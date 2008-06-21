@@ -8,7 +8,7 @@ winbuildenv=' echo \"\\program files\\Microsoft Visual Studio 8\\Common7\\Tools\
 
 getvmip()
 {
-    vmip=`cat /etc/vmware/vmnet8/dhcpd/dhcpd.conf | grep " $USER-$job_os {" -A2 | tail -n1 | tr -s ' ' | cut -f2 -d' ' |tr -d ';'`
+	vmip=`cat /etc/vmware/vmnet8/dhcpd/dhcpd.conf | grep " $USER-$job_os {" -A2 | tail -n1 | tr -s ' ' | cut -f2 -d' ' |tr -d ';'`
 }
 
 check_build()
