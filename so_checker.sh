@@ -324,7 +324,9 @@ while true; do
     # send results 
     scp job_results $USER@cs.pub.ro:\'"teme/ok/$job/NOTA"\'; 
     ssh $USER@cs.pub.ro rm \'"teme/ok/$job/../NOTA"\'
+    ssh $USER@cs.pub.ro rm \'"teme/ok/$job/../last"\'
     ssh $USER@cs.pub.ro ln -s \'"`echo $job|rev | cut -f1 -d/|rev`/NOTA"\' \'"teme/ok/$job/../NOTA"\'
+    ssh $USER@cs.pub.ro ln -s \'"`echo $job|rev | cut -f1 -d/|rev`"\'      \'"teme/ok/$job/../last"\'
     ssh $USER@cs.pub.ro rm -f \'"teme/checker/$job/file.zip"\'
     ssh $USER@cs.pub.ro 'cd public_html/Teme/upload && ./update_grades'
 

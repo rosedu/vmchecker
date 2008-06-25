@@ -281,7 +281,9 @@ while true; do
         # send results 
 	scp job_results pso@cs.pub.ro:\'"teme/ok/$tema/NOTA"\'
 	ssh pso@cs.pub.ro rm \'"teme/ok/$tema/../NOTA"\'
+	ssh pso@cs.pub.ro rm \'"teme/ok/$tema/../last"\'
 	ssh pso@cs.pub.ro ln -s \'"`echo $tema|rev | cut -f1 -d/|rev`/NOTA"\' \'"teme/ok/$tema/../NOTA"\'
+	ssh pso@cs.pub.ro ln -s \'"`echo $tema|rev | cut -f1 -d/|rev`"\'      \'"teme/ok/$tema/../last"\'
 	ssh pso@cs.pub.ro rm -f \'"teme/checker/$tema/file.zip"\'
 	ssh pso@cs.pub.ro 'cd public_html/Teme/upload && ./update_grades'
 	err=0
