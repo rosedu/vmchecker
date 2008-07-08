@@ -1,0 +1,140 @@
+#!/bin/bash
+
+function log()
+{
+	if [ -z "$2" ]; then
+		echo "$1" >> $HOME/logs/misc
+	else
+		echo "$1" >> $HOME/logs/$2
+	fi
+}
+
+function sec_violation()
+{
+	    echo "<p align=\"center\"><b><font color=red>"
+	    echo "Security violation: $1"
+	    log "Security violation $1" security
+	    echo "</font></b></p>"
+}
+
+function sec_test()
+{
+    if [ "$2" = "" ] || echo $2 | egrep "\.\."  &> /dev/null; then
+	    sec_violation "$1="$2" on `date` "
+	    exit
+    fi
+}
+
+function success()
+{
+    echo "<p align=\"center\"><b><font color=green>$1</font></b></p>"
+    echo "<br><br>";
+    log "On `date` $user ($grupa) uploaded $tema/$os succesfully" uploads
+}
+
+function error()
+{
+    cd ..
+    rm -rf "$teme"
+    if [ -z "`ls \"$HOME/teme/ok/$grupa/$user/$tema/$os\"`" ]; then
+	rm -Rf "$HOME/teme/ok/$grupa/$user/$tema/$os";
+    fi;
+    echo -e "<pre><font color=red size=2>$1</font></pre>"
+    echo "<p align=\"center\"><font color=red>Tema trimisa nu respecta cerintele astfel incat nu poate fi corectata. <br>Cititi cu atentie regulile de trimitere a temei.</font></p>"
+    echo "<br><br>";
+    log "On `date` $user ($grupa) uploaded $tema/$os with errors: $1" uploads
+    rmdir "$HOME/teme/$grupa/$user/$tema/" &> /dev/null
+}
+
+grupa="$1"
+user="$2"
+tema="$3"
+os="$4"
+attach="$5"
+
+
+start=`pwd`;
+
+if [ "$tema" = "-" ]; then
+    echo "<p align=\"center\"><b><font color=red>"
+    echo "Numarul temei nu este selectat"
+    echo "</font></b></p>"
+    exit 1
+fi
+
+sec_test grupa $grupa
+sec_test user $user
+sec_test tema $tema
+sec_test attach $attach
+sec_test os $os
+
+
+date_now="`date '+%Y-%m-%d %H:%M:%S'`"
+    
+teme="$HOME/teme/ok/$grupa/$user/$tema/$os/$date_now/"
+mkdir -p "$teme"
+    
+teme_backup="$HOME/teme/bak/$grupa/$user/$tema/$os/$date_now/"
+mkdir -p "$teme_backup"
+
+
+mv "$attach" "$teme/file.zip"
+cp "$teme/file.zip" "$teme_backup/"
+
+cd "$teme" &> /dev/null
+
+echo "<pre>"
+echo Continutul arhivei:
+echo 
+
+if ! unzip file.zip 2>& 1; then
+    echo "</pre>"
+    error "extragerea fisierelor a esuat !!!"
+    exit 1
+fi
+echo "</pre>"
+
+rm file.zip 
+
+makefile=`ls | grep -i "^makefile$"`
+readme=`ls | grep -i "^readme$"`
+
+if [ -z "$makefile" ] || ! [ -f "$makefile" ]; then
+    error "nu exista fisierul Makefile in radacina arhivei"
+    exit 1
+fi
+
+if [ -z "$readme" ] || ! [ -f "$readme" ]; then
+    error "nu exista fisierul README in radacina arhivei"
+    exit 1
+fi
+
+# we don't want non- ASCII/UTF files
+bad_files="`find -type f -exec file \{\} \; | egrep -v 'ASCII|UTF| lex '`"
+
+if ! [ -z "$bad_files" ]; then
+	error "Fisiere invalide:\n\n$bad_files"
+	exit 1
+fi
+
+cd $start
+
+#./update_grades
+
+success "OK"
+
+# discard old versions
+teme_checker="$HOME/teme/checker/$grupa/$user/$tema/$os/$date_now"
+rm -rf "`dirname "$teme_checker"`"
+mkdir -p "$teme_checker"
+ln -s "$teme_backup/file.zip" "$teme_checker/file.zip"
+
+to_check=`find $HOME/teme/checker -name file.zip | wc -l`
+
+ssh so@sanctuary 'nohup /runchecker.sh "cd ~/ && ./checker.sh" &>/dev/null < /dev/null &'  
+
+
+success "Tema a fost planificata pentru verificare. In coada de verificare sunt $to_check teme."
+
+
+

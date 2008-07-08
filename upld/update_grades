@@ -1,0 +1,121 @@
+#!/bin/bash 
+
+cd $HOME/public_html/Teme/upload
+
+if ! [ "$1" = "-raw" ]; then
+    ./`basename $0` -raw > ../Note.auth
+    chmod a+r ../Note.auth
+    exit
+fi
+
+
+function do_tema()
+{
+
+	if ! [ -d "$tema" ]; then
+	    echo "<td class=text align=center> - </td>"
+	    echo -n "," >> $HOME/teme/note.csv
+	    return
+	fi
+	
+	
+	if ! [ -f $tema/NOTA ]; then
+	    echo "<td class=text align=center> x </td>"
+	    echo "$grupa $student $tema" >> $HOME/public_html/Teme/decorectat
+	    echo -n "," >> $HOME/teme/note.csv
+	    return
+	fi
+
+        # the checker obsoletes this
+	#newer=`find "$tema" -maxdepth 1 -type d -newer "$tema/NOTA" | grep -v "^$tema\$"`
+        #if ! [ -z "$newer" ]; then
+        #    echo "<td class=text align=center> x </td>"
+	#    echo "$grupa $student $tema" >> $HOME/public_html/Teme/decorectat
+	#    echo -n "," >> $HOME/teme/note.csv
+        #    return
+        #fi;
+
+	nota=`head -n1 "$tema/NOTA"`
+	mkdir -p "$HOME/public_html/Teme/note/$grupa/$student/$tema"
+	chmod a+r "$tema/NOTA"
+	cp "$tema/NOTA" "$HOME/public_html/Teme/note/$grupa/$student/$tema/NOTA"
+	title=`head $tema/NOTA|tr -d '"'`
+	echo "<td class=text align=center> <a href=\"Teme/note/$grupa/$student/$tema/NOTA\" title=\"$title\"> $nota </a>"
+	echo -n "$nota," >> $HOME/teme/note.csv
+	
+}
+
+function do_grupa()
+{
+    echo -en "\n$grupa" >> $HOME/teme/note.csv
+    
+    echo "<p align=center><font color=maroon><b>Grupa $grupa</b></font><br><br>"
+
+    echo "<table width="100%" border=0 cellspacing=2 cellpadding=3>"
+    echo "<tr bgcolor=#d7d3c6><td class=text>Nume</td> "
+    echo "<td class=text  align=center>Tema 1<br>Linux</td>"
+    echo "<td class=text  align=center>Tema 1<br>Windows</td>"
+    echo "<td class=text align=center>Tema 2<br>Linux</td>"
+    echo "<td class=text align=center>Tema 2<br>Windows</td>"
+    echo "<td class=text  align=center>Tema 3<br>Linux</td>"
+    echo "<td class=text  align=center>Tema 3<br>Windows</td>"
+    echo "<td class=text  align=center>Tema 4<br>Linux</td>"
+    echo "<td class=text  align=center>Tema 4<br>Windows</td>"
+    echo "<td class=text  align=center>Tema 5<br>Linux</td>"
+    echo "<td class=text  align=center>Tema 5<br>Windows</td>"
+    echo "</tr>"
+    j=0
+    ls -d -1 * | while read student; do
+
+	case "$student" in
+		".")
+		continue;;
+		"..")
+		continue;;
+		"")
+		continue;;
+	esac 
+
+	echo -ne "\n$student,$grupa," >> $HOME/teme/note.csv
+
+	cd "$student"
+
+        if [ "$j" = "0" ]; then color="#f0f0e0"; else color="#ffffff"; fi; j=$[1-$j];
+	echo -n "<tr bgcolor=#e7e3d colspan=10> <td class=text>$student</td> "
+	
+	for tema in tema1/lin tema1/win tema2/lin tema2/win tema3/lin tema3/win tema4/lin tema4/win tema5/lin tema5/win; do
+	    do_tema
+	done
+	
+	cd ..
+
+	echo "</tr>"
+    done 
+
+    echo "</table></p>"
+}
+
+echo > $HOME/public_html/Teme/decorectat
+
+echo "<br><br>"
+
+echo > $HOME/teme/note.csv
+
+cd $HOME/teme/ok
+ls -d -1 * | while read grupa; do
+    cd $grupa
+    do_grupa 
+    cd ..
+done
+
+echo "<br><br>"
+echo "<pre>"
+echo "Legenda:"
+echo "- tema nu a fost uploadata corect"
+echo "x tema a fost uploadata si asteapta in coada de verificare"
+echo "ok tema a fost verificata"
+echo "0 tema nu se compileaza si nu se va puncta"
+echo "c tema copiata, se va anula punctajul tuturor temelor"
+echo "</pre>"
+
+chmod a+rX -R $HOME/public_html/Teme/note
