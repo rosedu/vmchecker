@@ -1,0 +1,28 @@
+CFLAGS = /W3 /nologo
+CC = cl
+
+all: hello_test.exe
+
+hello_test.exe: hello_test.obj
+	link /nologo /out:$@ $**
+
+hello_test.obj: hello_test.c
+
+clean:
+	del /q /f hello_test.exe hello_test.obj
+
+pre-build:
+
+build: hello_test.exe
+
+post-build:
+
+pre-run:
+
+run:
+	hello_test.exe
+
+post-run:
+
+pack: hello_test.c test_win.h Makefile.checker
+	zip tests.zip hello_test.c test_win.h Makefile.checker
