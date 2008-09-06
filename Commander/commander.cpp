@@ -97,6 +97,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines,char* conf)
 	guest_shell_path=iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
 //	guest_home_in_bash=iniparser_getstring(v_machines,(temp+"GuestHomeInBash").c_str());
 
+	temp="";
 
 	//get archives
 	system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"file.zip "+jobs_path+"/"+"file.zip").c_str());
