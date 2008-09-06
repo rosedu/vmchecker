@@ -15,7 +15,7 @@ import misc
 
 
 def main():
-    if len(sys.argv) == 1:
+    if len(sys.argv) != 2:
         print >> sys.stderr, 'Usage: %s homework_config_file' % sys.argv[0]
         sys.exit(1)
 

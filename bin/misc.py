@@ -22,13 +22,14 @@ def config_file():
         - None, if file not found"""
 
     path = os.path.join(vmchecker_root(), 'vmchecker.ini')
-    assert os.path.isfile(path), 'vmchecker.ini is not a file'
+    assert os.path.isfile(path), 'vmchecker.ini (%p) is not a file' % path
     return path
 
 
-def get_option(config, homework, option):
-    """Given homework name, returns option.
-    If there is no such option, returns None."""
+def get_option(config, homework, option, default=None):
+    """Given homework name, returns option. If option not found
+    in [homework] section, then option is looked up in [DEFAULT]
+    section.  If there is no such option, returns default."""
 
     assert config.has_section(homework), 'No such homework %s' % homework
 
@@ -38,4 +39,6 @@ def get_option(config, homework, option):
 
     # falls back to default remote ip
     if config.has_option('DEFAULT', option):
-        return config.get('DEFAULT', default)
+        return config.get('DEFAULT', option)
+
+    return default
