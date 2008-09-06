@@ -115,7 +115,12 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines,char* conf)
 	temp="";
 	system((temp+"scp "+jobs_path+"/"+"job_build "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_build" ).c_str());
 	system((temp+"scp "+jobs_path+"/"+"job_run "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_run").c_str());
-	
+
+	//pun arhiva si o dezarhivez
+	system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip" ).c_str());
+	system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+	system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+
 	//sterg fisierul de configurare
 	system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+conf+"\"").c_str());
 
