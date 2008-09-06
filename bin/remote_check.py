@@ -2,10 +2,11 @@
 # -*- coding: UTF-8 -*-
 # vim: set expandtab :
 
-import optparse
-
 
 __author__ = 'Alexandru Mosoi, brtzsnr@gmail.com'
+
+import optparse
+
 
 
 cmdline = optparse.OptionParser(version='%prog 0.1')
