@@ -1,7 +1,7 @@
 CFLAGS=-g -Wall
-ipcctl:ipcctl.o
+semctl:semctl.o
 clean:
-	rm -rdf *~ ipcctl ipcctl.o
+	rm -rdf *~ semctl semctl.o
 
-dist:ipcctl
-	cp ipcctl ../bin/
+dist:semctl
+	cp semctl ../bin/
