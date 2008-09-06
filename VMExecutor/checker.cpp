@@ -81,10 +81,9 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_pass=argv[9];
 	vmrun.guest_home=argv[10];
 	vmrun.guest_shell=argv[11];
-	vmrun.build_command_args+= "-c \"bash /home/user/ " BUILD_SCRIPT " " +
-		vmrun.vmname + "\"";
-	vmrun.run_command_args+= "-c \"bash /home/user/" RUN_SCRIPT " " +
-		vmrun.vmname + "\"";	
+	vmrun.guest_home_in_bash=argv[12];
+	vmrun.build_command_args= vmrun.build_command_args+"-c \" chmod +x "+ vmrun.guest_home+ BUILD_SCRIPT+ ";"+vmrun.guest_home+BUILD_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";
+	vmrun.run_command_args=vmrun.run_command_args+ "-c \" chmod +x "+vmrun.guest_home+RUN_SCRIPT+";"+vmrun.guest_home+RUN_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";	
 
 	return 0;
 }
@@ -107,6 +106,7 @@ static int append_f(const char *infile, const char *outfile, const char* message
 		in_file.close();
 		out_file.close();
 		return -1;
+	
 	}
 
 	out_file << message << endl;
@@ -570,8 +570,7 @@ static int run_scripts(void)
 		return -1;
 	}
 
-	sleep(40);
-
+	
 	// get BUILD_OUTPUT_FILE
 	log("Fetching %s...\n", BUILD_OUTPUT_FILE);
 	jobHandle = VixVM_CopyFileFromGuestToHost(
@@ -644,8 +643,6 @@ static int run_scripts(void)
 		post_time = time(NULL);
 		timeout = post_time - pre_time;
 	}
-
-	sleep(100);
 
 	// get RUN_OUTPUT_FILE
 	log("Fetching %s...\n", RUN_OUTPUT_FILE);
@@ -852,7 +849,7 @@ static void usage(char *argv0)
 {
 	fprintf(stderr, "Usage: %s vm_name(win|lin) enable_k_m(1|0)"
 			" deadline upload_date penalty(25)"
-			"vmpath local_ip guest_user guest_pass guest_home guest_shell\n", argv0);
+			"vmpath local_ip guest_user guest_pass guest_home guest_shell guest_home_in_shell\n", argv0);
 }
 
 /*
@@ -863,7 +860,7 @@ int main(int argc, char *argv[])
 {
 	//struct args_struct args;
 
-	if (argc != 12)
+	if (argc != 13)
 	{
 		usage(argv[0]);
 		exit(EXIT_FAILURE);

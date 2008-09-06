@@ -2,7 +2,7 @@
 
 #runs inside vm
 
-home="/home/user"
+home=$2
 winbuildenv="\"\\program files\\Microsoft Visual Studio 8\\Common7\\Tools\\vsvars32.bat\" &&   \"\\program files\\Microsoft Platform SDK\\SetEnv.cmd\" /SRV32 "
 
 cd $home

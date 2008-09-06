@@ -23,6 +23,7 @@ struct run_struct {
 	string guest_pass;
 	string guest_home;
 	string guest_shell;
+	string guest_home_in_bash;
 	string guest_ip;
 	string build_command_args;
 	string run_command_args;

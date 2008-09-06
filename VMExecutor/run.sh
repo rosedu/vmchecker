@@ -1,6 +1,6 @@
 #!/bin/sh
 
-home="/home/user"
+home=$2
 cd $home
 
 winbuildenv="\"\\program files\\Microsoft Visual Studio 8\\Common7\\Tools\\vsvars32.bat\" &&   \"\\program files\\Microsoft Platform SDK for Windows Server 2003 R2\\SetEnv.cmd\" /SRV32 "
