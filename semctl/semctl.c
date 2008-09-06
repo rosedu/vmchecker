@@ -39,7 +39,7 @@ static void print_usage(const char * program_name)
 static void print_errno(const char * usermgs, int err)
 {
     char * strerr = strerror(err);
-    fprintf(stderr, "%s  (errno=[%d] strerr=[%s]\n", usermgs, err, strerr);
+    fprintf(stderr, "%s  (errno=[%d] strerr=[%s])\n", usermgs, err, strerr);
 }
 
 
