@@ -9,12 +9,19 @@ hwconf_queue_dir=$1
 course_id=$2
 
 # path to the commander (gets tests.zip & file.zip and runs the vmexecutor)
-commander_binary=./commander
+commander=./commander.sh
 
 # path to the IPC semaphore manipulator
 semctl=../semctl/semctl
 
-notifier=./notify.sh
+notifier=../bin/notify.sh
+
+
+print_usage()
+{
+    echo "Invalid queue manager invocation. Propper syntax:"
+    echo "    " $0 "HW_Queue_dir CourseID"
+}
 
 create_semaphore()
 {
@@ -25,7 +32,6 @@ wait_on_semaphore()
 {
     $semctl down $course_id
 }
-
 
 init_queue()
 {
@@ -45,7 +51,7 @@ loop_func()
     # "ls -ctr"  sorts by creation time (-ct) in reverse (-r) order
     # "ls -1" formats the output in "single column" - one dir entry per line
     # "head -n 1" extract the first line: the name of the oldest file.
-    entry = `ls -ctr1 $hwconf_queue_dir | head -n 1`
+    local entry = `ls -ctr1 $hwconf_queue_dir | head -n 1`
 
     process_dir_entry $entry
     return $?
@@ -53,8 +59,10 @@ loop_func()
 
 process_dir_entry()
 {
-    entry = $2;
+    local entry = $1
     # is the entry an empty string?
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "$hwconf_queue_dir/$empty"
     if [ "$hwconf_queue_dir/$entry" = "$hwconf_queue_dir/" ]; then
         echo "I got notified I but did not find any files in $hwconf_queue_dir"
         return 0;
@@ -75,6 +83,7 @@ process_dir_at_startup()
 {
     # invoke the commander on all queued entryes.
     for entry in `ls -ctr1 $hwconf_queue_dir/`; do
+        echo "in for --- with $entry "
         process_dir_entry "$hwconf_queue_dir/$entry"
         if [ "$?" != 0 ]; then
             # do not stop after error; there are other homeworks that
@@ -86,9 +95,9 @@ process_dir_at_startup()
 
 invoke_commander()
 {
-    entry = $1
-    commander $entry
-    if [ "$?" == 0 ]; then
+    local entry = $1
+    $commander $entry
+    if [ "$?" = 0 ]; then
         echo "invoke_commander($entry) failed"
         echo "  retouching file for later invocation"
         echo "  sleeping for 5 seconds so we don't overload the server"
@@ -109,5 +118,15 @@ main()
     done
 }
 
+
+if [ "x$1" = "x" ]; then
+    print_usage
+    exit 1
+fi
+
+if [ "x$2" = "x" ]; then
+    print_usage
+    exit 1
+fi
 
 main
