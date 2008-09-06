@@ -2,24 +2,23 @@
 # iniparser tests Makefile
 #
 
-CC      = gcc
-CFLAGS  = -g -Iiniparser/src
-LFLAGS  = -L.. -liniparser
+CXXFAGS= -g -Wall
+
+CPPFLAGS  = -Iiniparser/src
+LDFLAGS  = -Liniparser 
+LDLIBS= -ldl -lstdc++ -liniparser -lfl
 AR	    = ar
 ARFLAGS = rcv
 RM      = rm -f
 
 
-default: all
+all: commander 
 
-all: iniexample
-
-iniexample: iniexample.c
-	$(CC) $(CFLAGS) -o iniexample iniexample.c -I../src -Liniparser -liniparser
+commander:commander.o
+commander.o: commander.cpp
 
 
 clean veryclean:
-	$(RM) iniexample example.ini
-
+	$(RM) commander *.o
 
 
