@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
@@ -6,40 +5,48 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-using std::cerr;
-using std::endl;
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
 // ftok crashes if the filename does not point to a valid file
 // we create one in a place where we're sure we can create a file
 // and where we don't polute the local namespace
 #define FTOKPREFIX "/tmp/vmchecker_"
-
-
 
 enum ACTIONS {
     UP,
     DOWN,
     CREATE,
     ERASE,
+    EXISTS,
     INVALID_ACTION
 };
 
 static void print_usage(const char * program_name)
 {
-    cerr << program_name << " [UP|DOWN|CREATE|ERASE] " << " CourseUniqueID\n";
+    fprintf(stderr,
+            "%s [UP|DOWN|CREATE|ERASE|EXISTS] UniqueString [count]\n"
+            " CREATE [count]  - create a new semaphore with value count\n"
+            "                 - default count value: 0\n"
+            " UP/DOWN [count] - increment/decrement the semaphore with count\n"
+            "                 - default count value: 1\n"
+            " ERASE           - erase the semaphore\n"
+            " EXISTS          - check if a semaphore exists\n",
+            program_name);
 }
 
 static void print_errno(const char * usermgs, int err)
 {
     char * strerr = strerror(err);
-    cerr << usermgs << " (errno=[" << err << "] strerr=[" << strerr << "]\n";
+    fprintf(stderr, "%s  (errno=[%d] strerr=[%s]\n", usermgs, err, strerr);
 }
 
 
 /////////////////////
 // FILE OPERATIONS //
 /////////////////////
-char * create_ftok_filename(const char * str)
+static char * complete_ftok_filename(const char * str)
 {
     char * ret = NULL;
     ret = (char*) calloc(strlen(FTOKPREFIX) + strlen(str) + 1, 1);
@@ -51,9 +58,9 @@ char * create_ftok_filename(const char * str)
 static int create_file(const char * ftokstr)
 {
     int fd = 0;
-    fd = creat(ftokstr, 
-               S_IRUSR | S_IWUSR | 
-               S_IRGRP | S_IWGRP | 
+    fd = creat(ftokstr,
+               S_IRUSR | S_IWUSR |
+               S_IRGRP | S_IWGRP |
                S_IROTH | S_IWOTH);
     if (-1 == fd) {
         print_errno("create_file:creat failed.", errno);
@@ -82,10 +89,12 @@ static key_t my_ftok(const char * ftokstr)
 #define GLOBAL_PROGRAM_ID 66 // a random number in the range [1..255]
     key_t key = ftok(ftokstr, GLOBAL_PROGRAM_ID);
     if (-1 == key) {
-        cerr << "parse_args:ftok failed. ftok args were" << endl;
-        cerr << "\t " << ftokstr << endl;
-        cerr << "\t " << GLOBAL_PROGRAM_ID << endl;
-        print_errno("", errno);
+        fprintf(stderr,
+                "parse_args:ftok failed. ftok args were\n"
+                "\t %s\n"
+                "\t %d\n",
+                ftokstr, GLOBAL_PROGRAM_ID);
+            print_errno("", errno);
         return -1;
     }
     return key;
@@ -96,11 +105,11 @@ static key_t my_ftok(const char * ftokstr)
 ///////////////////
 // SEMAPHORE OPS //
 ///////////////////
- 
+
 static int create_sem(key_t semKey)
 {
-    // cream o multime cu un singur semafor
-    // apelul esueaza daca exista deja un semafor cu cheia din semKey
+    // create a semaphore
+    // fail if the semaphore already exists.
     int ret = semget(semKey, 1, IPC_CREAT | IPC_EXCL | 0660);
     if (-1 == ret)
         print_errno("create_sem:semget failed", errno);
@@ -109,7 +118,7 @@ static int create_sem(key_t semKey)
 
 static int open_sem(key_t semKey)
 {
-    // deschidem un semafor existent
+    // open an existing semaphore
     int ret = semget(semKey, 1, 0);
     if (-1 == ret)
         print_errno("open_sem:semget failed", errno);
@@ -118,19 +127,17 @@ static int open_sem(key_t semKey)
 
 static int erase_sem(int semId)
 {
- 	// cand comanda este IPC_RMID, al doilea parametru este ignorat
- 	int ret = semctl(semId, 0, IPC_RMID);
+    int ret = semctl(semId, 0 /* ignored */, IPC_RMID);
     if (-1 == ret)
         print_errno("erase_sem:semctl failed", errno);
-    return ret;    
+    return ret;
 }
 
 static int modify_sem(int semId, int diff)
 {
     int ret;
     struct sembuf sop;
-    // ne referim la primul semafor din multime (cel cu numarul 0)
-    sop.sem_num = 0;
+    sop.sem_num = 0; // the first semaphore in the semaphore array
     sop.sem_op = diff;
     sop.sem_flg = 0;
     ret = semop(semId, &sop, 1);
@@ -144,7 +151,7 @@ static int modify_sem(int semId, int diff)
 // PROGRAM LOGIC //
 ///////////////////
 
-static int run_action(enum ACTIONS action, const char * ftokstr)
+static int run_action(enum ACTIONS action, const char * ftokstr, int count)
 {
     key_t key = -1;
     int semId = -1;
@@ -161,19 +168,22 @@ static int run_action(enum ACTIONS action, const char * ftokstr)
         return -1;
 
     switch(action) {
-    case UP:
     case DOWN:
+        count *= -1;
+        /* fallthough */
+    case UP:
         semId = open_sem(key);
         if (-1 == semId)
             return -1;
-        return modify_sem(semId, (UP == action)? +1 : -1);
+        return modify_sem(semId, count);
 
     case CREATE:
         // only creates the semaphore. does noting with it.
         semId = create_sem(key);
         if (-1 == semId)
             return -1;
-        return 0;
+
+        return modify_sem(semId, count);
 
     case ERASE:
         semId = open_sem(key);
@@ -187,62 +197,104 @@ static int run_action(enum ACTIONS action, const char * ftokstr)
             return -1;
         return 0;
 
+    case EXISTS:
+        semId = open_sem(key);
+        if (-1 == semId)
+            printf("0");
+        else
+            printf("1");
+        return (-1 == semId);
+
     default:
-        cerr << "run_action: invalid action=[" << action << "]" << endl;
+        fprintf(stderr, "run_action: invalid action=[%d]\n", action);
         return -1;
     }
-    
+
     return -2;
 }
 
-static int 
-parse_args(int argc, char * argv[], char * & ftokstr, enum ACTIONS & act) {
-    ftokstr = NULL;
-    act = INVALID_ACTION;
+static int
+parse_args(int argc, char * argv[], char ** pftokstr, enum ACTIONS * pact, int * pcount) {
+    *pftokstr = NULL;
+    *pact = INVALID_ACTION;
     if (argc < 3) {
-        cerr << "Invalid number of arguments." << endl;
-        return 1;
+        fprintf(stderr,"Invalid number of arguments.\n");
+        return EXIT_FAILURE;
     }
+
 #define PARSE_ACTION(action_name)                   \
     do {                                            \
         if (0 == strcasecmp(argv[1], #action_name)) \
-            act = action_name;                      \
+            *pact = action_name;                    \
     } while (0)
 
     PARSE_ACTION(UP);
     PARSE_ACTION(DOWN);
     PARSE_ACTION(CREATE);
     PARSE_ACTION(ERASE);
+    PARSE_ACTION(EXISTS);
 #undef PARSE_ACTION
-    
-    if (INVALID_ACTION == act) {
-        cerr << "Invalid first argument [" << argv[1] << "]." << endl;
-        return 2;
+
+    if (INVALID_ACTION == *pact) {
+        fprintf(stderr, "Invalid first argument [%s].\n", argv[1]);
+        return EXIT_FAILURE;
     }
-    
-    ftokstr = create_ftok_filename(argv[2]);
-    return 0;
+
+    *pftokstr = complete_ftok_filename(argv[2]);
+
+    if (argc >= 4) {
+        char * endptr, * str;
+        str = argv[3];
+        errno = 0;    /* To distinguish success/failure after call */
+        *pcount = strtol(str, &endptr, 10);
+
+        /* Check for various possible errors */
+
+        if ((errno == ERANGE && (*pcount == LONG_MAX || *pcount == LONG_MIN))
+            || (errno != 0 && *pcount == 0)) {
+            print_errno("could not parse `count` field", errno);
+            return EXIT_FAILURE;
+        }
+
+        if (endptr == str) {
+            fprintf(stderr, "No digits were found in the `count` field.\n");
+            return EXIT_FAILURE;
+        }
+
+        /* If we got here, strtol() successfully parsed a number */
+
+        if (*endptr != '\0') {
+            fprintf(stderr, "`Count` field contained more than a number.\n");
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    } else {
+        *pcount = (*pact == CREATE) ? 0 : 1;
+    }
+
+    return EXIT_SUCCESS ;
 }
 
 int main(int argc, char * argv[])
 {
+    int count = 0;
     int err = 0;
     char * ftokstr = NULL;
     enum ACTIONS action;
-    err = parse_args(argc, argv, ftokstr, action);
+    err = parse_args(argc, argv, &ftokstr, &action, &count);
     if (err) {
-        cerr << "Invalid arguments (error code:" << err << ")" << endl;
+        fprintf(stderr, "Invalid arguments (error code:%d)\n", err);
         print_usage(argv[0]);
         free(ftokstr);
         return err;
     }
-    
-    err = run_action(action, ftokstr);
+
+    err = run_action(action, ftokstr, count);
     if (err) {
-        cerr << "Cannot perform that action (error code:" << err << ")" << endl;
+        fprintf(stderr, "Cannot perform that action (error code:%d)\n", err);
         free(ftokstr);
-        return err;
+        return EXIT_FAILURE;
     }
     free(ftokstr);
-    return 0;
+    return EXIT_SUCCESS;
 }
