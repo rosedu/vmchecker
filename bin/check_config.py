@@ -15,7 +15,7 @@ import os
 
 
 def main():
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 3:
         print >> sys.stderr, 'Usage: %s user_id assignment_id archive_path results_path' % sys.argv[0]
         sys.exit(1)
 
@@ -23,8 +23,6 @@ def main():
 
     user_id = sys.argv[1]             # student name
     job = sys.argv[2]                 # assignment name
-    archive_path = sys.argv[3]        # path to atchive
-    results_path = sys.argv[4]        # path to check results
 
     global_config_file = ConfigParser.RawConfigParser()
     global_config_file.readfp(open(course_config_file))
@@ -57,6 +55,11 @@ def main():
     job_config_file = os.path.join(
         misc.vmchecker_root(), 'unchecked',
         '%s %s %s.ini' % (upload_time, user_id, job))
+
+    assert os.path.isdir(os.path.dirname(job_config_file)), (
+        'Directorul pentru fisierul de configurare (%s) a temei nu exista' % (
+            os.path.dirname(job_config_file)))
+
     with open(job_config_file, 'w') as handle:
         handle.write(file);
 
