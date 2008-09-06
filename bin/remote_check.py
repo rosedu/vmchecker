@@ -49,10 +49,13 @@ def main():
         sys.exit(1)
 
     # invokes notifier program on testing machine
+    course = config.get('DEFAULT', 'CourseName')
+    assert course, 'Uknown course...'
+
     return_code = subprocess.call([
         'ssh',
         '%s@%s' % (remote_user, remote_ip),
-        os.path.join(remote_queue, remote_notifier)])
+        'bash -c "cd %s && %s %s"' % (remote_queue, remote_notifier, course)])
     if return_code != 0:
         print >> sys.stderr, 'Nu am putut invoca programul de notificare'
         sys.exit(1)
