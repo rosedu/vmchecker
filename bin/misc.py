@@ -9,31 +9,33 @@ __author__ = 'Alexandru Mosoi, brtzsnr@gmail.com'
 import os
 
 
-def find_config_file(file_name='vmchecker.ini'):
-	"""Searches up on directory structure for file_name.
-	@return
-		- absolute path of config file
-		- None, if file not found"""
+def vmchecker_root():
+    assert 'VMCHECKER_ROOT' in os.environ, (
+        'VMCHECKER_ROOT environment varible not defined')
+    return os.environ['VMCHECKER_ROOT']
 
-	cwd = os.getcwd()
-	while cwd != '/':
-		# XXX assuming script runs on *nix, stops at root
-		path = os.path.join(cwd, file_name)
-		if os.path.isfile(path):
-			return os.path.abspath(path)
-		cwd = os.path.dirname(cwd)
+
+def config_file():
+    """Searches up on directory structure for file_name.
+    @return
+        - absolute path of config file
+        - None, if file not found"""
+
+    path = os.path.join(vmchecker_root(), 'vmchecker.ini')
+    assert os.path.isfile(path), 'vmchecker.ini is not a file'
+    return path
 
 
 def get_option(config, homework, option):
-	"""Given homework name, returns ip of remote testing machine.
-	If there is no such option, returns None."""
+    """Given homework name, returns option.
+    If there is no such option, returns None."""
 
-	assert config.has_section(homework), 'No such homework %s' % homework
+    assert config.has_section(homework), 'No such homework %s' % homework
 
-	# first tries to get option from `homework` section
-	if config.has_option(homework, option):
-		return config.get(homework, option)
+    # first tries to get option from `homework` section
+    if config.has_option(homework, option):
+        return config.get(homework, option)
 
-	# falls back to default remote ip
-	if config.has_option('DEFAULT', option):
-		return config.get('DEFAULT', default)
+    # falls back to default remote ip
+    if config.has_option('DEFAULT', option):
+        return config.get('DEFAULT', default)

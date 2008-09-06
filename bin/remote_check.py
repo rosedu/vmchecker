@@ -5,11 +5,11 @@
 
 __author__ = 'Alexandru Mosoi, brtzsnr@gmail.com'
 
+
 import sys
 import os
 import subprocess
 import ConfigParser
-
 
 import misc
 
@@ -19,13 +19,13 @@ def main():
         print >> sys.stderr, 'Usage: %s homework_config_file' % sys.argv[0]
         sys.exit(1)
 
-    config_file = misc.find_config_file()
+    config_file = misc.config_file()
 
     homework = ConfigParser.RawConfigParser()
-    homework.read(sys.argv[1])
+    homework.readfp(open(sys.argv[1]))
 
     config = ConfigParser.RawConfigParser()
-    config.read(config_file)
+    config.readfp(open(config_file))
 
     job = homework.get('DEFAULT', 'Job')
 
