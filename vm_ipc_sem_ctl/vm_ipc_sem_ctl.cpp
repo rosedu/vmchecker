@@ -6,11 +6,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-using namespace std;
+using std::cerr;
+using std::endl;
+
+// ftok crashes if the filename does not point to a valid file
+// we create one in a place where we're sure we can create a file
+// and where we don't polute the local namespace
 #define FTOKPREFIX "/tmp/vmchecker_"
-#define FIRST_ERROR_CODE 100
+
+
+
 enum ACTIONS {
-    UP = FIRST_ERROR_CODE,
+    UP,
     DOWN,
     CREATE,
     ERASE,
@@ -92,8 +99,8 @@ static key_t my_ftok(const char * ftokstr)
  
 static int create_sem(key_t semKey)
 {
-    //cream o multime cu un singur semafor
-    //apelul esueaza daca exista deja un semafor cu cheia din semKey
+    // cream o multime cu un singur semafor
+    // apelul esueaza daca exista deja un semafor cu cheia din semKey
     int ret = semget(semKey, 1, IPC_CREAT | IPC_EXCL | 0660);
     if (-1 == ret)
         print_errno("create_sem:semget failed", errno);
@@ -102,7 +109,7 @@ static int create_sem(key_t semKey)
 
 static int open_sem(key_t semKey)
 {
-    //deschidem un semafor existent
+    // deschidem un semafor existent
     int ret = semget(semKey, 1, 0);
     if (-1 == ret)
         print_errno("open_sem:semget failed", errno);
@@ -111,7 +118,7 @@ static int open_sem(key_t semKey)
 
 static int erase_sem(int semId)
 {
- 	//cand comanda este IPC_RMID, al doilea parametru este ignorat
+ 	// cand comanda este IPC_RMID, al doilea parametru este ignorat
  	int ret = semctl(semId, 0, IPC_RMID);
     if (-1 == ret)
         print_errno("erase_sem:semctl failed", errno);
@@ -122,7 +129,7 @@ static int modify_sem(int semId, int diff)
 {
     int ret;
     struct sembuf sop;
-    //ne referim la primul semafor din multime (cel cu numarul 0)
+    // ne referim la primul semafor din multime (cel cu numarul 0)
     sop.sem_num = 0;
     sop.sem_op = diff;
     sop.sem_flg = 0;
@@ -131,19 +138,6 @@ static int modify_sem(int semId, int diff)
         print_errno("modify_sem:semop failed", errno);
     return ret;
 }
-
-/*
-  static int decrement_sem(int semId)
-  {
-  return modify_sem(semId, -1);
-  }
-
-  static int increment_sem(int semId)
-  {
-  return modify_sem(semId, +1);
-  }
-*/
-
 
 
 ///////////////////
@@ -172,7 +166,7 @@ static int run_action(enum ACTIONS action, const char * ftokstr)
         semId = open_sem(key);
         if (-1 == semId)
             return -1;
-        return modify_sem(semId, (action==UP)?+1:-1);
+        return modify_sem(semId, (UP == action)? +1 : -1);
 
     case CREATE:
         // only creates the semaphore. does noting with it.
@@ -213,14 +207,15 @@ parse_args(int argc, char * argv[], char * & ftokstr, enum ACTIONS & act) {
     do {                                            \
         if (0 == strcasecmp(argv[1], #action_name)) \
             act = action_name;                      \
-    }while(0);
+    } while (0);
 
     PARSE_ACTION(UP);
     PARSE_ACTION(DOWN);
     PARSE_ACTION(CREATE);
     PARSE_ACTION(ERASE);
+#undef PARSE_ACTION
     
-    if (act == INVALID_ACTION) {
+    if (INVALID_ACTION == act) {
         cerr << "Invalid first argument [" << argv[1] << "]." << endl;
         return 2;
     }
