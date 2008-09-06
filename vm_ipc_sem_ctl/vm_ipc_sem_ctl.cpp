@@ -207,7 +207,7 @@ parse_args(int argc, char * argv[], char * & ftokstr, enum ACTIONS & act) {
     do {                                            \
         if (0 == strcasecmp(argv[1], #action_name)) \
             act = action_name;                      \
-    } while (0);
+    } while (0)
 
     PARSE_ACTION(UP);
     PARSE_ACTION(DOWN);
