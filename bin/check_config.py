@@ -43,10 +43,6 @@ def main():
     upload_time = time.strftime("%m-%d-%y %H:%M")
 
     # assignment configuration file
-    job_config_file = os.path.join(
-        misc.vmchecker_root(), 'unchecked',
-        '%s %s %s.ini' % (upload_time, user_id, job))
-
     file = '[DEFAULT]\n'
     file += 'Job=%s\n' % job
     file += 'UserId=%s\n' % user_id
@@ -58,6 +54,9 @@ def main():
     file += 'UploadTime=%s\n' % upload_time
     file += 'KernelMsg=%s\n' % kernel_msg
 
+    job_config_file = os.path.join(
+        misc.vmchecker_root(), 'unchecked',
+        '%s %s %s.ini' % (upload_time, user_id, job))
     with open(job_config_file, 'w') as handle:
         handle.write(file);
 
@@ -67,6 +66,7 @@ def main():
     if return_code != 0:
         print >> sys.stderr, 'Nu am putut invoca programul remote_check'
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
