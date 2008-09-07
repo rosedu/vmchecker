@@ -1,10 +1,12 @@
+#! /usr/bin/python
 
+from __future__ import with_statement
 __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
 
 import sqlite3
 import os
-from time import *
-from stat import * 
+import time 
+import stat 
 
 VMCHECKER_ROOT_ENVAR = 'VMCHECKER_ROOT'
 VMCHECKER_DB_NAME = 'vmchecker.db' 
@@ -14,7 +16,7 @@ if not os.environ.has_key(VMCHECKER_ROOT_ENVAR):
     print "Error: ", VMCHECKER_ROOT_ENVAR, "is not set. "
     exit()
 
-vmchk_root = os.environ[VMCHECKER_ROOT_ENVAR]
+vmchk_root = os.path.abspath(os.environ[VMCHECKER_ROOT_ENVAR])
 db_path = os.path.join(vmchk_root, VMCHECKER_DB_NAME)
 cwd = os.getcwd()
 checked_root = os.path.join(vmchk_root, 'checked')
@@ -33,10 +35,10 @@ db_cursor = db_conn.cursor()
 # 
 
 def DB_get_hw(hw_name):
-    """"Get a homework entry 
+    """ Get a homework entry 
     @return 
      - the id of the homework
-     - None if it doesn't exist"""
+     - None if it doesn't exist """
     global db_cursor
     db_cursor.execute('SELECT id FROM teme WHERE nume = ?;', (hw_name,))
     result = db_cursor.fetchone()
@@ -46,7 +48,7 @@ def DB_get_hw(hw_name):
         return result[0]
 
 def DB_save_hw(hw_name):
-    """"If the homework identified by (hw_name)  
+    """ If the homework identified by (hw_name)  
     exists then update the DB, else insert a new entry """
     global db_cursor
     id_hw = DB_get_hw(hw_name)
@@ -59,10 +61,10 @@ def DB_save_hw(hw_name):
         return id_hw
 
 def DB_get_student(student_name):
-    """"Get a student entry 
+    """ Get a student entry 
     @return 
      - the id of the entry 
-     - None if it doesn't exist"""
+     - None if it doesn't exist """
     global db_cursor
     db_cursor.execute('SELECT id FROM studenti WHERE nume = ?;', (student_name,))
     result = db_cursor.fetchone()
@@ -72,7 +74,7 @@ def DB_get_student(student_name):
         return result[0]
 
 def DB_save_student(student_name):
-    """"If the student identified by (student_name)  
+    """ If the student identified by (student_name)  
     exists then update the DB, else insert a new entry """
     global db_cursor
     id_student = DB_get_student(student_name)
@@ -80,15 +82,13 @@ def DB_save_student(student_name):
         db_cursor.execute('INSERT INTO studenti (nume) values (?)', (student_name,))
         db_cursor.execute('SELECT last_insert_rowid();');        
         (id_student,) = db_cursor.fetchone()
-        return id_student
-    else:
-        return id_student
+    return id_student
 
 def DB_get_grade(id_hw, id_student):
-    """"Get a grade entry 
+    """ Get a grade entry 
     @return 
      - a touple containing the id and the last modification timestamp 
-     - (None, None) if it doesn't exist"""
+     - (None, None) if it doesn't exist """
     global db_cursor
     db_cursor.execute('SELECT id, data FROM note WHERE id_tema = ? and id_student = ?;', (id_hw, id_student))
     result = db_cursor.fetchone()
@@ -98,7 +98,7 @@ def DB_get_grade(id_hw, id_student):
         return result
 
 def DB_save_grade(id_hw, id_student, grade, data):
-    """"If the grade identified by (id_hw, id_student) 
+    """ If the grade identified by (id_hw, id_student) 
     exists then update the DB, else insert a new entry """
     global db_cursor
     (id_grade, db_data) = DB_get_grade(id_hw, id_student)
@@ -111,48 +111,47 @@ def DB_save_grade(id_hw, id_student, grade, data):
 #################################################
 
 def update_hws(path):
-    """For each dentry from path, launch the next 
+    """ For each dentry from path, launch the next 
     level update routine - update_students() """
     for hw_name in os.listdir(path):
         path_hw = os.path.join(path, hw_name)        
-        mode = os.stat(path_hw)[ST_MODE]
-        if S_ISDIR(mode):        
+        mode = os.stat(path_hw)[stat.ST_MODE]
+        if stat.S_ISDIR(mode):        
             # save hw in the DB
             id_hw = DB_save_hw(hw_name)
-            print hw_name
+            #print hw_name
             update_students(path_hw, id_hw)
 
 def update_students(path, id_hw):
-    """For each dentry from path, 
+    """ For each dentry from path, 
     launch the update_grade() routine"""
     for student_name in os.listdir(path):
         path_student = os.path.join(path, student_name)        
-        mode = os.stat(path_student)[ST_MODE]
-        if S_ISDIR(mode):        
+        mode = os.stat(path_student)[stat.ST_MODE]
+        if stat.S_ISDIR(mode):        
             # save student in the DB
             id_student = DB_save_student(student_name)
-            print "\t ", student_name,
+            #print "\t ", student_name,
             update_grade(path_student, id_hw, id_student)
 
-def get_grade_modifdata(grade_filename):
-    return strftime("%Y-%m-%d %H-%M-%S", gmtime(os.path.getmtime(grade_filename)))
+def grade_modification_time(grade_filename):
+    return time.strftime("%Y-%m-%d %H-%M-%S", time.gmtime(os.path.getmtime(grade_filename)))
 
 def get_grade_value(grade_filename):
     """ read an integer from the first line of the file """
-    f = open(grade_filename, 'r')
-    value = int(f.read())
-    f.close()
+    with open(grade_filename, 'r') as f:
+        value = int(f.read())
     return value
     
 def update_grade(path, id_hw, id_student):
-    """Reads the grade's value only if the file containing the
+    """ Reads the grade's value only if the file containing the
     value was modified since the last update of the DB for this
-    submission."""
+    submission. """
     grade_filename = os.path.join(path, GRADE_VALUE_FILE)
     if not os.path.exists(grade_filename):
         print "Error. File ", grade_filename, " for grade value does not exist "
         return None
-    data_modif = get_grade_modifdata(grade_filename)
+    data_modif = grade_modification_time(grade_filename)
     (id_grade, db_data) = DB_get_grade(id_hw, id_student)
     if db_data != data_modif:
         # modified since last db save 
@@ -160,37 +159,42 @@ def update_grade(path, id_hw, id_student):
         if None != grade_value:        
             # update information from DB
             DB_save_grade(id_hw, id_student, grade_value, data_modif)
-            print "\t\t UPDATED "
-    else:
-        print " "
+            print path, " UPDATED "
+#    else:
+#        print " "
 
-# determine the level 
-LEVEL_HWS = 0
-LEVEL_STUDENTI = 1
-LEVEL_GRADE = 2
+def main():
+    # determine the level 
+    LEVEL_HWS = 0
+    LEVEL_STUDENTI = 1
+    LEVEL_GRADE = 2
 
-path = cwd
-level = LEVEL_HWS
-while path != checked_root:    
-    (path, tail) = os.path.split(path)
-    level = level + 1
+    path = cwd
+    level = LEVEL_HWS
+    while path != checked_root:    
+        (path, tail) = os.path.split(path)
+        level = level + 1
 
-if level == LEVEL_HWS:
-    update_hws(cwd)
-elif level == LEVEL_STUDENTI:
-    # get the name for homework
-    (head, nume_hw) = os.path.split(cwd)
-    # get the id 
-    id_hw = DB_save_hw(nume_hw)
-    update_students(cwd, id_hw)
-elif level == LEVEL_GRADE:
-    # get the  names from the path 
-    (head, nume_student) = os.path.split(cwd)
-    (head, nume_hw) = os.path.split(head)
-    # get the DB identifiers 
-    id_hw = DB_save_hw(nume_hw)
-    id_student = DB_save_student(nume_student)
-    update_grade(cwd, id_hw, id_student)
+    if level == LEVEL_HWS:
+        update_hws(cwd)
+    elif level == LEVEL_STUDENTI:
+        # get the name for homework
+        (head, nume_hw) = os.path.split(cwd)
+        # get the id 
+        id_hw = DB_save_hw(nume_hw)
+        update_students(cwd, id_hw)
+    elif level == LEVEL_GRADE:
+        # get the  names from the path 
+        (head, nume_student) = os.path.split(cwd)
+        (head, nume_hw) = os.path.split(head)
+        # get the DB identifiers 
+        id_hw = DB_save_hw(nume_hw)
+        id_student = DB_save_student(nume_student)
+        update_grade(cwd, id_hw, id_student)
 
-db_cursor.close(); 
-db_conn.close(); 
+        db_cursor.close() 
+        db_conn.close() 
+
+
+if __name__ == '__main__':
+    main()
