@@ -38,6 +38,7 @@ static VixHandle snapshotHandle = VIX_INVALID_HANDLE;
 
 static int snapshotIndex;
 static int pid_nc = -1;
+static string temp;
 
 Bool jobCompleted;
 
@@ -76,7 +77,6 @@ static int fill_vmrun( char **argv)
 	//vmrun.penalty = strtof(argv[5], &endp);
 	vmrun.vmpath=argv[3];
 	vmrun.local_ip=argv[4];
-	vmrun.base=jobs_path;
 	vmrun.guest_user=argv[5];
 	vmrun.guest_pass=argv[6];
 	vmrun.guest_home=argv[7];
@@ -115,7 +115,9 @@ static void print_run(void)
 static int get_vm_ip()
 {
 	string line;
-	ifstream infile((vmrun.base+BUILD_OUTPUT_FILE).c_str());
+	
+
+	ifstream infile((temp+scripts_path+BUILD_OUTPUT_FILE).c_str());
 
 	if (! infile.is_open())
 	{
@@ -143,7 +145,9 @@ static int check_build(void)
 {
 	string line;
 	string oldline;
-	ifstream infile((vmrun.base+BUILD_OUTPUT_FILE).c_str());
+	string temp;
+
+	ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str());
 
 	int warning_count = 0;
 
@@ -325,12 +329,13 @@ static int start_vm(void)
 
 static int copy_files(void)
 {
+	string temp;
 	// copy checker archive
 	log("Copying %s...\n", CHECKER_FILE);
 
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(vmrun.base + CHECKER_FILE).c_str(),
+			(temp+jobs_path + CHECKER_FILE).c_str(),
 			(vmrun.guest_home + CHECKER_FILE).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
@@ -349,7 +354,7 @@ static int copy_files(void)
 	log("Copying %s...\n", CHECKER_TEST);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(vmrun.base + CHECKER_TEST).c_str(),
+			(temp+jobs_path+ CHECKER_TEST).c_str(),
 			(vmrun.guest_home + CHECKER_TEST).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
@@ -368,7 +373,7 @@ static int copy_files(void)
 	log("Copying %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(vmrun.base + BUILD_SCRIPT).c_str(),
+			(temp+scripts_path + BUILD_SCRIPT).c_str(),
 			(vmrun.guest_home + BUILD_SCRIPT).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
@@ -387,7 +392,7 @@ static int copy_files(void)
 	log("Copying %s...\n", RUN_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(vmrun.base + RUN_SCRIPT).c_str(),
+			(temp+scripts_path + RUN_SCRIPT).c_str(),
 			(vmrun.guest_home + RUN_SCRIPT).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
@@ -453,7 +458,7 @@ static int run_scripts(void)
 	int build_c = 0;
 	int timeout;
 
-	ofstream outfile((vmrun.base+RESULT_OUTPUT_FILE).c_str());
+	ofstream outfile((temp+jobs_path+RESULT_OUTPUT_FILE).c_str());
 	
 	if (!outfile.is_open())
 	{
@@ -486,7 +491,7 @@ static int run_scripts(void)
 	jobHandle = VixVM_CopyFileFromGuestToHost(
 			vmHandle,
 			(vmrun.guest_home + BUILD_OUTPUT_FILE).c_str(),
-			(vmrun.base + BUILD_OUTPUT_FILE).c_str(),
+			(temp+jobs_path + BUILD_OUTPUT_FILE).c_str(),
 			0,			// options
 			VIX_INVALID_HANDLE,	// propertyListHandle
 			NULL,			// callbackProc
@@ -560,7 +565,7 @@ static int run_scripts(void)
 	jobHandle = VixVM_CopyFileFromGuestToHost(
 			vmHandle,
 			(vmrun.guest_home + RUN_OUTPUT_FILE).c_str(),
-			(vmrun.base + RUN_OUTPUT_FILE).c_str(),
+			(temp+jobs_path + RUN_OUTPUT_FILE).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
 			NULL,				// callbackProc
@@ -583,7 +588,7 @@ static int run_scripts(void)
 			jobHandle = VixVM_CopyFileFromGuestToHost(
 				vmHandle,
 				(vmrun.guest_home + KMESSAGE_OUTPUT_FILE).c_str(),
-				(vmrun.base + KMESSAGE_OUTPUT_FILE).c_str(),
+				(temp+jobs_path+ KMESSAGE_OUTPUT_FILE).c_str(),
 				0,				// options
 				VIX_INVALID_HANDLE,		// propertyListHandle
 				NULL,				// callbackProc
@@ -603,14 +608,14 @@ static int run_scripts(void)
 	
 	if(build_c > 1)
 	{
-		ofstream build_file((vmrun.base+BUILD_OUTPUT_FILE).c_str(),ios_base::app); 
+		ofstream build_file((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(),ios_base::app); 
 		build_file << "-1:  compilarea a produs " << build_c-1 << " warning-uri" << endl;
 		build_file.close();
 	}
 
 
 	/* write timeout in RUN_OUTPUT_FILE */ 
-	ofstream run_file((vmrun.base+RUN_OUTPUT_FILE).c_str(),ios_base::app);
+	ofstream run_file((temp+jobs_path+RUN_OUTPUT_FILE).c_str(),ios_base::app);
 
 	if (timeout<120) 
 		run_file << "timeout=" <<120-timeout;	
@@ -717,7 +722,7 @@ static void install_local_tests(void)
 {
 	string command;
 	
-	command = command +vmrun.base  + LOCAL_SCRIPT + " " + vmrun.local_ip + " " + vmrun.guest_ip;
+	command = command +jobs_path  + LOCAL_SCRIPT + " " + vmrun.local_ip + " " + vmrun.guest_ip;
 	system(command.c_str());
 }
 
