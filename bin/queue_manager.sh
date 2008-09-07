@@ -1,6 +1,11 @@
 #!/bin/bash
 # Queue Manager
 # Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
+# TODO:
+#  - hwconf_queue_dir should not be passed as argument, but
+#    computed from environment variable VMCHECKER_ROOT
+#  - semaphore should be created if it doesn't exist
+#  - at notify all homeworks in directory should checked
 
 # the directory where the homework config files are stored.
 hwconf_queue_dir=$1
