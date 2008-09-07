@@ -148,10 +148,7 @@ static int check_build(void)
 	string oldline;
 	string temp;
 
-       cout<<(temp+jobs_path+BUILD_OUTPUT_FILE).c_str()<<endl;
-
-
-	ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(),ios::in);
+        ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(),ios::in);
 
 	int warning_count = 0;
 
@@ -473,16 +470,14 @@ static int run_scripts(void)
 	log("Starting %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
-			"/bin/ls",
-			"asdfa",
+			vmrun.guest_shell.c_str(),
+			vmrun.run_command_args.c_str(),
 			0,			// options,
 			VIX_INVALID_HANDLE,	// propertyListHandle,
 			NULL,			// callbackProc,
 			NULL);			// clientData
 
-	int handler=-9;
-	char *xxx;
-	err = VixJob_Wait(jobHandle,3018, &handler, VIX_PROPERTY_NONE);
+	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
 		error("VixVM_RunProgramInGuest: %s: %llu\n",
@@ -491,8 +486,6 @@ static int run_scripts(void)
 	}
 
 	
-	printf("handler=%d\n",handler);
-
 	// get BUILD_OUTPUT_FILE
 	log("Fetching %s...\n", BUILD_OUTPUT_FILE);
 
@@ -810,6 +803,5 @@ int main(int argc, char *argv[])
 	Vix_ReleaseHandle(vmHandle);
 	VixHost_Disconnect(hostHandle);
 
-	check_build();
 	return 0;
 }
