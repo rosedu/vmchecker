@@ -41,7 +41,7 @@ struct run_struct {
 
 /* define path to files*/
 #define jobs_path "/home/student/jobs/"
-#define scripts_path "/home/student/scripts"
+#define scripts_path "/home/student/scripts/"
 
 /* define file names */
 #define CHECKER_FILE		"file.zip"
