@@ -72,10 +72,12 @@ def gen_html(results, hws):
     html += ' </table>'
     return html 
 
-(results, hws) = get_db_content()
-# send to the stdout all the HTML content 
-print gen_html(results, hws)
+def main():
+    (results, hws) = get_db_content()
+    # send to the stdout all the HTML content 
+    print gen_html(results, hws)
+    db_cursor.close()
+    db_conn.close()
 
-db_cursor.close()
-db_conn.close()
-
+if __name__ == '__main__':
+    main()
