@@ -114,7 +114,7 @@ invoke_commander()
         $notifier $course_id
         return 1
     else
-        infomsg "Commander returned successfuly for $entry. Will delete the file"
+        infomsg "Commander returned successfuly for $entry. Delete homework from queue"
         rm $entry
     fi
     return 0
