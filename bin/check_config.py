@@ -31,7 +31,7 @@ def main():
 
     # parses global course configuration file
     course_name = global_config_file.get('DEFAULT', 'CourseName')
-	penalty_script = global_config_file.get('DEFAULT', 'PenaltyScript')
+    penalty_script = global_config_file.get('DEFAULT', 'PenaltyScript')
 
     tester = global_config_file.get(job, 'Tester')
     vmname = global_config_file.get(job, 'VMName')
@@ -57,7 +57,7 @@ def main():
     file += 'Deadline=%s\n' % deadline
     file += 'UploadTime=%s\n' % upload_time
     file += 'KernelMsg=%s\n' % kernel_msg
-	file += 'PenaltyScript=%s\n' % penalty_script
+    file += 'PenaltyScript=%s\n' % penalty_script
 
     job_config_file = os.path.join(
         misc.vmchecker_root(), 'unchecked',

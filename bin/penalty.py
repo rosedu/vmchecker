@@ -10,6 +10,7 @@
 #   grade = nota temei inainte de depunctare
 #   upload_time = timpul la care s-a facut upload-ul temei
 #   deadline
+#       upload_time, deadline sunt de forma "dd mm yy hh:mm:ss"
 # Iesire:
 #   grade = nota finala dupa depunctare
 
@@ -40,7 +41,6 @@ def main():
     grade = float(sys.argv[1])
     upload_time = sys.argv[2]
     deadline = sys.argv[3]
-    wheighted = int(sys.argv[4])
 
     # parseaza stringurile primite la intrare conform formatului stabilit
     upload_time = time.strptime(upload_time, "%d %m %y %H:%M:%S")
