@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <assert.h>
 #include <fstream>
 #include <string>
 #include <cstdlib>
@@ -117,7 +118,7 @@ static int get_vm_ip()
 	string line;
 	
 
-	ifstream infile((temp+scripts_path+BUILD_OUTPUT_FILE).c_str());
+	ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str());
 
 	if (! infile.is_open())
 	{
@@ -147,7 +148,10 @@ static int check_build(void)
 	string oldline;
 	string temp;
 
-	ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str());
+       cout<<(temp+jobs_path+BUILD_OUTPUT_FILE).c_str()<<endl;
+
+
+	ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(),ios::in);
 
 	int warning_count = 0;
 
@@ -161,7 +165,6 @@ static int check_build(void)
 	while (!infile.eof())
 	{
 		getline(infile,line);
-
 		if(line.find("checker: building") != string::npos)
 			break;
 	}
@@ -259,7 +262,7 @@ static int start_vm(void)
 	}
 
 	log("Reverting to SnapShot...\n");
-	jobHandle = VixVM_RevertToSnapshot(
+	/*jobHandle = VixVM_RevertToSnapshot(
 			vmHandle,
 			snapshotHandle,
 			0,			// options
@@ -302,7 +305,7 @@ static int start_vm(void)
 	}
 
 	log("Logging in...\n");
-
+*/
 	// authenticate for guest operations.
 	jobHandle = VixVM_LoginInGuest(
 			vmHandle,
@@ -470,14 +473,16 @@ static int run_scripts(void)
 	log("Starting %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
-			vmrun.guest_shell.c_str(),
-			vmrun.build_command_args.c_str(),
+			"/bin/ls",
+			"asdfa",
 			0,			// options,
 			VIX_INVALID_HANDLE,	// propertyListHandle,
 			NULL,			// callbackProc,
 			NULL);			// clientData
 
-	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
+	int handler=-9;
+	char *xxx;
+	err = VixJob_Wait(jobHandle,3018, &handler, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
 		error("VixVM_RunProgramInGuest: %s: %llu\n",
@@ -486,8 +491,11 @@ static int run_scripts(void)
 	}
 
 	
+	printf("handler=%d\n",handler);
+
 	// get BUILD_OUTPUT_FILE
 	log("Fetching %s...\n", BUILD_OUTPUT_FILE);
+
 	jobHandle = VixVM_CopyFileFromGuestToHost(
 			vmHandle,
 			(vmrun.guest_home + BUILD_OUTPUT_FILE).c_str(),
@@ -802,5 +810,6 @@ int main(int argc, char *argv[])
 	Vix_ReleaseHandle(vmHandle);
 	VixHost_Disconnect(hostHandle);
 
+	check_build();
 	return 0;
 }

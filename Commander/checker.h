@@ -18,7 +18,6 @@ struct run_struct {
 	string vmdesc;
 	string vmpath;
 	string local_ip;
-	string base;
 	string guest_user;
 	string guest_pass;
 	string guest_home;
@@ -27,10 +26,7 @@ struct run_struct {
 	string guest_ip;
 	string build_command_args;
 	string run_command_args;
-	struct tm upload_time;
-	struct tm deadline_time;
-	float penalty;
-	Bool km_enable;
+	int km_enable;	
 };
 
 /* define ip addresses*/
@@ -42,6 +38,10 @@ struct run_struct {
 
 /* define nr. of variables in checker.conf */
 #define NUM_VAR		9 
+
+/* define path to files*/
+#define jobs_path "/home/student/jobs/"
+#define scripts_path "/home/student/scripts/"
 
 /* define file names */
 #define CHECKER_FILE		"file.zip"
