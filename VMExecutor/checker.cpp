@@ -47,7 +47,7 @@ Bool jobCompleted;
 
 static int fill_vmrun( char **argv)
 {
-	char *endp;
+	//char *endp;
 
 	vmrun.vmname = argv[1];
 
@@ -64,24 +64,24 @@ static int fill_vmrun( char **argv)
 		vmrun.km_enable = false;
 	}
 
-	if (strptime(argv[3], "%Y-%m-%d %H:%M:%S", &vmrun.deadline_time) == NULL) {
+	/*if (strptime(argv[3], "%Y-%m-%d %H:%M:%S", &vmrun.deadline_time) == NULL) {
 		error("strptime failed\n");
 		return -1;
 	}
 	if (strptime(argv[4], "%Y-%m-%d %H:%M:%S", &vmrun.upload_time) == NULL) {
 		error("strptime failed\n");
 		return -1;
-	}
+	}*/
 
-	vmrun.penalty = strtof(argv[5], &endp);
-	vmrun.vmpath=argv[6];
-	vmrun.local_ip=argv[7];
+	//vmrun.penalty = strtof(argv[5], &endp);
+	vmrun.vmpath=argv[3];
+	vmrun.local_ip=argv[4];
 	vmrun.base=jobs_path;
-	vmrun.guest_user=argv[8];
-	vmrun.guest_pass=argv[9];
-	vmrun.guest_home=argv[10];
-	vmrun.guest_shell=argv[11];
-	vmrun.guest_home_in_bash=argv[12];
+	vmrun.guest_user=argv[5];
+	vmrun.guest_pass=argv[6];
+	vmrun.guest_home=argv[7];
+	vmrun.guest_shell=argv[8];
+	vmrun.guest_home_in_bash=argv[9];
 	vmrun.build_command_args= vmrun.build_command_args+"-c \" chmod +x "+ vmrun.guest_home+ BUILD_SCRIPT+ ";"+vmrun.guest_home+BUILD_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";
 	vmrun.run_command_args=vmrun.run_command_args+ "-c \" chmod +x "+vmrun.guest_home+RUN_SCRIPT+";"+vmrun.guest_home+RUN_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";	
 
@@ -451,8 +451,6 @@ static void run_cb(VixHandle jobHandle, VixEventType eventType,
 static int run_scripts(void)
 {
 	int build_c = 0;
-	int bugs_c = 0;
-	int deadline_c = 0;
 	int timeout;
 
 	ofstream outfile((vmrun.base+RESULT_OUTPUT_FILE).c_str());
@@ -615,9 +613,9 @@ static int run_scripts(void)
 	ofstream run_file((vmrun.base+RUN_OUTPUT_FILE).c_str(),ios_base::app);
 
 	if (timeout<120) 
-		run_file << "timeout=" <<120-timeout	
+		run_file << "timeout=" <<120-timeout;	
 	else
-		run_file << "Tester timeouted"	
+		run_file << "Tester timeouted";	
 	
 	run_file.close();
 	outfile.close();
@@ -748,7 +746,6 @@ static void abort_job()
 static void usage(char *argv0)
 {
 	fprintf(stderr, "Usage: %s vm_name(win|lin) enable_k_m(1|0)"
-			" deadline upload_date penalty(25)"
 			"vmpath local_ip guest_user guest_pass guest_home guest_shell guest_home_in_shell\n", argv0);
 }
 
@@ -760,7 +757,7 @@ int main(int argc, char *argv[])
 {
 	//struct args_struct args;
 
-	if (argc != 13)
+	if (argc != 10)
 	{
 		usage(argv[0]);
 		exit(EXIT_FAILURE);
