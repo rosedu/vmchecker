@@ -202,8 +202,8 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	}
 
 
-	iniparser_dump(instance, stderr);
-	iniparser_dump(v_machines,stderr);
+//	iniparser_dump(instance, stderr);
+//	iniparser_dump(v_machines,stderr);
 
 	/* extracting homework info */
 	base_path=iniparser_getstring(instance,"Global:BasePath",NULL);
@@ -227,7 +227,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	guest_pass=iniparser_getstring(v_machines,(temp+":GuestPassword").c_str(),NULL);
 	guest_base_path=iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
 	guest_shell_path=iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
-	guest_home_in_bash=iniparser_getstring(v_machines,(temp+"GuestHomeInBash").c_str(),NULL);
+	guest_home_in_bash=iniparser_getstring(v_machines,(temp+":GuestHomeInBash").c_str(),NULL);
 
 	temp="";
 
@@ -238,35 +238,43 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	printf("Cmd1=%s\n",(temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip "+jobs_path+"/"+"file.zip").c_str());
 
 
-	//ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"file.zip "+jobs_path+"/"+"file.zip").c_str());
+	ret=system((temp+"scp "+username+"@"+ip+":"+"\""+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip\" "+jobs_path+"/"+"file.zip").c_str());
 
-	//system_return_value(ret,(char*)"Cannot get file.zip from Upload System");
+	system_return_value(ret,(char*)"Cannot get file.zip from Upload System");
 
 	printf("Cmd2=%s\n",(temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
 
-	//ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
+	ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
 
 
-	//system_return_value(ret,(char*)"Cannot get tests.zip from Upload System");
+	system_return_value(ret,(char*)"Cannot get tests.zip from Upload System");
 
 /* start vm_executor // tb un if sa vad dc jail sau nu*/
-/*	temp="bash -c \"";
+	temp="bash -c \"";
+	cout<< temp<<endl;
 
-	ret=system((temp+"./vm_executor "+vm_name+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
+	printf("Cmd3=%s\n",(temp+"./vm_executor "+vm_name+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
+
+	ret=system((temp+"./vm_executor "+vm_name+" "+kernel_msg+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
 
 	system_return_value(ret,(char*)"VMExecutor failed");
 
 /* verify and upload results */
 
-/*	temp="";
+	temp="";
 
 	/* upload build*/
-/*	ret=system((temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+base_path+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_time+"/"+"job_build" ).c_str());
+
+	printf("Cmd4=%s\n",(temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+base_path+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_time+"/"+"job_build" ).c_str());
+
+
+
+	ret=system((temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+"\""+base_path+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_time+"/"+"job_build \"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot upload build_output_file");
 
 	/* read first line in RESULT_OUTPUT_FILE "0"/"ok" */
-/*	fstream results_file;
+	fstream results_file;
 
 	results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),ios::in);
 
@@ -279,6 +287,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	getline(results_file,first_line);
 	results_file.close();
 
+	
 	if (first_line=="0") //homework doesn't compile
 	{
 		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nBUILD RESULTS:\n");
@@ -296,7 +305,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	
 		*/
 
-/*		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nBUILD RESULTS:\n");
+		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nBUILD RESULTS:\n");
 
 
 		if (atoi(kernel_msg))
@@ -317,13 +326,13 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 				
 				return 0;
 			}
-
+	
 			results_file.close();
 			
 			append_f((temp+jobs_path+KMESSAGE_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nKERNEL MESSAGES:\n");
-
+	
 			/* upload KMESSAGE_OUTPUT_FILE */
-/*			ret=system((temp+"scp "+jobs_path+"/"+KMESSAGE_OUTPUT_FILE+" "+username+ "@"+ip+ ":"+ base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+ "/"+ "job_run").c_str());
+			ret=system((temp+"scp "+jobs_path+"/"+KMESSAGE_OUTPUT_FILE+" "+username+ "@"+ip+ ":"+"\""+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+ "/"+ "job_run \"").c_str());
 
 			system_return_value(ret,(char*)"Cannot upload kmessage_output_file");
 		}
@@ -332,28 +341,32 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 		append_f((temp+jobs_path+RUN_OUTPUT_FILE).c_str(), (temp+jobs_path+ RESULT_OUTPUT_FILE).c_str() , "\nRUN RESULTS:\n");
 
 		/*upload  RUN_OUTPUT_FILE*/
-/*		ret=system((temp+"scp "+jobs_path+"/"+RUN_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+ base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/" +upload_time+ "/"+ "job_run").c_str());
+		ret=system((temp+"scp "+jobs_path+"/"+RUN_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+ base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/" +upload_time+ "/"+ "job_run\"").c_str());
 	
 		system_return_value(ret,(char*)"Cannot upload run_output_file");
 	}
 
 	
 	/* upload RESULT_OUTPUT_FILE */
-/*	ret=system((temp+"scp "+jobs_path+"/"+RESULT_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/"+upload_time+"/"+"job_run").c_str());
+	ret=system((temp+"scp "+jobs_path+"/"+RESULT_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/"+upload_time+"/"+"job_results\"").c_str());
 
 	system_return_value(ret,(char*)"Cannot upload result_output_file");
 
 
 	/*upload file.zip ; unzip file.zip;remove file.zip*/
-/*	ret=system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip" ).c_str());
+	ret=system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+"\""+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot upload file.zip");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+
+	printf("Cmd5=%s\n",(temp+"ssh "+username+"@"+ip+" "+"\"unzip "+"\""+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip\" \"" ).c_str());
+
+
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip "+" -d "+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot unzip file.zip on Upload System");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot remove file.zip from Upload System");
 
