@@ -32,7 +32,7 @@ def main():
     # parses global course configuration file
     course_name = global_config_file.get('DEFAULT', 'CourseName')
     # XXX base_path = global_config_file.get('DEFAULT', 'BasePath')
-    penalty = global_config_file.get('DEFAULT', 'Penalty')
+    # XXX penalty = global_config_file.get('DEFAULT', 'Penalty')
 
     tester = global_config_file.get(job, 'Tester')
     vmname = global_config_file.get(job, 'VMName')
