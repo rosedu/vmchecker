@@ -152,6 +152,7 @@ if [ -z $2 ]; then
     exit 1
 fi
 
+check_executable $semctl
 check_executable $commander
 check_executable $notifier
 
