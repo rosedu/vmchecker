@@ -57,46 +57,47 @@ loop_func()
 {
     # wait until notified by the notifier
     wait_on_semaphore
+    if [ $? -ne 0 ]; then
+        errmsg "wait_on_semaphore failed. stopping $0"
+        exit 1
+    fi
 
     # "ls -ctr"  sorts by creation time (-ct) in reverse (-r) order
     # "ls -1" formats the output in "single column" - one dir entry per line
     # "head -n 1" extract the first line: the name of the oldest file.
-    local entry=`ls -ctr1 $hwconf_queue_dir | head -n 1`
+    local entry=`ls -ctr1 $hwconf_queue_dir/*.ini 2> /dev/null | head -n 1`
 
-    process_dir_entry "$hwconf_queue_dir/$entry"
+    if [ -n "$entry" ]; then
+        echo "a new entry in queue: $entry"
+        process_dir_entry "$entry"
+    fi
+
     return $?
 }
 
 process_dir_entry()
 {
     local entry=$1
-    # is the entry an empty string?
-    echo $entry
-    if [ -z $entry ]; then
-        errmsg "I got notified I but did not find any files in $hwconf_queue_dir"
-        return 0
+
+    # let's check if it's a valid file
+    if [ -f "$entry" ]; then
+        invoke_commander "$entry"
+        return $?
     else
-        # $entry is not an empty string
-        # let's check if it's a valid file
-        if [ -f "$entry" ]; then
-            invoke_commander "$entry"
-            return $?
-        else
-            errmsg "Expected $entry to be a filename, but was wrong"
-            return 0
-        fi
+        errmsg "\"$entry\" should be a filename, but it's not."
+        return 0
     fi
 }
 
 process_dir_at_startup()
 {
     # invoke the commander on all queued entryes.
-    for entry in `ls -ctr1 $hwconf_queue_dir/`; do
-        process_dir_entry "$hwconf_queue_dir/$entry"
+    for entry in "$hwconf_queue_dir"/*; do
+        process_dir_entry "$entry"
         if [ $? -ne 0 ]; then
             # do not stop after error; there are other homeworks that
-            #  still need checking. Just log the error:
-            errmsg "process_dir_entry($hwconf_queue_dir/$entry) failed"
+            # need checking. Just log the error:
+            errmsg "process_dir_entry($entry) failed"
         fi
     done
 }
@@ -104,30 +105,30 @@ process_dir_at_startup()
 invoke_commander()
 {
     local entry=$1
-    $commander $entry
+    $commander "$entry"
     if [ $? -ne 0 ]; then
         errmsg "invoke_commander($entry) failed\n"
         errmsg   "    retouching file for later invocation"
-        touch $entry
+        touch "$entry"
         errmsg   "    sleeping for 5 seconds so we don't overload the server"
         sleep 5
         $notifier $course_id
         return 1
     else
         infomsg "Commander returned successfuly for $entry. Delete homework from queue"
-        rm $entry
+        rm "$entry"
     fi
     return 0
 }
 
 check_executable()
 {
-	if ! [ -f $1 ]; then
+	if ! [ -f "$1" ]; then
 		errmsg "cannot invoke $1. file doesn't exist"
 		exit 1
 	fi
 
-	if ! [ -x $1 ]; then
+	if ! [ -x "$1" ]; then
 		errmsg "cannot invoke $1. file it's not executable"
 		exit 1
 	fi
@@ -135,6 +136,7 @@ check_executable()
 
 main()
 {
+    # init_queue
     process_dir_at_startup
     while true; do
         loop_func
@@ -142,12 +144,12 @@ main()
 }
 
 
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
     print_usage
     exit 1
 fi
 
-if [ -z $2 ]; then
+if [ -z "$2" ]; then
     print_usage
     exit 1
 fi
@@ -155,5 +157,7 @@ fi
 check_executable $semctl
 check_executable $commander
 check_executable $notifier
+
+echo "started $0 on $hwconf_queue_dir for course $course_id"
 
 main

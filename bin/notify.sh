@@ -8,4 +8,4 @@ if [ -z $1 ]; then
 fi
 
 echo "received new homework for $1"
-./semctl up $1
+`dirname $0`/semctl up $1
