@@ -6,7 +6,7 @@ CXXFAGS= -g -Wall
 
 CPPFLAGS  = -Iiniparser/src
 LDFLAGS  = -Liniparser 
-LDLIBS= -ldl -lstdc++ -liniparser -lfl
+LDLIBS= -ldl -lstdc++ -liniparser 
 AR	    = ar
 ARFLAGS = rcv
 RM      = rm -f

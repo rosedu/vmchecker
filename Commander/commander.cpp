@@ -3,6 +3,9 @@
 #include <string.h>
 #include <string>
 #include <unistd.h>
+#include "log.h"
+#include <sys/wait.h>
+
 
 using namespace std;
 
@@ -15,22 +18,57 @@ char* tester;
 char* vm_name;
 
 
-int  parse_ini_files(char * ini_instance,char* ini_v_machines,char* conf);
+int  parse_ini_files(char * ini_instance,char* ini_v_machines);
 int get_archives(char* source,char* destination,char* username,char* ip);
+
+void system_return_value(int ret, char* message)
+{
+	if (ret==-1)
+	{
+		error("\"system()\" failed\n");
+		exit(-1);
+	}
+	else
+	{	
+		if (WIFEXITED(ret)&&(WEXITSTATUS(ret) != 0))
+		{
+			error("%s\n",message);
+			exit(-1);
+		}
+	}
+}
+
+char* conf_file(char conf[])
+{
+	char* a1;
+	char* a2;
+	
+	for(a1=strtok(conf,"/");a1!=NULL;a1=strtok(NULL,"/"))
+	{
+		printf("%s\n",a1);
+		a2=a1;
+	}
+	return a2;
+}
 
 int main(int argc, char * argv[])
 {
 	int status ;
 
 	if (argc==2) {
-		status = parse_ini_files(argv[1],(char*)"checker.ini",argv[1]);
+		status = parse_ini_files(argv[1],(char*)"checker.ini");
 	}
+	
+	printf("fis=%s\n",conf_file(argv[1]));
+	
+
 	return status ;
 }
 
-int parse_ini_files(char *ini_instance,char* ini_v_machines,char* conf)
+int parse_ini_files(char *ini_instance,char* ini_v_machines)
 {
 	string temp;
+	int ret;
 
 	dictionary* instance; //instanta tema
 	dictionary* v_machines; //fisier de configurare vms
@@ -56,13 +94,13 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines,char* conf)
 	
 	instance = iniparser_load(ini_instance);
 	if (instance==NULL) {
-		fprintf(stderr, "cannot parse file: %s\n", ini_instance);
+		error("Cannot parse file: %s\n", ini_instance);
 		return -1 ;
 	}
 
 	v_machines=iniparser_load(ini_v_machines);
 	if (v_machines==NULL){
-		fprintf(stderr,"cannot parse file: %s\n",ini_v_machines);
+		error("Cannot parse file: %s\n",ini_v_machines);
 		return -1;
 	}
 
@@ -79,8 +117,6 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines,char* conf)
 	upload_time=iniparser_getstring(instance,"Global:UploadTime",NULL);
 	penalty=iniparser_getstring(instance,"Global:Penalty",NULL);
 	kernel_msg=iniparser_getstring(instance,"Global:KernelMsg",NULL);
-	//jobs_path=iniparser_getstring(v_machines,"Global:JobsPath",NULL);
-	//username=iniparser_getstring(v_machines,"Global:TesterUsername",NULL);
 	ip=iniparser_getstring(instance,"Global:UploadIP",NULL);
 
 
@@ -95,46 +131,60 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines,char* conf)
 	guest_pass=iniparser_getstring(v_machines,(temp+":GuestPassword").c_str(),NULL);
 	guest_base_path=iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
 	guest_shell_path=iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
-//	guest_home_in_bash=iniparser_getstring(v_machines,(temp+"GuestHomeInBash").c_str());
+	guest_home_in_bash=iniparser_getstring(v_machines,(temp+"GuestHomeInBash").c_str(),NULL);
 
 	temp="";
 
 	//get archives
-	system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"file.zip "+jobs_path+"/"+"file.zip").c_str());
-	system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
+	ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"file.zip "+jobs_path+"/"+"file.zip").c_str());
+
+	system_return_value(ret,"Cannot get file.zip from Upload System");
+
+	ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
+
+	system_return_value(ret,"Cannot get tests.zip from Upload System");
 
 	//apelez executorul
 	
 	temp="bash -c \"";
-	system((temp+"./executor "+vm_name+" "+ vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+"\"").c_str());
 
-	//verific deadline + warninguri
-	//din jobs_path am job_build si job_run
+	ret=system((temp+"./vm_executor "+vm_name+" "+ vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+"\"").c_str());
+
+	system_return_value(ret,"VMExecutor failed");
+
 	
 	//pun pe sistemul de upload rezultatele
 	
 	temp="";
-	system((temp+"scp "+jobs_path+"/"+"job_build "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_build" ).c_str());
-	system((temp+"scp "+jobs_path+"/"+"job_run "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_run").c_str());
+
+	ret=system((temp+"scp "+jobs_path+"/"+"job_build "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_build" ).c_str());
+
+	system_return_value(ret,"Cannot upload job_build");
+
+	ret=system((temp+"scp "+jobs_path+"/"+"job_run "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_run").c_str());
+
+	system_return_value(ret,"Cannot upload job_run");
 
 	//pun arhiva si o dezarhivez
-	system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip" ).c_str());
-	system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
-	system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+	ret=system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip" ).c_str());
+
+	system_return_value(ret,"Cannot upload file.zip");
+
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+
+	system_return_value(ret,"Cannot unzip file.zip on Upload System");
+
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+"file.zip"+"\"").c_str());
+
+	system_return_value(ret,"Cannot remove file.zip from Upload System");
 
 	//sterg fisierul de configurare
-	system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+conf+"\"").c_str());
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+(char*)conf_file(ini_instance)+"\"").c_str());
+
+	system_return_value(ret,"Cannot remove .conf file from Upload System");
 
 	iniparser_freedict(instance);
 	iniparser_freedict(v_machines);
 	return 0 ;
 }
-
-/*int get_archives(char* base_path,char* upload_time,char* user_id,char* job_id char* destination,char* username,char* ip)
-{
-	string temp;
-	
-	system((temp+"scp "+base_path+"/"+"file.zip"+" "+username+"@"+ip+":"+destination+"file.zip").c_str());
-	system((temp+"scp "+source+"tests.zip"+" "+username+"@"+ip+":"+destination+"tests.zip").c_str());
-}*/
 
