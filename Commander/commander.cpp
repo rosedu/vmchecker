@@ -19,7 +19,10 @@ char* vm_name;
 
 
 int  parse_ini_files(char * ini_instance,char* ini_v_machines);
-int get_archives(char* source,char* destination,char* username,char* ip);
+
+/*
+ * inspectes the returning value of the command invoked by system()
+ */
 
 void system_return_value(int ret, char* message)
 {
@@ -38,6 +41,10 @@ void system_return_value(int ret, char* message)
 	}
 }
 
+/*
+ * extracts .conf file name from .conf file path
+ */
+
 char* conf_file(char conf[])
 {
 	char* a1;
@@ -50,6 +57,7 @@ char* conf_file(char conf[])
 	}
 	return a2;
 }
+
 
 int main(int argc, char * argv[])
 {
@@ -70,8 +78,8 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	string temp;
 	int ret;
 
-	dictionary* instance; //instanta tema
-	dictionary* v_machines; //fisier de configurare vms
+	dictionary* instance; 	//homework.ini
+	dictionary* v_machines; //tester_vm.ini
 
 	char* base_path;
 	char* vm_name;
@@ -108,7 +116,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 //	iniparser_dump(instance, stderr);
 //	iniparser_dump(v_machines,stderr);
 
-	//extrag din instanta de tema
+	/* extracting homework info */
 	base_path=iniparser_getstring(instance,"Global:BasePath",NULL);
 	vm_name=iniparser_getstring(instance,"Global:VMName",NULL);
 	job_id=iniparser_getstring(instance,"Global:Job",NULL);
@@ -122,7 +130,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	temp=vm_name;
 
-	//extrag din fisierul de masini virtuale 
+	/*extracting vm info */ 
 	local_ip=iniparser_getstring(v_machines,"Global:LocalAddress",NULL);
 	jobs_path=iniparser_getstring(v_machines,"Global:JobsPath",NULL);
 	username=iniparser_getstring(v_machines,"Global:TesterUsername",NULL);
@@ -135,7 +143,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	temp="";
 
-	//get archives
+	/* get archives from Upload System*/
 	ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"file.zip "+jobs_path+"/"+"file.zip").c_str());
 
 	system_return_value(ret,"Cannot get file.zip from Upload System");
@@ -144,17 +152,14 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	system_return_value(ret,"Cannot get tests.zip from Upload System");
 
-	//apelez executorul
-	
+	/* start vm_executor // tb un if sa vad dc jail sau nu*/
 	temp="bash -c \"";
 
 	ret=system((temp+"./vm_executor "+vm_name+" "+ vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+"\"").c_str());
 
 	system_return_value(ret,"VMExecutor failed");
 
-	
-	//pun pe sistemul de upload rezultatele
-	
+	/* upload results */
 	temp="";
 
 	ret=system((temp+"scp "+jobs_path+"/"+"job_build "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_build" ).c_str());
@@ -165,7 +170,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	system_return_value(ret,"Cannot upload job_run");
 
-	//pun arhiva si o dezarhivez
+	/*upload file.zip ; unzip file.zip;remove file.zip*/
 	ret=system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip" ).c_str());
 
 	system_return_value(ret,"Cannot upload file.zip");
@@ -178,13 +183,15 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	system_return_value(ret,"Cannot remove file.zip from Upload System");
 
-	//sterg fisierul de configurare
+	/* remove .conf file */
 	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"uncheked"+"/"+(char*)conf_file(ini_instance)+"\"").c_str());
 
 	system_return_value(ret,"Cannot remove .conf file from Upload System");
 
+	/* free resources */
 	iniparser_freedict(instance);
 	iniparser_freedict(v_machines);
+
 	return 0 ;
 }
 
