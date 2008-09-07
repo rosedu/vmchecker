@@ -17,6 +17,12 @@ semctl=./semctl
 notifier=./notify.sh
 
 
+print_usage()
+{
+    echo "Invalid queue manager invocation. Propper syntax:"
+    echo "    " $0 "HW_Queue_dir CourseID"
+}
+
 errmsg()
 {
     echo "QUEUE_MANAGER Error: $1"
@@ -24,11 +30,6 @@ errmsg()
 infomsg()
 {
     echo $1
-}
-print_usage()
-{
-    echo "Invalid queue manager invocation. Propper syntax:"
-    echo "    " $0 "HW_Queue_dir CourseID"
 }
 
 create_semaphore()
