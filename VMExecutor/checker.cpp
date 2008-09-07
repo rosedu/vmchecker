@@ -101,9 +101,9 @@ static void print_run(void)
 	cout << "guest_ip: " << vmrun.guest_ip << endl;
 	cout << "build_command_args: " << vmrun.build_command_args << endl;
 	cout << "run_command_args: " << vmrun.run_command_args << endl;
-	cout << "upload_time: " << asctime(&vmrun.upload_time);
-	cout << "deadline_time: " << asctime(&vmrun.deadline_time);
-	cout << "penalty: " << vmrun.penalty << endl;
+//	cout << "upload_time: " << asctime(&vmrun.upload_time);
+//	cout << "deadline_time: " << asctime(&vmrun.deadline_time);
+//	cout << "penalty: " << vmrun.penalty << endl;
 	cout << "km_enable: " << (vmrun.km_enable == true ? "true" : "false") << endl;
 	cout << "===================" << endl;
 }

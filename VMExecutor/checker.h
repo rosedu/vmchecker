@@ -26,7 +26,7 @@ struct run_struct {
 	string guest_ip;
 	string build_command_args;
 	string run_command_args;
-	
+	Bool km_enable;	
 };
 
 /* define ip addresses*/
