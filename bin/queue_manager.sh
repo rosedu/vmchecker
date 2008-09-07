@@ -9,24 +9,25 @@ hwconf_queue_dir=$1
 course_id=$2
 
 # path to the commander (gets tests.zip & file.zip and runs the vmexecutor)
-commander=./commander.sh
+commander=`dirname $0`/commander.sh
 
 # path to the IPC semaphore manipulator
 semctl=./semctl
 
-notifier=./notify.sh
+notifier=`dirname $0`/notify.sh
 
 
 print_usage()
 {
-    echo "Invalid queue manager invocation. Propper syntax:"
-    echo "    " $0 "HW_Queue_dir CourseID"
+    echo "Invalid queue manager invocation."
+    echo "    Usage: $0 HW_Queue_dir CourseID"
 }
 
 errmsg()
 {
     echo "QUEUE_MANAGER Error: $1"
 }
+
 infomsg()
 {
     echo $1
@@ -45,7 +46,7 @@ wait_on_semaphore()
 init_queue()
 {
     create_semaphore
-    if [ "$?" != 0 ]; then
+    if [ $? -ne 0 ]; then
         errmsg "Could not create IPC for course " $course_id
         exit 1
     fi
@@ -71,9 +72,9 @@ process_dir_entry()
     local entry=$1
     # is the entry an empty string?
     echo $entry
-    if [ "x$entry" = "x" ]; then
+    if [ -z $entry ]; then
         errmsg "I got notified I but did not find any files in $hwconf_queue_dir"
-        return 0;
+        return 0
     else
         # $entry is not an empty string
         # let's check if it's a valid file
@@ -82,7 +83,7 @@ process_dir_entry()
             return $?
         else
             errmsg "Expected $entry to be a filename, but was wrong"
-            return 0;
+            return 0
         fi
     fi
 }
@@ -92,7 +93,7 @@ process_dir_at_startup()
     # invoke the commander on all queued entryes.
     for entry in `ls -ctr1 $hwconf_queue_dir/`; do
         process_dir_entry "$hwconf_queue_dir/$entry"
-        if [ "$?" != 0 ]; then
+        if [ $? -ne 0 ]; then
             # do not stop after error; there are other homeworks that
             #  still need checking. Just log the error:
             errmsg "process_dir_entry($hwconf_queue_dir/$entry) failed"
@@ -104,7 +105,7 @@ invoke_commander()
 {
     local entry=$1
     $commander $entry
-    if [ "$?" != 0 ]; then
+    if [ $? -ne 0 ]; then
         errmsg "invoke_commander($entry) failed\n"
         errmsg   "    retouching file for later invocation"
         touch $entry
@@ -119,6 +120,18 @@ invoke_commander()
     return 0
 }
 
+check_executable()
+{
+	if ! [ -f $1 ]; then
+		errmsg "cannot invoke $1. file doesn't exist"
+		exit 1
+	fi
+
+	if ! [ -x $1 ]; then
+		errmsg "cannot invoke $1. file it's not executable"
+		exit 1
+	fi
+}
 
 main()
 {
@@ -129,14 +142,17 @@ main()
 }
 
 
-if [ "x$1" = "x" ]; then
+if [ -z $1 ]; then
     print_usage
     exit 1
 fi
 
-if [ "x$2" = "x" ]; then
+if [ -z $2 ]; then
     print_usage
     exit 1
 fi
+
+check_executable $commander
+check_executable $notifier
 
 main

@@ -7,5 +7,5 @@ if [ -z $1 ]; then
     exit 1
 fi
 
-echo "received new homework for" $1
+echo "received new homework for $1"
 ./semctl up $1
