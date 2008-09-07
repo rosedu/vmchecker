@@ -31,8 +31,6 @@ def main():
 
     # parses global course configuration file
     course_name = global_config_file.get('DEFAULT', 'CourseName')
-    # XXX base_path = global_config_file.get('DEFAULT', 'BasePath')
-    # XXX penalty = global_config_file.get('DEFAULT', 'Penalty')
 
     tester = global_config_file.get(job, 'Tester')
     vmname = global_config_file.get(job, 'VMName')
@@ -44,7 +42,7 @@ def main():
 
     hw_path = os.path.join(misc.vmchecker_root(), 'back', job, user_id, upload_time)
     os.makedirs(hw_path)
-    
+
     hw_path = os.path.join(hw_path, 'file.zip')
     shutil.copy(archive_path, hw_path)
 
@@ -53,7 +51,6 @@ def main():
     file += 'Job=%s\n' % job
     file += 'UserId=%s\n' % user_id
     file += 'VMCheckerRoot=%s\n' % misc.vmchecker_root()
-    # XXX file += 'Penalty=%s\n' % penalty
     file += 'Tester=%s\n' % tester
     file += 'VMName=%s\n' % vmname
     file += 'Deadline=%s\n' % deadline
@@ -69,16 +66,20 @@ def main():
             os.path.dirname(job_config_file)))
 
     with open(job_config_file, 'w') as handle:
-        handle.write(file);
+        handle.write(file)
+        handle.flush()
 
     # call remote_check script
-    return_code = subprocess.call([
-        './remote_check.py',
-        '%s' % job_config_file])
+    remote_check = os.path.join(os.path.dirname(sys.argv[0]), 'remote_check.py')
+    try:
+        return_code = subprocess.call([remote_check, job_config_file])
+    except OSError, e:
+        print >> sys.stderr, 'Nu pot invoca %s (%s)' % (remote_check, str(e))
 
     if return_code != 0:
-        print >> sys.stderr, 'Nu am putut invoca programul remote_check'
-        sys.exit(1)    
+        print >> sys.stderr, 'Programul %s a esuat' % remote_check
+        sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
