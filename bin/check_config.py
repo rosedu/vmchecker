@@ -53,7 +53,7 @@ def main():
     file += 'Job=%s\n' % job
     file += 'UserId=%s\n' % user_id
     file += 'VMCheckerRoot=%s\n' % misc.vmchecker_root()
-    file += 'Penalty=%s\n' % penalty
+    # XXX file += 'Penalty=%s\n' % penalty
     file += 'Tester=%s\n' % tester
     file += 'VMName=%s\n' % vmname
     file += 'Deadline=%s\n' % deadline
