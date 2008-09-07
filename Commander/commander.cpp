@@ -13,10 +13,6 @@ extern "C" {
 #include "iniparser.h"
 }
 
-char* base_path;
-char* tester;
-char* vm_name;
-
 
 int  parse_ini_files(char * ini_instance,char* ini_v_machines);
 
