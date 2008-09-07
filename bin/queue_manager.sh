@@ -12,7 +12,7 @@ course_id=$2
 commander=`dirname $0`/commander.sh
 
 # path to the IPC semaphore manipulator
-semctl=./semctl
+semctl=`dirname $0`/semctl
 
 notifier=`dirname $0`/notify.sh
 
