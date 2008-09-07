@@ -4,6 +4,8 @@
 #include <string>
 #include <unistd.h>
 #include "log.h"
+#include "checker.h"
+
 #include <sys/wait.h>
 
 
@@ -15,6 +17,97 @@ extern "C" {
 
 
 int  parse_ini_files(char * ini_instance,char* ini_v_machines);
+
+/*
+ * append content of infile to outfile
+ * (similar to "cat infile >> outfile" shell command)
+ */
+
+static int append_f(const char *infile, const char *outfile, const char* message)
+{
+	string line;
+	string oldline;
+	ifstream in_file(infile);
+	ofstream out_file(outfile, ios_base::app);
+
+	if (!(in_file.is_open() && out_file.is_open()))
+	{
+		error("unable to open file %s or file %s\n", infile, outfile);
+		in_file.close();
+		out_file.close();
+		return -1;
+	
+	}
+
+	out_file << message << endl;
+
+	while (!in_file.eof())
+	{
+		getline(in_file,line);
+		out_file << line << endl; 
+	}
+
+	in_file.close();
+	out_file.close();
+
+	return 0;
+}
+
+/*
+ * returns the number of days between upload_date and deadline_date
+ * if upload_date>deadline, else 0 
+ */
+
+static int check_deadline(void)
+{
+
+	double secs;
+	int days;
+
+	secs = difftime(mktime(&vmrun.upload_time),
+			mktime(&vmrun.deadline_time));
+	days = secs / 60 / 60 / 24;
+
+	if (secs < 0)
+		return 0;
+		
+	if (days > 12)
+		days = 12;
+	
+	return days;
+}
+
+/*
+ * checks for bugs in file KMESSAGE_OUTPUT_FILE
+ * returns number of bugs
+ */
+
+static int check_bugs(void)
+{
+	string line;
+	ifstream infile(KMESSAGE_OUTPUT_FILE);
+	
+	int bugs_count = 0;
+
+	if (!infile.is_open())
+	{
+		error("unable to open file %s\n", KMESSAGE_OUTPUT_FILE);
+		return -1;
+	}	
+
+	while (!infile.eof())
+	{
+		getline(infile,line);
+
+		if(line.find("BUG:") != string::npos)
+			bugs_count++;
+	}
+	
+	infile.close();
+
+	return bugs_count;
+}
+
 
 /*
  * inspectes the returning value of the command invoked by system()
@@ -48,7 +141,6 @@ char* conf_file(char conf[])
 	
 	for(a1=strtok(conf,"/");a1!=NULL;a1=strtok(NULL,"/"))
 	{
-		printf("%s\n",a1);
 		a2=a1;
 	}
 	return a2;
@@ -63,9 +155,6 @@ int main(int argc, char * argv[])
 		status = parse_ini_files(argv[1],(char*)"checker.ini");
 	}
 	
-	printf("fis=%s\n",conf_file(argv[1]));
-	
-
 	return status ;
 }
 
@@ -73,6 +162,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 {
 	string temp;
 	int ret;
+	string first_line;
 
 	dictionary* instance; 	//homework.ini
 	dictionary* v_machines; //tester_vm.ini
@@ -128,7 +218,6 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	/*extracting vm info */ 
 	local_ip=iniparser_getstring(v_machines,"Global:LocalAddress",NULL);
-	jobs_path=iniparser_getstring(v_machines,"Global:JobsPath",NULL);
 	username=iniparser_getstring(v_machines,"Global:TesterUsername",NULL);
 	vm_path=iniparser_getstring(v_machines,(temp+":VMPath").c_str(),NULL);
 	guest_user=iniparser_getstring(v_machines,(temp+":GuestUser").c_str(),NULL);
@@ -139,7 +228,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	temp="";
 
-	/* get archives from Upload System*/
+/* get archives from Upload System*/
 	ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_time+"file.zip "+jobs_path+"/"+"file.zip").c_str());
 
 	system_return_value(ret,"Cannot get file.zip from Upload System");
@@ -148,23 +237,98 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	system_return_value(ret,"Cannot get tests.zip from Upload System");
 
-	/* start vm_executor // tb un if sa vad dc jail sau nu*/
+/* start vm_executor // tb un if sa vad dc jail sau nu*/
 	temp="bash -c \"";
 
-	ret=system((temp+"./vm_executor "+vm_name+" "+ vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+"\"").c_str());
+	ret=system((temp+"./vm_executor "+vm_name+" "+ vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+ " "+ guest_home_in_bash"\"").c_str());
 
 	system_return_value(ret,"VMExecutor failed");
 
-	/* upload results */
+/* verify and upload results */
+
 	temp="";
 
-	ret=system((temp+"scp "+jobs_path+"/"+"job_build "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_build" ).c_str());
+	/* upload build*/
+	ret=system((temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+base_path+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_time+"/"+"job_build" ).c_str());
 
-	system_return_value(ret,"Cannot upload job_build");
+	system_return_value(ret,"Cannot upload build_output_file");
 
-	ret=system((temp+"scp "+jobs_path+"/"+"job_run "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"job_run").c_str());
+	/* read first line in RESULT_OUTPUT_FILE "0"/"ok" */
+	ifstream results_file((temp+jobs_path+RESULT_OUTPUT_FILE).c_str());
 
-	system_return_value(ret,"Cannot upload job_run");
+	if (!results_file.is_open())
+	{
+		error("unable to open file %s\n", RESULT_OUTPUT_FILE);
+		return -1;
+	}
+
+	getline(results_file,first_line);
+	results_file.close();
+
+	if (firstline=="0") //homework doesn't compile
+	{
+		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nBUILD RESULTS:\n");
+
+	}
+	else
+	{
+		/*
+		deadline_c = check_deadline();
+		if (deadline_c == -1)
+			error("System error: check_deadline failed\n"); //but go on?
+	
+		if (deadline_c > 0)
+			outfile << "-" << deadline_c*vmrun.penalty / 100.0 <<": intarziere " <<deadline_c << " zile" << endl;
+	
+		*/
+
+		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nBUILD RESULTS:\n");
+
+
+		if (atoi(kernel_msg))
+		{
+			bugs_c = check_bugs();
+			if (bugs_c == -1)
+			{
+				error("System error: check_bugs failed\n");
+				return -1;
+			}
+
+			results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),io::out);
+	
+			if (bugs_c > 0)
+			{
+				results_file << "0\n" << endl;
+				results_file << "-10: au fost identificate " << bugs_c << " bug-uri" << endl;
+				
+				return 0;
+			}
+
+			results_file.close();
+			
+			append_f((temp+jobs_path+KMESSAGE_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\nKERNEL MESSAGES:\n");
+
+			/* upload KMESSAGE_OUTPUT_FILE */
+			ret=system((temp+"scp "+jobs_path+"/"+KMESSAGE_OUTPUT_FILE+" "+username+ "@"+ip+ ":"+ base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+ "/"+ "job_run").c_str());
+
+			system_return_value(ret,"Cannot upload kmessage_output_file");
+		}
+
+
+		append_f((temp+jobs_path+RUN_OUTPUT_FILE).c_str(), (temp+jobs_path+ RESULT_OUTPUT_FILE).c_str() , "\nRUN RESULTS:\n");
+
+		/*upload  RUN_OUTPUT_FILE*/
+		ret=system((temp+"scp "+jobs_path+"/"+RUN_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+ base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/" +upload_time+ "/"+ "job_run").c_str());
+	
+		system_return_value(ret,"Cannot upload run_output_file");
+	}
+
+	
+	/* upload RESULT_OUTPUT_FILE */
+	ret=system((temp+"scp "+jobs_path+"/"+RESULT_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/"+upload_time+"/"+"job_run").c_str());
+
+	system_return_value(ret,"Cannot upload result_output_file");
+
 
 	/*upload file.zip ; unzip file.zip;remove file.zip*/
 	ret=system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_time+"/"+"file.zip" ).c_str());

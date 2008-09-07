@@ -76,7 +76,7 @@ static int fill_vmrun( char **argv)
 	vmrun.penalty = strtof(argv[5], &endp);
 	vmrun.vmpath=argv[6];
 	vmrun.local_ip=argv[7];
-	vmrun.base="./";
+	vmrun.base=jobs_path;
 	vmrun.guest_user=argv[8];
 	vmrun.guest_pass=argv[9];
 	vmrun.guest_home=argv[10];
@@ -88,40 +88,6 @@ static int fill_vmrun( char **argv)
 	return 0;
 }
 
-/*
- * append content of infile to outfile
- * (similar to "cat infile >> outfile" shell command)
- */
-
-static int append_f(const char *infile, const char *outfile, const char* message)
-{
-	string line;
-	string oldline;
-	ifstream in_file(infile);
-	ofstream out_file(outfile, ios_base::app);
-
-	if (!(in_file.is_open() && out_file.is_open()))
-	{
-		error("unable to open file %s or file %s\n", infile, outfile);
-		in_file.close();
-		out_file.close();
-		return -1;
-	
-	}
-
-	out_file << message << endl;
-
-	while (!in_file.eof())
-	{
-		getline(in_file,line);
-		out_file << line << endl; 
-	}
-
-	in_file.close();
-	out_file.close();
-
-	return 0;
-}
 
 static void print_run(void)
 {
@@ -149,7 +115,7 @@ static void print_run(void)
 static int get_vm_ip()
 {
 	string line;
-	ifstream infile(BUILD_OUTPUT_FILE);
+	ifstream infile((vmrun.base+BUILD_OUTPUT_FILE).c_str());
 
 	if (! infile.is_open())
 	{
@@ -177,7 +143,7 @@ static int check_build(void)
 {
 	string line;
 	string oldline;
-	ifstream infile(BUILD_OUTPUT_FILE);
+	ifstream infile((vmrun.base+BUILD_OUTPUT_FILE).c_str());
 
 	int warning_count = 0;
 
@@ -219,60 +185,6 @@ static int check_build(void)
 	return warning_count+1;
 }
 
-/*
- * returns the number of days between upload_date and deadline_date
- * if upload_date>deadline, else 0 
- */
-
-static int check_deadline(void)
-{
-
-	double secs;
-	int days;
-
-	secs = difftime(mktime(&vmrun.upload_time),
-			mktime(&vmrun.deadline_time));
-	days = secs / 60 / 60 / 24;
-
-	if (secs < 0)
-		return 0;
-		
-	if (days > 12)
-		days = 12;
-	
-	return days;
-}
-
-/*
- * checks for bugs in file KMESSAGE_OUTPUT_FILE
- * returns number of bugs
- */
-
-static int check_bugs(void)
-{
-	string line;
-	ifstream infile(KMESSAGE_OUTPUT_FILE);
-	
-	int bugs_count = 0;
-
-	if (!infile.is_open())
-	{
-		error("unable to open file %s\n", KMESSAGE_OUTPUT_FILE);
-		return -1;
-	}	
-
-	while (!infile.eof())
-	{
-		getline(infile,line);
-
-		if(line.find("BUG:") != string::npos)
-			bugs_count++;
-	}
-	
-	infile.close();
-
-	return bugs_count;
-}
 
 /*
  * start guest operating system (use VIX API)
@@ -543,7 +455,7 @@ static int run_scripts(void)
 	int deadline_c = 0;
 	int timeout;
 
-	ofstream outfile(RESULT_OUTPUT_FILE);
+	ofstream outfile((vmrun.base+RESULT_OUTPUT_FILE).c_str());
 	
 	if (!outfile.is_open())
 	{
@@ -603,9 +515,10 @@ static int run_scripts(void)
 			outfile << "0\n" << endl;
 			outfile << "-10: tema nu se compileaza" << endl;
 			outfile.close();
-			append_f(BUILD_OUTPUT_FILE, RESULT_OUTPUT_FILE, "\nBUILD RESULTS:\n");
 			return -1;
 		}
+		else
+			outfile << "ok" << endl;
 	}
 
 	//get_vm_ip
@@ -687,40 +600,27 @@ static int run_scripts(void)
 			}
 		}
 
-		bugs_c = check_bugs();
-		if (bugs_c == -1)
-		{
-			error("System error: check_bugs failed\n");
-			return -1;
-		}
-	}
 
-	if (bugs_c > 0)
-	{
-		outfile << "0\n" << endl;
-		outfile << "-10: au fost identificate " << bugs_c << " bug-uri" << endl;
-	}
-	else
-		outfile << "ok\n" << endl;
-
+	}	
+	
 	if(build_c > 1)
-		outfile << "-1:  compilarea a produs " << build_c-1 << " warning-uri" << endl;
+	{
+		ofstream build_file((vmrun.base+BUILD_OUTPUT_FILE).c_str(),ios_base::app); 
+		build_file << "-1:  compilarea a produs " << build_c-1 << " warning-uri" << endl;
+		build_file.close();
+	}
 
-	deadline_c = check_deadline();
-	if (deadline_c == -1)
-		error("System error: check_deadline failed\n"); //but go on?
 
-	if (deadline_c > 0)
-		outfile << "-" << deadline_c*vmrun.penalty / 100.0 <<": intarziere " <<deadline_c << " zile" << endl;
+	/* write timeout in RUN_OUTPUT_FILE */ 
+	ofstream run_file((vmrun.base+RUN_OUTPUT_FILE).c_str(),ios_base::app);
 
+	if (timeout<120) 
+		run_file << "timeout=" <<120-timeout	
+	else
+		run_file << "Tester timeouted"	
+	
+	run_file.close();
 	outfile.close();
-
-	append_f(BUILD_OUTPUT_FILE, RESULT_OUTPUT_FILE, "\nBUILD RESULTS:\n");
-	append_f(RUN_OUTPUT_FILE, RESULT_OUTPUT_FILE, "\nRUN RESULTS:\n");
-
-	if (vmrun.km_enable)
-		append_f(KMESSAGE_OUTPUT_FILE, RESULT_OUTPUT_FILE,
-				"\nKERNEL MESSAGES:\n");
 
 	log("timeout = %d\n", timeout);
 
@@ -872,16 +772,6 @@ int main(int argc, char *argv[])
 	}
 	print_run();
 
-/*	config = read_config(CHECKER_CONFIG);
-	if (config == NULL)
-	{
-		fprintf(stderr, "Error in configuration file.\n");
-		exit(EXIT_FAILURE);
-	}
-
-	define_run(config, &args);
-	print_run();
-*/
 	if (start_vm() != 0)
 		abort_job();
 

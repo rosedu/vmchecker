@@ -43,9 +43,6 @@ struct run_struct {
 /* define nr. of variables in checker.conf */
 #define NUM_VAR		9 
 
-/* define path to files*/
-#define jobs_path "/home/student/jobs/"
-
 /* define file names */
 #define CHECKER_FILE		"file.zip"
 #define CHECKER_TEST		"tests.zip"
