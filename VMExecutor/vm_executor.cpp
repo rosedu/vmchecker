@@ -87,8 +87,8 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_shell=argv[8];
 	vmrun.guest_home_in_bash=argv[9];
 	vmrun.vmchecker_root=argv[10];
-	vmrun.build_command_args= vmrun.build_command_args+"-c \" chmod +x "+ vmrun.guest_home+ BUILD_SCRIPT+ ";"+vmrun.guest_home+BUILD_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";
-	vmrun.run_command_args=vmrun.run_command_args+ "-c \" chmod +x "+vmrun.guest_home+RUN_SCRIPT+";"+vmrun.guest_home+RUN_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";	
+	vmrun.build_command_args= vmrun.build_command_args+"-c \" chmod +x "+ vmrun.guest_home_in_bash+"/"+ BUILD_SCRIPT+ ";"+vmrun.guest_home_in_bash+"/"+BUILD_SCRIPT+" " +vmrun.guest_home_in_bash+" \"";
+	vmrun.run_command_args=vmrun.run_command_args+ "-c \" chmod +x "+vmrun.guest_home_in_bash+"/"+RUN_SCRIPT+";"+vmrun.guest_home_in_bash+"/"+RUN_SCRIPT+" " +vmrun.guest_home_in_bash+" \"";	
 
 	jobs_path=vmrun.vmchecker_root+"/executor_jobs/";
 	scripts_path=vmrun.vmchecker_root+"/executor_scripts/";
@@ -380,7 +380,7 @@ static int copy_files(void)
 	log("Copying %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(temp+scripts_path + BUILD_SCRIPT).c_str(),
+			(temp+scripts_path +vmrun.vmname+"_"+ BUILD_SCRIPT).c_str(),
 			(vmrun.guest_home + BUILD_SCRIPT).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
@@ -399,7 +399,7 @@ static int copy_files(void)
 	log("Copying %s...\n", RUN_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(temp+scripts_path + RUN_SCRIPT).c_str(),
+			(temp+scripts_path +vmrun.vmname+"_"+ RUN_SCRIPT).c_str(),
 			(vmrun.guest_home + RUN_SCRIPT).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
