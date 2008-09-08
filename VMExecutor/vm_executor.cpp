@@ -41,6 +41,9 @@ static int snapshotIndex;
 static int pid_nc = -1;
 static string temp;
 
+string jobs_path;
+string scripts_path;
+
 Bool jobCompleted;
 
 /*
@@ -83,8 +86,12 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_home=argv[7];
 	vmrun.guest_shell=argv[8];
 	vmrun.guest_home_in_bash=argv[9];
+	vmrun.vmchecker_root=argv[10];
 	vmrun.build_command_args= vmrun.build_command_args+"-c \" chmod +x "+ vmrun.guest_home+ BUILD_SCRIPT+ ";"+vmrun.guest_home+BUILD_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";
 	vmrun.run_command_args=vmrun.run_command_args+ "-c \" chmod +x "+vmrun.guest_home+RUN_SCRIPT+";"+vmrun.guest_home+RUN_SCRIPT+" "+vmrun.vmname + " "+vmrun.guest_home_in_bash+" \"";	
+
+	jobs_path=vmrun.vmchecker_root+"/executor_jobs/";
+	scripts_path=vmrun.vmchecker_root+"/executor_scripts/";
 
 	return 0;
 }
@@ -752,7 +759,7 @@ static void abort_job()
 static void usage(char *argv0)
 {
 	fprintf(stderr, "Usage: %s vm_name(win|lin) enable_k_m(1|0)"
-			"vmpath local_ip guest_user guest_pass guest_home guest_shell guest_home_in_shell\n", argv0);
+			"vmpath local_ip guest_user guest_pass guest_home guest_shell guest_home_in_shell root\n", argv0);
 }
 
 /*
@@ -763,7 +770,7 @@ int main(int argc, char *argv[])
 {
 	//struct args_struct args;
 
-	if (argc != 10)
+	if (argc != 11)
 	{
 		usage(argv[0]);
 		exit(EXIT_FAILURE);

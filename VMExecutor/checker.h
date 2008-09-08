@@ -26,22 +26,12 @@ struct run_struct {
 	string guest_ip;
 	string build_command_args;
 	string run_command_args;
+	string vmchecker_root;
 	Bool km_enable;	
 };
 
-/* define ip addresses*/
-#define	WIN_VM_IP	"172.16.173.128"
-#define LIN_VM_IP	"172.16.173.129"
-
 /* define run timeout */
 #define TIMEOUT		120
-
-/* define nr. of variables in checker.conf */
-#define NUM_VAR		9 
-
-/* define path to files*/
-#define jobs_path "/home/student/jobs/"
-#define scripts_path "/home/student/scripts/"
 
 /* define file names */
 #define CHECKER_FILE		"file.zip"
@@ -54,6 +44,6 @@ struct run_struct {
 #define ERROR_OUTPUT_FILE	"job_errors"
 #define RESULT_OUTPUT_FILE	"job_results"
 #define KMESSAGE_OUTPUT_FILE	"job_km"
-#define CHECKER_CONFIG		"checker.conf"
+
 
 #endif
