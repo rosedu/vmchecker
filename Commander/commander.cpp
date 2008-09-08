@@ -239,10 +239,9 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 /*
 * get archives from Upload System
 */
-	printf("Get archives\n");
+	//printf("Get archives\n");
 
 	//printf("Cmd1=%s\n",(temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_s+"/"+"file.zip "+jobs_path+"/"+"file.zip").c_str());
-
 
 	ret=system((temp+"scp "+username+"@"+ip+":"+"\""+base_path+"/"+job_id+"/"+user_id+"/"+upload_s+"/"+"file.zip\" "+jobs_path+"/"+"file.zip").c_str());
 
@@ -259,8 +258,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	* start vm_executor // tb un if sa vad dc jail sau nu
 	*/
 	temp="bash -c \"";
-	cout<< temp<<endl;
-
+	
 	//printf("Cmd3=%s\n",(temp+"./vm_executor "+vm_name+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
 
 	/* TODO: calea spe vm_executor si apelat cu >> vm_executor.log*/
@@ -313,10 +311,10 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 		*/
 
 		//TODO: de modificat calea scriptului pt. deadline si jobs_path care este momentan in header
-		ret=system((temp+"./deadline.py >> "+jobs_path+RESULT_OUTPUT_FILE).c_str());
+		/*t=system((temp+"./deadline.py >> "+jobs_path+RESULT_OUTPUT_FILE).c_str());
 
-		system_return_value(ret,(char*)"Cannot upload build_output_file");
-
+		system_return_value(ret,(char*)"Cannot check deadline");
+		*/
 		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
 
 		if (atoi(kernel_msg))
@@ -388,11 +386,13 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	/*
 	* remove .conf file from local and Upload System
 	*/
-	ret=system((temp+"\"rm -f "+ini_instance+"\"").c_str());
+
+
+	ret=system((temp+"rm -f "+ini_instance).c_str());
+
 	system_return_value(ret,(char*)"Cannot remove .conf file from Tester System");
 
-
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"/"+"uncheked"+"/"+(char*)conf_file(ini_instance)+"\"").c_str());
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"/"+"unchecked"+"/"+(char*)conf_file(ini_instance)+"\"").c_str());
 
 	system_return_value(ret,(char*)"Cannot remove .conf file from Upload System");
 
