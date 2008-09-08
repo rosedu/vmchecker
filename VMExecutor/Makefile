@@ -15,15 +15,14 @@ LDLIBS = -ldl -lvix -lstdc++ -lfl
 
 .PHONY: all clean
 
-all: checker
+all: vm_executor
 
-checker: checker.o 
+vm_executor: vm_executor.o 
 
-checker.o: checker.cpp checker.h 
+vm_executor.o: vm_executor.cpp checker.h 
 
 clean:
-	-rm -f checker *~ *.o job_output job_run job_results job_build \
-		checker_conf_reader.c
+	-rm -f vm_executor *.o 
 
 test_lin: checker
 	cp lin_file.zip file.zip
