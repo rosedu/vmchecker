@@ -266,7 +266,8 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	//printf("Cmd3=%s\n",(temp+"./vm_executor "+vm_name+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
 
 	/* TODO: calea spe vm_executor si apelat cu >> vm_executor.log*/
-	ret=system((temp+"./vm_executor "+vm_name+" "+kernel_msg+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+" "+base_path+ "\"").c_str());
+
+	ret=system((temp+"./vm_executor "+"\'"+vm_name+"\'"+" "+"\'"+kernel_msg+"\'"+" "+"\'"+vm_path+"\'"+" "+local_ip+" "+"\'"+guest_user+"\'"+" "+"\'"+guest_pass+"\'"+" "+"\'"+guest_base_path+"\'"+" "+"\'"+guest_shell_path+"\'"+" "+"\'"+guest_home_in_bash+"\'"+" "+"\'"+base_path+"\'"+ "\"").c_str());
 
 	system_return_value(ret,(char*)"VMExecutor failed");
 
