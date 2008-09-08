@@ -266,7 +266,7 @@ static int start_vm(void)
 	}
 
 	log("Reverting to SnapShot...\n");
-	/*jobHandle = VixVM_RevertToSnapshot(
+	jobHandle = VixVM_RevertToSnapshot(
 			vmHandle,
 			snapshotHandle,
 			0,			// options
@@ -309,7 +309,7 @@ static int start_vm(void)
 	}
 
 	log("Logging in...\n");
-*/
+
 	// authenticate for guest operations.
 	jobHandle = VixVM_LoginInGuest(
 			vmHandle,
@@ -478,7 +478,7 @@ static int run_scripts(void)
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
 			vmrun.guest_shell.c_str(),
-			vmrun.run_command_args.c_str(),
+			vmrun.build_command_args.c_str(),
 			0,			// options,
 			VIX_INVALID_HANDLE,	// propertyListHandle,
 			NULL,			// callbackProc,
@@ -526,7 +526,7 @@ static int run_scripts(void)
 			outfile << "0\n" << endl;
 			outfile << "-10: tema nu se compileaza" << endl;
 			outfile.close();
-			return -1;
+			return 0;
 		}
 		else
 			outfile << "ok" << endl;

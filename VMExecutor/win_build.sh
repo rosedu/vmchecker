@@ -10,7 +10,7 @@ cd $home
 get_vm_ip()
 {
 	echo "Adresa IP a masinii virtuale este:"
-	ifconfig |grep "IP Address"|cut -d ':' -f 2 |cut -d " " -f 2|head -n 1 2>&1
+	ipconfig |grep "IP Address"|cut -d ':' -f 2 |cut -d " " -f 2|head -n 1 2>&1
 }
 
 
