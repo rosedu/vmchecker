@@ -26,6 +26,7 @@ extern "C" {
 }
 
 
+
 int  parse_ini_files(char * ini_instance,char* ini_v_machines);
 
 /*
@@ -169,6 +170,8 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	string temp;
 	int ret,bugs_c;
 	string first_line;
+	string jobs_path;
+	string scripts_path;
 
 	dictionary* instance; 	//homework.ini
 	dictionary* v_machines; //tester_vm.ini
@@ -235,7 +238,8 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 	temp="";
 
-	
+	jobs_path=temp+base_path+"/executor_jobs/";
+		
 /*
 * get archives from Upload System
 */
@@ -262,7 +266,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	//printf("Cmd3=%s\n",(temp+"./vm_executor "+vm_name+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
 
 	/* TODO: calea spe vm_executor si apelat cu >> vm_executor.log*/
-	ret=system((temp+"./vm_executor "+vm_name+" "+kernel_msg+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
+	ret=system((temp+"./vm_executor "+vm_name+" "+kernel_msg+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+" "+base_path+ "\"").c_str());
 
 	system_return_value(ret,(char*)"VMExecutor failed");
 
