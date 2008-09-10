@@ -8,12 +8,12 @@ __author__ = 'Alexandru Mosoi, brtzsnr@gmail.com'
 
 import os
 
+VMCHECKER_DB = 'vmchecker.db'
 
 def vmchecker_root():
     assert 'VMCHECKER_ROOT' in os.environ, (
         'VMCHECKER_ROOT environment varible not defined')
     return os.environ['VMCHECKER_ROOT']
-
 
 def config_file():
     """Searches up on directory structure for file_name.
@@ -22,9 +22,20 @@ def config_file():
         - None, if file not found"""
 
     path = os.path.join(vmchecker_root(), 'vmchecker.ini')
-    assert os.path.isfile(path), 'vmchecker.ini (%p) is not a file' % path
+    assert os.path.isfile(path), 'vmchecker.ini (%s) is not a file' % path
     return path
 
+def db_file():
+    """ The name of the DataBase file 
+    @return
+        - absolute path of config file
+        - None if the path isn't a file"""
+
+    path = os.path.join(vmchecker_root(), VMCHECKER_DB)
+    if os.path.isfile(path):
+        return path
+    else:
+        return None
 
 def get_option(config, homework, option, default=None):
     """Given homework name, returns option. If option not found
