@@ -17,9 +17,11 @@ table#hw-results-table td.grade {}  /* the grade cell */
 
 """
 
-VMCHECKER_DB_NAME = 'vmchecker.db' 
+db_path = misc.db_file()
+if None == db_path:
+    print "DB file does not exist"
+    exit()
 
-db_path = os.path.join(misc.vmchecker_root(),VMCHECKER_DB_NAME)
 db_conn = sqlite3.connect(db_path)
 db_cursor = db_conn.cursor()
 
