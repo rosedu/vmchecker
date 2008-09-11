@@ -26,14 +26,77 @@ extern "C" {
 }
 
 
+static char* vmchecker_root;			//course root
+static char* vm_name;				//virtual machine's name
+static char* username;				//tester system's username
+static char* ip;				//upload system's ip address
+static char* job_id;				//homework's name
+static char* user_id;				//student's name
+static char* deadline;				//homework's deadline
+static char* upload_time;			//homework's upload time
+static char* penalty_script;			//path to penalty script 
+static char* kernel_msg;			//kernel messages enable
+static char* local_ip;				//tester system's ip address
+static char* vm_path;				//path to vm's configuration file
+static char* guest_user;			//vm's username
+static char* guest_pass;			//vm's password	
+static char* guest_base_path;			//path to vm's working directory (home directory)
+static char* guest_shell_path;			//path to vm's shell
+static char* guest_home_in_bash;		//path to working directory in shell (used for cd command in build/run .sh)
 
-int  parse_ini_files(char * ini_instance,char* ini_v_machines);
+static string upload_s;				//upload time directory name
+static string jobs_path;			//path to temporary working files for executor
+static string scripts_path;			//path to build/run script for vms
+
+static	dictionary* instance; 			//homework.ini
+static	dictionary* v_machines; 		//tester_vm.ini
+
+
+
+/*
+*  parses ini files and extracts necessary information
+*/
+void  parse_ini_files(char * ini_instance,char* ini_v_machines);
+
+/*
+* copies archives from upload system 
+*/
+void get_archives();
+
+/*
+* start vm_executor // tb un if sa vad dc jail sau nu
+*/
+void start_executor();
+
+/*
+* verify and upload results 
+*/
+void upload_results();
+
+/*
+* upload file.zip ; unzip file.zip;remove file.zip
+*/
+void unzip_homework();
+
+/*
+* remove .conf file from local and Upload System
+*/
+void remove_config_file(char* ini_instance);
+
+/*
+* free resources (the 2 dictionaries used for parsing ini files)
+*/
+void free_resources();
+
+/*
+* deletes files/directories from executor_jobs directory
+*/
+void clear_jobs_dir();
 
 /*
  * append content of infile to outfile
  * (similar to "cat infile >> outfile" shell command)
  */
-
 static int append_f(const char *infile, const char *outfile, const char* message)
 {
 	string line;
@@ -97,7 +160,7 @@ static int check_bugs(void)
 
 
 /*
- * inspectes the returning value of the command invoked by system()
+ * inspects the returning value of the command invoked by system()
  */
 
 void system_return_value(int ret, char* message)
@@ -135,7 +198,7 @@ char* conf_file(char conf[])
 
 
 /*
- * return a string that replaces " " by "\ " in str
+ * returns a string that replaces " " by "\ " in str
  */
 
 string replace_spaces(char* str)
@@ -156,56 +219,37 @@ string replace_spaces(char* str)
 
 int main(int argc, char * argv[])
 {
-	int status ;
 
-	if (argc==2) {
-		status = parse_ini_files(argv[1],(char*)"checker.ini");
+	if (argc==2) 
+	{
+		parse_ini_files(argv[1],(char*)"checker.ini");
+		get_archives();
+		start_executor();
+		upload_results();
+		unzip_homework();
+		remove_config_file(argv[1]);
+		free_resources();
+		clear_jobs_dir();
 	}
 	
-	return status ;
+	return 0;
 }
 
-int parse_ini_files(char *ini_instance,char* ini_v_machines)
+
+void parse_ini_files(char *ini_instance,char* ini_v_machines)
 {
 	string temp;
-	int ret,bugs_c;
-	string first_line;
-	string jobs_path;
-	string scripts_path;
-
-	dictionary* instance; 	//homework.ini
-	dictionary* v_machines; //tester_vm.ini
-
-	char* base_path;
-	char* vm_name;
-	char* username;
-	char* ip;
-	char* job_id;
-	char* user_id;
-	char* deadline;
-	char* upload_time;
-	char* penalty;
-	char* kernel_msg;
-	char* local_ip;
-	char* vm_path;
-	char* guest_user;
-	char* guest_pass;
-	char* guest_base_path;
-	char* guest_shell_path;
-	char* guest_home_in_bash;
 	
-	string upload_s;
-
 	instance = iniparser_load(ini_instance);
 	if (instance==NULL) {
 		error("Cannot parse file: %s\n", ini_instance);
-		return -1 ;
+		exit(-1) ;
 	}
 
 	v_machines=iniparser_load(ini_v_machines);
 	if (v_machines==NULL){
 		error("Cannot parse file: %s\n",ini_v_machines);
-		return -1;
+		exit(-1);
 	}
 
 
@@ -213,13 +257,13 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 //	iniparser_dump(v_machines,stderr);
 
 	/* extracting homework info */
-	base_path=iniparser_getstring(instance,"Global:BasePath",NULL);
+	vmchecker_root=iniparser_getstring(instance,"Global:VMCheckerRoot",NULL);
 	vm_name=iniparser_getstring(instance,"Global:VMName",NULL);
 	job_id=iniparser_getstring(instance,"Global:Job",NULL);
 	user_id=iniparser_getstring(instance,"Global:UserId",NULL);
 	deadline=iniparser_getstring(instance,"Global:Deadline",NULL);
 	upload_time=iniparser_getstring(instance,"Global:UploadTime",NULL);
-	penalty=iniparser_getstring(instance,"Global:Penalty",NULL);
+	penalty_script=iniparser_getstring(instance,"Global:Penalty",NULL);
 	kernel_msg=iniparser_getstring(instance,"Global:KernelMsg",NULL);
 	ip=iniparser_getstring(instance,"Global:UploadIP",NULL);
 	upload_s=replace_spaces(upload_time);
@@ -235,60 +279,54 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	guest_base_path=iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
 	guest_shell_path=iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
 	guest_home_in_bash=iniparser_getstring(v_machines,(temp+":GuestHomeInBash").c_str(),NULL);
+}
 
-	temp="";
 
-	jobs_path=temp+base_path+"/executor_jobs/";
+void get_archives()
+{
+	string temp;
+	int ret;
+
+	jobs_path=temp+vmchecker_root+"/executor_jobs/";
 		
-/*
-* get archives from Upload System
-*/
-	//printf("Get archives\n");
 
-	//printf("Cmd1=%s\n",(temp+"scp "+username+"@"+ip+":"+base_path+"/"+job_id+"/"+user_id+"/"+upload_s+"/"+"file.zip "+jobs_path+"/"+"file.zip").c_str());
-
-	ret=system((temp+"scp "+username+"@"+ip+":"+"\""+base_path+"/"+job_id+"/"+user_id+"/"+upload_s+"/"+"file.zip\" "+jobs_path+"/"+"file.zip").c_str());
+	//get CHECKER_FILE
+	ret=system((temp+"scp "+username+"@"+ip+":"+"\"" +vmchecker_root+ "/"+job_id+ "/"+user_id+ "/"+upload_s+ "/"+ CHECKER_FILE+"\" "+ jobs_path+ CHECKER_FILE).c_str());
 
 	system_return_value(ret,(char*)"Cannot get file.zip from Upload System");
 
-	//printf("Cmd2=%s\n",(temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
-
-	ret=system((temp+"scp "+username+"@"+ip+":"+base_path+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+"tests.zip").c_str());
+	//get CHECKER_TEST
+	ret=system((temp+"scp "+username+"@"+ip+":"+vmchecker_root+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+ CHECKER_TEST).c_str());
 
 
 	system_return_value(ret,(char*)"Cannot get tests.zip from Upload System");
+}
 
-	/*
-	* start vm_executor // tb un if sa vad dc jail sau nu
-	*/
-	temp="bash -c \"";
-	
-	//printf("Cmd3=%s\n",(temp+"./vm_executor "+vm_name+" "+vm_path+" "+local_ip+" "+guest_user+" "+guest_pass+" "+guest_base_path+" "+guest_shell_path+" "+guest_home_in_bash+"\"").c_str());
+void start_executor()
+{
+	string temp="bash -c \"";
+	int ret;	
 
-	/* TODO: calea spe vm_executor si apelat cu >> vm_executor.log*/
+	/* TODO: apelat cu >> vm_executor.log*/
 
-	ret=system((temp+"./vm_executor "+"\'"+vm_name+"\'"+" "+"\'"+kernel_msg+"\'"+" "+"\'"+vm_path+"\'"+" "+local_ip+" "+"\'"+guest_user+"\'"+" "+"\'"+guest_pass+"\'"+" "+"\'"+guest_base_path+"\'"+" "+"\'"+guest_shell_path+"\'"+" "+"\'"+guest_home_in_bash+"\'"+" "+"\'"+base_path+"\'"+ "\"").c_str());
+	ret=system((temp+vmchecker_root+ "/bin/"+"vm_executor "+"\'"+vm_name+"\'"+" "+"\'"+kernel_msg+"\'"+" "+"\'"+vm_path+"\'"+" "+local_ip+" "+"\'"+guest_user+"\'"+" "+"\'"+guest_pass+"\'"+" "+"\'"+guest_base_path+"\'"+" "+"\'"+guest_shell_path+"\'"+" "+"\'"+guest_home_in_bash+"\'"+" "+"\'"+vmchecker_root+"\'"+ "\"").c_str());
 
 	system_return_value(ret,(char*)"VMExecutor failed");
+}
 
-/*
-* verify and upload results 
-*/
-	temp="";
-
-	/*
-	* upload build
-	*/
-
-	//printf("Cmd4=%s\n",(temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+base_path+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_time+"/"+"job_build" ).c_str());
+void upload_results()
+{
+	string temp;
+	int ret,bugs_c;
+	string first_line;
 
 
-
-	ret=system((temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+"\""+base_path+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_s+"/"+"job_build \"" ).c_str());
+	//upload build
+	ret=system((temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+"\""+vmchecker_root+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_s+"/"+BUILD_OUTPUT_FILE+"\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot upload build_output_file");
 
-	/* read first line in RESULT_OUTPUT_FILE "0"/"ok" */
+	//read first line in RESULT_OUTPUT_FILE "0"/"ok" 
 	fstream results_file;
 
 	results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),ios::in);
@@ -296,7 +334,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	if (!results_file.is_open())
 	{
 		error("unable to open file %s\n", RESULT_OUTPUT_FILE);
-		return -1;
+		exit(-1);
 	}
 
 	getline(results_file,first_line);
@@ -311,15 +349,12 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 	else
 	{
 
-		/*
-		* check deadline 
-		*/
-
-		//TODO: de modificat calea scriptului pt. deadline si jobs_path care este momentan in header
-		/*t=system((temp+"./deadline.py >> "+jobs_path+RESULT_OUTPUT_FILE).c_str());
+		//check deadline 
+		/*t=system((temp+"/"+penalty_script+" >> "+jobs_path+RESULT_OUTPUT_FILE).c_str());
 
 		system_return_value(ret,(char*)"Cannot check deadline");
 		*/
+
 		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
 
 		if (atoi(kernel_msg))
@@ -328,7 +363,7 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 			if (bugs_c == -1)
 			{
 				error("System error: check_bugs failed\n");
-				return -1;
+				exit(-1);
 			}
 
 			results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),ios::trunc);
@@ -338,17 +373,15 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 				results_file << "0\n" << endl;
 				results_file << "-10: au fost identificate " << bugs_c << " bug-uri" << endl;
 				
-				return 0;
+				exit(0);
 			}
 	
 			results_file.close();
 			
 			append_f((temp+jobs_path+KMESSAGE_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\n     ===== KERNEL MESSAGES =====\n");
 	
-			/*
-			* upload KMESSAGE_OUTPUT_FILE
-			*/
-			ret=system((temp+"scp "+jobs_path+"/"+KMESSAGE_OUTPUT_FILE+" "+username+ "@"+ip+ ":"+"\""+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+ "/"+ "job_run \"").c_str());
+			//upload KMESSAGE_OUTPUT_FILE
+			ret=system((temp+"scp "+jobs_path+"/"+KMESSAGE_OUTPUT_FILE+" "+username+ "@"+ip+ ":"+"\""+ vmchecker_root+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+ "/"+ RUN_OUTPUT_FILE +" \"").c_str());
 
 			system_return_value(ret,(char*)"Cannot upload kmessage_output_file");
 		}
@@ -356,57 +389,63 @@ int parse_ini_files(char *ini_instance,char* ini_v_machines)
 
 		append_f((temp+jobs_path+RUN_OUTPUT_FILE).c_str(), (temp+jobs_path+ RESULT_OUTPUT_FILE).c_str() , "\n     ===== RUN RESULTS =====\n");
 
-		/*
-		*  upload  RUN_OUTPUT_FILE
-		*/
-		ret=system((temp+"scp "+jobs_path+"/"+RUN_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+ base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/" +upload_s+ "/"+ "job_run\"").c_str());
+		//upload  RUN_OUTPUT_FILE
+		ret=system((temp+"scp "+jobs_path+"/"+RUN_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+ vmchecker_root+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/" +upload_s+ "/"+  RUN_OUTPUT_FILE+"\"").c_str());
 	
 		system_return_value(ret,(char*)"Cannot upload run_output_file");
 	}
 
 	
-	/*
-	* upload RESULT_OUTPUT_FILE
-	*/
-
-	ret=system((temp+"scp "+jobs_path+"/"+RESULT_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+base_path+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/"+upload_s+"/"+"job_results\"").c_str());
+	//upload RESULT_OUTPUT_FILE
+	ret=system((temp+"scp "+jobs_path+"/"+RESULT_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+vmchecker_root+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/"+upload_s+"/"+RESULT_OUTPUT_FILE+"\"").c_str());
 
 	system_return_value(ret,(char*)"Cannot upload result_output_file");
+}
 
-	/*
-	* upload file.zip ; unzip file.zip;remove file.zip
-	*/
-	ret=system((temp+"scp "+jobs_path+"/"+"file.zip "+username+"@"+ip+":"+"\""+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+"/"+"file.zip\"" ).c_str());
+void unzip_homework()
+{
+	string temp;
+	int ret;
+
+	ret=system((temp+"scp "+jobs_path+"/"+ CHECKER_FILE+ username+ "@"+ ip+":"+ "\""+ vmchecker_root+ "/"+ "checked"+ "/"+ job_id+"/"+user_id+"/"+upload_s+"/"+CHECKER_FILE+"\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot upload file.zip");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+base_path+ "/"+"checked"+ "/"+job_id+"/"+user_id+ "/"+upload_s+"/"+"file.zip "+" -d "+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+"/\"" ).c_str());
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+vmchecker_root+ "/"+"checked"+ "/"+job_id+"/"+user_id+ "/"+upload_s+"/"+CHECKER_FILE+" -d "+vmchecker_root+ "/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+"/\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot unzip file.zip on Upload System");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+"/"+"file.zip\"" ).c_str());
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+ vmchecker_root+ "/"+ "checked"+ "/"+job_id+ "/"+ user_id+"/"+upload_s+"/"+CHECKER_FILE+"\"" ).c_str());
 
 	system_return_value(ret,(char*)"Cannot remove file.zip from Upload System");
+}
 
-	/*
-	* remove .conf file from local and Upload System
-	*/
-
+void remove_config_file(char* ini_instance)
+{
+	string temp;
+	int ret;
 
 	ret=system((temp+"rm -f "+ini_instance).c_str());
 
 	system_return_value(ret,(char*)"Cannot remove .conf file from Tester System");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+base_path+"/"+"unchecked"+"/"+(char*)conf_file(ini_instance)+"\"").c_str());
+	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+ vmchecker_root+ "/"+ "unchecked"+ "/"+ (char*)conf_file(ini_instance)+ "\"").c_str());
 
 	system_return_value(ret,(char*)"Cannot remove .conf file from Upload System");
-
-	/*
-	* free resources
-	*/
-	iniparser_freedict(instance);
-	iniparser_freedict(v_machines);
-
-	return 0 ;
 }
 
+void free_resources()
+{
+	iniparser_freedict(instance);
+	iniparser_freedict(v_machines);
+}
+
+void clear_jobs_dir()
+{
+	string temp;
+	int ret;
+
+	ret=system((temp+"rm -rf " +jobs_path+"/*" ).c_str());
+
+	system_return_value(ret,(char*)"Cannot clear executor_jobs directory");
+}
