@@ -7,17 +7,12 @@ import sqlite3
 import os
 import time 
 import stat 
+import misc 
 
-VMCHECKER_ROOT_ENVAR = 'VMCHECKER_ROOT'
-VMCHECKER_DB_NAME = 'vmchecker.db' 
 GRADE_VALUE_FILE = 'NOTA'
 
-if not os.environ.has_key(VMCHECKER_ROOT_ENVAR):
-    print "Error: ", VMCHECKER_ROOT_ENVAR, "is not set. "
-    exit()
-
-vmchk_root = os.path.abspath(os.environ[VMCHECKER_ROOT_ENVAR])
-db_path = os.path.join(vmchk_root, VMCHECKER_DB_NAME)
+vmchk_root = os.path.abspath(misc.vmchecker_root())
+db_path = misc.db_file()
 cwd = os.getcwd()
 checked_root = os.path.join(vmchk_root, 'checked')
 
@@ -25,6 +20,10 @@ if not cwd.startswith(checked_root):
     print "Error: working directory not in the VMCHECKER_ROOT subtree "
     exit()
 
+if None == db_path:
+    print "Error: DB file doesn't exist"
+    exit()
+    
 db_conn = sqlite3.connect(db_path)
 db_conn.isolation_level = None  # this is for autocommiting updates 
 db_cursor = db_conn.cursor()
