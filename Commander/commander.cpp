@@ -12,6 +12,8 @@
 #include <string.h>
 #include <string>
 #include <unistd.h>
+#include <cstdarg>
+
 #include "log.h"
 #include "checker.h"
 
@@ -19,7 +21,10 @@
 #include <sys/wait.h>
 
 
-using namespace std;
+using std::cout;
+using std::fstream;
+
+
 
 extern "C" {
 #include "iniparser.h"
@@ -44,9 +49,9 @@ static char* guest_base_path;			//path to vm's working directory (home directory
 static char* guest_shell_path;			//path to vm's shell
 static char* guest_home_in_bash;		//path to working directory in shell (used for cd command in build/run .sh)
 
-static string upload_s;				//upload time directory name
-static string jobs_path;			//path to temporary working files for executor
-static string scripts_path;			//path to build/run script for vms
+static const char* upload_s;			//upload time directory name
+static const char* jobs_path;			//path to temporary working files for executor
+static const char* scripts_path;		//path to build/run script for vms
 
 static	dictionary* instance; 			//homework.ini
 static	dictionary* v_machines; 		//tester_vm.ini
@@ -61,27 +66,27 @@ void  parse_ini_files(char * ini_instance,char* ini_v_machines);
 /*
 * copies archives from upload system 
 */
-void get_archives();
+int get_archives();
 
 /*
 * start vm_executor // tb un if sa vad dc jail sau nu
 */
-void start_executor();
+int start_executor();
 
 /*
 * verify and upload results 
 */
-void upload_results();
+int upload_results();
 
 /*
 * upload file.zip ; unzip file.zip;remove file.zip
 */
-void unzip_homework();
+int unzip_homework();
 
 /*
 * remove .conf file from local and Upload System
 */
-void remove_config_file(char* ini_instance);
+int remove_config_file(char* ini_instance);
 
 /*
 * free resources (the 2 dictionaries used for parsing ini files)
@@ -91,7 +96,7 @@ void free_resources();
 /*
 * deletes files/directories from executor_jobs directory
 */
-void clear_jobs_dir();
+int clear_jobs_dir();
 
 /*
  * append content of infile to outfile
@@ -128,6 +133,22 @@ static int append_f(const char *infile, const char *outfile, const char* message
 }
 
 /*
+* concatenates multiple char arrays into one string
+*/
+static string concatenate(int nr_args,...)
+{
+	va_list arguments;
+	va_start (arguments, nr_args);
+
+	string temp;
+
+	for (int i = 0; i < nr_args; i++)
+		temp+= va_arg ( arguments, char*);
+
+	return temp;
+}
+
+/*
  * checks for bugs in file KMESSAGE_OUTPUT_FILE
  * returns number of bugs
  */
@@ -158,26 +179,34 @@ static int check_bugs(void)
 	return bugs_count;
 }
 
+void abort_job()
+{
+	free_resources();
+	clear_jobs_dir();
+	exit(-1);
+}
 
 /*
  * inspects the returning value of the command invoked by system()
  */
 
-void system_return_value(int ret, char* message)
+int system_return_value(int ret, char* message)
 {
 	if (ret==-1)
 	{
 		error("\"system()\" failed\n");
-		exit(-1);
+		return -1;
 	}
 	else
 	{	
 		if (WIFEXITED(ret)&&(WEXITSTATUS(ret) != 0))
 		{
 			error("%s\n",message);
-			exit(-1);
+			return -1;
 		}
 	}
+
+	return 0;
 }
 
 /*
@@ -207,10 +236,10 @@ string replace_spaces(char* str)
 	
 	while(*str!=0)
 	{
-		if(*str==' ')
-			aux+="\\ ";
+		if (*str == ' ')
+			aux+= "\\ ";
 		else 
-			aux+=*str;
+			aux+= *str;
 		str++;
 	}	
 	
@@ -223,32 +252,45 @@ int main(int argc, char * argv[])
 	if (argc==2) 
 	{
 		parse_ini_files(argv[1],(char*)"checker.ini");
-		get_archives();
-		start_executor();
-		upload_results();
-		unzip_homework();
-		remove_config_file(argv[1]);
+
+		if (get_archives() == -1)
+			abort_job();
+
+		if (start_executor() == -1)
+			abort_job();
+
+		if (upload_results() == -1)
+			abort_job();
+
+		if (unzip_homework() == -1)
+			abort_job();
+
+		if (remove_config_file(argv[1]) == -1)
+			abort_job();
+
 		free_resources();
-		clear_jobs_dir();
+
+		if (clear_jobs_dir() == -1)
+			exit (-1);
 	}
-	
+
 	return 0;
 }
 
 
-void parse_ini_files(char *ini_instance,char* ini_v_machines)
+void parse_ini_files(char *ini_instance, char* ini_v_machines)
 {
 	string temp;
 	
-	instance = iniparser_load(ini_instance);
+	instance = iniparser_load (ini_instance);
 	if (instance==NULL) {
 		error("Cannot parse file: %s\n", ini_instance);
 		exit(-1) ;
 	}
 
-	v_machines=iniparser_load(ini_v_machines);
+	v_machines=iniparser_load (ini_v_machines);
 	if (v_machines==NULL){
-		error("Cannot parse file: %s\n",ini_v_machines);
+		error("Cannot parse file: %s\n", ini_v_machines);
 		exit(-1);
 	}
 
@@ -266,7 +308,7 @@ void parse_ini_files(char *ini_instance,char* ini_v_machines)
 	penalty_script=iniparser_getstring(instance,"Global:Penalty",NULL);
 	kernel_msg=iniparser_getstring(instance,"Global:KernelMsg",NULL);
 	ip=iniparser_getstring(instance,"Global:UploadIP",NULL);
-	upload_s=replace_spaces(upload_time);
+	upload_s=replace_spaces(upload_time).c_str();
 
 	temp=vm_name;
 
@@ -282,39 +324,57 @@ void parse_ini_files(char *ini_instance,char* ini_v_machines)
 }
 
 
-void get_archives()
+int get_archives()
 {
 	string temp;
 	int ret;
 
-	jobs_path=temp+vmchecker_root+"/executor_jobs/";
+	jobs_path = (temp+vmchecker_root+"/executor_jobs/").c_str();
 		
 
 	//get CHECKER_FILE
-	ret=system((temp+"scp "+username+"@"+ip+":"+"\"" +vmchecker_root+ "/"+job_id+ "/"+user_id+ "/"+upload_s+ "/"+ CHECKER_FILE+"\" "+ jobs_path+ CHECKER_FILE).c_str());
+	temp = concatenate (21,"scp", " ", username, "@", ip, ":", "\"", vmchecker_root,  \
+			   "/", job_id, "/", user_id, "/", upload_s, "/", CHECKER_FILE,  \
+			   "\"", " ", jobs_path, "/", CHECKER_FILE);
 
-	system_return_value(ret,(char*)"Cannot get file.zip from Upload System");
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret,"Cannot get file.zip from Upload System");
+
+	if (ret==-1) return -1;
 
 	//get CHECKER_TEST
-	ret=system((temp+"scp "+username+"@"+ip+":"+vmchecker_root+"/"+"tests"+"/"+job_id+".zip "+jobs_path+"/"+ CHECKER_TEST).c_str());
+	temp=concatenate (15,"scp", " ", username, "@", ip, ":", "\"", vmchecker_root, "/",\
+			 "tests", "/",job_id, ".zip", jobs_path, CHECKER_TEST);
 
+	ret = system (temp.c_str());
 
-	system_return_value(ret,(char*)"Cannot get tests.zip from Upload System");
+	ret = system_return_value (ret,"Cannot get tests.zip from Upload System");
+
+	return ret;
 }
 
-void start_executor()
+int start_executor()
 {
 	string temp="bash -c \"";
 	int ret;	
 
 	/* TODO: apelat cu >> vm_executor.log*/
 
-	ret=system((temp+vmchecker_root+ "/bin/"+"vm_executor "+"\'"+vm_name+"\'"+" "+"\'"+kernel_msg+"\'"+" "+"\'"+vm_path+"\'"+" "+local_ip+" "+"\'"+guest_user+"\'"+" "+"\'"+guest_pass+"\'"+" "+"\'"+guest_base_path+"\'"+" "+"\'"+guest_shell_path+"\'"+" "+"\'"+guest_home_in_bash+"\'"+" "+"\'"+vmchecker_root+"\'"+ "\"").c_str());
+	temp = concatenate (45,"bash -c \"", vmchecker_root, "/", "bin", "/", "vm_executor", " ", "\'",	\
+			 vm_name, "\'", " ", "\'", kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",	\
+			 local_ip, " ", "\'", guest_user, "\'", " ", "\'", guest_pass, "\'", " ",	\
+			 "\'", guest_base_path, "\'", " ", "\'", guest_shell_path, "\'", " ", "\'",	\
+			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root, "\'",  "\"");
 
-	system_return_value(ret,(char*)"VMExecutor failed");
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret, "VMExecutor failed");
+	
+	return ret;
 }
 
-void upload_results()
+int upload_results()
 {
 	string temp;
 	int ret,bugs_c;
@@ -322,9 +382,15 @@ void upload_results()
 
 
 	//upload build
-	ret=system((temp+"scp "+jobs_path+"/"+BUILD_OUTPUT_FILE+" "+username+ "@"+ip+":"+"\""+vmchecker_root+ "/"+ "checked"+ "/"+ job_id+ "/"+user_id+ "/"+upload_s+"/"+BUILD_OUTPUT_FILE+"\"" ).c_str());
+	temp = concatenate (23,"scp", " ", jobs_path, "/", BUILD_OUTPUT_FILE, " ", username, "@", ip, ":",	\
+			   "\"", vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/",  upload_s,	\
+			   "/", BUILD_OUTPUT_FILE, "\"");
 
-	system_return_value(ret,(char*)"Cannot upload build_output_file");
+	ret=system(temp.c_str());
+
+	ret=system_return_value(ret,"Cannot upload build_output_file");
+
+	if (ret==-1) return -1;
 
 	//read first line in RESULT_OUTPUT_FILE "0"/"ok" 
 	fstream results_file;
@@ -334,7 +400,7 @@ void upload_results()
 	if (!results_file.is_open())
 	{
 		error("unable to open file %s\n", RESULT_OUTPUT_FILE);
-		exit(-1);
+		return -1;
 	}
 
 	getline(results_file,first_line);
@@ -343,19 +409,24 @@ void upload_results()
 	
 	if (first_line=="0") //homework doesn't compile
 	{
-		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
+		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(), (temp + jobs_path + 	\
+			RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
 
 	}
 	else
 	{
 
 		//check deadline 
-		/*t=system((temp+"/"+penalty_script+" >> "+jobs_path+RESULT_OUTPUT_FILE).c_str());
+		/*
+		temp = concatenate (4,penalty_script, ">>", jobs_path, RESULT_OUTPUT_FILE); 
 
-		system_return_value(ret,(char*)"Cannot check deadline");
+		ret = system(temp.c_str());
+
+		ret = system_return_value(ret, "Cannot check deadline");
 		*/
 
-		append_f((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
+		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(), (temp + jobs_path + 	\
+			RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
 
 		if (atoi(kernel_msg))
 		{
@@ -363,7 +434,7 @@ void upload_results()
 			if (bugs_c == -1)
 			{
 				error("System error: check_bugs failed\n");
-				exit(-1);
+				return -1;
 			}
 
 			results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),ios::trunc);
@@ -373,79 +444,133 @@ void upload_results()
 				results_file << "0\n" << endl;
 				results_file << "-10: au fost identificate " << bugs_c << " bug-uri" << endl;
 				
-				exit(0);
+				return -1;
 			}
 	
 			results_file.close();
 			
-			append_f((temp+jobs_path+KMESSAGE_OUTPUT_FILE).c_str(), (temp+jobs_path+RESULT_OUTPUT_FILE).c_str(), "\n     ===== KERNEL MESSAGES =====\n");
+			append_f((temp + jobs_path + KMESSAGE_OUTPUT_FILE).c_str(), (temp + jobs_path +		\
+				RESULT_OUTPUT_FILE).c_str(), "\n     ===== KERNEL MESSAGES =====\n");
 	
 			//upload KMESSAGE_OUTPUT_FILE
-			ret=system((temp+"scp "+jobs_path+"/"+KMESSAGE_OUTPUT_FILE+" "+username+ "@"+ip+ ":"+"\""+ vmchecker_root+"/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+ "/"+ RUN_OUTPUT_FILE +" \"").c_str());
+			temp = concatenate (23,"scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,	\
+					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/", job_id,	\
+					   "/", user_id, "/", upload_s, "/", RUN_OUTPUT_FILE, "\"");
 
-			system_return_value(ret,(char*)"Cannot upload kmessage_output_file");
+			ret = system (temp.c_str());
+
+			ret = system_return_value (ret,"Cannot upload kmessage_output_file");
+
+			if (ret==-1) return -1;
 		}
 
 
-		append_f((temp+jobs_path+RUN_OUTPUT_FILE).c_str(), (temp+jobs_path+ RESULT_OUTPUT_FILE).c_str() , "\n     ===== RUN RESULTS =====\n");
+		append_f((temp+jobs_path+RUN_OUTPUT_FILE).c_str(), (temp+jobs_path+ RESULT_OUTPUT_FILE).c_str(), \
+			"\n     ===== RUN RESULTS =====\n");
 
 		//upload  RUN_OUTPUT_FILE
-		ret=system((temp+"scp "+jobs_path+"/"+RUN_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+ vmchecker_root+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/" +upload_s+ "/"+  RUN_OUTPUT_FILE+"\"").c_str());
+		temp = concatenate (23, "scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,	 \
+					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/",		 \
+					   job_id, "/", user_id, "/", upload_s, "/", RUN_OUTPUT_FILE, "\"");
+
+
+		ret = system (temp.c_str());
 	
-		system_return_value(ret,(char*)"Cannot upload run_output_file");
+		ret = system_return_value (ret, "Cannot upload run_output_file");
+
+		if (ret == -1) return -1;
 	}
 
 	
 	//upload RESULT_OUTPUT_FILE
-	ret=system((temp+"scp "+jobs_path+"/"+RESULT_OUTPUT_FILE+ " "+ username+"@"+ ip+":"+"\""+vmchecker_root+ "/"+ "checked"+"/"+ job_id+ "/"+user_id+"/"+upload_s+"/"+RESULT_OUTPUT_FILE+"\"").c_str());
+	temp = concatenate (23, "scp", " ", jobs_path, "/", RESULT_OUTPUT_FILE, " ", username, "@", ip, ":", "\"", \
+				vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/",	   \
+				RESULT_OUTPUT_FILE, "\"");
 
-	system_return_value(ret,(char*)"Cannot upload result_output_file");
+
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret, "Cannot upload result_output_file");
+
+	return ret;
 }
 
-void unzip_homework()
+int unzip_homework()
 {
 	string temp;
 	int ret;
 
-	ret=system((temp+"scp "+jobs_path+"/"+ CHECKER_FILE+ username+ "@"+ ip+":"+ "\""+ vmchecker_root+ "/"+ "checked"+ "/"+ job_id+"/"+user_id+"/"+upload_s+"/"+CHECKER_FILE+"\"" ).c_str());
+	temp = concatenate (23, "scp", " ", jobs_path, "/", CHECKER_FILE, " ", username, "@", ip, ":", "\"",	\
+			    vmchecker_root,  "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/",	\
+			    CHECKER_FILE, "\""); 
 
-	system_return_value(ret,(char*)"Cannot upload file.zip");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"unzip "+vmchecker_root+ "/"+"checked"+ "/"+job_id+"/"+user_id+ "/"+upload_s+"/"+CHECKER_FILE+" -d "+vmchecker_root+ "/"+"checked"+"/"+job_id+"/"+user_id+"/"+upload_s+"/\"" ).c_str());
+	ret = system (temp.c_str());
 
-	system_return_value(ret,(char*)"Cannot unzip file.zip on Upload System");
+	ret = system_return_value (ret,(char*)"Cannot upload file.zip");
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+ vmchecker_root+ "/"+ "checked"+ "/"+job_id+ "/"+ user_id+"/"+upload_s+"/"+CHECKER_FILE+"\"" ).c_str());
+	if (ret == -1) return -1;
 
-	system_return_value(ret,(char*)"Cannot remove file.zip from Upload System");
+	temp = concatenate (31, "ssh", " ", username, "@", ip, " ", "\"", "unzip", " ", vmchecker_root, "/", 	\
+			"checked", "/", job_id, "/", user_id, "/", upload_s, "/", CHECKER_FILE, " -d ", 	\
+			vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/\"");
+
+
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret, "Cannot unzip file.zip on Upload System");
+
+	if (ret == -1) return -1;
+
+	temp = concatenate (19, "ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "checked",	\
+			"/", job_id,  "/",  user_id, "/", upload_s, "/", CHECKER_FILE, "\"");
+
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret, "Cannot remove file.zip from Upload System");
+
+	return ret;
 }
 
-void remove_config_file(char* ini_instance)
+int remove_config_file(char* ini_instance)
 {
 	string temp;
 	int ret;
 
-	ret=system((temp+"rm -f "+ini_instance).c_str());
+	temp = concatenate (2, "rm -f ", ini_instance);
 
-	system_return_value(ret,(char*)"Cannot remove .conf file from Tester System");
+	ret = system (temp.c_str());
 
-	ret=system((temp+"ssh "+username+"@"+ip+" "+"\"rm -f "+ vmchecker_root+ "/"+ "unchecked"+ "/"+ (char*)conf_file(ini_instance)+ "\"").c_str());
+	ret = system_return_value (ret, "Cannot remove .conf file from Tester System");
 
-	system_return_value(ret,(char*)"Cannot remove .conf file from Upload System");
+	if (ret==-1) return -1;
+
+	temp = concatenate (13, "ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "unchecked",  \
+			"/", (char*)conf_file(ini_instance), "\"");
+
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret, "Cannot remove .conf file from Upload System");
+
+	return ret;
 }
 
 void free_resources()
 {
-	iniparser_freedict(instance);
-	iniparser_freedict(v_machines);
+	iniparser_freedict (instance);
+	iniparser_freedict (v_machines);
 }
 
-void clear_jobs_dir()
+int clear_jobs_dir()
 {
 	string temp;
 	int ret;
 
-	ret=system((temp+"rm -rf " +jobs_path+"/*" ).c_str());
+	temp = concatenate (3, "rm -rf ",jobs_path, "/*");
 
-	system_return_value(ret,(char*)"Cannot clear executor_jobs directory");
+	ret = system (temp.c_str());
+
+	ret = system_return_value (ret, "Cannot clear executor_jobs directory");
+
+	return ret;
 }
