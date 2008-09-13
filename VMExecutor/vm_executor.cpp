@@ -750,21 +750,20 @@ static int start_kernel_listener(void)
 /*
  * runs a script which installs localy the CHECKER_TEST
  */
-static void install_local_tests(void)
+static int install_local_tests(void)
 {
 	string command;
 	int ret;	
 
-	comand+= "unzip " + jobs_path + "/" + CHECKER_TEST + " -d " + jobs_path;
+	command += "unzip " + jobs_path + "/" + CHECKER_TEST + " -d " + jobs_path;
 
 	ret = system (command.c_str());
-
 	ret = system_return_value(ret, "Cannot unpack local tests");
 
 	if (ret == -1) return -1;
 
-	command = command + "bash -c \"" + "chmod +x " + jobs_path + "/" + LOCAL_SCRIPT + ";" jobs_path + "/" + \
-		LOCAL_SCRIPT+ " " + vmrun.local_ip + " " + vmrun.guest_ip + "\"";
+	command = command + "bash -c \"" + "chmod +x " + jobs_path + "/" + LOCAL_SCRIPT + ";" + jobs_path + "/" + \
+		  LOCAL_SCRIPT+ " " + vmrun.local_ip + " " + vmrun.guest_ip + "\"";
 
 	ret = system(command.c_str());
 	ret = system_return_value(ret, "Cannot run local script");
