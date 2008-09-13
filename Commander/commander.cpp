@@ -51,7 +51,7 @@ static char* guest_home_in_bash;		//path to working directory in shell (used for
 
 static const char* upload_s;			//upload time directory name
 static const char* jobs_path;			//path to temporary working files for executor
-static const char* scripts_path;		//path to build/run script for vms
+//static const char* scripts_path;		//path to build/run script for vms
 
 static	dictionary* instance; 			//homework.ini
 static	dictionary* v_machines; 		//tester_vm.ini
@@ -187,7 +187,7 @@ static int check_bugs(void)
 void abort_job()
 {
 	free_resources();
-	clear_jobs_dir();
+	//clear_jobs_dir();
 	exit(-1);
 }
 
@@ -299,16 +299,19 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 //	iniparser_dump(v_machines,stderr);
 
 	/* extracting homework info */
-	vmchecker_root=iniparser_getstring(instance,"Global:VMCheckerRoot",NULL);
-	vm_name=iniparser_getstring(instance,"Global:VMName",NULL);
-	job_id=iniparser_getstring(instance,"Global:Job",NULL);
-	user_id=iniparser_getstring(instance,"Global:UserId",NULL);
-	deadline=iniparser_getstring(instance,"Global:Deadline",NULL);
-	upload_time=iniparser_getstring(instance,"Global:UploadTime",NULL);
-	penalty_script=iniparser_getstring(instance,"Global:Penalty",NULL);
-	kernel_msg=iniparser_getstring(instance,"Global:KernelMsg",NULL);
-	ip=iniparser_getstring(instance,"Global:UploadIP",NULL);
-	upload_s=replace_spaces(upload_time).c_str();
+	vmchecker_root = iniparser_getstring(instance,"Global:VMCheckerRoot",NULL);
+	vm_name = iniparser_getstring(instance,"Global:VMName",NULL);
+	job_id = iniparser_getstring(instance,"Global:Job",NULL);
+	user_id = iniparser_getstring(instance,"Global:UserId",NULL);
+	deadline = iniparser_getstring(instance,"Global:Deadline",NULL);
+	upload_time = iniparser_getstring(instance,"Global:UploadTime",NULL);
+	penalty_script = iniparser_getstring(instance,"Global:Penalty",NULL);
+	kernel_msg = iniparser_getstring(instance,"Global:KernelMsg",NULL);
+	ip = iniparser_getstring(instance,"Global:UploadIP",NULL);
+	upload_s = strdup(replace_spaces(upload_time).c_str());
+
+	temp = temp + vmchecker_root + "/executor_jobs/";
+	jobs_path = strdup(temp .c_str());
 
 	temp=vm_name;
 
@@ -321,16 +324,15 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 	guest_base_path=iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
 	guest_shell_path=iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
 	guest_home_in_bash=iniparser_getstring(v_machines,(temp+":GuestHomeInBash").c_str(),NULL);
+
 }
+	
 
 
 int get_archives()
 {
 	string temp;
 	int ret;
-
-	jobs_path = (temp+vmchecker_root+"/executor_jobs/").c_str();
-		
 
 	//get CHECKER_FILE
 	temp = concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root,    \
@@ -343,8 +345,11 @@ int get_archives()
 	if (ret==-1) return -1;
 
 	//get CHECKER_TEST
-	temp=concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root, "/",  \
-			 "tests", "/",job_id, ".zip", jobs_path, CHECKER_TEST, NULL);
+	temp=concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root, "/",  	\
+			 "tests", "/",job_id, ".zip", "\"", " ", jobs_path, CHECKER_TEST, NULL);
+
+
+	cout <<temp<<endl;
 
 	ret = system (temp.c_str());
 	ret = system_return_value (ret,"Cannot get tests.zip from Upload System");
@@ -391,7 +396,9 @@ int upload_results()
 
 	//read first line in RESULT_OUTPUT_FILE "0"/"ok" 
 	fstream results_file;
-	results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),ios::in);
+	temp="";
+
+	results_file.open((temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),ios::in);
 
 	if (!results_file.is_open())
 	{
