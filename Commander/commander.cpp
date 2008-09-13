@@ -135,24 +135,29 @@ static int append_f(const char *infile, const char *outfile, const char* message
 /*
 * concatenates multiple char arrays into one string
 */
-static string concatenate(int nr_args,...)
+static string concatenate(char * arg1,... )
 {
 	va_list arguments;
-	va_start (arguments, nr_args);
+	va_start (arguments, arg1);
 
 	string temp;
+	char* str = arg1;
 
-	for (int i = 0; i < nr_args; i++)
-		temp+= va_arg ( arguments, char*);
+	for (; str!=NULL;str = va_arg ( arguments, char*))
+		temp+= str;
+
+	va_end(arguments);	
 
 	return temp;
 }
+
+
+
 
 /*
  * checks for bugs in file KMESSAGE_OUTPUT_FILE
  * returns number of bugs
  */
-
 static int check_bugs(void)
 {
 	string line;
@@ -189,10 +194,9 @@ void abort_job()
 /*
  * inspects the returning value of the command invoked by system()
  */
-
 int system_return_value(int ret, char* message)
 {
-	if (ret==-1)
+	if (ret == -1)
 	{
 		error("\"system()\" failed\n");
 		return -1;
@@ -201,7 +205,7 @@ int system_return_value(int ret, char* message)
 	{	
 		if (WIFEXITED(ret)&&(WEXITSTATUS(ret) != 0))
 		{
-			error("%s\n",message);
+			error("%s\n", message);
 			return -1;
 		}
 	}
@@ -212,15 +216,14 @@ int system_return_value(int ret, char* message)
 /*
  * extracts .conf file name from .conf file path
  */
-
 char* conf_file(char conf[])
 {
 	char* a1;
 	char* a2;
 	
-	for(a1=strtok(conf,"/");a1!=NULL;a1=strtok(NULL,"/"))
+	for(a1 = strtok(conf,"/"); a1 != NULL; a1 = strtok(NULL,"/"))
 	{
-		a2=a1;
+		a2 = a1;
 	}
 	return a2;
 }
@@ -229,7 +232,6 @@ char* conf_file(char conf[])
 /*
  * returns a string that replaces " " by "\ " in str
  */
-
 string replace_spaces(char* str)
 {
 	string aux;
@@ -237,9 +239,9 @@ string replace_spaces(char* str)
 	while(*str!=0)
 	{
 		if (*str == ' ')
-			aux+= "\\ ";
+			aux += "\\ ";
 		else 
-			aux+= *str;
+			aux += *str;
 		str++;
 	}	
 	
@@ -273,8 +275,6 @@ int main(int argc, char * argv[])
 		if (clear_jobs_dir() == -1)
 			exit (-1);
 	}
-
-	return 0;
 }
 
 
@@ -333,22 +333,20 @@ int get_archives()
 		
 
 	//get CHECKER_FILE
-	temp = concatenate (21,"scp", " ", username, "@", ip, ":", "\"", vmchecker_root,  \
+	temp = concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root,    \
 			   "/", job_id, "/", user_id, "/", upload_s, "/", CHECKER_FILE,  \
-			   "\"", " ", jobs_path, "/", CHECKER_FILE);
+			   "\"", " ", jobs_path, "/", CHECKER_FILE, NULL);
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret,"Cannot get file.zip from Upload System");
 
 	if (ret==-1) return -1;
 
 	//get CHECKER_TEST
-	temp=concatenate (15,"scp", " ", username, "@", ip, ":", "\"", vmchecker_root, "/",\
-			 "tests", "/",job_id, ".zip", jobs_path, CHECKER_TEST);
+	temp=concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root, "/",  \
+			 "tests", "/",job_id, ".zip", jobs_path, CHECKER_TEST, NULL);
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret,"Cannot get tests.zip from Upload System");
 
 	return ret;
@@ -361,14 +359,14 @@ int start_executor()
 
 	/* TODO: apelat cu >> vm_executor.log*/
 
-	temp = concatenate (45,"bash -c \"", vmchecker_root, "/", "bin", "/", "vm_executor", " ", "\'",	\
+	temp = concatenate ("bash -c \"", vmchecker_root, "/", "bin", "/", "vm_executor", " ", "\'",	\
 			 vm_name, "\'", " ", "\'", kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",	\
 			 local_ip, " ", "\'", guest_user, "\'", " ", "\'", guest_pass, "\'", " ",	\
 			 "\'", guest_base_path, "\'", " ", "\'", guest_shell_path, "\'", " ", "\'",	\
-			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root, "\'",  "\"");
+			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root, "\'",  "\"", NULL);
 
+	
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "VMExecutor failed");
 	
 	return ret;
@@ -382,19 +380,17 @@ int upload_results()
 
 
 	//upload build
-	temp = concatenate (23,"scp", " ", jobs_path, "/", BUILD_OUTPUT_FILE, " ", username, "@", ip, ":",	\
+	temp = concatenate ("scp", " ", jobs_path, "/", BUILD_OUTPUT_FILE, " ", username, "@", ip, ":",		\
 			   "\"", vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/",  upload_s,	\
-			   "/", BUILD_OUTPUT_FILE, "\"");
+			   "/", BUILD_OUTPUT_FILE, "\"", NULL);
 
 	ret=system(temp.c_str());
-
 	ret=system_return_value(ret,"Cannot upload build_output_file");
 
-	if (ret==-1) return -1;
+	if (ret == -1) return -1;
 
 	//read first line in RESULT_OUTPUT_FILE "0"/"ok" 
 	fstream results_file;
-
 	results_file.open((temp+jobs_path+RESULT_OUTPUT_FILE).c_str(),ios::in);
 
 	if (!results_file.is_open())
@@ -405,9 +401,8 @@ int upload_results()
 
 	getline(results_file,first_line);
 	results_file.close();
-
 	
-	if (first_line=="0") //homework doesn't compile
+	if (first_line == "0") //homework doesn't compile
 	{
 		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(), (temp + jobs_path + 	\
 			RESULT_OUTPUT_FILE).c_str(), "\n     ===== BUILD RESULTS =====\n");
@@ -418,10 +413,9 @@ int upload_results()
 
 		//check deadline 
 		/*
-		temp = concatenate (4,penalty_script, ">>", jobs_path, RESULT_OUTPUT_FILE); 
+		temp = concatenate (penalty_script, deadline, upload_time, ">>", jobs_path, RESULT_OUTPUT_FILE, NULL); 
 
 		ret = system(temp.c_str());
-
 		ret = system_return_value(ret, "Cannot check deadline");
 		*/
 
@@ -453,29 +447,26 @@ int upload_results()
 				RESULT_OUTPUT_FILE).c_str(), "\n     ===== KERNEL MESSAGES =====\n");
 	
 			//upload KMESSAGE_OUTPUT_FILE
-			temp = concatenate (23,"scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,	\
+			temp = concatenate ("scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,	\
 					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/", job_id,	\
-					   "/", user_id, "/", upload_s, "/", RUN_OUTPUT_FILE, "\"");
+					   "/", user_id, "/", upload_s, "/", KMESSAGE_OUTPUT_FILE, "\"", NULL);
 
 			ret = system (temp.c_str());
-
 			ret = system_return_value (ret,"Cannot upload kmessage_output_file");
 
-			if (ret==-1) return -1;
+			if (ret == -1) return -1;
 		}
 
-
-		append_f((temp+jobs_path+RUN_OUTPUT_FILE).c_str(), (temp+jobs_path+ RESULT_OUTPUT_FILE).c_str(), \
-			"\n     ===== RUN RESULTS =====\n");
+		append_f((temp + jobs_path + RUN_OUTPUT_FILE).c_str(), (temp + jobs_path +	 		 \
+				RESULT_OUTPUT_FILE).c_str(), "\n     ===== RUN RESULTS =====\n");
 
 		//upload  RUN_OUTPUT_FILE
-		temp = concatenate (23, "scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,	 \
-					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/",		 \
-					   job_id, "/", user_id, "/", upload_s, "/", RUN_OUTPUT_FILE, "\"");
+		temp = concatenate ("scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,		 \
+					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/", job_id, 	 \
+					   "/", user_id, "/", upload_s, "/", KMESSAGE_OUTPUT_FILE, "\"", NULL);
 
 
 		ret = system (temp.c_str());
-	
 		ret = system_return_value (ret, "Cannot upload run_output_file");
 
 		if (ret == -1) return -1;
@@ -483,13 +474,12 @@ int upload_results()
 
 	
 	//upload RESULT_OUTPUT_FILE
-	temp = concatenate (23, "scp", " ", jobs_path, "/", RESULT_OUTPUT_FILE, " ", username, "@", ip, ":", "\"", \
+	temp = concatenate ("scp", " ", jobs_path, "/", RESULT_OUTPUT_FILE, " ", username, "@", ip, ":", "\"",	   \
 				vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/",	   \
-				RESULT_OUTPUT_FILE, "\"");
+				RESULT_OUTPUT_FILE, "\"", NULL);
 
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "Cannot upload result_output_file");
 
 	return ret;
@@ -500,33 +490,30 @@ int unzip_homework()
 	string temp;
 	int ret;
 
-	temp = concatenate (23, "scp", " ", jobs_path, "/", CHECKER_FILE, " ", username, "@", ip, ":", "\"",	\
+	temp = concatenate ("scp", " ", jobs_path, "/", CHECKER_FILE, " ", username, "@", ip, ":", "\"",	\
 			    vmchecker_root,  "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/",	\
-			    CHECKER_FILE, "\""); 
+			    CHECKER_FILE, "\"", NULL); 
 
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret,(char*)"Cannot upload file.zip");
 
 	if (ret == -1) return -1;
 
-	temp = concatenate (31, "ssh", " ", username, "@", ip, " ", "\"", "unzip", " ", vmchecker_root, "/", 	\
+	temp = concatenate ("ssh", " ", username, "@", ip, " ", "\"", "unzip", " ", vmchecker_root, "/", 	\
 			"checked", "/", job_id, "/", user_id, "/", upload_s, "/", CHECKER_FILE, " -d ", 	\
-			vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/\"");
+			vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/\"", NULL);
 
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "Cannot unzip file.zip on Upload System");
 
 	if (ret == -1) return -1;
 
-	temp = concatenate (19, "ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "checked",	\
-			"/", job_id,  "/",  user_id, "/", upload_s, "/", CHECKER_FILE, "\"");
+	temp = concatenate ("ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "checked",	\
+			"/", job_id,  "/",  user_id, "/", upload_s, "/", CHECKER_FILE, "\"", NULL);
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "Cannot remove file.zip from Upload System");
 
 	return ret;
@@ -537,19 +524,16 @@ int remove_config_file(char* ini_instance)
 	string temp;
 	int ret;
 
-	temp = concatenate (2, "rm -f ", ini_instance);
-
+	temp = concatenate ("rm -f ", ini_instance, NULL);
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "Cannot remove .conf file from Tester System");
 
 	if (ret==-1) return -1;
 
-	temp = concatenate (13, "ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "unchecked",  \
-			"/", (char*)conf_file(ini_instance), "\"");
+	temp = concatenate ( "ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "unchecked",  \
+			"/", (char*)conf_file(ini_instance), "\"", NULL);
 
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "Cannot remove .conf file from Upload System");
 
 	return ret;
@@ -566,10 +550,8 @@ int clear_jobs_dir()
 	string temp;
 	int ret;
 
-	temp = concatenate (3, "rm -rf ",jobs_path, "/*");
-
+	temp = concatenate ("rm -rf ", jobs_path, "/*", NULL);
 	ret = system (temp.c_str());
-
 	ret = system_return_value (ret, "Cannot clear executor_jobs directory");
 
 	return ret;

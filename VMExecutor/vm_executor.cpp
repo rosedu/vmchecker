@@ -46,10 +46,32 @@ string scripts_path;
 
 Bool jobCompleted;
 
+
+/*
+ * inspects the returning value of the command invoked by system()
+ */
+int system_return_value(int ret, char* message)
+{
+	if (ret==-1)
+	{
+		error("\"system()\" failed\n");
+		return -1;
+	}
+	else
+	{	
+		if (WIFEXITED(ret)&&(WEXITSTATUS(ret) != 0))
+		{
+			error("%s\n",message);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 /*
  * fill vmrun structure with virtual machine info from arguments  
  */
-
 static int fill_vmrun( char **argv)
 {
 	//char *endp;
@@ -109,9 +131,6 @@ static void print_run(void)
 	cout << "guest_ip: " << vmrun.guest_ip << endl;
 	cout << "build_command_args: " << vmrun.build_command_args << endl;
 	cout << "run_command_args: " << vmrun.run_command_args << endl;
-//	cout << "upload_time: " << asctime(&vmrun.upload_time);
-//	cout << "deadline_time: " << asctime(&vmrun.deadline_time);
-//	cout << "penalty: " << vmrun.penalty << endl;
 	cout << "km_enable: " << (vmrun.km_enable == true ? "true" : "false") << endl;
 	cout << "===================" << endl;
 }
@@ -725,13 +744,27 @@ static int start_kernel_listener(void)
 /*
  * runs a script which installs localy the CHECKER_TEST
  */
-
 static void install_local_tests(void)
 {
 	string command;
-	
-	command = command +jobs_path  + LOCAL_SCRIPT + " " + vmrun.local_ip + " " + vmrun.guest_ip;
-	system(command.c_str());
+	int ret;	
+
+	comand+= "unzip " + jobs_path + "/" + CHECKER_TEST + " -d " + jobs_path;
+
+	ret = system (command.c_str());
+
+	ret = system_return_value(ret, "Cannot unpack local tests");
+
+	if (ret == -1) return -1;
+
+	command = command + "bash -c \"" + "chmod +x " + jobs_path + "/" + LOCAL_SCRIPT + ";" jobs_path + "/" + \
+		LOCAL_SCRIPT+ " " + vmrun.local_ip + " " + vmrun.guest_ip + "\"";
+
+	ret = system(command.c_str());
+
+	ret = system_return_value(ret, "Cannot run local script");
+
+	return ret;
 }
 
 /*
