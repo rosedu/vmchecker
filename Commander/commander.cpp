@@ -461,9 +461,9 @@ int upload_results()
 				RESULT_OUTPUT_FILE).c_str(), "\n     ===== RUN RESULTS =====\n");
 
 		//upload  RUN_OUTPUT_FILE
-		temp = concatenate ("scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,		 \
+		temp = concatenate ("scp", " ", jobs_path, "/", RUN_OUTPUT_FILE, " ", username,		 \
 					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/", job_id, 	 \
-					   "/", user_id, "/", upload_s, "/", KMESSAGE_OUTPUT_FILE, "\"", NULL);
+					   "/", user_id, "/", upload_s, "/", RUN_OUTPUT_FILE, "\"", NULL);
 
 
 		ret = system (temp.c_str());
