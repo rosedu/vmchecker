@@ -101,19 +101,25 @@ static int fill_vmrun( char **argv)
 	}*/
 
 	//vmrun.penalty = strtof(argv[5], &endp);
-	vmrun.vmpath=argv[3];
-	vmrun.local_ip=argv[4];
-	vmrun.guest_user=argv[5];
-	vmrun.guest_pass=argv[6];
-	vmrun.guest_home=argv[7];
-	vmrun.guest_shell=argv[8];
-	vmrun.guest_home_in_bash=argv[9];
-	vmrun.vmchecker_root=argv[10];
-	vmrun.build_command_args= vmrun.build_command_args+"-c \" chmod +x "+ vmrun.guest_home_in_bash+"/"+ BUILD_SCRIPT+ ";"+vmrun.guest_home_in_bash+"/"+BUILD_SCRIPT+" " +vmrun.guest_home_in_bash+" \"";
-	vmrun.run_command_args=vmrun.run_command_args+ "-c \" chmod +x "+vmrun.guest_home_in_bash+"/"+RUN_SCRIPT+";"+vmrun.guest_home_in_bash+"/"+RUN_SCRIPT+" " +vmrun.guest_home_in_bash+" \"";	
+	vmrun.vmpath = argv[3];
+	vmrun.local_ip = argv[4];
+	vmrun.guest_user = argv[5];
+	vmrun.guest_pass = argv[6];
+	vmrun.guest_home = argv[7];
+	vmrun.guest_shell = argv[8];
+	vmrun.guest_home_in_bash = argv[9];
+	vmrun.vmchecker_root = argv[10];
+	vmrun.build_command_args = vmrun.build_command_args + "-c \" chmod +x " +	\
+				vmrun.guest_home_in_bash + "/" +  BUILD_SCRIPT +	\
+				";" + vmrun.guest_home_in_bash + "/"+BUILD_SCRIPT +	\
+				" " + vmrun.guest_home_in_bash + " \"";
+	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x " +		\
+				vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" +	\
+				vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " +	\
+				vmrun.guest_home_in_bash + " \"";	
 
-	jobs_path=vmrun.vmchecker_root+"/executor_jobs/";
-	scripts_path=vmrun.vmchecker_root+"/executor_scripts/";
+	jobs_path = vmrun.vmchecker_root + "/executor_jobs/";
+	scripts_path = vmrun.vmchecker_root + "/executor_scripts/";
 
 	return 0;
 }
@@ -167,7 +173,6 @@ static int get_vm_ip()
  *    0 for "checker: building failed"
  *    [warning_count+1] for "checker: building done" 
  */
-
 static int check_build(void)
 {
 	string line;
@@ -212,7 +217,7 @@ static int check_build(void)
 	if(oldline.find("failed") != string::npos)
 		return 0;
 
-	return warning_count+1;
+	return warning_count + 1;
 }
 
 
@@ -523,6 +528,7 @@ static int run_scripts(void)
 			VIX_INVALID_HANDLE,	// propertyListHandle
 			NULL,			// callbackProc
 			NULL);			// clientData
+
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
@@ -560,7 +566,7 @@ static int run_scripts(void)
 
 	log("VM's IP = %s\n", vmrun.guest_ip.c_str());
 
-	//build succesful, go on with runnig CHECKER_TEST
+	//build succesful, go on with runnig RUN_SCRIPT
 
 	/* setup alarm signal to be sent after 120 seconds */
 	set_signal();
@@ -635,7 +641,7 @@ static int run_scripts(void)
 	
 	if(build_c > 1)
 	{
-		ofstream build_file((temp+jobs_path+BUILD_OUTPUT_FILE).c_str(),ios_base::app); 
+		ofstream build_file((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(), ios_base::app); 
 		build_file << "-1:  compilarea a produs " << build_c-1 << " warning-uri" << endl;
 		build_file.close();
 	}
@@ -644,7 +650,7 @@ static int run_scripts(void)
 	/* write timeout in RUN_OUTPUT_FILE */ 
 	ofstream run_file((temp+jobs_path+RUN_OUTPUT_FILE).c_str(),ios_base::app);
 
-	if (timeout<120) 
+	if (timeout < 120) 
 		run_file << "timeout=" <<120-timeout;	
 	else
 		run_file << "Tester timeouted";	
@@ -761,7 +767,6 @@ static void install_local_tests(void)
 		LOCAL_SCRIPT+ " " + vmrun.local_ip + " " + vmrun.guest_ip + "\"";
 
 	ret = system(command.c_str());
-
 	ret = system_return_value(ret, "Cannot run local script");
 
 	return ret;
