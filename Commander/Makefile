@@ -2,9 +2,7 @@
 # iniparser tests Makefile
 #
 
-CXXFAGS= -g -Wall
-
-CPPFLAGS  = -Iiniparser/src
+CPPFLAGS  = -g -Wall -Iiniparser/src
 LDFLAGS  = -Liniparser 
 LDLIBS= -ldl -lstdc++ -liniparser 
 AR	    = ar

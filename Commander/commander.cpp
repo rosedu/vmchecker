@@ -23,6 +23,7 @@
 
 using std::cout;
 using std::fstream;
+using std::cerr;
 
 
 
@@ -148,7 +149,7 @@ static string concatenate(char * arg1,... )
 		temp+= str;
 
 	va_end(arguments);	
-
+	cerr << "concatenate: " << temp << endl;
 	return temp;
 }
 
@@ -296,20 +297,22 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 	}
 
 
-//	iniparser_dump(instance, stderr);
-//	iniparser_dump(v_machines,stderr);
+	iniparser_dump(instance, stderr);
+	iniparser_dump(v_machines,stderr);
 
 	/* extracting homework info */
-	vmchecker_root = iniparser_getstring(instance,"Global:VMCheckerRoot",NULL);
+	/* TODO: ce se intampla daca apare NULL? nu trebuie SIGSEGV */
+
+	vmchecker_root = iniparser_getstring(instance,"DEFAULT:VMCheckerRoot",NULL);
 	vmchecker_root_local = strdup(getenv("VMCHECKER_ROOT"));
-	vm_name = iniparser_getstring(instance,"Global:VMName",NULL);
-	job_id = iniparser_getstring(instance,"Global:Job",NULL);
-	user_id = iniparser_getstring(instance,"Global:UserId",NULL);
-	deadline = iniparser_getstring(instance,"Global:Deadline",NULL);
-	upload_time = iniparser_getstring(instance,"Global:UploadTime",NULL);
-	penalty_script = iniparser_getstring(instance,"Global:Penalty",NULL);
-	kernel_msg = iniparser_getstring(instance,"Global:KernelMsg",NULL);
-	ip = iniparser_getstring(instance,"Global:UploadIP",NULL);
+	vm_name = iniparser_getstring(instance,"DEFAULT:VMName",NULL);
+	job_id = iniparser_getstring(instance,"DEFAULT:Job",NULL);
+	user_id = iniparser_getstring(instance,"DEFAULT:UserId",NULL);
+	deadline = iniparser_getstring(instance,"DEFAULT:Deadline",NULL);
+	upload_time = iniparser_getstring(instance,"DEFAULT:UploadTime",NULL);
+	penalty_script = iniparser_getstring(instance,"DEFAULT:Penalty",NULL);
+	kernel_msg = iniparser_getstring(instance,"DEFAULT:KernelMsg",NULL);
+	ip = iniparser_getstring(instance,"DEFAULT:UploadIP",NULL);
 	upload_s = strdup(replace_spaces(upload_time).c_str());
 
 	temp = temp + vmchecker_root_local + "/executor_jobs/";
