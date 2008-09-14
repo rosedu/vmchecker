@@ -149,7 +149,7 @@ static string concatenate(const char* arg1,... )
 		temp += str;
 
 	va_end(arguments);	
-	cerr << "concatenate: " << temp << endl;
+	//cerr << "concatenate: " << temp << endl;
 	return temp;
 }
 
@@ -188,8 +188,8 @@ static int check_bugs(void)
 
 void abort_job()
 {
-	//free_resources();
-	//clear_jobs_dir();
+	free_resources();
+	clear_jobs_dir();
 	exit(-1);
 }
 
@@ -249,10 +249,11 @@ string escape(const string& path) {
 
 int main(int argc, char * argv[])
 {
-
 	if (argc==2) 
 	{
-		parse_ini_files(argv[1], escape(concatenate(vmchecker_root_local, "/checker.ini")).c_str());
+		vmchecker_root_local = strdup(getenv("VMCHECKER_ROOT"));
+		assert(vmchecker_root_local != NULL);
+		parse_ini_files(argv[1], escape(concatenate(vmchecker_root_local, "/checker.ini", NULL).c_str()).c_str());
 
 		if (get_archives() == -1)
 			abort_job();
@@ -301,8 +302,6 @@ void parse_ini_files(const char *ini_instance, const char* ini_v_machines)
 
 	vmchecker_root = iniparser_getstring(instance,"DEFAULT:VMCheckerRoot",NULL);
 	assert (vmchecker_root != NULL);
-	vmchecker_root_local = strdup(getenv("VMCHECKER_ROOT"));
-	assert (vmchecker_root_local != NULL);
 	vm_name = iniparser_getstring(instance,"DEFAULT:VMName",NULL);
 	assert (vm_name != NULL);
 	job_id = iniparser_getstring(instance,"DEFAULT:Job",NULL);
@@ -398,6 +397,7 @@ int ssh_command(const char* username, const char* ip, ...)
 		else break;
 	}
 	temp += "\"";
+	cout << "Execute ssh command: " <<temp << endl; 
 	ret = system_return_value(system(temp.c_str()));
 
 	if (ret != 0)
@@ -578,7 +578,7 @@ int unzip_homework()
 		"unzip ",
 		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/archive/", CHECKER_FILE, NULL).c_str(),
 		" -d ", 
-		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/", NULL).c_str(), 
+		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/archive/", NULL).c_str(), 
 		NULL);
 
 	if (ret != 0)
