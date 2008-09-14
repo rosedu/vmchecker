@@ -50,9 +50,9 @@ def main():
 
     # prepares output directory
     # cleans previous job files
-    output_dir = os.path.join(misc.vmchecker_root(), 'checked', job, user_id)
-    shutil.rmtree(output_dir, ignore_errors=True)
-    os.makedirs(output_dir)
+    # output_dir = os.path.join(misc.vmchecker_root(), 'checked', job, user_id)
+    # shutil.rmtree(output_dir, ignore_errors=True)
+    # os.makedirs(os.path.join(output_dir, 'archive'))
 
     # writes assignment configuration file
     job_config_file = os.path.join(
