@@ -138,16 +138,16 @@ static int append_f(const char *infile, const char *outfile, const char* message
 /*
 * concatenates multiple char arrays into one string
 */
-static string concatenate(char * arg1,... )
+static string concatenate(const char* arg1,... )
 {
 	va_list arguments;
-	va_start (arguments, arg1);
+	va_start(arguments, arg1);
 
 	string temp;
-	char* str = arg1;
+	const char* str = arg1;
 
-	for (; str!=NULL;str = va_arg ( arguments, char*))
-		temp+= str;
+	for (; str != NULL; str = va_arg(arguments, const char*))
+		temp += str;
 
 	va_end(arguments);	
 	cerr << "concatenate: " << temp << endl;
@@ -251,6 +251,20 @@ string replace_spaces(char* str)
 	return aux;
 }
 
+string escape(const string& path) {
+	string aux;
+
+	const char* str = path.c_str();
+	for (; *str != 0; str++) {
+		// XXX escapes only spaces.
+		if (isblank(*str))
+			aux.push_back('\\');
+		aux.push_back(*str);
+	}
+
+	return aux;
+}
+
 int main(int argc, char * argv[])
 {
 
@@ -318,16 +332,18 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 	assert (deadline !=NULL);
 	upload_time = iniparser_getstring(instance,"DEFAULT:UploadTime",NULL);
 	assert (upload_time != NULL);
-	penalty_script = iniparser_getstring(instance,"DEFAULT:Penalty",NULL);
+	penalty_script = iniparser_getstring(instance,"DEFAULT:PenaltyScript",NULL);
 	assert (penalty_script != NULL);
 	kernel_msg = iniparser_getstring(instance,"DEFAULT:KernelMsg",NULL);
 	assert (kernel_msg != NULL);
 	ip = iniparser_getstring(instance,"DEFAULT:UploadIP",NULL);
 	assert (ip != NULL);
-	upload_s = strdup(replace_spaces(upload_time).c_str());
+
+	// upload_time = escape_string(upload_time);
+	// upload_s = strdup(replace_spaces(upload_time).c_str());
 	
 	temp = temp + vmchecker_root_local + "/executor_jobs/";
-	jobs_path = strdup(temp .c_str());
+	jobs_path = strdup(temp.c_str());
 
 	temp=vm_name;
 
@@ -344,6 +360,33 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 }
 	
 
+int copy_from_remote(const char* username, const char* ip, const string& src, const string& dest)
+{
+	string temp;
+	temp += concatenate("scp", " ", NULL);
+	temp += concatenate(username, "@", ip, ":\"", escape(src).c_str(), "\" ", NULL);
+	temp += concatenate("\"", escape(dest).c_str(), "\"", NULL);
+	cerr << "copy_from_remote: " << temp << endl;
+
+	// XXX fixed message
+	return system_return_value(
+		system(temp.c_str()),
+		"Cannot get file.zip from Upload System");
+}
+
+int copy_to_remote(const char* username, const char* ip, const string& src, const string& dest)
+{
+	string temp;
+	temp += concatenate("scp", " ", NULL);
+	temp += concatenate("\"", escape(src).c_str(), "\" ", NULL);
+	temp += concatenate(username, "@", ip, ":\"", escape(dest).c_str(), "\"", NULL);
+	cerr << "copy_to_remote: " << temp << endl;
+
+	// XXX fixed message
+	return system_return_value(
+		system(temp.c_str()),
+		"Cannot get file.zip from Upload System");
+}
 
 int get_archives()
 {
@@ -351,23 +394,22 @@ int get_archives()
 	int ret;
 
 	//get CHECKER_FILE
-	temp = concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root,    \
-			   "/", job_id, "/", user_id, "/", upload_s, "/", CHECKER_FILE,  \
-			   "\"", " ", jobs_path, "/", CHECKER_FILE, NULL);
-
-	ret = system (temp.c_str());
-	ret = system_return_value (ret,"Cannot get file.zip from Upload System");
-
-	if (ret==-1) return -1;
+	ret = copy_from_remote(
+		username, ip,
+		concatenate(vmchecker_root, "/back/", job_id, "/", user_id, "/", upload_time, "/", CHECKER_FILE, NULL),
+		concatenate(jobs_path, "/", CHECKER_FILE, NULL));
+	if (ret != 0)
+		return ret;
 
 	//get CHECKER_TEST
 	temp=concatenate ("scp", " ", username, "@", ip, ":", "\"", vmchecker_root, "/",  	\
 			 "tests", "/",job_id, ".zip", "\"", " ", jobs_path, CHECKER_TEST, NULL);
 
 
-	cout <<temp<<endl;
+	cout << temp << endl;
 
 	ret = system (temp.c_str());
+
 	ret = system_return_value (ret,"Cannot get tests.zip from Upload System");
 
 	return ret;
@@ -402,14 +444,13 @@ int upload_results()
 
 
 	//upload build
-	temp = concatenate ("scp", " ", jobs_path, "/", BUILD_OUTPUT_FILE, " ", username, "@", ip, ":",		\
-			   "\"", vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/",  upload_s,	\
-			   "/", BUILD_OUTPUT_FILE, "\"", NULL);
+	ret = copy_to_remote(
+		username, ip,
+		concatenate(jobs_path, "/", BUILD_OUTPUT_FILE, NULL),
+		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/", BUILD_OUTPUT_FILE, NULL));
+	if (ret != 0)
+		return ret;
 
-	ret=system(temp.c_str());
-	ret=system_return_value(ret,"Cannot upload build_output_file");
-
-	if (ret == -1) return -1;
 
 	//read first line in RESULT_OUTPUT_FILE "0"/"ok" 
 	fstream results_file;
@@ -473,7 +514,7 @@ int upload_results()
 			//upload KMESSAGE_OUTPUT_FILE
 			temp = concatenate ("scp", " ", jobs_path, "/", KMESSAGE_OUTPUT_FILE, " ", username,	\
 					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/", job_id,	\
-					   "/", user_id, "/", upload_s, "/", KMESSAGE_OUTPUT_FILE, "\"", NULL);
+					   "/", user_id, "/", KMESSAGE_OUTPUT_FILE, "\"", NULL);
 
 			ret = system (temp.c_str());
 			ret = system_return_value (ret,"Cannot upload kmessage_output_file");
@@ -487,7 +528,7 @@ int upload_results()
 		//upload  RUN_OUTPUT_FILE
 		temp = concatenate ("scp", " ", jobs_path, "/", RUN_OUTPUT_FILE, " ", username,		 \
 					   "@", ip, ":", "\"", vmchecker_root, "/", "checked", "/", job_id, 	 \
-					   "/", user_id, "/", upload_s, "/", RUN_OUTPUT_FILE, "\"", NULL);
+					   "/", user_id, "/", RUN_OUTPUT_FILE, "\"", NULL);
 
 
 		ret = system (temp.c_str());
@@ -499,7 +540,7 @@ int upload_results()
 	
 	//upload RESULT_OUTPUT_FILE
 	temp = concatenate ("scp", " ", jobs_path, "/", RESULT_OUTPUT_FILE, " ", username, "@", ip, ":", "\"",	   \
-				vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/",	   \
+				vmchecker_root, "/", "checked", "/", job_id, "/", user_id,  "/",	   \
 				RESULT_OUTPUT_FILE, "\"", NULL);
 
 
@@ -515,7 +556,7 @@ int unzip_homework()
 	int ret;
 
 	temp = concatenate ("scp", " ", jobs_path, "/", CHECKER_FILE, " ", username, "@", ip, ":", "\"",	\
-			    vmchecker_root,  "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/",	\
+			    vmchecker_root,  "/", "checked", "/", job_id, "/", user_id, "/",	\
 			    CHECKER_FILE, "\"", NULL); 
 
 
@@ -526,7 +567,7 @@ int unzip_homework()
 
 	temp = concatenate ("ssh", " ", username, "@", ip, " ", "\"", "unzip", " ", vmchecker_root, "/", 	\
 			"checked", "/", job_id, "/", user_id, "/", upload_s, "/", CHECKER_FILE, " -d ", 	\
-			vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/", upload_s, "/\"", NULL);
+			vmchecker_root, "/", "checked", "/", job_id, "/", user_id, "/\"", NULL);
 
 
 	ret = system (temp.c_str());
@@ -535,7 +576,7 @@ int unzip_homework()
 	if (ret == -1) return -1;
 
 	temp = concatenate ("ssh", " ", username, "@", ip, " ", "\"rm -f ", vmchecker_root, "/", "checked",	\
-			"/", job_id,  "/",  user_id, "/", upload_s, "/", CHECKER_FILE, "\"", NULL);
+			"/", job_id,  "/",  user_id, "/", CHECKER_FILE, "\"", NULL);
 
 	ret = system (temp.c_str());
 	ret = system_return_value (ret, "Cannot remove file.zip from Upload System");
