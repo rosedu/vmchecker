@@ -6,24 +6,42 @@
 __author__ = 'Alexandru Mosoi, brtzsnr@gmail.com'
 
 
+import fcntl
 import os
+import socket
+import struct
 
+
+VMCHECKER_INI = 'vmchecker.ini'
 VMCHECKER_DB = 'vmchecker.db'
+
 
 def vmchecker_root():
     assert 'VMCHECKER_ROOT' in os.environ, (
         'VMCHECKER_ROOT environment varible not defined')
-    return os.environ['VMCHECKER_ROOT']
+    return os.path.abspath(os.environ['VMCHECKER_ROOT'])
+
 
 def config_file():
-    """Searches up on directory structure for file_name.
-    @return
-        - absolute path of config file
-        - None, if file not found"""
-
-    path = os.path.join(vmchecker_root(), 'vmchecker.ini')
-    assert os.path.isfile(path), 'vmchecker.ini (%s) is not a file' % path
+    """Returns absolute path for config file 'VMCHECKER_INI'"""
+    path = os.path.join(vmchecker_root(), VMCHECKER_INI)
+    assert os.path.isfile(path), '%s (%s) is not a file' % (
+        VMCHECKER_INI, path)
     return path
+
+
+def get_ip_address(ifname):
+    """Returns ip address for network interface 'ifname'
+    in standard dotted notation.
+
+    Source from:
+        http://code.activestate.com/recipes/439094/"""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15]))[20:24])
+
 
 def db_file():
     """ The name of the DataBase file 

@@ -32,6 +32,7 @@ def main():
     # parses global course configuration file
     course_name = global_config_file.get('DEFAULT', 'CourseName')
     penalty_script = global_config_file.get('DEFAULT', 'PenaltyScript')
+    interface = global_config_file.get('DEFAULT', 'Interface') 
 
     tester = global_config_file.get(job, 'Tester')
     vmname = global_config_file.get(job, 'VMName')
@@ -49,15 +50,16 @@ def main():
 
     # assignment configuration file
     file = '[DEFAULT]\n'
-    file += 'Job=%s\n' % job
-    file += 'UserId=%s\n' % user_id
-    file += 'VMCheckerRoot=%s\n' % misc.vmchecker_root()
-    file += 'Tester=%s\n' % tester
-    file += 'VMName=%s\n' % vmname
     file += 'Deadline=%s\n' % deadline
-    file += 'UploadTime=%s\n' % upload_time
+    file += 'Job=%s\n' % job
     file += 'KernelMsg=%s\n' % kernel_msg
     file += 'PenaltyScript=%s\n' % penalty_script
+    file += 'Tester=%s\n' % tester
+    file += 'UploadTime=%s\n' % upload_time
+    file += 'UploadIp=%s\n' % misc.get_ip_address(interface)
+    file += 'UserId=%s\n' % user_id
+    file += 'VMCheckerRoot=%s\n' % misc.vmchecker_root()
+    file += 'VMName=%s\n' % vmname
 
     job_config_file = os.path.join(
         misc.vmchecker_root(), 'unchecked',
