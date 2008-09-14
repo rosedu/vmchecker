@@ -13,6 +13,7 @@
 #include <string>
 #include <unistd.h>
 #include <cstdarg>
+#include <assert.h>
 
 #include "log.h"
 #include "checker.h"
@@ -304,31 +305,41 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 	/* TODO: ce se intampla daca apare NULL? nu trebuie SIGSEGV */
 
 	vmchecker_root = iniparser_getstring(instance,"DEFAULT:VMCheckerRoot",NULL);
+	assert (vmchecker_root != NULL);
 	vmchecker_root_local = strdup(getenv("VMCHECKER_ROOT"));
+	assert (vmchecker_root_local != NULL);
 	vm_name = iniparser_getstring(instance,"DEFAULT:VMName",NULL);
+	assert (vm_name != NULL);
 	job_id = iniparser_getstring(instance,"DEFAULT:Job",NULL);
+	assert (job_id != NULL);
 	user_id = iniparser_getstring(instance,"DEFAULT:UserId",NULL);
+	assert (user_id != NULL);
 	deadline = iniparser_getstring(instance,"DEFAULT:Deadline",NULL);
+	assert (deadline !=NULL);
 	upload_time = iniparser_getstring(instance,"DEFAULT:UploadTime",NULL);
+	assert (upload_time != NULL);
 	penalty_script = iniparser_getstring(instance,"DEFAULT:Penalty",NULL);
+	assert (penalty_script != NULL);
 	kernel_msg = iniparser_getstring(instance,"DEFAULT:KernelMsg",NULL);
+	assert (kernel_msg != NULL);
 	ip = iniparser_getstring(instance,"DEFAULT:UploadIP",NULL);
+	assert (ip != NULL);
 	upload_s = strdup(replace_spaces(upload_time).c_str());
-
+	
 	temp = temp + vmchecker_root_local + "/executor_jobs/";
 	jobs_path = strdup(temp .c_str());
 
 	temp=vm_name;
 
 	/*extracting vm info */ 
-	local_ip=iniparser_getstring(v_machines,"Global:LocalAddress",NULL);
-	username=iniparser_getstring(v_machines,"Global:TesterUsername",NULL);
-	vm_path=iniparser_getstring(v_machines,(temp+":VMPath").c_str(),NULL);
-	guest_user=iniparser_getstring(v_machines,(temp+":GuestUser").c_str(),NULL);
-	guest_pass=iniparser_getstring(v_machines,(temp+":GuestPassword").c_str(),NULL);
-	guest_base_path=iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
-	guest_shell_path=iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
-	guest_home_in_bash=iniparser_getstring(v_machines,(temp+":GuestHomeInBash").c_str(),NULL);
+	local_ip = iniparser_getstring(v_machines,"Global:LocalAddress",NULL);
+	username = iniparser_getstring(v_machines,"Global:TesterUsername",NULL);
+	vm_path = iniparser_getstring(v_machines,(temp+":VMPath").c_str(),NULL);
+	guest_user = iniparser_getstring(v_machines,(temp+":GuestUser").c_str(),NULL);
+	guest_pass = iniparser_getstring(v_machines,(temp+":GuestPassword").c_str(),NULL);
+	guest_base_path = iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
+	guest_shell_path = iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
+	guest_home_in_bash = iniparser_getstring(v_machines,(temp+":GuestHomeInBash").c_str(),NULL);
 
 }
 	
