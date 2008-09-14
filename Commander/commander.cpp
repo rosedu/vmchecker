@@ -32,6 +32,7 @@ extern "C" {
 
 
 static char* vmchecker_root;			//course root
+static char* vmchecker_root_local;
 static char* vm_name;				//virtual machine's name
 static char* username;				//tester system's username
 static char* ip;				//upload system's ip address
@@ -300,6 +301,7 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 
 	/* extracting homework info */
 	vmchecker_root = iniparser_getstring(instance,"Global:VMCheckerRoot",NULL);
+	vmchecker_root_local = strdup(getenv("VMCHECKER_ROOT"));
 	vm_name = iniparser_getstring(instance,"Global:VMName",NULL);
 	job_id = iniparser_getstring(instance,"Global:Job",NULL);
 	user_id = iniparser_getstring(instance,"Global:UserId",NULL);
@@ -310,7 +312,7 @@ void parse_ini_files(char *ini_instance, char* ini_v_machines)
 	ip = iniparser_getstring(instance,"Global:UploadIP",NULL);
 	upload_s = strdup(replace_spaces(upload_time).c_str());
 
-	temp = temp + vmchecker_root + "/executor_jobs/";
+	temp = temp + vmchecker_root_local + "/executor_jobs/";
 	jobs_path = strdup(temp .c_str());
 
 	temp=vm_name;
@@ -364,11 +366,11 @@ int start_executor()
 
 	/* TODO: apelat cu >> vm_executor.log*/
 
-	temp = concatenate ("bash -c \"", vmchecker_root, "/", "bin", "/", "vm_executor", " ", "\'",	\
+	temp = concatenate ("bash -c \"", vmchecker_root_local, "/", "bin", "/", "vm_executor", " ", "\'",	\
 			 vm_name, "\'", " ", "\'", kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",	\
 			 local_ip, " ", "\'", guest_user, "\'", " ", "\'", guest_pass, "\'", " ",	\
 			 "\'", guest_base_path, "\'", " ", "\'", guest_shell_path, "\'", " ", "\'",	\
-			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root, "\'", " ", "\'", job_id,  \
+			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root_local, "\'", " ", "\'", job_id,  \
 			 "\'", "\"", NULL);
 
 	
