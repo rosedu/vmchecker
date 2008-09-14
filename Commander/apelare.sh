@@ -1,1 +1,1 @@
-./commander /home/student/vmchecker/Commander/hw.ini
+./commander hw.ini
