@@ -6,26 +6,26 @@ from __future__ import with_statement
 __author__ = 'Ana Savu ana.savu86@gmail.com'
 
 
-import time
-import sys
-import misc
 import ConfigParser
-import subprocess
+import misc
 import os
 import shutil
+import subprocess
+import sys
+import time
 
 
 def main():
+    # parses arguments
     if len(sys.argv) != 4:
         print >> sys.stderr, 'Usage: %s user_id assignment_id archive_path' % sys.argv[0]
         sys.exit(1)
-
-    course_config_file = misc.config_file()
 
     user_id = sys.argv[1]             # student name
     job = sys.argv[2]                 # assignment name
     archive_path = sys.argv[3]        # archive path
 
+    course_config_file = misc.config_file()
     global_config_file = ConfigParser.RawConfigParser()
     global_config_file.readfp(open(course_config_file))
 
@@ -37,18 +37,32 @@ def main():
     tester = global_config_file.get(job, 'Tester')
     vmname = global_config_file.get(job, 'VMName')
     deadline = global_config_file.get(job, 'Deadline')
-    kernel_msg = misc.get_option(global_config_file, job, 'KernelMsg')
+    kernel_msg = misc.get_option(global_config_file, job, 'KernelMsg', default='0')
 
+    # copy job files to backup directory
     # the upload time is the system's current time
     upload_time = time.strftime("%d-%m-%y %H:%M:%S")
-
+ 
     hw_path = os.path.join(misc.vmchecker_root(), 'back', job, user_id, upload_time)
     os.makedirs(hw_path)
-
     hw_path = os.path.join(hw_path, 'file.zip')
     shutil.copy(archive_path, hw_path)
 
-    # assignment configuration file
+    # prepares output directory
+    # cleans previous job files
+    output_dir = os.path.join(misc.vmchecker_root(), 'checked', job, user_id)
+    shutil.rmtree(output_dir, ignore_errors=True)
+    os.makedirs(output_dir)
+
+    # writes assignment configuration file
+    job_config_file = os.path.join(
+        misc.vmchecker_root(), 'unchecked',
+        '%s %s %s.ini' % (upload_time, user_id, job))
+
+    assert os.path.isdir(os.path.dirname(job_config_file)), (
+        'Directorul pentru fisierul de configurare (%s) a temei nu exista' % (
+            os.path.dirname(job_config_file)))
+
     file = '[DEFAULT]\n'
     file += 'Deadline=%s\n' % deadline
     file += 'Job=%s\n' % job
@@ -61,19 +75,11 @@ def main():
     file += 'VMCheckerRoot=%s\n' % misc.vmchecker_root()
     file += 'VMName=%s\n' % vmname
 
-    job_config_file = os.path.join(
-        misc.vmchecker_root(), 'unchecked',
-        '%s %s %s.ini' % (upload_time, user_id, job))
-
-    assert os.path.isdir(os.path.dirname(job_config_file)), (
-        'Directorul pentru fisierul de configurare (%s) a temei nu exista' % (
-            os.path.dirname(job_config_file)))
-
     with open(job_config_file, 'w') as handle:
         handle.write(file)
         handle.flush()
 
-    # call remote_check script
+    # calls remote_check script
     remote_check = os.path.join(os.path.dirname(sys.argv[0]), 'remote_check.py')
     try:
         return_code = subprocess.call([remote_check, job_config_file])
