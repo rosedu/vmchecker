@@ -109,10 +109,13 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_shell = argv[8];
 	vmrun.guest_home_in_bash = argv[9];
 	vmrun.vmchecker_root = argv[10];
+	vmrun.job_id = argv[11];
 	vmrun.build_command_args = vmrun.build_command_args + "-c \" chmod +x " +	\
 				vmrun.guest_home_in_bash + "/" +  BUILD_SCRIPT +	\
 				";" + vmrun.guest_home_in_bash + "/"+BUILD_SCRIPT +	\
-				" " + vmrun.guest_home_in_bash + " \"";
+				" " + vmrun.guest_home_in_bash + " " + vmrun.local_ip + \
+				" " + vmrun.job_id + " \"";
+	
 	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x " +		\
 				vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" +	\
 				vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " +	\
@@ -134,7 +137,7 @@ static void print_run(void)
 	cout << "guest_pass: " << vmrun.guest_pass << endl;
 	cout << "guest_home: " << vmrun.guest_home << endl;
 	cout << "guest_shell: " << vmrun.guest_shell << endl;
-	cout << "guest_ip: " << vmrun.guest_ip << endl;
+	cout << "local_ip: " << vmrun.local_ip << endl;
 	cout << "build_command_args: " << vmrun.build_command_args << endl;
 	cout << "run_command_args: " << vmrun.run_command_args << endl;
 	cout << "km_enable: " << (vmrun.km_enable == true ? "true" : "false") << endl;
@@ -796,7 +799,8 @@ static void abort_job()
 static void usage(char *argv0)
 {
 	fprintf(stderr, "Usage: %s vm_name(win|lin) enable_k_m(1|0)"
-			"vmpath local_ip guest_user guest_pass guest_home guest_shell guest_home_in_shell root\n", argv0);
+			" vmpath local_ip guest_user guest_pass guest_home"
+		        " guest_shell guest_home_in_shell root job_id\n", argv0);
 }
 
 /*
@@ -807,7 +811,7 @@ int main(int argc, char *argv[])
 {
 	//struct args_struct args;
 
-	if (argc != 11)
+	if (argc != 12)
 	{
 		usage(argv[0]);
 		exit(EXIT_FAILURE);

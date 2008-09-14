@@ -368,7 +368,7 @@ int start_executor()
 			 vm_name, "\'", " ", "\'", kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",	\
 			 local_ip, " ", "\'", guest_user, "\'", " ", "\'", guest_pass, "\'", " ",	\
 			 "\'", guest_base_path, "\'", " ", "\'", guest_shell_path, "\'", " ", "\'",	\
-			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root, "\'", " ". "\'", job_id,  \
+			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root, "\'", " ", "\'", job_id,  \
 			 "\'", "\"", NULL);
 
 	

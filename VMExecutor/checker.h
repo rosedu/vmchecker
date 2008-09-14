@@ -27,6 +27,7 @@ struct run_struct {
 	string build_command_args;
 	string run_command_args;
 	string vmchecker_root;
+	string job_id;
 	Bool km_enable;	
 };
 
