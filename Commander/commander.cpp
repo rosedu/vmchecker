@@ -1,5 +1,5 @@
 /*
- * commander.cpp - Commands VMExecutor 
+ * commander.cpp - Commands VMExecutor - using iniParser3.0b  
  *
  * (C) 2008 Adriana Szekeres <aaa_sz@yahoo.com>
  * 
