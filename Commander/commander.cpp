@@ -263,7 +263,7 @@ int main(int argc, char * argv[])
 		vmchecker_root_local = strdup(vm_root);
 		assert(vmchecker_root_local != NULL);
 		parse_ini_files(argv[1], escape(concatenate(vmchecker_root_local, \
-					"/checker.ini", NULL)).c_str());
+					"/vm_config.ini", NULL)).c_str());
 
 		if (get_archives() == -1)
 			abort_job();
