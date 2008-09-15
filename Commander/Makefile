@@ -18,8 +18,8 @@ compile_parser:
 commander: commander.o
 commander.o: commander.cpp
 
-veryclean:
+clean:
 	$(RM) commander *.o
-	cd iniparser;$(MAKE) veryclean
+	cd iniparser;$(MAKE) clean
 
 

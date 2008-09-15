@@ -48,15 +48,12 @@ libiniparser.so:	$(OBJS)
 		-Wl,-soname=`basename $@`.0
 
 clean:
-	$(RM) $(OBJS)
+	$(RM) $(OBJS) libiniparser.a libiniparser.so*
 
 veryclean:
 	$(RM) $(OBJS) libiniparser.a libiniparser.so*
 	rm -rf ./html ; mkdir html
-	cd test ; $(MAKE) veryclean
 
 docs:
 	@(cd doc ; $(MAKE))
-	
-check:
-	@(cd test ; $(MAKE))
+
