@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <cstdarg>
 #include <assert.h>
+#include <time.h>
 
 #include "log.h"
 #include "commander.h"
@@ -25,8 +26,11 @@
 using std::cout;
 using std::fstream;
 using std::cerr;
-
-
+using std::string;
+using std::ios;
+using std::ifstream;
+using std::ofstream;
+using std::endl;
 
 extern "C" {
 #include "iniparser.h"
@@ -109,7 +113,7 @@ static int append_f(const char *infile, const char *outfile, const char* message
 	string line;
 	string oldline;
 	ifstream in_file(infile);
-	ofstream out_file(outfile, ios_base::app);
+	ofstream out_file(outfile, ios::app);
 
 	if (!(in_file.is_open() && out_file.is_open()))
 	{
