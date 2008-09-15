@@ -1,1 +1,0 @@
-./commander hw.ini

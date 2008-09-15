@@ -16,7 +16,7 @@
 #include <assert.h>
 
 #include "log.h"
-#include "checker.h"
+#include "commander.h"
 
 #include <fcntl.h>
 #include <sys/wait.h>
