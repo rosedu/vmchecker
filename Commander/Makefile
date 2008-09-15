@@ -10,13 +10,16 @@ ARFLAGS = rcv
 RM      = rm -f
 
 
-all: commander 
+all:compile_parser commander
 
-commander:commander.o
+compile_parser: 
+	cd iniparser;$(MAKE)
+	
+commander: commander.o
 commander.o: commander.cpp
 
-
-clean veryclean:
+veryclean:
 	$(RM) commander *.o
+	cd iniparser;$(MAKE) veryclean
 
 
