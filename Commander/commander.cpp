@@ -263,6 +263,7 @@ int main(int argc, char * argv[])
 		if (vm_root == NULL)
 		{
 			cerr << "VMCHECKER_ROOT variable not initialized" << endl;
+			exit(-1);
 		}
 		vmchecker_root_local = strdup(vm_root);
 		assert(vmchecker_root_local != NULL);
