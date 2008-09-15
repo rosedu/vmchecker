@@ -237,7 +237,8 @@ string escape(const string& path) {
 	string aux;
 
 	const char* str = path.c_str();
-	for (; *str != 0; str++) {
+	for (; *str != 0; str++) 
+	{
 		// escapes only spaces.
 		if (isblank(*str))
 			aux.push_back('\\');
@@ -249,11 +250,20 @@ string escape(const string& path) {
 
 int main(int argc, char * argv[])
 {
+	char* vm_root;
+
 	if (argc==2) 
 	{
-		vmchecker_root_local = strdup(getenv("VMCHECKER_ROOT"));
+		vm_root = getenv("VMCHECKER_ROOT");
+		
+		if (vm_root == NULL)
+		{
+			cerr << "VMCHECKER_ROOT variable not initialized" << endl;
+		}
+		vmchecker_root_local = strdup(vm_root);
 		assert(vmchecker_root_local != NULL);
-		parse_ini_files(argv[1], escape(concatenate(vmchecker_root_local, "/checker.ini", NULL).c_str()).c_str());
+		parse_ini_files(argv[1], escape(concatenate(vmchecker_root_local, \
+					"/checker.ini", NULL)).c_str());
 
 		if (get_archives() == -1)
 			abort_job();
@@ -283,13 +293,15 @@ void parse_ini_files(const char *ini_instance, const char* ini_v_machines)
 	string temp;
 	
 	instance = iniparser_load (ini_instance);
-	if (instance==NULL) {
+	if (instance==NULL)
+	{
 		error("Cannot parse file: %s\n", ini_instance);
 		exit(-1) ;
 	}
 
 	v_machines=iniparser_load (ini_v_machines);
-	if (v_machines==NULL){
+	if (v_machines==NULL)
+	{
 		error("Cannot parse file: %s\n", ini_v_machines);
 		exit(-1);
 	}
@@ -326,17 +338,23 @@ void parse_ini_files(const char *ini_instance, const char* ini_v_machines)
 	jobs_path = strdup(temp.c_str());
 
 	temp=vm_name;
-
 	/*extracting vm info */ 
 	local_ip = iniparser_getstring(v_machines,"Global:LocalAddress",NULL);
-	username = iniparser_getstring(v_machines,"Global:TesterUsername",NULL);
+	assert (local_ip != NULL);
+	username = iniparser_getstring(v_machines,"Global:UploaderUsername",NULL);
+	assert (username != NULL);
 	vm_path = iniparser_getstring(v_machines,(temp+":VMPath").c_str(),NULL);
+	assert (vm_path != NULL);
 	guest_user = iniparser_getstring(v_machines,(temp+":GuestUser").c_str(),NULL);
+	assert (guest_user != NULL);
 	guest_pass = iniparser_getstring(v_machines,(temp+":GuestPassword").c_str(),NULL);
+	assert (guest_pass != NULL);
 	guest_base_path = iniparser_getstring(v_machines,(temp+":GuestBasePath").c_str(),NULL);
+	assert (guest_base_path != NULL);
 	guest_shell_path = iniparser_getstring(v_machines,(temp+":GuestShellPath").c_str(),NULL);
+	assert (guest_shell_path != NULL);
 	guest_home_in_bash = iniparser_getstring(v_machines,(temp+":GuestHomeInBash").c_str(),NULL);
-
+	assert (guest_home_in_bash != NULL);
 }
 	
 
@@ -414,7 +432,8 @@ int get_archives()
 	//get CHECKER_FILE
 	ret = copy_from_uploader(
 		username, ip,
-		concatenate(vmchecker_root, "/back/", job_id, "/", user_id, "/", upload_time, "/", CHECKER_FILE, NULL),
+		concatenate(vmchecker_root, "/back/", job_id, "/", user_id, "/", upload_time,\
+			 "/", CHECKER_FILE, NULL),
 		concatenate(jobs_path, "/", CHECKER_FILE, NULL));
 	if (ret != 0)
 		return ret;
@@ -435,11 +454,14 @@ int start_executor()
 
 	/* TODO: apelat cu >> vm_executor.log*/
 
-	temp = concatenate ("bash -c \"", vmchecker_root_local, "/", "bin", "/", "vm_executor", " ", "\'",	\
-			 vm_name, "\'", " ", "\'", kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",		\
-			 local_ip, " ", "\'", guest_user, "\'", " ", "\'", guest_pass, "\'", " ",		\
-			 "\'", guest_base_path, "\'", " ", "\'", guest_shell_path, "\'", " ", "\'",		\
-			 guest_home_in_bash, "\'", " ", "\'", vmchecker_root_local, "\'", " ", "\'", job_id,  	\
+	temp = concatenate ("bash -c \"", vmchecker_root_local, "/", "bin", "/",\
+			 "vm_executor", " ", "\'", vm_name, "\'", " ", "\'",	\
+			 kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",	\
+			 local_ip, " ", "\'", guest_user, "\'", " ", "\'",	\
+			 guest_pass, "\'", " ",	"\'", guest_base_path, "\'", 	\
+			 " ", "\'", guest_shell_path, "\'", " ", "\'",		\
+			 guest_home_in_bash, "\'", " ", "\'", 			\
+			vmchecker_root_local, "\'", " ", "\'", job_id,  	\
 			 "\'", "\"", NULL);
 
 	ret = system_return_value (system (temp.c_str()));
@@ -460,7 +482,8 @@ int prepare_for_results_upload()
 	ret = ssh_command(
 		username, ip,
 		"rm -rf ",
-		concatenate(vmchecker_root, "/checked/", job_id,  "/",  user_id, "/*", NULL).c_str(), 
+		concatenate(vmchecker_root, "/checked/", job_id,  "/",  user_id,\
+			 "/*", NULL).c_str(), 
 		NULL);	
 	
 	if (ret != 0)
@@ -469,7 +492,8 @@ int prepare_for_results_upload()
 	ret = ssh_command(
 		username, ip,
 		"mkdir ",
-		concatenate(vmchecker_root, "/checked/", job_id,  "/",  user_id, "/archive", NULL).c_str(), 
+		concatenate(vmchecker_root, "/checked/", job_id,  "/",  user_id,\
+			 "/archive", NULL).c_str(), 
 		NULL);	
 	
 	return ret;
@@ -510,7 +534,8 @@ int upload_results()
 
 		//check deadline 
 		/*
-		temp = concatenate (penalty_script, deadline, upload_time, ">>", jobs_path, RESULT_OUTPUT_FILE, NULL); 
+		temp = concatenate(escape(penalty_script)," ", deadline, " ", upload_time,	\
+		" >> ", escape(concatenate(jobs_path, "/",  RESULT_OUTPUT_FILE, NULL)).c_str(); 
 
 		ret = system(temp.c_str());
 		ret = system_return_value(ret, "Cannot check deadline");
@@ -576,7 +601,8 @@ int unzip_homework()
 	ret = ssh_command(
 		username, ip,
 		"unzip ",
-		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/archive/", CHECKER_FILE, NULL).c_str(),
+		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/archive/", CHECKER_FILE,\
+			 NULL).c_str(),
 		" -d ", 
 		concatenate(vmchecker_root, "/checked/", job_id, "/", user_id, "/archive/", NULL).c_str(), 
 		NULL);
@@ -587,7 +613,8 @@ int unzip_homework()
 	ret = ssh_command(
 		username, ip,
 		"rm -f ",
-		concatenate(vmchecker_root, "/checked/", job_id,  "/",  user_id, "/archive/", CHECKER_FILE, NULL).c_str(), 
+		concatenate(vmchecker_root, "/checked/", job_id,  "/",  user_id, "/archive/", CHECKER_FILE,\
+			 NULL).c_str(), 
 		NULL);	
 
 	return ret;
