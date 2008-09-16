@@ -459,15 +459,16 @@ int start_executor()
 
 	/* TODO: apelat cu >> vm_executor.log*/
 
-	temp = concatenate ("bash -c \"", vmchecker_root_local, "/", "bin", "/",\
-			 "vm_executor", " ", "\'", vm_name, "\'", " ", "\'",	\
-			 kernel_msg, "\'", " ", "\'", vm_path, "\'", " ",	\
-			 local_ip, " ", "\'", guest_user, "\'", " ", "\'",	\
-			 guest_pass, "\'", " ",	"\'", guest_base_path, "\'", 	\
-			 " ", "\'", guest_shell_path, "\'", " ", "\'",		\
-			 guest_home_in_bash, "\'", " ", "\'", 			\
-			vmchecker_root_local, "\'", " ", "\'", job_id,  	\
-			 "\'", "\"", NULL);
+	temp = concatenate ("bash -c \"", escape(vmchecker_root_local).c_str(), \
+			"/VMExecutor/", "vm_executor", " ", "\'", vm_name, 	\
+			"\'", " ", "\'", kernel_msg, "\'", " ", "\'", vm_path,	\
+			"\'", " ", local_ip, " ", "\'", guest_user, "\'", " ", 	\
+			"\'", guest_pass, "\'", " ",	"\'", 			\
+			escape(guest_base_path).c_str(), "\'", " ", "\'",	\
+			escape(guest_shell_path).c_str(), "\'", " ", "\'",	\
+			escape(guest_home_in_bash).c_str(), "\'", " ", "\'",	\
+			escape(vmchecker_root_local).c_str(), "\'", " ", "\'", 	\
+			escape(job_id).c_str(), "\'", "\"", NULL);
 
 	ret = system_return_value (system (temp.c_str()));
 
