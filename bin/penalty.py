@@ -10,7 +10,7 @@
 #   grade = nota temei inainte de depunctare
 #   upload_time = timpul la care s-a facut upload-ul temei (string)
 #   deadline = deadline-ul temei (string)
-#       datele sunt de forma: "dd mm yy hh:mm:ss"
+#       datele sunt de forma: "dd-mm-yy hh:mm:ss"
 # Iesire:
 #   grade = nota finala dupa depunctare
 
@@ -26,8 +26,8 @@ import math
 def parse_time(upload_time_str, deadline_str):
 
     # parseaza stringurile primite la intrare conform formatului stabilit
-    upload_time = time.strptime(upload_time_str, "%d %m %y %H:%M:%S")
-    deadline = time.strptime(deadline_str, "%d %m %y %H:%M:%S")
+    upload_time = time.strptime(upload_time_str, "%d-%m-%y %H:%M:%S")
+    deadline = time.strptime(deadline_str, "%d-%m-%y %H:%M:%S")
 
     return (upload_time, deadline)
 
