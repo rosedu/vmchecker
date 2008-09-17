@@ -28,7 +28,7 @@ using namespace std;
 #include "checker.h"
 
 /* running information */
-static struct run_struct vmrun;
+static struct run_struct vmrun={""};
 
 /* define global variables */
 static VixError err = VIX_OK;
@@ -50,7 +50,7 @@ Bool jobCompleted;
 /*
  * inspects the returning value of the command invoked by system()
  */
-static int system_return_value(int ret, char* message)
+static int system_return_value(int ret, const char* message)
 {
 	if (ret==-1)
 	{
@@ -597,6 +597,8 @@ static int run_scripts(void)
 		timeout = post_time - pre_time;
 	}
 
+	log("timeout= %d\n",timeout);
+
 	// get RUN_OUTPUT_FILE
 	log("Fetching %s...\n", RUN_OUTPUT_FILE);
 	jobHandle = VixVM_CopyFileFromGuestToHost(
@@ -664,7 +666,7 @@ static int run_scripts(void)
 	run_file.close();
 	outfile.close();
 
-	log("timeout = %d\n", timeout);
+
 
 	return 0;
 }
@@ -787,10 +789,13 @@ static int install_local_tests(void)
 
 static void abort_job()
 {
+	log("Abort job\n");
 	if (pid_nc != -1)
 		kill(pid_nc, SIGTERM);
 
-	close_vm();
+	if ( close_vm() != 0)
+		exit(-1);
+	
 	Vix_ReleaseHandle(jobHandle);
 	Vix_ReleaseHandle(snapshotHandle);
 	Vix_ReleaseHandle(vmHandle);
@@ -852,7 +857,8 @@ int main(int argc, char *argv[])
 	if (pid_nc != -1)
 		kill(pid_nc, SIGTERM);
 
-	close_vm();
+	if (close_vm() != 0)
+		exit(-1);
 
 	Vix_ReleaseHandle(jobHandle);
 	Vix_ReleaseHandle(snapshotHandle);
