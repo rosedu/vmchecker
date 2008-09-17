@@ -110,17 +110,17 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_home_in_bash = argv[9];
 	vmrun.vmchecker_root = argv[10];
 	vmrun.job_id = argv[11];
-	vmrun.build_command_args = vmrun.build_command_args + "-c \" chmod +x " +	\
-				vmrun.guest_home_in_bash + "/" +  BUILD_SCRIPT +	\
-				";" + vmrun.guest_home_in_bash + "/"+BUILD_SCRIPT +	\
-				" " + vmrun.guest_home_in_bash + " " + vmrun.local_ip + \
-				" " + vmrun.job_id + " \"";
+	vmrun.build_command_args = vmrun.build_command_args + "-c \" chmod +x " + \
+        vmrun.guest_home_in_bash + "/" +  BUILD_SCRIPT +                \
+        ";" + vmrun.guest_home_in_bash + "/"+BUILD_SCRIPT +             \
+        " " + vmrun.guest_home_in_bash + " " + vmrun.local_ip +         \
+        " " + vmrun.job_id + " \"";
 	
-	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x " +		\
-				vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" +	\
-				vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " +	\
-				vmrun.guest_home_in_bash + " \"";	
-
+	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x " + \
+        vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" +             \
+        vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " +             \
+        vmrun.guest_home_in_bash + " \"";	
+    
 	jobs_path = vmrun.vmchecker_root + "/executor_jobs/";
 	scripts_path = vmrun.vmchecker_root + "/executor_scripts/";
 
