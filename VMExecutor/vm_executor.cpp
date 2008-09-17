@@ -50,7 +50,7 @@ Bool jobCompleted;
 /*
  * inspects the returning value of the command invoked by system()
  */
-int system_return_value(int ret, char* message)
+static int system_return_value(int ret, char* message)
 {
 	if (ret==-1)
 	{
@@ -448,7 +448,7 @@ static int copy_files(void)
  * handler function for SIGALRM
  */
 
-void alarm_handler(int sig)
+static void alarm_handler(int sig)
 {
 	/* do nothing; succesfully */
 }

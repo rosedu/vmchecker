@@ -3,9 +3,9 @@
 #
 
 # development
-CXXFLAGS = -Wall -g
+CXXFLAGS = -Wall -g -Weffc++
 # release
-#CFLAGS = -Wall -O
+#CFLAGS = -Wall -O -Weffc++
 
 VIX_INCLUDE_PATH = /usr/include/vmware-vix/
 VIX_LIB_PATH = /usr/lib/vmware-vix/lib/server-1/32bit/
