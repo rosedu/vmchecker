@@ -110,16 +110,16 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_home_in_bash = argv[9];
 	vmrun.vmchecker_root = argv[10];
 	vmrun.job_id = argv[11];
-	vmrun.build_command_args = vmrun.build_command_args + "-c \" chmod +x " + \
-        vmrun.guest_home_in_bash + "/" +  BUILD_SCRIPT +                \
-        ";" + vmrun.guest_home_in_bash + "/"+BUILD_SCRIPT +             \
-        " " + vmrun.guest_home_in_bash + " " + vmrun.local_ip +         \
-        " " + vmrun.job_id + " \"";
+	vmrun.build_command_args = vmrun.build_command_args +	\
+	"-c \" chmod +x " + vmrun.guest_home_in_bash + "/" +  	\
+	BUILD_SCRIPT + ";" + vmrun.guest_home_in_bash + "/"+	\
+	BUILD_SCRIPT + " " + vmrun.guest_home_in_bash + " " + 	\
+	vmrun.local_ip + " " + vmrun.job_id + " \"";
 	
-	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x " + \
-        vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" +             \
-        vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " +             \
-        vmrun.guest_home_in_bash + " \"";	
+	vmrun.run_command_args = vmrun.run_command_args + 	\
+	"-c \" chmod +x " + vmrun.guest_home_in_bash + "/" + 	\
+	RUN_SCRIPT + ";" + vmrun.guest_home_in_bash + "/" + 	\
+	RUN_SCRIPT + " " +  vmrun.guest_home_in_bash + " \"";	
     
 	jobs_path = vmrun.vmchecker_root + "/executor_jobs/";
 	scripts_path = vmrun.vmchecker_root + "/executor_scripts/";
@@ -407,7 +407,8 @@ static int copy_files(void)
 	log("Copying %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
-			(temp+scripts_path +vmrun.vmname+"_"+ BUILD_SCRIPT).c_str(),
+			(temp + scripts_path + vmrun.vmname + "_" \
+			+ BUILD_SCRIPT).c_str(),
 			(vmrun.guest_home + BUILD_SCRIPT).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
@@ -624,7 +625,7 @@ static int run_scripts(void)
 			jobHandle = VixVM_CopyFileFromGuestToHost(
 				vmHandle,
 				(vmrun.guest_home + KMESSAGE_OUTPUT_FILE).c_str(),
-				(temp+jobs_path+ KMESSAGE_OUTPUT_FILE).c_str(),
+				(temp + jobs_path + KMESSAGE_OUTPUT_FILE).c_str(),
 				0,				// options
 				VIX_INVALID_HANDLE,		// propertyListHandle
 				NULL,				// callbackProc
@@ -644,8 +645,10 @@ static int run_scripts(void)
 	
 	if(build_c > 1)
 	{
-		ofstream build_file((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(), ios_base::app); 
-		build_file << "-1:  compilarea a produs " << build_c-1 << " warning-uri" << endl;
+		ofstream build_file((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(), \
+                                    ios_base::app); 
+		build_file << "-1:  compilarea a produs " << build_c-1 << 	    \
+                                     " warning-uri" << endl;
 		build_file.close();
 	}
 
@@ -672,7 +675,7 @@ static int run_scripts(void)
 
 static int close_vm()
 {
-/*	log("Closing VM...\n");
+	log("Closing VM...\n");
 	jobHandle=VixVM_PowerOff(
 			vmHandle,
 			0,
@@ -686,7 +689,7 @@ static int close_vm()
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
-*/
+
 	return 0;
 }
 
@@ -758,7 +761,8 @@ static int install_local_tests(void)
 	string command;
 	int ret;	
 
-	command += "unzip " + jobs_path + "/" + CHECKER_TEST + " -d " + jobs_path;
+	command += "unzip " + jobs_path + "/" + CHECKER_TEST + " -d " + \
+		jobs_path;
 
 	ret = system (command.c_str());
 	ret = system_return_value(ret, "Cannot unpack local tests");
@@ -766,8 +770,10 @@ static int install_local_tests(void)
 	if (ret == -1) return -1;
 
 	command = "";
-	command = command + "bash -c \"" + "chmod +x " + jobs_path + "/" + LOCAL_SCRIPT + ";" + jobs_path + "/" + \
-		  LOCAL_SCRIPT+ " " + "\'" + vmrun.local_ip + "\'" + " " + "\'" + vmrun.guest_ip + "\'" + "\"";
+	command = command + "bash -c \"" + "chmod +x " + jobs_path + "/" \
+		 + LOCAL_SCRIPT + ";" + jobs_path + "/" + LOCAL_SCRIPT+  \
+		" " + "\'" + vmrun.local_ip + "\'" + " " + "\'" + 	 \
+		vmrun.guest_ip + "\'" + "\"";
 
 	ret = system(command.c_str());
 	ret = system_return_value(ret, "Cannot run local script");
@@ -800,8 +806,9 @@ static void abort_job()
 static void usage(char *argv0)
 {
 	fprintf(stderr, "Usage: %s vm_name(win|lin) enable_k_m(1|0)"
-			" vmpath local_ip guest_user guest_pass guest_home"
-		        " guest_shell guest_home_in_shell root job_id\n", argv0);
+			" vmpath local_ip guest_user guest_pass "
+			" guest_home guest_shell guest_home_in_shell"
+			" root job_id\n", argv0);
 }
 
 /*
