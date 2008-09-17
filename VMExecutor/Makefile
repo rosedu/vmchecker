@@ -11,18 +11,21 @@ VIX_INCLUDE_PATH = /usr/include/vmware-vix/
 VIX_LIB_PATH = /usr/lib/vmware-vix/lib/server-1/32bit/
 CPPFLAGS = -I$(VIX_INCLUDE_PATH)
 LDFLAGS = -L$(VIX_LIB_PATH)
-LDLIBS = -ldl -lvix -lstdc++ -lfl
+LDLIBS = -ldl -lvix -lstdc++
 
-.PHONY: all clean
+.PHONY: all clean dist test_lin test_win
 
 all: vm_executor
+
+dist: all
+	cp ./vm_executor ../bin/
 
 vm_executor: vm_executor.o 
 
 vm_executor.o: vm_executor.cpp checker.h 
 
 clean:
-	-rm -f vm_executor *.o 
+	-rm -f vm_executor *.o *~
 
 test_lin: checker
 	cp lin_file.zip file.zip
