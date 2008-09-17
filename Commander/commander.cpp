@@ -108,7 +108,8 @@ int clear_jobs_dir();
  * append content of infile to outfile
  * (similar to "cat infile >> outfile" shell command)
  */
-static int append_f(const char *infile, const char *outfile, const char* message)
+static int 
+append_f(const char *infile, const char *outfile, const char* message)
 {
 	string line;
 	string oldline;

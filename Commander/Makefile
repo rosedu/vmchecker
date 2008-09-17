@@ -12,14 +12,17 @@ RM      = rm -f
 
 all:compile_parser commander
 
+dist: all
+		cp commander ../bin/
+
 compile_parser: 
 	cd iniparser;$(MAKE)
-	
+
 commander: commander.o
 commander.o: commander.cpp
 
 clean:
-	$(RM) commander *.o
-	cd iniparser;$(MAKE) clean
+	$(RM) commander *.o *~
+	cd iniparser; $(MAKE) clean
 
 
