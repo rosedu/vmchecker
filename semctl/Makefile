@@ -1,6 +1,5 @@
-# Author: Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
-# Copyright (c) 2008 rosedu.org
-# See LICENSE file for copyright and license details.
+# Copyright (c) 2008 Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
+# See LICENSE file for license details.
 
 CFLAGS=-g -Wall
 

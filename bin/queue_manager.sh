@@ -1,14 +1,10 @@
 #!/bin/bash
 
 # Queue Manager
-# Author: Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
-# Copyright (c) 2008 rosedu.org
-# See LICENSE file for copyright and license details.
+# Copyright (c) 2008 Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
+# See LICENSE file for license details.
 #
 # TODO:
-#  - hwconf_queue_dir should not be passed as argument, but
-#    computed from environment variable VMCHECKER_ROOT
-#  - semaphore should be created if it doesn't exist
 #  - at notify all homeworks in directory should checked
 
 # the directory where the homework config files are stored.
@@ -101,9 +97,9 @@ process_dir_entry()
 process_dir_at_startup()
 {
     # invoke the commander on all queued entryes.
-    for entry in "$hwconf_queue_dir"/*; do
+    for entry in "$hwconf_queue_dir"/*.ini; do
         # if there's noting in the directory just bail out
-        if [ "$entry" = "$hwconf_queue_dir/*" ]; then
+        if [ "$entry" = "$hwconf_queue_dir/*.ini" ]; then
             infomsg "Clean startup: No entries in $hwconf_queue_dir/"
             return 0
         fi
@@ -160,14 +156,14 @@ sanity_checks()
     fi
 
     # check if $hwconf_queue_dir/ is actually a directory or not.
-    if [ -d "$hwconf_queue_dir/" ]; then
-        check_executable $semctl
-        check_executable $commander
-        check_executable $notifier
-    else
+    if ! [ -d "$hwconf_queue_dir/" ]; then
         errmsg "main queue $hwconf_queue_dir/ is not a directory."
         exit 1
     fi
+
+    check_executable $semctl
+    check_executable $commander
+    check_executable $notifier
 }
 
 main()
