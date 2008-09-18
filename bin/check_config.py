@@ -1,4 +1,7 @@
 #! /usr/bin/python
+# Creates a homework configuration file for an upload and calls the 
+# remote_check script using this file
+
 
 from __future__ import with_statement
 
@@ -18,7 +21,8 @@ import time
 def main():
     # parses arguments
     if len(sys.argv) != 4:
-        print >> sys.stderr, 'Usage: %s user_id assignment_id archive_path' % sys.argv[0]
+        print >> sys.stderr, 'Usage: %s user_id assignment_id archive_path' % (
+                sys.argv[0])
         sys.exit(1)
 
     user_id = sys.argv[1]             # student name
@@ -37,13 +41,15 @@ def main():
     tester = global_config_file.get(job, 'Tester')
     vmname = global_config_file.get(job, 'VMName')
     deadline = global_config_file.get(job, 'Deadline')
-    kernel_msg = misc.get_option(global_config_file, job, 'KernelMsg', default='0')
+    kernel_msg = misc.get_option(global_config_file, job, 'KernelMsg', 
+            default='0')
 
     # copy job files to backup directory
     # the upload time is the system's current time
     upload_time = time.strftime("%d-%m-%y %H:%M:%S")
  
-    hw_path = os.path.join(misc.vmchecker_root(), 'back', job, user_id, upload_time)
+    hw_path = os.path.join(misc.vmchecker_root(), 'back', job, user_id, 
+            upload_time)
     os.makedirs(hw_path)
     hw_path = os.path.join(hw_path, 'file.zip')
     shutil.copy(archive_path, hw_path)
@@ -60,7 +66,7 @@ def main():
         '%s %s %s.ini' % (upload_time, user_id, job))
 
     assert os.path.isdir(os.path.dirname(job_config_file)), (
-        'Directorul pentru fisierul de configurare (%s) a temei nu exista' % (
+        'The configuration file direcotory (%s) does not exist' % (
             os.path.dirname(job_config_file)))
 
     file = '[DEFAULT]\n'
@@ -84,10 +90,10 @@ def main():
     try:
         return_code = subprocess.call([remote_check, job_config_file])
     except OSError, e:
-        print >> sys.stderr, 'Nu pot invoca %s (%s)' % (remote_check, str(e))
+        print >> sys.stderr, 'Can\'t call %s (%s)' % (remote_check, str(e))
 
     if return_code != 0:
-        print >> sys.stderr, 'Programul %s a esuat' % remote_check
+        print >> sys.stderr, '%s failed' % remote_check
         sys.exit(1)
 
 

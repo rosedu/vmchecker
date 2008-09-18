@@ -1,18 +1,19 @@
 #! /usr/bin/python
 # Penalty
 #
-# Calculeaza penalizarea primita de o tema in functie de o valoare predefinita si de o lista de ponderi
+# Computes the penalty for one homework based on a predefined value and a 
+# wheight list
 #
-# Utilizare:
-#   ./penalty.py nota data_upload deadline
+# Usage:
+#   ./penalty.py grade upload_time deadline
 #
-# Intrari:
-#   grade = nota temei inainte de depunctare
-#   upload_time = timpul la care s-a facut upload-ul temei (string)
-#   deadline = deadline-ul temei (string)
-#       datele sunt de forma: "dd-mm-yy hh:mm:ss"
-# Iesire:
-#   grade = nota finala dupa depunctare
+# Input:
+#   grade = homework grade before recomputing
+#   upload_time = time of upload (string)
+#   deadline = assignment deadline (string)
+#       date format: "dd-mm-yy hh:mm:ss"
+# Output:
+#   grade = final grade
 
 
 __author__='Ana Savu, ana.savu86@gmail.com'
@@ -25,7 +26,8 @@ import math
 
 def parse_time(upload_time_str, deadline_str):
 
-    # parseaza stringurile primite la intrare conform formatului stabilit
+    # parse input strngs according to format
+
     upload_time = time.strptime(upload_time_str, "%d-%m-%y %H:%M:%S")
     deadline = time.strptime(deadline_str, "%d-%m-%y %H:%M:%S")
 
@@ -34,49 +36,51 @@ def parse_time(upload_time_str, deadline_str):
 
 def compute_grade(grade, upload_time, deadline, penalty, wheights, limit):
 
-# penalty - pentru fiecare zi intarziere se scade valoarea penalty inmultita cu ponderea pentru ziua respectiva
-# wheights - ponderea penalizarii pe zile (ultima pondere din lista se foloseste la calculele urmatoare)
-# limit - se penalizeaza pana la maxim 'limit' puncte
+# penalty - for every day after the deadline the product of the penalty and 
+#   the wheight is substracted from the grade
+# wheights - the penalty's wheight per day (the last wheight from the list 
+# is used for subsequent computations)
+# limit - the limit for the penalty value
 
-    # intervalul de timp dintre deadline si momentul de upload (secunde)
+    # time interval between deadline and upload time (seconds)
     interval = time.mktime(upload_time) - time.mktime(deadline)
 
     new_grade = grade
 
-    # ne intereseaza numai daca numarul de zile ese pozitiv (s-a depasit deadline-ul)
+    # only if the number of days late is positive (deadline exceeded)
     if interval > 0:
-        # numar intreg de zile intarziere
         days_late = int(math.ceil(interval / (3600 * 24)))
         
         for i in range(days_late):
 
-            # daca s-a depasit limita de puncte care pot fi scazute calculul se incheie
+            # the penalty exceeded the limit
             if (grade - new_grade) > limit:
                 break
             else:
-                # pentru fiecare zi intarziere se gaseste ponderea specifica
+                # for every day late the specific wheight is used
                 wheight = wheights[min(i, len(wheights) - 1)]
                 new_grade -= wheight * penalty
 
-    # nota initiala se scade cu maxim 'limit' puncte
     return max(new_grade, grade - limit)
 
 
 def compute_grade_linear(grade, upload_time, deadline):
     
-    # pentru fiecare zi intarziere se scade valoarea 'penalty' (0.25) 
+    # for every day pass the deafline the penalty value is substracted 
+    # from the grade 
     return compute_grade(grade, upload_time, deadline, 0.25, [1], 3)
 
 
 def compute_grade_fixed_deadline(grade, upload_time, deadline):
 
-    # dupa 'x' zile de la depasirea deadline-ului tema nu mai este punctata (x = len(wheights) - 1)
+    # if the number of days pass the deadline exceeds 'x' the homework is
+    # not graded (x = len(wheights) - 1)
     return compute_grade(grade, upload_time, deadline, 1, [1, 1, 1, 7], 10)
 
 
 def compute_grade_wheighted(grade, upload_time, deadline):
 
-    # ponderea penalizarii creste in functie de zi
+    # the wheight for penalty is diferent depending on the day
     return compute_grade(grade, upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
 
 
@@ -92,13 +96,15 @@ def main():
 
     (upload_time, deadline) = parse_time(upload_time_str, deadline_str)
 
-    # in functie de modul de calcul al penalizarii apelati una din functiile urmatoare
+    # based on the type of penalty computing used call one of 
+    # the functions below
     new_grade = compute_grade_linear(grade, upload_time, deadline)
     # new_grade = compute_grade_fixed_deadline(grade, upload_time, deadline)
     # new_grade = compute_grade_wheighted(grade, upload_time, deadline)
-    # new_grade = compute_grade(grade, upload_time, deadline, my_penalty, my_wheights, my_limit)
+    # new_grade = compute_grade(grade, upload_time, deadline, my_penalty, 
+    #        my_wheights, my_limit)
 
-    # nota minima este 0
+    # min grade is 0
     print max(new_grade, 0)
 
 if __name__ == '__main__':
