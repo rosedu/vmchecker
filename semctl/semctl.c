@@ -1,3 +1,12 @@
+/*
+ * Create, modify and delete SysV semaphores
+ *
+ * @author: Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
+ * Copyright (c) 2008 rosedu.org
+ * See LICENSE file for copyright and license details.
+ */
+
+
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
@@ -26,13 +35,13 @@ enum ACTIONS {
 static void print_usage(const char * program_name)
 {
     fprintf(stderr,
-            "%s [UP|DOWN|CREATE|ERASE|EXISTS] UniqueString [count]\n"
-            " CREATE [count]  - create a new semaphore with value count\n"
+            "%s [up|down|create|erase|exists] UniqueString [count]\n"
+            " create [count]  - create a new semaphore with value count\n"
             "                 - default count value: 0\n"
-            " UP/DOWN [count] - increment/decrement the semaphore with count\n"
+            " up/down [count] - increment/decrement the semaphore with count\n"
             "                 - default count value: 1\n"
-            " ERASE           - erase the semaphore\n"
-            " EXISTS          - check if a semaphore exists\n",
+            " erase           - erase the semaphore\n"
+            " exists          - check if a semaphore exists\n",
             program_name);
 }
 

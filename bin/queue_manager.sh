@@ -1,6 +1,10 @@
 #!/bin/bash
+
 # Queue Manager
-# Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
+# Author: Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
+# Copyright (c) 2008 rosedu.org
+# See LICENSE file for copyright and license details.
+#
 # TODO:
 #  - hwconf_queue_dir should not be passed as argument, but
 #    computed from environment variable VMCHECKER_ROOT
@@ -8,10 +12,10 @@
 #  - at notify all homeworks in directory should checked
 
 # the directory where the homework config files are stored.
-hwconf_queue_dir=$1
+hwconf_queue_dir=$VMCHECKER_ROOT/queue
 
 # the id of the course. It's used to identify the semaphore.
-course_id=$2
+course_id=$1
 
 # path to the commander (gets tests.zip & file.zip and runs the vmexecutor)
 commander=`dirname $0`/commander.sh
@@ -25,7 +29,7 @@ notifier=`dirname $0`/notify.sh
 print_usage()
 {
     echo "Invalid queue manager invocation."
-    echo "    Usage: $0 HW_Queue_dir CourseID"
+    echo "    Usage: $0 CourseID"
 }
 
 errmsg()
@@ -38,9 +42,19 @@ infomsg()
     echo $1
 }
 
-create_semaphore()
+# creates a semaphore if one does not already exists
+initialize_semaphore()
 {
-    $semctl create $course_id
+    # only redirect stdout; stderr should still return any encountered errors.
+    $semctl exists $course_id > /dev/null
+    if [ $? -ne 0 ]; then
+        $semctl create $course_id
+        if [ $? -ne 0 ]; then
+            errmsg "Could not create a semaphore for course: $course_id"
+            return 1
+        fi
+    fi
+    return 0
 }
 
 wait_on_semaphore()
@@ -48,19 +62,9 @@ wait_on_semaphore()
     $semctl down $course_id
 }
 
-init_queue()
-{
-    create_semaphore
-    if [ $? -ne 0 ]; then
-        errmsg "Could not create IPC for course " $course_id
-        exit 1
-    fi
-    return 0
-}
-
 loop_func()
 {
-    # wait until notified by the notifier
+    # wait until notified by the notifier, find the oldest file and process it
     wait_on_semaphore
     if [ $? -ne 0 ]; then
         errmsg "wait_on_semaphore failed. stopping $0"
@@ -98,6 +102,13 @@ process_dir_at_startup()
 {
     # invoke the commander on all queued entryes.
     for entry in "$hwconf_queue_dir"/*; do
+        # if there's noting in the directory just bail out
+        if [ "$entry" = "$hwconf_queue_dir/*" ]; then
+            infomsg "Clean startup: No entries in $hwconf_queue_dir/"
+            return 0
+        fi
+
+        # process a posibly valid entry
         process_dir_entry "$entry"
         if [ $? -ne 0 ]; then
             # do not stop after error; there are other homeworks that
@@ -121,7 +132,7 @@ invoke_commander()
         $notifier $course_id
         return 1
     else
-        infomsg "Commander returned successfuly for $entry. Delete homework from queue"
+        infomsg "Commander returned successfuly for $entry. Unqueued homework."
         rm "$entry"
     fi
     return 0
@@ -140,6 +151,25 @@ check_executable()
 	fi
 }
 
+
+sanity_checks()
+{
+    if [ -z "$VMCHECKER_ROOT" ]; then
+        errmsg "Environment variable VMCHECKER_ROOT is not set."
+        exit 1
+    fi
+
+    # check if $hwconf_queue_dir/ is actually a directory or not.
+    if [ -d "$hwconf_queue_dir/" ]; then
+        check_executable $semctl
+        check_executable $commander
+        check_executable $notifier
+    else
+        errmsg "main queue $hwconf_queue_dir/ is not a directory."
+        exit 1
+    fi
+}
+
 main()
 {
     # init_queue
@@ -155,14 +185,14 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-if [ -z "$2" ]; then
-    print_usage
+
+
+sanity_checks
+initialize_semaphore
+if [ $? -ne 0 ]; then
+    errmsg "failed while initializing semctl semaphore $course_id"
     exit 1
 fi
-
-check_executable $semctl
-check_executable $commander
-check_executable $notifier
 
 echo "started $0 on $hwconf_queue_dir for course $course_id"
 
