@@ -22,7 +22,7 @@ dist: all
 
 vm_executor: vm_executor.o 
 
-vm_executor.o: vm_executor.cpp checker.h 
+vm_executor.o: vm_executor.cpp vm_executor.h 
 
 clean:
 	-rm -f vm_executor *.o *~
