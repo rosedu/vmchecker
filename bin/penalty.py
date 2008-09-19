@@ -5,15 +5,15 @@
 # wheight list
 #
 # Usage:
-#   ./penalty.py grade upload_time deadline
+#   ./penalty.py upload_time deadline
 #
 # Input:
-#   grade = homework grade before recomputing
 #   upload_time = time of upload (string)
 #   deadline = assignment deadline (string)
 #       date format: "dd-mm-yy hh:mm:ss"
 # Output:
-#   grade = final grade
+#   penalty_points = number of points to be substracted from the grade
+#   days_late = number of days exceeding the deadline
 
 
 __author__='Ana Savu, ana.savu86@gmail.com'
@@ -34,10 +34,10 @@ def parse_time(upload_time_str, deadline_str):
     return (upload_time, deadline)
 
 
-def compute_grade(grade, upload_time, deadline, penalty, wheights, limit):
+def compute_penalty(upload_time, deadline, penalty, wheights, limit):
 
 # penalty - for every day after the deadline the product of the penalty and 
-#   the wheight is substracted from the grade
+#   the wheight is added to the penalty_points variable
 # wheights - the penalty's wheight per day (the last wheight from the list 
 # is used for subsequent computations)
 # limit - the limit for the penalty value
@@ -45,7 +45,7 @@ def compute_grade(grade, upload_time, deadline, penalty, wheights, limit):
     # time interval between deadline and upload time (seconds)
     interval = time.mktime(upload_time) - time.mktime(deadline)
 
-    new_grade = grade
+    penalty_points = 0
 
     # only if the number of days late is positive (deadline exceeded)
     if interval > 0:
@@ -54,58 +54,59 @@ def compute_grade(grade, upload_time, deadline, penalty, wheights, limit):
         for i in range(days_late):
 
             # the penalty exceeded the limit
-            if (grade - new_grade) > limit:
+            if penalty_points > limit:
                 break
             else:
                 # for every day late the specific wheight is used
                 wheight = wheights[min(i, len(wheights) - 1)]
-                new_grade -= wheight * penalty
+                penalty_points += wheight * penalty
+    else:
+        days_late = 0
 
-    return max(new_grade, grade - limit)
+    return (min(penalty_points, limit), days_late)
 
 
-def compute_grade_linear(grade, upload_time, deadline):
+def compute_penalty_linear(upload_time, deadline):
     
-    # for every day pass the deafline the penalty value is substracted 
-    # from the grade 
-    return compute_grade(grade, upload_time, deadline, 0.25, [1], 3)
+    # for every day pass the deafline the penalty value is added
+    # to the penalty_points
+    return compute_penalty(upload_time, deadline, 0.25, [1], 3)
 
 
-def compute_grade_fixed_deadline(grade, upload_time, deadline):
+def compute_penalty_fixed_deadline(upload_time, deadline):
 
     # if the number of days pass the deadline exceeds 'x' the homework is
     # not graded (x = len(wheights) - 1)
-    return compute_grade(grade, upload_time, deadline, 1, [1, 1, 1, 7], 10)
+    return compute_penalty(upload_time, deadline, 1, [1, 1, 1, 7], 10)
 
 
-def compute_grade_wheighted(grade, upload_time, deadline):
+def compute_penalty_wheighted(upload_time, deadline):
 
     # the wheight for penalty is diferent depending on the day
-    return compute_grade(grade, upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
+    return compute_penalty(upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
 
 
 def main():
    
-    if len(sys.argv) != 4:
-        print >> sys.stderr, 'Usage: %s grade upload_time deadline' % sys.argv[0]
+    if len(sys.argv) != 3:
+        print >> sys.stderr, 'Usage: %s upload_time deadline' % sys.argv[0]
         sys.exit(1)
     
-    grade = float(sys.argv[1])
-    upload_time_str = sys.argv[2]
-    deadline_str = sys.argv[3]
+    upload_time_str = sys.argv[1]
+    deadline_str = sys.argv[2]
 
     (upload_time, deadline) = parse_time(upload_time_str, deadline_str)
 
     # based on the type of penalty computing used call one of 
     # the functions below
-    new_grade = compute_grade_linear(grade, upload_time, deadline)
-    # new_grade = compute_grade_fixed_deadline(grade, upload_time, deadline)
-    # new_grade = compute_grade_wheighted(grade, upload_time, deadline)
-    # new_grade = compute_grade(grade, upload_time, deadline, my_penalty, 
-    #        my_wheights, my_limit)
+    (penalty_points, days_late) = compute_penalty_linear(upload_time, deadline)
+    # (penalty_points, days_late) = compute_penalty_fixed_deadline(upload_time, deadline)
+    # (penalty_points, days_late) = compute_penalty_wheighted(upload_time, deadline)
+    # (penalty_points, days_late) = compute_penalty(upload_time, deadline, my_penalty, 
+    #         my_wheights, my_limit)
 
-    # min grade is 0
-    print max(new_grade, 0)
+    if penalty_points > 0:
+        print "-%.2f: %d zile intarziere" % (penalty_points, days_late)
 
 if __name__ == '__main__':
     main()
