@@ -788,24 +788,24 @@ int main(int argc, char * argv[])
 					vmchecker_root_local,   	     \
 					"/vm_config.ini", NULL)).c_str());
 
-		if (get_archives() == -1)
+		if (get_archives() != 0)
 			abort_job();
 
-		if (start_executor() == -1)
+		if (start_executor() != 0)
 			abort_job();
 
-		if (upload_results() == -1)
+		if (upload_results() != 0)
 			abort_job();
 
-		if (unzip_homework() == -1)
+		if (unzip_homework() != 0)
 			abort_job();
 
-		if (remove_config_file(argv[1]) == -1)
+		if (remove_config_file(argv[1]) != 0)
 			abort_job();
 
 		free_resources();
 
-		if (clear_jobs_dir() == -1)
+		if (clear_jobs_dir() != 0
 			exit (-1);
 	}
 }
