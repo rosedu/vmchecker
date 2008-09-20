@@ -146,13 +146,15 @@ static int system_return_value(int ret)
 	}
 	else
 	{	
-		if (WIFEXITED(ret)&&(WEXITSTATUS(ret) != 0))
-		{
+		if (WIFEXITED(ret))
+			if ((WEXITSTATUS(ret) != 0))
+			{
 			return WEXITSTATUS(ret);
-		}
+			}
+			else return 0;
 	}
 
-	return 0;
+	return -1;
 }
 
 /*--------------------------------------------------------------------------*/
