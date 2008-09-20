@@ -16,3 +16,6 @@ tester-dist uploader-dist clean:
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
+	@if [ "$@" = "clean" ]; then \
+		rm -vf bin/semctl bin/vm_executor bin/commander; \
+	fi
