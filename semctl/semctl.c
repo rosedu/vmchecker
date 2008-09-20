@@ -65,6 +65,14 @@ static void print_errno(const char * userstr, int err, ...)
     va_end(ap);
 }
 
+static void print_arguments(int argc, char * argv[])
+{
+    int i;
+    fprintf(stderr, "[SEMCTL] Commandline arguments were: ");
+    for(i = 0; i < argc; i++)
+        fprintf(stderr, "%s ", argv[i]);
+    fprintf(stderr, "\n");
+}
 
 /////////////////////
 // FILE OPERATIONS //
@@ -317,6 +325,7 @@ int main(int argc, char * argv[])
     err = run_action(action, ftokstr, count);
     if (err) {
         errmsg("Cannot perform that action (error code:%d)\n", err);
+        print_arguments(argc, argv);
         free(ftokstr);
         return EXIT_FAILURE;
     }
