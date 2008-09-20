@@ -427,14 +427,14 @@ static void parse_ini_files(const char *ini_instance, 			     \
 	string temp;
 	
 	instance = iniparser_load (ini_instance);
-	if (instance==NULL)
+	if (instance == NULL)
 	{
 		error("Cannot parse file: %s\n", ini_instance);
 		exit(-1) ;
 	}
 
 	v_machines=iniparser_load (ini_v_machines);
-	if (v_machines==NULL)
+	if (v_machines == NULL)
 	{
 		error("Cannot parse file: %s\n", ini_v_machines);
 		exit(-1);
@@ -448,22 +448,22 @@ static void parse_ini_files(const char *ini_instance, 			     \
 	vmchecker_root = iniparser_getstring(instance, 			     \
 						"DEFAULT:VMCheckerRoot",NULL);
 	assert (vmchecker_root != NULL);
-	vm_name = iniparser_getstring(instance,        "DEFAULT:VMName",NULL);
+	vm_name = iniparser_getstring(instance, "DEFAULT:VMName",NULL);
 	assert (vm_name != NULL);
-	job_id = iniparser_getstring(instance,            "DEFAULT:Job",NULL);
+	job_id = iniparser_getstring(instance, "DEFAULT:Job",NULL);
 	assert (job_id != NULL);
-	user_id = iniparser_getstring(instance,        "DEFAULT:UserId",NULL);
+	user_id = iniparser_getstring(instance, "DEFAULT:UserId",NULL);
 	assert (user_id != NULL);
-	deadline = iniparser_getstring(instance,     "DEFAULT:Deadline",NULL);
+	deadline = iniparser_getstring(instance, "DEFAULT:Deadline",NULL);
 	assert (deadline !=NULL);
 	upload_time = iniparser_getstring(instance,"DEFAULT:UploadTime",NULL);
 	assert (upload_time != NULL);
 	penalty_script = iniparser_getstring(instance, 			     \
                                                 "DEFAULT:PenaltyScript",NULL);
 	assert (penalty_script != NULL);
-	kernel_msg = iniparser_getstring(instance,  "DEFAULT:KernelMsg",NULL);
+	kernel_msg = iniparser_getstring(instance, "DEFAULT:KernelMsg",NULL);
 	assert (kernel_msg != NULL);
-	ip = iniparser_getstring(instance,         "DEFAULT:UploaderIP",NULL);
+	ip = iniparser_getstring(instance, "DEFAULT:UploaderIP",NULL);
 	assert (ip != NULL);
 	username = iniparser_getstring(instance, "DEFAULT:UploaderUsername", \
 								        NULL);
