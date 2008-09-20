@@ -12,6 +12,7 @@ __author__ = 'Ana Savu ana.savu86@gmail.com'
 import ConfigParser
 import misc
 import os
+import pwd
 import shutil
 import subprocess
 import sys
@@ -76,7 +77,8 @@ def main():
     file += 'PenaltyScript=%s\n' % penalty_script
     file += 'Tester=%s\n' % tester
     file += 'UploadTime=%s\n' % upload_time
-    file += 'UploadIp=%s\n' % misc.get_ip_address(interface)
+    file += 'UploaderIP=%s\n' % misc.get_ip_address(interface)
+    file += 'UploaderUsername=%s\n' % pwd.getpwuid(os.getuid())[0]
     file += 'UserId=%s\n' % user_id
     file += 'VMCheckerRoot=%s\n' % misc.vmchecker_root()
     file += 'VMName=%s\n' % vmname
