@@ -79,14 +79,16 @@ static int system_return_value(int ret, const char* message)
 	}
 	else
 	{	
-		if (WIFEXITED(ret)&&(WEXITSTATUS(ret) != 0))
-		{
-			error("%s\n",message);
-			return WEXITSTATUS(ret);
-		}
+		if (WIFEXITED(ret))
+			if ((WEXITSTATUS(ret) != 0))
+			{
+				error("%s\n",message);
+				return WEXITSTATUS(ret);
+			}
+			else return 0;
 	}
 
-	return 0;
+	return -1;
 }
 
 /*--------------------------------------------------------------------------*/
