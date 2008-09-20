@@ -805,7 +805,7 @@ int main(int argc, char * argv[])
 
 		free_resources();
 
-		if (clear_jobs_dir() != 0
+		if (clear_jobs_dir() != 0)
 			exit (-1);
 	}
 }
