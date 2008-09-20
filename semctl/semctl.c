@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -44,10 +45,24 @@ static void print_usage(const char * program_name)
             program_name);
 }
 
-static void print_errno(const char * usermgs, int err)
+static void errmsg(const char * fmt, ...)
 {
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stderr, "[SEMCTL] ");
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+}
+
+static void print_errno(const char * userstr, int err, ...)
+{
+    va_list ap;
     char * strerr = strerror(err);
-    fprintf(stderr, "%s  (errno=[%d] strerr=[%s])\n", usermgs, err, strerr);
+    va_start(ap, err);
+    fprintf(stderr, "[SEMCTL] ");
+    vfprintf(stderr, userstr, ap);
+    errmsg("\t(errno=[%d] strerr=[%s])\n", err, strerr);
+    va_end(ap);
 }
 
 
@@ -96,15 +111,6 @@ static key_t my_ftok(const char * ftokstr)
 {
 #define GLOBAL_PROGRAM_ID 66 // a random number in the range [1..255]
     key_t key = ftok(ftokstr, GLOBAL_PROGRAM_ID);
-    if (-1 == key) {
-        fprintf(stderr,
-                "parse_args:ftok failed. ftok args were\n"
-                "\t %s\n"
-                "\t %d\n",
-                ftokstr, GLOBAL_PROGRAM_ID);
-            print_errno("", errno);
-        return -1;
-    }
     return key;
 }
 
@@ -171,9 +177,18 @@ static int run_action(enum ACTIONS action, const char * ftokstr, int count)
             return -1;
     }
 
+
     key = my_ftok(ftokstr);
-    if (-1 == key)
+    if (-1 == key) {
+        if (EXISTS == action) {
+            printf("0\n");
+            return 0;
+        }
+        print_errno("run_action:my_ftok failed. ftok args were\n"
+                    "\t %s\n"
+                    "\t %d\n", errno, ftokstr, GLOBAL_PROGRAM_ID);
         return -1;
+    }
 
     switch(action) {
     case DOWN:
@@ -206,15 +221,16 @@ static int run_action(enum ACTIONS action, const char * ftokstr, int count)
         return 0;
 
     case EXISTS:
+
         semId = open_sem(key);
         if (-1 == semId)
-            printf("0");
+            printf("0\n");
         else
-            printf("1");
+            printf("1\n");
         return (-1 == semId);
 
     default:
-        fprintf(stderr, "run_action: invalid action=[%d]\n", action);
+        errmsg("run_action: invalid action=[%d]\n", action);
         return -1;
     }
 
@@ -222,11 +238,12 @@ static int run_action(enum ACTIONS action, const char * ftokstr, int count)
 }
 
 static int
-parse_args(int argc, char * argv[], char ** pftokstr, enum ACTIONS * pact, int * pcount) {
+parse_args(int argc, char * argv[], char ** pftokstr,
+           enum ACTIONS * pact, int * pcount) {
     *pftokstr = NULL;
     *pact = INVALID_ACTION;
     if (argc < 3) {
-        fprintf(stderr,"Invalid number of arguments.\n");
+        errmsg("Invalid number of arguments.\n");
         return EXIT_FAILURE;
     }
 
@@ -244,7 +261,7 @@ parse_args(int argc, char * argv[], char ** pftokstr, enum ACTIONS * pact, int *
 #undef PARSE_ACTION
 
     if (INVALID_ACTION == *pact) {
-        fprintf(stderr, "Invalid first argument [%s].\n", argv[1]);
+        errmsg("Invalid first argument [%s].\n", argv[1]);
         return EXIT_FAILURE;
     }
 
@@ -265,14 +282,14 @@ parse_args(int argc, char * argv[], char ** pftokstr, enum ACTIONS * pact, int *
         }
 
         if (endptr == str) {
-            fprintf(stderr, "No digits were found in the `count` field.\n");
+            errmsg("No digits were found in the `count` field.\n");
             return EXIT_FAILURE;
         }
 
         /* If we got here, strtol() successfully parsed a number */
 
         if (*endptr != '\0') {
-            fprintf(stderr, "`Count` field contained more than a number.\n");
+            errmsg("`Count` field contained more than a number.\n");
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -291,7 +308,7 @@ int main(int argc, char * argv[])
     enum ACTIONS action;
     err = parse_args(argc, argv, &ftokstr, &action, &count);
     if (err) {
-        fprintf(stderr, "Invalid arguments (error code:%d)\n", err);
+        errmsg("Invalid arguments (error code:%d)\n", err);
         print_usage(argv[0]);
         free(ftokstr);
         return err;
@@ -299,7 +316,7 @@ int main(int argc, char * argv[])
 
     err = run_action(action, ftokstr, count);
     if (err) {
-        fprintf(stderr, "Cannot perform that action (error code:%d)\n", err);
+        errmsg("Cannot perform that action (error code:%d)\n", err);
         free(ftokstr);
         return EXIT_FAILURE;
     }
