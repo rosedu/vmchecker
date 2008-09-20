@@ -42,8 +42,8 @@ infomsg()
 initialize_semaphore()
 {
     # only redirect stdout; stderr should still return any encountered errors.
-    $semctl exists $course_id > /dev/null
-    if [ $? -ne 0 ]; then
+    local sem_exists=`$semctl exists $course_id`
+    if [ "x0" = "x$sem_exists" ]; then
         $semctl create $course_id
         if [ $? -ne 0 ]; then
             errmsg "Could not create a semaphore for course: $course_id"
