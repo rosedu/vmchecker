@@ -441,8 +441,8 @@ static void parse_ini_files(const char *ini_instance, 			     \
 	}
 
 
-	iniparser_dump(instance, stderr);
-	iniparser_dump(v_machines,stderr);
+	//iniparser_dump(instance, stderr);
+	//iniparser_dump(v_machines,stderr);
 
 	/* extracting homework info */
 	vmchecker_root = iniparser_getstring(instance, 			     \
@@ -463,8 +463,12 @@ static void parse_ini_files(const char *ini_instance, 			     \
 	assert (penalty_script != NULL);
 	kernel_msg = iniparser_getstring(instance,  "DEFAULT:KernelMsg",NULL);
 	assert (kernel_msg != NULL);
-	ip = iniparser_getstring(instance,           "DEFAULT:UploadIP",NULL);
+	ip = iniparser_getstring(instance,         "DEFAULT:UploaderIP",NULL);
 	assert (ip != NULL);
+	username = iniparser_getstring(instance, "DEFAULT:UploaderUsername", \
+								        NULL);
+	assert (username != NULL);
+	
 
 	temp = temp + vmchecker_root_local + "/executor_jobs/";
 	jobs_path = strdup(temp.c_str());
@@ -474,10 +478,6 @@ static void parse_ini_files(const char *ini_instance, 			     \
 	/*extracting vm info */ 
 	local_ip = iniparser_getstring(v_machines,"Global:LocalAddress",NULL);
 	assert (local_ip != NULL);
-
-	username = iniparser_getstring(v_machines,                           \
-					      "Global:UploaderUsername",NULL);
-	assert (username != NULL);
 	vm_path = iniparser_getstring(v_machines,			     \
 					     (temp + ":VMPath").c_str(),NULL);
 	assert (vm_path != NULL);
@@ -493,7 +493,7 @@ static void parse_ini_files(const char *ini_instance, 			     \
 	guest_shell_path = iniparser_getstring(v_machines, 		     \
 				     (temp + ":GuestShellPath").c_str(),NULL);
 	assert (guest_shell_path != NULL);
-	guest_home_in_bash = iniparser_getstring(v_machines, 		     \	
+	guest_home_in_bash = iniparser_getstring(v_machines, 		     \
 		                    (temp + ":GuestHomeInBash").c_str(),NULL);
 	assert (guest_home_in_bash != NULL);
 }
