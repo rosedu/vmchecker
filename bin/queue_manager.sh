@@ -119,7 +119,6 @@ invoke_commander()
     local entry=$1
     $commander "$entry"
     if [ $? -ne 0 ]; then
-	exit 1
         errmsg "invoke_commander($entry) failed\n"
         errmsg   "    retouching file for later invocation"
         touch "$entry"
