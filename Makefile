@@ -10,7 +10,9 @@
 MAKEFLAGS += --no-print-directory
 
 COMPONENTS:= VMExecutor Commander semctl
-dist clean:
+
+
+tester-dist uploader-dist clean:
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
