@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 # Queue Manager
 # Copyright (c) 2008 Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
@@ -127,8 +127,10 @@ invoke_commander()
         $notifier $course_id
         return 1
     else
-        infomsg "Commander returned successfuly for $entry. Unqueued homework."
-        rm "$entry"
+        # fixed bug #17 (http://dev.rosedu.org/trac/vmchecker/ticket/17)
+        # queue_manager will not delete entries from the queue.
+        #infomsg "Commander returned successfuly for $entry. Unqueued homework."
+        #rm "$entry"
     fi
     return 0
 }
