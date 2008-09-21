@@ -87,6 +87,13 @@ def main():
         handle.write(file)
         handle.flush()
 
+    # backs up assignment configuration file     
+    back_config_file = os.path.join(
+        misc.vmchecker_root(), 'back', job, user_id, upload_time, 
+        '%s %s %s.ini' % (upload_time, user_id, job))
+    
+    shutil.copy(job_config_file, back_config_file)
+
     # calls remote_check script
     remote_check = os.path.join(os.path.dirname(sys.argv[0]), 'remote_check.py')
     try:
