@@ -638,14 +638,19 @@ static int upload_results()
 	{
 
 		//check deadline 
-		/*
-		temp = concatenate(escape(penalty_script)," ", deadline, " ",\
-		upload_time, " >> ", escape(concatenate(jobs_path, "/",      \
-		RESULT_OUTPUT_FILE, NULL)).c_str(); 
+		
+		temp = concatenate(escape(penalty_script).c_str()," \'",\
+		deadline, "\' ", upload_time, " >> ",\
+		escape(concatenate(jobs_path,\
+		"/", RESULT_OUTPUT_FILE, NULL)).c_str()); 
 
 		ret = system(temp.c_str());
-		ret = system_return_value(ret, "Cannot check deadline");
-		*/
+		ret = system_return_value(ret);
+
+		if (ret != 0) 
+			error("%s","Cannot check deadline");
+
+		//but go on? 		
 
 		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(),     \
 			(temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),     \
