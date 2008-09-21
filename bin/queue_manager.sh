@@ -126,7 +126,7 @@ invoke_commander()
         sleep 5
         $notifier $course_id
         return 1
-    else
+        #else
         # fixed bug #17 (http://dev.rosedu.org/trac/vmchecker/ticket/17)
         # queue_manager will not delete entries from the queue.
         #infomsg "Commander returned successfuly for $entry. Unqueued homework."
