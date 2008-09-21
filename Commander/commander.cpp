@@ -640,10 +640,12 @@ static int upload_results()
 		//check deadline 
 		
 		temp = concatenate(escape(penalty_script).c_str()," \'",\
-		deadline, "\' ", upload_time, " >> ",\
+		deadline, "\' \'", upload_time, "\' >> ",\
 		escape(concatenate(jobs_path,\
 		"/", RESULT_OUTPUT_FILE, NULL)).c_str()); 
-
+		
+		cout <<"Checking deadline\n" << temp << endl;
+		
 		ret = system(temp.c_str());
 		ret = system_return_value(ret);
 
