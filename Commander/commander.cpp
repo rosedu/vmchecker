@@ -643,7 +643,7 @@ static int upload_results()
 		escape(penalty_script).c_str()," \'",\
 		deadline, "\' \'", upload_time, "\' >> ",\
 		escape(concatenate(jobs_path,\
-		"/", RESULT_OUTPUT_FILE, NULL)).c_str()); 
+		"/", RESULT_OUTPUT_FILE, NULL)).c_str(), NULL); 
 		
 		cout <<"Checking deadline\n" << temp << endl;
 		
