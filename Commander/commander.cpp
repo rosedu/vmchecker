@@ -654,7 +654,7 @@ static int upload_results()
 			error("%s","Cannot check deadline");
 
 		//but go on? 		
-
+		temp="";		
 		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(),     \
 			(temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),     \
 			"\n     ===== BUILD RESULTS =====\n");
