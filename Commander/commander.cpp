@@ -643,7 +643,7 @@ static int upload_results()
 		
 		temp = concatenate(escape(vmchecker_root_local).c_str(), "/",\
 		escape(penalty_script).c_str()," \'",\
-		deadline, "\' \'", upload_time, "\' >> ",\
+		upload_time, "\' \'", deadline, "\' >> ",\
 		escape(concatenate(jobs_path,\
 		"/", RESULT_OUTPUT_FILE, NULL)).c_str(), NULL); 
 		
