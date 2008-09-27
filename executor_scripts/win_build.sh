@@ -76,6 +76,12 @@ check_job()
 		return $err
 	fi
    
+	build_tests "post"; err=$?
+	if [ $err != 0 ]; then
+		return $err
+	fi
+
+
 	return 0
 }
 
