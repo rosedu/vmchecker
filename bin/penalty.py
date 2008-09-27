@@ -105,8 +105,9 @@ def main():
     # (penalty_points, days_late) = compute_penalty(upload_time, deadline, my_penalty, 
     #         my_wheights, my_limit)
 
-    if penalty_points > 0:
-        print "-%.2f: %d zile intarziere" % (penalty_points, days_late)    
+    
+    #if penalty_points > 0:
+    print "-%.2f: %d zile intarziere" % (penalty_points, days_late)    
 
 if __name__ == '__main__':
     main()
