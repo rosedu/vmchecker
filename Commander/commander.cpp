@@ -249,7 +249,8 @@ static int copy_from_uploader(const char* username, const char* ip, \
 	temp += concatenate("scp", " ", NULL);
 	temp += concatenate(username, "@", ip, ":\"", \
                             escape(src).c_str(), "\" ", NULL);
-	temp += concatenate("\"", escape(dest).c_str(), "\"", NULL);
+	temp += concatenate("\"", escape(dest).c_str(), "\" ", NULL);
+	temp += "> /dev/null";
 	cerr << "copy_from_uploader: " << temp << endl;
 	ret = system_return_value(system(temp.c_str()));
 
@@ -283,6 +284,7 @@ static int copy_to_uploader(const char* username, const char* ip, \
 	temp += concatenate("\"", escape(src).c_str(), "\" ", NULL);
 	temp += concatenate(username, "@", ip, ":\"", \
 			    escape(dest).c_str(), "\"", NULL);
+	temp += "> /dev/null";
 	cerr << "copy_to_uploader: " << temp << endl;
 	ret = system_return_value(system(temp.c_str()));
 

@@ -106,7 +106,7 @@ def main():
     #         my_wheights, my_limit)
 
     if penalty_points > 0:
-        print "-%.2f: %d zile intarziere" % (penalty_points, days_late)
+        print "-%.2f: %d zile intarziere" % (penalty_points, days_late)    
 
 if __name__ == '__main__':
     main()
