@@ -234,7 +234,7 @@ static int check_build(void)
 
 	if (!infile.is_open())
 	{
-		error("unable to open file %s\n",
+		error("[EXECUTOR] Unable to open file %s\n",
 				BUILD_OUTPUT_FILE);
 		return -1;
 	}	
@@ -280,7 +280,7 @@ static int start_vm(void)
 {
 	int tries;	
 
-	log("Connecting to server...\n");
+	log("[EXECUTOR] Connecting to server...\n");
 	jobHandle = VixHost_Connect(
 			1,
 			VIX_SERVICEPROVIDER_VMWARE_SERVER,
@@ -299,14 +299,14 @@ static int start_vm(void)
 			VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-   		error("VixHost_Connect: %s: %llu\n",
+   		error("[EXECUTOR] VixHost_Connect: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
    		return -1;
 	}
 
 	Vix_ReleaseHandle(jobHandle);
  
-	log("Opening VM...\n");
+	log("[EXECUTOR] Opening VM...\n");
 	jobHandle = VixVM_Open(
 			hostHandle,
 			vmrun.vmpath.c_str(),
@@ -320,14 +320,14 @@ static int start_vm(void)
 			VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_Open: %s: %llu\n",
+		error("[EXECUTOR] VixVM_Open: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err); 
 		return -1;
 	}
 
 	Vix_ReleaseHandle(jobHandle);
 
-	log("Getting SnapShot...\n");
+	log("[EXECUTOR] Getting SnapShot...\n");
 
 	// revert to snapshot #0
 	snapshotIndex = 0;
@@ -337,12 +337,12 @@ static int start_vm(void)
 			&snapshotHandle);
 	if (VIX_OK != err)
 	{
-		error("VixVM_GetRootSnapshot: %s: %llu\n",
+		error("[EXECUTOR] VixVM_GetRootSnapshot: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
    		return -1;
 	}
 
-	log("Reverting to SnapShot...\n");
+	log("[EXECUTOR] Reverting to SnapShot...\n");
 	jobHandle = VixVM_RevertToSnapshot(
 			vmHandle,
 			snapshotHandle,
@@ -354,16 +354,17 @@ static int start_vm(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_RevertToSnapshot: %s: %llu\n",
+		error("[EXECUTOR] VixVM_RevertToSnapshot: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
 
-	log("Waiting for Tools...\n");
+	log("[EXECUTOR] Waiting for Tools...\n");
 
 	// wait until guest completes bootup process
 	tries=5;
-	while (tries>0) {
+	while (tries>0)
+	{
 		jobHandle = VixVM_WaitForToolsInGuest(
 				vmHandle,
 				300,		// timeoutInSeconds
@@ -374,12 +375,14 @@ static int start_vm(void)
 		{
 			if (VIX_E_UNRECOGNIZED_PROPERTY == err)
 			{
-				log("Retrying Waiting for Tools...\n");
+			log("[EXECUTOR] Retrying Waiting "
+				"for Tools...\n");
 				tries--;
 				continue;
 			}
 
-			error("VixVM_WaitForToolsInGuest: %s: %llu\n",
+			error("[EXECUTOR] "
+			      "VixVM_WaitForToolsInGuest: %s: %llu\n",
 					Vix_GetErrorText(err,NULL), err);
 			return -1;
 		}
@@ -387,7 +390,7 @@ static int start_vm(void)
 		break;
 	}
 	
-	log("Logging in...\n");
+	log("[EXECUTOR] Logging in...\n");
 
 	// authenticate for guest operations.
 	jobHandle = VixVM_LoginInGuest(
@@ -401,7 +404,7 @@ static int start_vm(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_LoginInGuest: %s: %llu\n",
+		error("[EXECUTOR] VixVM_LoginInGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
@@ -418,7 +421,7 @@ static int copy_files(void)
 {
 	string temp;
 	// copy checker archive
-	log("Copying %s...\n", CHECKER_FILE);
+	log("[EXECUTOR] Copying %s...\n", CHECKER_FILE);
 
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
@@ -432,13 +435,13 @@ static int copy_files(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_CopyFileFromHostToGuest: %s: %llu\n",
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
 
 	// copy CHECKER_TEST.zip
-	log("Copying %s...\n", CHECKER_TEST);
+	log("[EXECUTOR] Copying %s...\n", CHECKER_TEST);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
 			(temp+jobs_path+ CHECKER_TEST).c_str(),
@@ -451,13 +454,13 @@ static int copy_files(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_CopyFileFromHostToGuest: %s: %llu\n",
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
 
         // copy build script
-	log("Copying %s...\n", BUILD_SCRIPT);
+	log("[EXECUTOR] Copying %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(			
 			vmHandle,					
 			(temp + scripts_path + vmrun.vmname + "_"	     \
@@ -471,13 +474,13 @@ static int copy_files(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_CopyFileFromHostToGuest: %s: %llu\n",
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
 
 	// copy running script
-	log("Copying %s...\n", RUN_SCRIPT);
+	log("[EXECUTOR] Copying %s...\n", RUN_SCRIPT);
 	jobHandle = VixVM_CopyFileFromHostToGuest(
 			vmHandle,
 			(temp+scripts_path +vmrun.vmname+"_"		     \
@@ -491,7 +494,7 @@ static int copy_files(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("VixVM_CopyFileFromHostToGuest: %s: %llu\n",
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
@@ -559,12 +562,13 @@ static int run_scripts(void)
 	
 	if (!outfile.is_open())
 	{
-		error("unable to open file %s\n", RESULT_OUTPUT_FILE);
+		error("[EXECUTOR] Unable to open "
+		      "file %s\n", RESULT_OUTPUT_FILE);
 		return -1;
 	}
 
 	// run the target program. 
-	log("Starting %s...\n", BUILD_SCRIPT);
+	log("[EXECUTOR] Starting %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
 			vmrun.guest_shell.c_str(),
@@ -584,7 +588,7 @@ static int run_scripts(void)
 
 	
 	// get BUILD_OUTPUT_FILE
-	log("Fetching %s...\n", BUILD_OUTPUT_FILE);
+	log("[EXECUTOR] Fetching %s...\n", BUILD_OUTPUT_FILE);
 
 	jobHandle = VixVM_CopyFileFromGuestToHost(
 			vmHandle,
@@ -598,7 +602,7 @@ static int run_scripts(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-                error("VixVM_CopyFileFromGuestToHost: %s: %llu\n",
+                error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
@@ -607,7 +611,7 @@ static int run_scripts(void)
 	build_c = check_build();
 	if (build_c == -1)
 	{
-		error("System error: check_build failed\n");
+		error("[EXECUTOR] System error: check_build failed\n");
 		return -1;
 	}
 	else
@@ -626,11 +630,11 @@ static int run_scripts(void)
 	//get_vm_ip
 	if (get_vm_ip() == -1)
 	{
-		error("System error: get_vm_ip failed\n");
+		error("[EXECUTOR] System error: get_vm_ip failed\n");
 		return -1;
 	}
 
-	log("VM's IP = %s\n", vmrun.guest_ip.c_str());
+	log("[EXECUTOR] VM's IP = %s\n", vmrun.guest_ip.c_str());
 
 	//build succesful, go on with runnig RUN_SCRIPT
 
@@ -639,7 +643,7 @@ static int run_scripts(void)
 	alarm(120);
 
 	// run the target program. 
-	log("Starting %s...\n", RUN_SCRIPT);
+	log("[EXECUTOR] Starting %s...\n", RUN_SCRIPT);
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
 			vmrun.guest_shell.c_str(),
@@ -659,10 +663,10 @@ static int run_scripts(void)
 		timeout = post_time - pre_time;
 	}
 
-	log("timeout= %d\n",timeout);
+	log("[EXECUTOR] Timeout= %d\n",timeout);
 
 	// get RUN_OUTPUT_FILE
-	log("Fetching %s...\n", RUN_OUTPUT_FILE);
+	log("[EXECUTOR] Fetching %s...\n", RUN_OUTPUT_FILE);
 	jobHandle = VixVM_CopyFileFromGuestToHost(
 			vmHandle,
 			(vmrun.guest_home + RUN_OUTPUT_FILE).c_str(),
@@ -675,7 +679,7 @@ static int run_scripts(void)
 	err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-                error("VixVM_CopyFileFromGuestToHost: %s: %llu\n",
+                error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
@@ -683,7 +687,7 @@ static int run_scripts(void)
 	//if kernel messages enabled, fetch KMESSAGE_OUTPUT_FILE
 	if (vmrun.km_enable)
 	{
-		log("Fetching %s...\n", KMESSAGE_OUTPUT_FILE);	
+		log("[EXECUTOR] Fetching %s...\n", KMESSAGE_OUTPUT_FILE);	
 		if (vmrun.vmname == "win")
 		{
 			jobHandle = VixVM_CopyFileFromGuestToHost(
@@ -700,9 +704,11 @@ static int run_scripts(void)
 			err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 			if (VIX_OK != err)
 			{
-				error("VixVM_CopyFileFromGuestToHost: %s:"   \
-					"%llu\n",
-					Vix_GetErrorText(err,NULL), err);
+				error("[EXECUTOR] "
+				"VixVM_CopyFileFromGuestToHost: %s:"
+				"%llu\n",
+				Vix_GetErrorText(err,NULL), err);
+				
 				return -1;
 			}
 		}
@@ -742,7 +748,7 @@ static int run_scripts(void)
 /*--------------------------------------------------------------------------*/
 static int close_vm()
 {
-	log("Closing VM...\n");
+	log("[EXECUTOR] Closing VM...\n");
 	jobHandle=VixVM_PowerOff(
 			vmHandle,
 			0,
@@ -752,7 +758,7 @@ static int close_vm()
 	err=VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		log("VixVM_PowerOff: %s: %llu\n",
+		log("[EXECUTOR] VixVM_PowerOff: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		return -1;
 	}
@@ -772,6 +778,7 @@ static int start_kernel_listener(void)
 
 	if (vmrun.vmname == "lin")
 	{
+		log("[EXECUTOR] Starting Netcat...\n");
 		switch (pid_nc = fork())
 		{
 			case -1: /* fork failed */
@@ -799,7 +806,7 @@ static int start_kernel_listener(void)
 			KMESSAGE_OUTPUT_FILE + "\"";  
 
 		// run the target program. 
-		log("Starting dbgview...\n");
+		log("[EXECUTOR] Starting dbgview...\n");
 		jobHandle = VixVM_RunProgramInGuest(
 				vmHandle,
 				vmrun.guest_shell.c_str(),
@@ -812,7 +819,7 @@ static int start_kernel_listener(void)
 		err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 		if (VIX_OK != err)
 		{
-			error("VixVM_RunProgramInGuest: %s: %llu\n",
+			error("[EXECUTOR] VixVM_RunProgramInGuest: %s: %llu\n",
 					Vix_GetErrorText(err,NULL), err);
 			return -1;
 		}
@@ -858,7 +865,7 @@ static int install_local_tests(void)
 /*--------------------------------------------------------------------------*/
 static void abort_job()
 {
-	log("Abort job\n");
+	log("[EXECUTOR] Abort job\n");
 	if (pid_nc != -1)
 		kill(pid_nc, SIGTERM);
 
@@ -912,7 +919,7 @@ int main(int argc, char *argv[])
 
 	if (vmrun.km_enable)
 	{
-		log("Start listening messages from kernel...\n");
+		log("[EXECUTOR] Start listening to kernel...\n");
 		if (start_kernel_listener() != 0)
 			abort_job();
 	}

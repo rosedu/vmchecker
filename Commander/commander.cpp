@@ -251,11 +251,12 @@ static int copy_from_uploader(const char* username, const char* ip, \
                             escape(src).c_str(), "\" ", NULL);
 	temp += concatenate("\"", escape(dest).c_str(), "\" ", NULL);
 	temp += "> /dev/null";
-	cerr << "copy_from_uploader: " << temp << endl;
+	cout <<  "[COMMANDER] " << temp << endl;
+
 	ret = system_return_value(system(temp.c_str()));
 
 	if (ret != 0)
-		cout << "Cannot get file : " << src \
+		cout << "[COMMANDER] Cannot get file : " << src \
                      << " from Upload System " << endl; 
 	return ret;		
 }
@@ -285,11 +286,11 @@ static int copy_to_uploader(const char* username, const char* ip, \
 	temp += concatenate(username, "@", ip, ":\"", \
 			    escape(dest).c_str(), "\"", NULL);
 	temp += "> /dev/null";
-	cerr << "copy_to_uploader: " << temp << endl;
+	cout << "[COMMANDER] " << temp << endl;
 	ret = system_return_value(system(temp.c_str()));
 
 	if (ret != 0)
-		cout << "Cannot upload file : " << src \
+		cout << "[COMMANDER] Cannot upload file : " << src \
 		     << " to Upload System " << endl; 
 	return ret;		
 }
@@ -329,11 +330,11 @@ int ssh_command(const char* username, const char* ip, ...)
 		else break;
 	}
 	temp += "\"";
-	cout << "Execute ssh command: " <<temp << endl; 
+	cout << "[COMMANDER] " <<temp << endl; 
 	ret = system_return_value(system(temp.c_str()));
 
 	if (ret != 0)
-		cout << "Cannot execute ssh command: " << temp << endl; 
+		cout << "[COMMANDER] Cannot execute ssh command: " << temp << endl; 
 	va_end(arguments);	
 	return ret;		
 }
@@ -544,6 +545,7 @@ int start_executor()
 
 	/* TODO: apelat cu >> vm_executor.log*/
 
+	cout << "[COMMANDER] Starting executor" << endl;
 	temp = concatenate ("bash -c \"", escape(vmchecker_root_local        \
 			).c_str(), "/VMExecutor/", "vm_executor", " ",       \
 			"\'", vm_name,"\' \'", kernel_msg, "\' \'", 	     \
@@ -558,7 +560,7 @@ int start_executor()
 	ret = system_return_value (system (temp.c_str()));
 
 	if (ret != 0)
-		cout << "ERROR: VMExecutor failed" << endl;	
+		cout << "[COMMANDER] ERROR: VMExecutor failed" << endl;	
 	return ret;
 }
 
@@ -701,7 +703,7 @@ static int upload_results()
 		username, ip,
 		concatenate(jobs_path, "/", RESULT_OUTPUT_FILE, NULL),
 		concatenate(vmchecker_root, "/checked/", job_id, "/",        \
-			    user_id, "/", "NOTA", NULL));
+			    user_id, "/", "nota", NULL));
 
 	return ret;
 
@@ -765,11 +767,12 @@ int remove_config_file(char* ini_instance)
 	int ret;
 
 	temp = concatenate ("rm -f ", escape(ini_instance).c_str(), NULL);
+	cout << "[COMMANDER] " << temp << endl; 
 	ret = system_return_value (system (temp.c_str()));
 
 	if (ret != 0) 
-		cout << "Cannot remove config file from Tester System"       \
-		     << endl;
+		cout << "[COMMANDER] Cannot remove config file from Tester "
+		     << "System"  << endl;
 
 	ret = ssh_command(						     \
 		username, ip,						     \
