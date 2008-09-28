@@ -798,7 +798,8 @@ int main(int argc, char * argv[])
 		
 		if (vm_root == NULL)
 		{
-			cerr << "VMCHECKER_ROOT variable not initialized"    \
+			cerr << "[EXECUTOR] VMCHECKER_ROOT "
+				"variable not initialized"    \
 			     << endl;
 			exit(-1);
 		}
@@ -828,5 +829,7 @@ int main(int argc, char * argv[])
 		if (clear_jobs_dir() != 0)
 			exit (-1);
 	}
+return 0;
+
 }
 
