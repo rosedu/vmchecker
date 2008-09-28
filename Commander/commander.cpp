@@ -644,7 +644,7 @@ static int upload_results()
 		escape(concatenate(jobs_path,\
 		"/", RESULT_OUTPUT_FILE, NULL)).c_str(), NULL); 
 		
-		cout <<"Checking deadline\n" << temp << endl;
+		cout <<"[COMMANDER] Checking deadline\n" << temp << endl;
 		
 		ret = system(temp.c_str());
 		ret = system_return_value(ret);
