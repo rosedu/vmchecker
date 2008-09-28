@@ -24,13 +24,13 @@ notifier=`dirname $0`/notify.sh
 
 print_usage()
 {
-    echo "Invalid queue manager invocation."
+    echo "[QUEUE_MANAGER] Invalid queue manager invocation."
     echo "    Usage: $0 CourseID"
 }
 
 errmsg()
 {
-    echo "QUEUE_MANAGER Error: $1"
+    echo "[QUEUE_MANAGER] Error: $1"
 }
 
 infomsg()
@@ -73,7 +73,7 @@ loop_func()
     local entry=`ls -ctr1 $hwconf_queue_dir/*.ini 2> /dev/null | head -n 1`
 
     if [ -n "$entry" ]; then
-        echo "a new entry in queue: $entry"
+        echo "[QUEUE_MANAGER] a new entry in queue: $entry"
         process_dir_entry "$entry"
     fi
 
@@ -191,6 +191,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "started $0 on $hwconf_queue_dir for course $course_id"
+echo "[QUEUE_MANAGER] started $0 on $hwconf_queue_dir for course $course_id"
 
 main
