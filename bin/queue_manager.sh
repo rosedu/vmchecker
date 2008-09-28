@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 # Queue Manager
 # Copyright (c) 2008 Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
