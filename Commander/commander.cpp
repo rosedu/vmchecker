@@ -588,15 +588,10 @@ int prepare_for_results_upload()
 	
 	ret = ssh_command(
 		username, ip,
-		"mkdir ",
-		concatenate(vmchecker_root, "/checked/", job_id, NULL).c_str(), 
-		";mkdir ",
-		concatenate(vmchecker_root, "/checked/", job_id,  "/",       \
-				user_id,  NULL).c_str(), 
-		";mkdir ",
+		"mkdir -p ",
 		concatenate(vmchecker_root, "/checked/", job_id,  "/",       \
 				user_id, "/archive", NULL).c_str(), 
-	NULL);	
+		NULL);	
 	
 	return ret;
 }
