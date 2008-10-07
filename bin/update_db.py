@@ -9,7 +9,7 @@ import time
 import stat 
 import misc 
 
-GRADE_VALUE_FILE = 'NOTA'
+GRADE_VALUE_FILE = 'nota'
 
 vmchk_root = os.path.abspath(misc.vmchecker_root())
 db_path = misc.db_file()
