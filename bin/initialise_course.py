@@ -34,31 +34,23 @@ def main():
     base_path = misc.vmchecker_root()
 
     # if one of the directories exist the script fails
-    assert not(os.path.isdir(os.path.join(base_path, 'unchecked'))), (
-        '%s already exists' % (
-            os.path.join(base_path, 'unchecked')))
-    os.mkdir(os.path.join(base_path, 'unchecked'))
+    if not(os.path.isdir(os.path.join(base_path, 'unchecked'))):
+        os.mkdir(os.path.join(base_path, 'unchecked'))
 
-    assert not(os.path.isdir(os.path.join(base_path, 'back'))), (
-        '%s already exists' % (
-            os.path.join(base_path, 'back')))
-    os.mkdir(os.path.join(base_path, 'back'))
+    if not(os.path.isdir(os.path.join(base_path, 'back'))):
+        os.mkdir(os.path.join(base_path, 'back'))
 
-    assert not(os.path.isdir(os.path.join(base_path, 'checked'))), (
-        '%s already exists' % (
-            os.path.join(base_path, 'checked')))
-    os.mkdir(os.path.join(base_path, 'checked'))
+    if not(os.path.isdir(os.path.join(base_path, 'checked'))):
+        os.mkdir(os.path.join(base_path, 'checked'))
 
-    assert not(os.path.isdir(os.path.join(base_path, 'tests'))), (
-        '%s already exists' % (
-            os.path.join(base_path, 'tests')))
-    os.mkdir(os.path.join(base_path, 'tests'))
+    if not(os.path.isdir(os.path.join(base_path, 'tests'))):
+        os.mkdir(os.path.join(base_path, 'tests'))
     
     # check for DB existance 
     if None == misc.db_file():
         create_db(os.path.join(base_path, misc.VMCHECKER_DB))
     else:
-        print misc.db_file(), " already created"
+        print misc.db_file(), " already created; skipping"
 
 if __name__ == '__main__':
     main()
