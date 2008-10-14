@@ -14,10 +14,19 @@ COMPONENTS:= VMExecutor Commander semctl
 all:
 	echo " run make tester-dist or make uploader-dist"
 
-tester-dist uploader-dist clean:
+
+uploader-dist:
+	./bin/initialise_course.py
+
+
+tester-dist:
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
-	@if [ "$@" = "clean" ]; then \
-		rm -vf bin/semctl bin/vm_executor bin/commander; \
-	fi
+
+clean:
+	@for i in $(COMPONENTS); do \
+		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
+	done;
+
+	rm -vf bin/semctl bin/vm_executor bin/commander;
