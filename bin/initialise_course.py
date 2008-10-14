@@ -7,6 +7,7 @@ __author__ = 'Ana Savu, ana.savu86@gmail.com'
 import os
 import sqlite3
 import misc
+import sys
 
 def create_db(db_path):
     db_conn = sqlite3.connect(db_path)
@@ -39,13 +40,13 @@ def main():
         if not(os.path.isdir(fullpath)):
             os.mkdir(fullpath)
         else:
-            print "Dir [", fullpath, "] already exists; skipping"
+            print "[" + sys.argv[0] + "] Directory ", fullpath, " already exists; skipping"
         
     # check for DB existance 
     if None == misc.db_file():
         create_db(os.path.join(base_path, misc.VMCHECKER_DB))
     else:
-        print "DB [", misc.db_file(), "] already created; skipping"
+        print "[" + sys.argv[0] + "] Sqlite3 DB file ", misc.db_file(), " already created; skipping"
 
 if __name__ == '__main__':
     main()
