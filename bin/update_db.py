@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from __future__ import with_statement
 __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'

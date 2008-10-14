@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # Creates a homework configuration file for an upload and calls the 
 # remote_check script using this file
 

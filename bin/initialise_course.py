@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # Initialises the directory path for one course 
 
 __author__ = 'Ana Savu, ana.savu86@gmail.com'
