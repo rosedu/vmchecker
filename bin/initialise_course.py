@@ -33,24 +33,19 @@ def main():
     
     base_path = misc.vmchecker_root()
 
-    # if one of the directories exist the script fails
-    if not(os.path.isdir(os.path.join(base_path, 'unchecked'))):
-        os.mkdir(os.path.join(base_path, 'unchecked'))
-
-    if not(os.path.isdir(os.path.join(base_path, 'back'))):
-        os.mkdir(os.path.join(base_path, 'back'))
-
-    if not(os.path.isdir(os.path.join(base_path, 'checked'))):
-        os.mkdir(os.path.join(base_path, 'checked'))
-
-    if not(os.path.isdir(os.path.join(base_path, 'tests'))):
-        os.mkdir(os.path.join(base_path, 'tests'))
-    
+    dirnames = ['unchecked', 'back', 'checked', 'tests'];
+    for dirname in dirnames:
+        fullpath = os.path.join(base_path, dirname)
+        if not(os.path.isdir(fullpath)):
+            os.mkdir(fullpath)
+        else:
+            print "Dir [", fullpath, "] already exists; skipping"
+        
     # check for DB existance 
     if None == misc.db_file():
         create_db(os.path.join(base_path, misc.VMCHECKER_DB))
     else:
-        print misc.db_file(), " already created; skipping"
+        print "DB [", misc.db_file(), "] already created; skipping"
 
 if __name__ == '__main__':
     main()
