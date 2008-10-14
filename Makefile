@@ -30,4 +30,4 @@ clean:
 	done;
 
 	rm -vf bin/semctl bin/vm_executor bin/commander;
-	rm -r *~
+	rm -rf *~
