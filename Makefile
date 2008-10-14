@@ -11,6 +11,8 @@ MAKEFLAGS += --no-print-directory
 
 COMPONENTS:= VMExecutor Commander semctl
 
+all:
+	echo " run make tester-dist or make uploader-dist"
 
 tester-dist uploader-dist clean:
 	@for i in $(COMPONENTS); do \
