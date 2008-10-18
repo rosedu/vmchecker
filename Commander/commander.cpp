@@ -810,7 +810,10 @@ int main(int argc, char * argv[])
 			abort_job();
 
 		if (start_executor() != 0)
+        {
+            unzip_homework();
 			abort_job();
+        }
 
 		if (upload_results() != 0)
 		{
