@@ -21,6 +21,7 @@ import time
 
 def main():
     # parses arguments
+    
     if len(sys.argv) != 4:
         print >> sys.stderr, 'Usage: %s user_id assignment_id archive_path' % (
                 sys.argv[0])
@@ -30,6 +31,9 @@ def main():
     job = sys.argv[2]                 # assignment name
     archive_path = sys.argv[3]        # archive path
 
+    check_config(user_id, job, archive_path)
+
+def check_config(user_id, job, archive_path):
     course_config_file = misc.config_file()
     global_config_file = ConfigParser.RawConfigParser()
     global_config_file.readfp(open(course_config_file))
