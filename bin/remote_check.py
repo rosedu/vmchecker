@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.5
 # -*- coding: UTF-8 -*-
 # vim: set expandtab :
 
@@ -39,7 +39,7 @@ def main():
     remote_notifier = misc.get_option(config, job, 'RemoteNotifier')
     assert remote_notifier, 'No notifier supplied'
 
-    # invokes scp and copy homework on testing machines
+    # invokes scp and copies homework on testing machines
     return_code = subprocess.call([
         'scp',           # program to invoke
         sys.argv[1],     # config file to copy

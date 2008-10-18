@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.5
 # Penalty
 #
 # Computes the penalty for one homework based on a predefined value and a 

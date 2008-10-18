@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.5
 
 
 __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
