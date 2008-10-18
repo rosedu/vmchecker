@@ -809,11 +809,10 @@ int main(int argc, char * argv[])
 		if (get_archives() != 0)
 			abort_job();
 
-		if (start_executor() != 0)
+		if (start_executor() != 0) 
         {
-            prepare_for_results_upload();
-            unzip_homework();
-			abort_job();
+            cerr << "[COMMANDER] start_executor() failed" << endl;
+            // fall through and upload all build & check logs
         }
 
 		if (upload_results() != 0)
