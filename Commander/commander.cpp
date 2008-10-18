@@ -811,12 +811,14 @@ int main(int argc, char * argv[])
 
 		if (start_executor() != 0)
         {
+            prepare_for_results_upload();
             unzip_homework();
 			abort_job();
         }
 
 		if (upload_results() != 0)
 		{
+            prepare_for_results_upload();
 			unzip_homework();
 			abort_job();
 		}
