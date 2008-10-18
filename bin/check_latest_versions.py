@@ -15,11 +15,14 @@ def main():
             namedir = hwdir + "/" + name
             dates = os.listdir(namedir)
             dates.sort()
-            for i in dates:
+            for date in dates:
                 print ("mata: " + i)
-            print ("\t\t latest date of upload: " + dates[0])
-            datedir = namedir + "/" + dates[0]
-            check_config.check_config(name, hw, datedir + "/file.zip")
+                datedir = namedir + "/" + date
+                zipfile = datedir + "/" + "file.zip"
+                if os.stat(zipfile) != None:
+                    print ("\t\t latest date of upload: " + dates[0])
+                    check_config.check_config(name, hw, datedir + "/file.zip")
+                    break
 
 
 if __name__ == "__main__":
