@@ -13,7 +13,9 @@ def main():
         for name in os.listdir(hwdir):
             print ("\t name: " + name)
             namedir = hwdir + "/" + name
-            dates = os.listdir(namedir).sort()
+            dates = os.listdir(namedir)
+            for i in dates:
+                print ("mata: " + i)
             print ("\t\t latest date of upload: " + dates[0])
             datedir = namedir + "/" + dates[0]
             check_config.check_config(name, hw, datedir + "/file.zip")
