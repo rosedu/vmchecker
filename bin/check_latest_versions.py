@@ -19,6 +19,7 @@ def main():
                 print ("mata: " + i)
                 datedir = namedir + "/" + date
                 zipfile = datedir + "/" + "file.zip"
+                print (os.stat(zipfile))
                 if os.stat(zipfile) != None:
                     print ("\t\t latest date of upload: " + dates[0])
                     check_config.check_config(name, hw, datedir + "/file.zip")
