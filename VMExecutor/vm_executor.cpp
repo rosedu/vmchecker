@@ -246,9 +246,12 @@ static int check_build(void)
 			break;
 	}
 
+	// we arrived at EOF if we could not find "checker: building" in the file
 	if (infile.eof())
 	{ 
 		infile.close();
+		error("[EXECUTOR] did not find a `checker: building` string in %s\n",
+				BUILD_OUTPUT_FILE);
 		return -1;
 	}
 
