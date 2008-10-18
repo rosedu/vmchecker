@@ -147,11 +147,13 @@ static int system_return_value(int ret)
 	else
 	{	
 		if (WIFEXITED(ret))
+		{
 			if ((WEXITSTATUS(ret) != 0))
 			{
 			return WEXITSTATUS(ret);
 			}
 			else return 0;
+		}
 	}
 
 	return -1;
@@ -793,7 +795,7 @@ int main(int argc, char * argv[])
 		
 		if (vm_root == NULL)
 		{
-			cerr << "[EXECUTOR] VMCHECKER_ROOT "
+			cerr << "[COMMANDER] VMCHECKER_ROOT "
 				"variable not initialized"    \
 			     << endl;
 			exit(-1);
@@ -811,7 +813,10 @@ int main(int argc, char * argv[])
 			abort_job();
 
 		if (upload_results() != 0)
+		{
+			unzip_homework();
 			abort_job();
+		}
 
 		if (unzip_homework() != 0)
 			abort_job();
