@@ -14,6 +14,7 @@ def main():
             print ("\t name: " + name)
             namedir = hwdir + "/" + name
             dates = os.listdir(namedir)
+            dates.sort()
             for i in dates:
                 print ("mata: " + i)
             print ("\t\t latest date of upload: " + dates[0])
