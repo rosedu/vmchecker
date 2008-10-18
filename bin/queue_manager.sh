@@ -122,8 +122,8 @@ invoke_commander()
         errmsg "invoke_commander($entry) failed\n"
         errmsg   "    retouching file for later invocation"
         touch "$entry"
-        errmsg   "    sleeping for 60 seconds so we don't overload the server"
-        sleep 60
+        errmsg   "    sleeping for 2 seconds so we don't overload the server"
+        sleep 2
         $notifier $course_id
         return 1
         #else

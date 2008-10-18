@@ -139,7 +139,7 @@ def grade_modification_time(grade_filename):
 def get_grade_value(grade_filename):
     """ read an integer from the first line of the file """
     with open(grade_filename, 'r') as f:
-        value = int(f.read())
+        value = int(f.readline())
     return value
     
 def update_grade(path, id_hw, id_student):
