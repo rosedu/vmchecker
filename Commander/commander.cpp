@@ -640,12 +640,29 @@ static int upload_results()
 
 	getline(results_file,first_line);
 	results_file.close();
+
+	results_file.open((temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),   \
+								   ios::out);
+
+	if (!results_file.is_open())
+	{
+		error("unable to open file %s\n", RESULT_OUTPUT_FILE);
+		return -1;
+	}
+
+	results_file << "Tema uploadata la data: " \
+		    << upload_time << endl << endl << first_line << endl; 
+		
+	results_file.close();
 	
 	if (first_line == "0") //homework doesn't compile
 	{
 		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(),     \
 			(temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),     \
 			"\n     ===== BUILD RESULTS =====\n", 2);
+			
+		
+
 	}
 	else
 	{
