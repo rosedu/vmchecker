@@ -659,7 +659,7 @@ static int upload_results()
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
 
-  	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
+  	strftime (buffer,80,"%d-%m-%y %H:%M:%S",timeinfo);
 
 	results_file << "\nTema a fost corectata la data: " \
 		    << buffer << endl;
@@ -671,7 +671,7 @@ static int upload_results()
 		return -1;
 	}
 
-  	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
+  	strftime (buffer,80,"%d-%m-%y %H:%M:%S",timeinfo);
 	
 	results_file << "Tema a fost uploadata la data: " \
 		    << buffer << endl << endl;
