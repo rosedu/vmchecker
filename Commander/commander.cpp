@@ -645,7 +645,7 @@ static int upload_results()
 	results_file.close();
 
 	results_file.open((temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),   \
-								   ios::app);
+								  ios::out|ios::app);
 
 	if (!results_file.is_open())
 	{
