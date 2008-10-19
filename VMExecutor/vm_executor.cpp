@@ -615,7 +615,7 @@ static int run_scripts(void)
 
 	//check if build succesful
 	build_c = check_build();
-	if (build_c < 0)
+	if (build_c == -1)
 	{
 		error("[EXECUTOR] check_build failed, missing " BUILD_OUTPUT_FILE "\n");
         outfile << "0\n" << endl;
