@@ -617,23 +617,33 @@ static int run_scripts(void)
 	build_c = check_build();
 	if (build_c < 0)
 	{
-		error("[EXECUTOR] System error: check_build failed\n");
-		//eroare poate fi de la sistem sau de la tema, 
-		//de ex. arhiva care nu se despacheteaza
-		return build_c;
-	}
-	else
+		error("[EXECUTOR] check_build failed, missing " BUILD_OUTPUT_FILE "\n");
+        outfile << "0\n" << endl;
+        outfile << "nu am gasit fisierul " << BUILD_OUTPUT_FILE;
+        outfile << " pe masina virtuala" << endl;
+        outfile.close();
+        return 0;
+	} 
+    else if (build_c == -2)
+    {
+		error("[EXECUTOR] check_build failed: missing `checker: building`\n");
+        outfile << "0\n" << endl;
+        outfile << "nu am gasit `checker: building` in " << BUILD_OUTPUT_FILE;
+        outfile << " pe masina virtuala" << endl;
+        outfile.close();
+        return 0;        
+    }
+	else if (build_c == 0)
 	{
-		if (build_c == 0)
-		{
-			outfile << "0\n" << endl;
-			outfile << "-10: tema nu se compileaza" << endl;
-			outfile.close();
-			return 0;
-		}
-		else
-			outfile << "ok" << endl;
-	}
+        outfile << "0\n" << endl;
+        outfile << "-10: tema nu se compileaza" << endl;
+        outfile.close();
+        return 0;
+    }
+    else
+    {
+        outfile << "ok" << endl;
+    }
 
 	//get_vm_ip
 	if (get_vm_ip() == -1)
