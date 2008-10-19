@@ -674,7 +674,7 @@ static int upload_results()
   	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
 	
 	results_file << "Tema a fost uploadata la data: " \
-		    << buffer << endl;
+		    << buffer << endl << endl;
 
 	results_file.close();
 
