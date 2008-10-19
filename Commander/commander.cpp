@@ -359,8 +359,9 @@ int ssh_command(const char* username, const char* ip, ...)
 */
 /*--------------------------------------------------------------------------*/
 static int append_f(const char *infile, const char *outfile,                 \
-		    const char* message)
+		    const char* message, int skip_lines)
 {
+	int i;
 	string line;
 	string oldline;
 	ifstream in_file(infile);
@@ -377,6 +378,10 @@ static int append_f(const char *infile, const char *outfile,                 \
 	}
 
 	out_file << message << endl;
+
+	//skips firs skip_lines lines	
+	for (i = 0; i < skip_lines; i++)
+		getline(in_file,line);
 
 	while (!in_file.eof())
 	{
@@ -640,7 +645,7 @@ static int upload_results()
 	{
 		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(),     \
 			(temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),     \
-			"\n     ===== BUILD RESULTS =====\n");
+			"\n     ===== BUILD RESULTS =====\n", 2);
 	}
 	else
 	{
@@ -665,7 +670,7 @@ static int upload_results()
 		temp="";		
 		append_f((temp + jobs_path + BUILD_OUTPUT_FILE).c_str(),     \
 			(temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),     \
-			"\n     ===== BUILD RESULTS =====\n");
+			"\n     ===== BUILD RESULTS =====\n", 2);
 
 		if (atoi(kernel_msg))
 		{
@@ -693,12 +698,12 @@ static int upload_results()
 				KMESSAGE_OUTPUT_FILE).c_str(), 		     \
 				 (temp + jobs_path +           		     \
 				RESULT_OUTPUT_FILE).c_str(),   		     \
-			        "\n     ===== KERNEL MESSAGES =====\n");
+			        "\n     ===== KERNEL MESSAGES =====\n", 0);
 	
 		}
 		append_f((temp + jobs_path + RUN_OUTPUT_FILE).c_str(),       \
 			(temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),     \
-			"\n     ===== RUN RESULTS =====\n");
+			"\n     ===== RUN RESULTS =====\n", 0);
 	}
 
 	
@@ -831,17 +836,15 @@ int main(int argc, char * argv[])
 		if (get_archives() != 0)
 			abort_job();
 
-		if (start_executor() != 0) 
-        {
-            cerr << "[COMMANDER] start_executor() failed" << endl;
-            // fall through and upload all build & check logs
-        }
+		if (start_executor() == -1) //erorare de sistem altfel eroare
+					    // de la tema
+        	{
+			abort_job();			
+        	}
 
 		if (upload_results() != 0)
 		{
-            prepare_for_results_upload();
-			unzip_homework();
-			abort_job();
+        		abort_job();
 		}
 
 		if (unzip_homework() != 0)
@@ -855,7 +858,7 @@ int main(int argc, char * argv[])
 		if (clear_jobs_dir() != 0)
 			exit (-1);
 	}
-return 0;
 
+	return 0;
 }
 

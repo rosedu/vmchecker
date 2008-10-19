@@ -255,7 +255,7 @@ static int check_build(void)
 		infile.close();
 		error("[EXECUTOR] did not find a `checker: building` string in %s\n",
 				BUILD_OUTPUT_FILE);
-		return -1;
+		return -2;
 	}
 
 	while (!infile.eof())
@@ -615,10 +615,12 @@ static int run_scripts(void)
 
 	//check if build succesful
 	build_c = check_build();
-	if (build_c == -1)
+	if (build_c < 0)
 	{
 		error("[EXECUTOR] System error: check_build failed\n");
-		return -1;
+		//eroare poate fi de la sistem sau de la tema, 
+		//de ex. arhiva care nu se despacheteaza
+		return build_c;
 	}
 	else
 	{
@@ -869,7 +871,7 @@ static int install_local_tests(void)
     This function is an emergency service.
 */
 /*--------------------------------------------------------------------------*/
-static void abort_job()
+static void abort_job(int error_code)
 {
 	log("[EXECUTOR] Abort job\n");
 	if (pid_nc != -1)
@@ -883,7 +885,7 @@ static void abort_job()
 	Vix_ReleaseHandle(vmHandle);
 	VixHost_Disconnect(hostHandle);
 	
-	exit(EXIT_FAILURE);
+	exit(error_code);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -907,6 +909,7 @@ static void usage(char *argv0)
 int main(int argc, char *argv[])
 {
 	//struct args_struct args;
+	int ret;
 
 	if (argc != 12)
 	{
@@ -920,23 +923,23 @@ int main(int argc, char *argv[])
 	}
 	print_run();
 
-	if (start_vm() != 0)
-		abort_job();
+	if ((ret = start_vm()) != 0)
+		abort_job(ret);
 
 	if (vmrun.km_enable)
 	{
 		log("[EXECUTOR] Start listening to kernel...\n");
-		if (start_kernel_listener() != 0)
-			abort_job();
+		if ((ret = start_kernel_listener()) != 0)
+			abort_job(ret);
 	}
 
 //	install_local_tests();
 
-	if(copy_files() != 0)
-		abort_job();
+	if((ret = copy_files()) != 0)
+		abort_job(ret);
 
-	if (run_scripts() != 0)
-		abort_job();
+	if ((ret = run_scripts()) != 0)
+		abort_job(ret);
 
 	if (pid_nc != -1)
 		kill(pid_nc, SIGTERM);
