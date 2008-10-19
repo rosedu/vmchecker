@@ -624,6 +624,8 @@ static int upload_results()
 	string first_line;
 	time_t rawtime;
   	struct tm * timeinfo;
+	//struct tm timeinfo2;
+
 	char buffer [80];
 
 	if (prepare_for_results_upload() !=0)
@@ -653,16 +655,29 @@ static int upload_results()
 		return -1;
 	}
 
+
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
 
   	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
 
-	results_file << "\nTema uploadata la data: " \
-		    << upload_time << "\nTema corectata la data: "
-                    << buffer << endl; 
-		
+	results_file << "\nTema a fost corectata la data: " \
+		    << buffer << endl;
+
+	if (strptime(upload_time, "%d-%m-%Y %H:%M:%S", timeinfo)   \
+          == NULL) 
+	{
+		error("strptime failed\n");
+		return -1;
+	}
+
+  	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
+	
+	results_file << "Tema a fost uploadata la data: " \
+		    << buffer << endl;
+
 	results_file.close();
+
 	
 	if (first_line == "0") //homework doesn't compile
 	{

@@ -618,7 +618,7 @@ static int run_scripts(void)
 
 	if (build_c <= 0)
 	{
-        	outfile << "0\n" << endl;
+        	outfile << "0" << endl;
         	outfile << "-10: tema nu se compileaza" << endl;
         	outfile.close();
         	return build_c;
