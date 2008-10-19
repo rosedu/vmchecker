@@ -622,6 +622,9 @@ static int upload_results()
 	string temp;
 	int ret,bugs_c;
 	string first_line;
+	time_t rawtime;
+  	struct tm * timeinfo;
+	char buffer [80];
 
 	if (prepare_for_results_upload() !=0)
 		return -1;
@@ -650,8 +653,14 @@ static int upload_results()
 		return -1;
 	}
 
+	time ( &rawtime );
+	timeinfo = localtime ( &rawtime );
+
+  	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
+
 	results_file << "Tema uploadata la data: " \
-		    << upload_time << endl << endl << first_line << endl; 
+		    << upload_time << "si corectata la data: "
+                    << buffer << endl << endl << first_line << endl; 
 		
 	results_file.close();
 	
