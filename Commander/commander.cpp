@@ -765,8 +765,9 @@ static int unzip_homework()
 			    user_id, "/archive/", NULL).c_str(),	     \
 		NULL);
 
+    //Lucian: don't crash if this does not work
 	if (ret != 0)
-		return ret;
+        return 0;
 
 	ret = ssh_command(						     \
 		username, ip,						     \
