@@ -645,7 +645,7 @@ static int upload_results()
 	results_file.close();
 
 	results_file.open((temp + jobs_path + RESULT_OUTPUT_FILE).c_str(),   \
-								   ios::out);
+								   ios::app);
 
 	if (!results_file.is_open())
 	{
@@ -658,9 +658,9 @@ static int upload_results()
 
   	strftime (buffer,80,"%Y-%m-%d %H:%M:%S",timeinfo);
 
-	results_file << "Tema uploadata la data: " \
-		    << upload_time << "si corectata la data: "
-                    << buffer << endl << endl << first_line << endl; 
+	results_file << "\nTema uploadata la data: " \
+		    << upload_time << "\nTema corectata la data: "
+                    << buffer << endl; 
 		
 	results_file.close();
 	
