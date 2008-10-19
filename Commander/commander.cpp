@@ -102,6 +102,13 @@ static string concatenate(const char* arg1,... )
 	return temp;
 }
 
+static int echo_system(const char* command) {
+	cout << command << endl;
+	return system(command);
+}
+
+#define system(command) echo_system(command)
+
 /*--------------------------------------------------------------------------*/
 /**
   This function modifies the input string by replacing spaces with "\ ".
@@ -332,7 +339,7 @@ int ssh_command(const char* username, const char* ip, ...)
 		else break;
 	}
 	temp += "\"";
-	cout << "[COMMANDER] " <<temp << endl; 
+	cout << "[COMMANDER] " << temp << endl; 
 	ret = system_return_value(system(temp.c_str()));
 
 	if (ret != 0)
@@ -701,6 +708,21 @@ static int upload_results()
 		concatenate(jobs_path, "/", RESULT_OUTPUT_FILE, NULL),
 		concatenate(vmchecker_root, "/checked/", job_id, "/",        \
 			    user_id, "/", "nota", NULL));
+
+	
+	if (ret != 0) return ret;
+
+	cout << "[COMMANDER] Update note" << endl;
+
+        ret = ssh_command(
+		username, ip,
+		concatenate(
+			"export VMCHECKER_ROOT=", vmchecker_root, " && ",
+			"cd $VMCHECKER_ROOT/checked", " && ",
+			vmchecker_root, "/bin/update_db.py", " && ",
+			vmchecker_root, "/bin/view_grades.py", " > $VMCHECKER_ROOT/checked/Note.html", NULL).c_str(),
+		NULL);
+
 
 	return ret;
 
