@@ -615,41 +615,24 @@ static int run_scripts(void)
 
 	//check if build succesful
 	build_c = check_build();
-	if (build_c == -1)
+
+	if (build_c <= 0)
 	{
-		error("[EXECUTOR] check_build failed, missing " BUILD_OUTPUT_FILE "\n");
-        outfile << "0\n" << endl;
-        outfile << "nu am gasit fisierul " << BUILD_OUTPUT_FILE;
-        outfile << " pe masina virtuala" << endl;
-        outfile.close();
-        return 0;
-	} 
-    else if (build_c == -2)
-    {
-		error("[EXECUTOR] check_build failed: missing `checker: building`\n");
-        outfile << "0\n" << endl;
-        outfile << "nu am gasit `checker: building` in " << BUILD_OUTPUT_FILE;
-        outfile << " pe masina virtuala" << endl;
-        outfile.close();
-        return 0;        
-    }
-	else if (build_c == 0)
-	{
-        outfile << "0\n" << endl;
-        outfile << "-10: tema nu se compileaza" << endl;
-        outfile.close();
-        return 0;
-    }
-    else
-    {
-        outfile << "ok" << endl;
-    }
+        	outfile << "0\n" << endl;
+        	outfile << "-10: tema nu se compileaza" << endl;
+        	outfile.close();
+        	return build_c;
+    	}
+    	else
+    	{
+        	outfile << "ok" << endl;
+    	}
 
 	//get_vm_ip
 	if (get_vm_ip() == -1)
 	{
 		error("[EXECUTOR] System error: get_vm_ip failed\n");
-		return -1;
+		//return -2;
 	}
 
 	log("[EXECUTOR] VM's IP = %s\n", vmrun.guest_ip.c_str());
