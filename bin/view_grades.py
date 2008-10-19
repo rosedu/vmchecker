@@ -11,6 +11,8 @@ The script generates a HTML table that contains the grade for each student and f
 The layout can be modified by editing the following CSS elements: 
 
 table#hw-results-table {}           
+table#hw-results-table tr.tr-odd {} /* odd rows from table */
+table#hw-results-table tr.tr-even {}/* even rows from table */           
 table#hw-results-table td.hw-h {}   /* home heading row */
 table#hw-results-table td.st-h {}   /* student heading column */
 table#hw-results-table td.grade {}  /* the grade cell */
@@ -52,6 +54,13 @@ def get_db_content():
         
     return (results, hws)
 
+def href(target, text, title='Click pentru detalii'):
+    """ Generate a HTML anchor with target, text, and title attributes
+    @return
+    a HTML string with an A tag and it's attributes
+    """
+    return "<a href='%s' title='%s'>%s</a>" % (target, title, text)
+
 def gen_html(results, hws):
     # table header 
     html = "<table id='hw-results-table'> <tr> <td > Nume </td> "
@@ -60,17 +69,23 @@ def gen_html(results, hws):
         html += "<td class='hw-h'> %s </td> \n" %hw_name
     html += "</tr>"
     # table content 
+    odd = True
     for student_name in sorted(results.keys()):
-        html += "<tr> <td class='st-h'> %s </td> " %student_name
+        if odd :
+            tr_class = 'tr-odd' 
+        else: 
+            tr_class = 'tr-even'
+        html += "<tr class='%s'> <td class='st-h'> %s </td> " %(tr_class, student_name)
         # for each student we generate a full row 
         for hw_name in hws:
             html += '<td class="grade">'
             if results[student_name].has_key(hw_name):
-                html += str(results[student_name][hw_name])
+                html += href('#', str(results[student_name][hw_name]))
             else:
                 html += 'x'
             html += '</td>'
         html += "</tr> \n"
+        odd = not odd
     html += ' </table>'
     return html 
 
