@@ -5,6 +5,7 @@ import os
 import remote_check
 import sys
 import subprocess
+import time
 
 def main():
     root = misc.vmchecker_root()
@@ -16,7 +17,8 @@ def main():
             print ("name: " + name)
             namedir = hwdir + "/" + name
             dates = os.listdir(namedir)
-            dates.sort()
+            dates.sort(lambda x, y: x < y)
+            print dates
             for date in dates:
                 datedir = namedir + "/" + date
                 inifile = datedir + "/" + date + " " + name + " " + hw + ".ini"
