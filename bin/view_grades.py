@@ -64,6 +64,8 @@ def href(target, text, title='Click pentru detalii'):
 
 def cpl_hack(student_name, hw_name, result):
     # TODO(alexandru): replace with something less specifi
+    if result == '-1':
+    	result = 'ok'
     return "<a href=\"Teme/nota.php?user=%s&homework=%s\">%s</a>" % (
         urllib.quote(student_name), urllib.quote(hw_name), result)
 
