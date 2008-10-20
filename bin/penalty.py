@@ -85,7 +85,27 @@ def compute_penalty_wheighted(upload_time, deadline):
     # the wheight for penalty is diferent depending on the day
     return compute_penalty(upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
 
+def time_late(upload_time, deadline):
+    interval = time.mktime(upload_time) - time.mktime(deadline)
+    penalty_points = 0
 
+    # only if the number of days late is positive (deadline exceeded)
+    if interval > 0:
+        days_late = int(math.floor(interval / (3600 * 24)))
+        interval -= days_late * (3600 * 24)
+        hour_late = int(math.floor((interval / 3600)))
+        interval -= hour_late * 3600
+        mins_late = int(math.floor((interval / 60)))
+        secs_late = interval - mins_late * 60
+        return " %d zile %d ore %d minute %d secunde" % (days_late, 
+                                                         hour_late,
+                                                         mins_late,
+                                                         secs_late)
+    else:
+        days_late = 0
+        return " tema trimisa inainte de expirarea deadline-ului"
+        
+    
 def main():
    
     if len(sys.argv) != 3:
@@ -107,7 +127,7 @@ def main():
 
     
     #if penalty_points > 0:
-    print "-%.2f: %d zile intarziere" % (penalty_points, days_late)    
-
+    print "-%.2f: %s" % (penalty_points, time_late(upload_time, deadline))
+    
 if __name__ == '__main__':
     main()
