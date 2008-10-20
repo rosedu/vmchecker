@@ -5,6 +5,7 @@ __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
 import sqlite3
 import misc
 import os
+import urllib
 
 """
 The script generates a HTML table that contains the grade for each student and for each homework
@@ -61,6 +62,11 @@ def href(target, text, title='Click pentru detalii'):
     """
     return "<a href='%s' title='%s'>%s</a>" % (target, title, text)
 
+def cpl_hack(student_name, hw_name, result):
+    # TODO(alexandru): replace with something less specifi
+    return "<a href=\"Teme/nota.php?user=%s&homework=%s\">%s</a>" % (
+        urllib.quote(student_name), urllib.quote(hw_name), result)
+
 def gen_html(results, hws):
     # table header 
     html = "<table id='hw-results-table'> <tr> <td > Nume </td> "
@@ -80,7 +86,8 @@ def gen_html(results, hws):
         for hw_name in hws:
             html += '<td class="grade">'
             if results[student_name].has_key(hw_name):
-                html += href('#', str(results[student_name][hw_name]))
+                html += cpl_hack(
+                    student_name, hw_name, str(results[student_name][hw_name]))
             else:
                 html += 'x'
             html += '</td>'
