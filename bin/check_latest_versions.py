@@ -41,8 +41,7 @@ def main():
                                             'remote_check.py')
 		return_code = 0
                 try:
-                    print ("")
-                    #return_code = subprocess.call([remote_check, inifile])
+                    return_code = subprocess.call([remote_check, inifile])
                     #print "\t remote_check" + inifile
                 except OSError, e:
                     print >> sys.stderr, 'Can\'t call %s (%s)' % (remote_check, str(e))
