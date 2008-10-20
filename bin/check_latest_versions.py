@@ -25,7 +25,7 @@ def main():
             namedir = hwdir + "/" + name
             dates = os.listdir(namedir)
             dates.sort(revstrcmp)
-            for i in range(len(dates)):
+            for i in range(0, len(dates)):
                 print dates[i]
             for date in dates:
                 datedir = namedir + "/" + date
