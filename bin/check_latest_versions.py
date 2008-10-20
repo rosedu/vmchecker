@@ -18,13 +18,26 @@ def main():
             for date in dates:
                 print ("mata: " + date)
                 datedir = namedir + "/" + date
-                zipfile = datedir + "/" + "file.zip"
+                inifile = datedir + "/" + date + name + hw + ".ini"
+                print (inifile);
+                
+
                 try:
-                    os.stat(zipfile)
+                    os.stat(inifile)
                 except OSError:
                     continue
-                print ("\t\t latest date of upload: " + date)
-                check_config.check_config(name, hw, datedir + "/file.zip")
+                print ("\t\t latest date of upload: " + date + " f:" + inifile)
+                remote_check = os.path.join(os.path.dirname(sys.argv[0]), 
+                                            'remote_check.py')
+                try:
+                    return_code = subprocess.call([remote_check, inifile])
+                except OSError, e:
+                    print >> sys.stderr, 'Can\'t call %s (%s)' % (remote_check, str(e))
+                    
+                if return_code != 0:
+                    print >> sys.stderr, '%s failed' % remote_check
+                    sys.exit(1)
+                        
                 break
 
 
