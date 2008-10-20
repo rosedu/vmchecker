@@ -2,7 +2,7 @@
 
 import misc
 import os
-import check_config
+import remote_check
 
 def main():
     root = misc.vmchecker_root()
@@ -18,7 +18,7 @@ def main():
             for date in dates:
                 print ("mata: " + date)
                 datedir = namedir + "/" + date
-                inifile = datedir + "/" + date + name + hw + ".ini"
+                inifile = datedir + "/" + date + " " + name + " " + hw + ".ini"
                 print (inifile);
                 
 
@@ -30,10 +30,11 @@ def main():
                 remote_check = os.path.join(os.path.dirname(sys.argv[0]), 
                                             'remote_check.py')
                 try:
-                    return_code = subprocess.call([remote_check, inifile])
+                    #return_code = subprocess.call([remote_check, inifile])
+                    print "remote_check" + inifile
                 except OSError, e:
                     print >> sys.stderr, 'Can\'t call %s (%s)' % (remote_check, str(e))
-                    
+                
                 if return_code != 0:
                     print >> sys.stderr, '%s failed' % remote_check
                     sys.exit(1)
