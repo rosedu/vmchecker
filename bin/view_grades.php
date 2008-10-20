@@ -5,7 +5,7 @@
  * 
  */
 
-  // $VMCHECKER_ROOT = ini_get('VMCHECKER_ROOT'); 
+$VMCHECKER_ROOT = getenv('VMCHECKER_ROOT'); 
 
 $db = sqlite3_open($VMCHECKER_ROOT . "vmchecker.db");
 if (!$db) die ("Could not open database...");
