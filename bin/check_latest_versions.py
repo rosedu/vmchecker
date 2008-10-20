@@ -7,6 +7,13 @@ import sys
 import subprocess
 import time
 
+def revstrcmp(x, y):
+    if x > y:
+        return -1
+    if x == y:
+        return 0
+    return 1
+
 def main():
     root = misc.vmchecker_root()
     back = root + "/back"
@@ -17,8 +24,9 @@ def main():
             print ("name: " + name)
             namedir = hwdir + "/" + name
             dates = os.listdir(namedir)
-            dates.sort(lambda x, y: x < y)
-            print dates
+            dates.sort(revstrcmp)
+            for i in range(len(dates)):
+                print dates[i]
             for date in dates:
                 datedir = namedir + "/" + date
                 inifile = datedir + "/" + date + " " + name + " " + hw + ".ini"
