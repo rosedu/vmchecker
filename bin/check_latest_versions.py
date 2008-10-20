@@ -3,6 +3,8 @@
 import misc
 import os
 import remote_check
+import sys
+import subprocess
 
 def main():
     root = misc.vmchecker_root()
@@ -11,27 +13,27 @@ def main():
         print ("hw: " + hw)
         hwdir = back + "/" + hw
         for name in os.listdir(hwdir):
-            print ("\t name: " + name)
+            print ("name: " + name)
             namedir = hwdir + "/" + name
             dates = os.listdir(namedir)
             dates.sort()
             for date in dates:
-                print ("mata: " + date)
                 datedir = namedir + "/" + date
                 inifile = datedir + "/" + date + " " + name + " " + hw + ".ini"
-                print (inifile);
-                
 
                 try:
                     os.stat(inifile)
                 except OSError:
                     continue
-                print ("\t\t latest date of upload: " + date + " f:" + inifile)
+                print ("\t latest date of upload: " + date)
+                print ("\t inifile: " + inifile)
                 remote_check = os.path.join(os.path.dirname(sys.argv[0]), 
                                             'remote_check.py')
+		return_code = 0
                 try:
+                    print ("")
                     #return_code = subprocess.call([remote_check, inifile])
-                    print "remote_check" + inifile
+                    #print "\t remote_check" + inifile
                 except OSError, e:
                     print >> sys.stderr, 'Can\'t call %s (%s)' % (remote_check, str(e))
                 
