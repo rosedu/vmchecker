@@ -1,11 +1,13 @@
 <?php 
 /**  
- *  @author 		Gheorghe Claudiu-Dan, claudiugh [ at ] gmail dot com
- *  @description 	Script that generates the HTML code for vmchecker.db content 
+ *  @file	view_grades.php
+ *  @author	Gheorghe Claudiu-Dan, claudiugh [ at ] gmail dot com
+ *  @date 	October 2008
+ *  @brief	Script that generates the HTML code for vmchecker.db content 
  * 
  */
 
-$VMCHECKER_ROOT = getenv('VMCHECKER_ROOT'); 
+require_once('config.php');
 
 $db = sqlite3_open($VMCHECKER_ROOT . "vmchecker.db");
 if (!$db) die ("Could not open database...");
@@ -72,8 +74,8 @@ function gen_html($results, $hws)
       foreach ($hws as $nume_hw => $deadline)
 	{
 	  $html .= '<td class="grade">';
-	  if (isset($results[$nume_st][$nume_hw]))
-	    $html .= "<a href='#' title='click pentru detalii'>".$results[$nume_st][$nume_hw] ."</a>";
+	  if (isset($results[$nume_st][$nume_hw]))	    
+	    $html .= table_cell_content($results[$nume_st][$nume_hw], '#', 'click pentru detalii'); // defined in config.php
 	  else
 	    $html .= 'x';
 	  $html .= '</td>';
