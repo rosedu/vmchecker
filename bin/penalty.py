@@ -22,6 +22,7 @@ __author__='Ana Savu <ana.savu86@gmail.com>, Lucian Adrian Grijincu <lucian.grij
 import sys
 import time
 import math
+import datetime
 
 
 def parse_time(upload_time_str, deadline_str):
@@ -97,16 +98,11 @@ def verbose_time_difference(upload_time, deadline):
     else:
         str = "intarziat "
 
-    days_late = int(math.floor(interval / (3600 * 24)))
-    interval -= days_late * (3600 * 24)
-    hour_late = int(math.floor((interval / 3600)))
-    interval -= hour_late * 3600
-    mins_late = int(math.floor((interval / 60)))
-    secs_late = interval - mins_late * 60
-    return str + " %d zile %d ore %d minute %d secunde" % (days_late, 
-                                                           hour_late,
-                                                           mins_late,
-                                                           secs_late)
+    d = datetime.timedelta(seconds=interval)
+    return str + " %d zile %d ore %d minute %d secunde" % (d.days,
+                                                           d.seconds / 3600,
+                                                           d.seconds % 3600 /60,
+                                                           d.seconds % 60)
 
         
     
