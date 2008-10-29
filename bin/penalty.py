@@ -68,7 +68,7 @@ def compute_penalty(upload_time, deadline, penalty, wheights, limit):
 def compute_penalty_fixed_penalty(upload_time, deadline):
     # if the number of days pass the deadline exceeds 'x' the homework is
     # not graded (x = len(wheights) - 1)
-    return compute_penalty(upload_time, deadline, 1, [2, 0, 0, 0, 0, 0, 9], 10)
+    return compute_penalty(upload_time, deadline, 1, [2, 0, 0, 0, 0, 0, 0, 9], 10)
 
 
 def compute_penalty_linear(upload_time, deadline):
