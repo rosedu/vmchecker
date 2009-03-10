@@ -11,14 +11,19 @@ import os
 import socket
 import struct
 
+import ConfigParser
+
 
 VMCHECKER_INI = 'vmchecker.ini'
 VMCHECKER_DB = 'vmchecker.db'
+DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
+
+_config = None
 
 
 def vmchecker_root():
     assert 'VMCHECKER_ROOT' in os.environ, (
-        'VMCHECKER_ROOT environment varible not defined')
+        'VMCHECKER_ROOT environment variable not defined')
     return os.path.abspath(os.environ['VMCHECKER_ROOT'])
 
 
@@ -28,6 +33,25 @@ def config_file():
     assert os.path.isfile(path), '%s (%s) is not a file' % (
         VMCHECKER_INI, path)
     return path
+
+
+def config():
+    """Returns a RawConfigParse containing vmchecker's configuration."""
+    global _config
+    if _config is None:
+        _config = ConfigParser.RawConfigParser()
+        with open(config_file()) as handle:
+            _config.readfp(handle)
+    return _config
+
+
+def repository(assignment):
+    """Returns repository where sources for assignment are stored.
+    
+    NOTE: Full path where they are actually stored is
+    `repository/assignment'"""
+    return os.path.join(vmchecker_root(),
+                        config().get(assignment, 'Repository'))
 
 
 def get_ip_address(ifname):
@@ -55,19 +79,3 @@ def db_file():
     else:
         return None
 
-def get_option(config, homework, option, default=None):
-    """Given homework name, returns option. If option not found
-    in [homework] section, then option is looked up in [DEFAULT]
-    section.  If there is no such option, returns default."""
-
-    assert config.has_section(homework), 'No such homework %s' % homework
-
-    # first tries to get option from `homework` section
-    if config.has_option(homework, option):
-        return config.get(homework, option)
-
-    # falls back to default remote ip
-    if config.has_option('DEFAULT', option):
-        return config.get('DEFAULT', option)
-
-    return default
