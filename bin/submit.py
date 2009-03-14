@@ -59,13 +59,14 @@ def build_config(user, assignment, archive):
         handle.write('User=%s\n' % user)
         handle.write('Assignment=%s\n' % assignment)
         handle.write('UploadTime=%s\n' % upload_time)
-        handle.write('Archive=./archive.zip\n')
 
     # commits the changes
     _call_git(repository, 'add', location)
     _call_git(repository, 'clean', location, '-f', '-d')
     _call_git(repository, 'commit', location, '-m',
             'Updated assignment `%s\' from `%s\'' % (assignment, user))
+
+    # XXX should create a clean zip from repository
     shutil.copy(archive, join(location, 'archive.zip'))
 
     return assignment_config
@@ -76,7 +77,14 @@ def submit_assignment(assignment_config):
 
     This function creates a zip archive, stores it in
     $VMCHECKER_ROOT/unchecked/ directory and calls submit
-    script."""
+    script.
+
+    The archive contains:
+        config - assignment config (eg. name, time of submission etc)
+        global - global assignments config (eg. deadlines)
+        archive.zip - a zip containing the homework
+
+    """
     assignment_config = abspath(assignment_config)
 
     # reads user, assignment and course
@@ -88,9 +96,12 @@ def submit_assignment(assignment_config):
     assignment = config.get('Assignment', 'Assignment')
     course = misc.config().get(assignment, 'Course')
 
-    archive = join(dirname(assignment_config),
-                   config.get('Assignment', 'Archive'))
-    tests = join(misc.vmchecker_root(), 'tests', assignment + '.zip')
+    archive = join(dirname(assignment_config), './archive.zip')
+    tests = misc.relative_path('tests', assignment + '.zip')
+
+    # finds location of penalty script
+    penalty = misc.relative_path(misc.config().get(assignment, 'Penalty'))
+    assert isfile(penalty)
 
     # builds archive with configuration
     location = join(misc.vmchecker_root(), 'unchecked')
@@ -104,13 +115,14 @@ def submit_assignment(assignment_config):
             dir=location)
     print sys.stderr, 'Creating zip package at `%s\'' % fd[1]
 
-    # adds the files to 
+    # adds the files to
     with os.fdopen(fd[0], 'w+b') as handler:
         zip = ZipFile(handler, 'w')
         zip.write(assignment_config, 'config')   # assignment config
         zip.write(misc.config_file(), 'global')  # global vmchecker config
         zip.write(archive, 'archive.zip')        # assignment archive
         zip.write(tests, 'tests.zip')            # the archive containing tests
+        zip.write(penalty, 'penalty')            # penalty script
         zip.close()
 
 

@@ -3,7 +3,7 @@
 # vim: set expandtab :
 
 
-__author__ = 'Alexandru Mosoi, brtzsnr@gmail.com'
+__author__ = 'Alexandru Mosoi <brtzsnr@gmail.com>'
 
 
 import fcntl
@@ -45,13 +45,18 @@ def config():
     return _config
 
 
+
+def relative_path(*args):
+    """Joins the arguments and returns a path relative to root"""
+    return os.path.join(vmchecker_root(), os.path.join(*args))
+
+
 def repository(assignment):
     """Returns repository where sources for assignment are stored.
-    
+ 
     NOTE: Full path where they are actually stored is
     `repository/assignment'"""
-    return os.path.join(vmchecker_root(),
-                        config().get(assignment, 'Repository'))
+    return relative_path(config().get(assignment, 'Repository'))
 
 
 def get_ip_address(ifname):
