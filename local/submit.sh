@@ -1,5 +1,5 @@
 #!/bin/bash
 
 echo 'Received "'$1'" for evaluation. Listing:'
-tar tf $1
+unzip -l $1
 echo

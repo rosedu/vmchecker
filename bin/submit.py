@@ -14,8 +14,9 @@ import sys
 import time
 
 from subprocess import check_call
-from os.path import join, split, abspath, isfile, isdir
+from os.path import join, split, abspath, isfile, isdir, dirname
 from tempfile import mkstemp
+from zipfile import ZipFile
 
 
 def _call_git(repository, *args):
@@ -43,8 +44,11 @@ def build_config(user, assignment, archive):
 
     # removes the old homework and adds the new one
     # NOTE: git is clever enough to store only diffs
-    shutil.rmtree(location)
+    if os.path.isdir(location):
+        shutil.rmtree(location)
+    assert not os.path.exists(location)
     os.makedirs(location)
+
     check_call(('unzip', archive, '-d', join(location, 'archive')))
 
     # writes assignment configuration file
@@ -55,45 +59,60 @@ def build_config(user, assignment, archive):
         handle.write('User=%s\n' % user)
         handle.write('Assignment=%s\n' % assignment)
         handle.write('UploadTime=%s\n' % upload_time)
+        handle.write('Archive=./archive.zip\n')
 
     # commits the changes
     _call_git(repository, 'add', location)
     _call_git(repository, 'clean', location, '-f', '-d')
     _call_git(repository, 'commit', location, '-m',
             'Updated assignment `%s\' from `%s\'' % (assignment, user))
+    shutil.copy(archive, join(location, 'archive.zip'))
 
     return assignment_config
 
 
 def submit_assignment(assignment_config):
-    """Submits config file for evaluation."""
+    """Submits config file for evaluation.
+
+    This function creates a zip archive, stores it in
+    $VMCHECKER_ROOT/unchecked/ directory and calls submit
+    script."""
     assignment_config = abspath(assignment_config)
 
     # reads user, assignment and course
     config = ConfigParser.RawConfigParser()
     with open(assignment_config) as handler:
         config.readfp(handler)
+
     user = config.get('Assignment', 'User')
     assignment = config.get('Assignment', 'Assignment')
     course = misc.config().get(assignment, 'Course')
 
+    archive = join(dirname(assignment_config),
+                   config.get('Assignment', 'Archive'))
+    tests = join(misc.vmchecker_root(), 'tests', assignment + '.zip')
+
     # builds archive with configuration
     location = join(misc.vmchecker_root(), 'unchecked')
-    assert isdir(location), 'No such directory `unchecked\''
+    if not isdir(location):
+        os.makedirs(location)
+
+    # creates the zip archive with a unique name
     fd = mkstemp(
-            suffix='.tgz',
+            suffix='.zip',
             prefix='%s_%s_%s_' % (course, assignment, user),
             dir=location)
-    print >>sys.stderr, 'Config files stored at `%s\'' % fd[1]
+    print sys.stderr, 'Creating zip package at `%s\'' % fd[1]
 
-    _a = split(assignment_config)
-    _c = split(misc.config_file())
-    with os.fdopen(fd[0]) as handler:
-        check_call(('tar', '-cz',
-            '-C', _a[0], _a[1],         # assignment
-            '-C', _c[0], _c[1],         # global config
-                                        # machine information (TODO)
-            ), stdout=handler)
+    # adds the files to 
+    with os.fdopen(fd[0], 'w+b') as handler:
+        zip = ZipFile(handler, 'w')
+        zip.write(assignment_config, 'config')   # assignment config
+        zip.write(misc.config_file(), 'global')  # global vmchecker config
+        zip.write(archive, 'archive.zip')        # assignment archive
+        zip.write(tests, 'tests.zip')            # the archive containing tests
+        zip.close()
+
 
     # sends homework to tester
     submit = misc.config().get(assignment, 'Submit')
