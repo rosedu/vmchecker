@@ -12,7 +12,7 @@ RM      = rm -f
 
 all:compile_parser commander
 
-uploader-dist: # do nothing
+storer-dist: # do nothing
 
 tester-dist: all
 		cp commander ../bin/

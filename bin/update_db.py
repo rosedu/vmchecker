@@ -8,20 +8,27 @@ import os
 import time 
 import stat 
 import misc 
+import logging
+
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vmchecker.initialise_course")
 
 GRADE_VALUE_FILE = 'nota'
 
-vmchk_root = os.path.abspath(misc.vmchecker_root())
-db_path = misc.db_file()
+vmchk_root = misc.vmcheckerPaths.root
+db_path = misc.vmcheckerPaths.db_file
 cwd = os.getcwd()
-checked_root = os.path.join(vmchk_root, 'checked')
+checked_root = misc.vmcheckerPaths.dir_checked
 
 if not cwd.startswith(checked_root):
-    print "Error: working directory not in the VMCHECKER_ROOT subtree "
+    logger.error("Error: working directory [%s] not in the VMCHECKER_ROOT [%s] subtree." % 
+                 (cwd, checked_root))
     exit()
 
 if None == db_path:
-    print "Error: DB file doesn't exist"
+    logger.error("Error: DB file [%s] doesn't exist" % db_path)
     exit()
     
 db_conn = sqlite3.connect(db_path)
@@ -150,7 +157,7 @@ def update_grade(path, id_hw, id_student):
     submission. """
     grade_filename = os.path.join(path, GRADE_VALUE_FILE)
     if not os.path.exists(grade_filename):
-        print "Error. File ", grade_filename, " for grade value does not exist "
+        logger.error("File [%s] for grade value does not exist " % grade_filename)
         return None
     data_modif = grade_modification_time(grade_filename)
     (id_grade, db_data) = DB_get_grade(id_hw, id_student)

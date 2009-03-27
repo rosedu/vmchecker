@@ -5,7 +5,7 @@ CFLAGS=-g -Wall
 
 semctl: semctl.o
 
-uploader-dist:# do nothing
+storer-dist:# do nothing
 
 tester-dist: semctl
 	cp ./semctl ../bin/

@@ -1,12 +1,5 @@
 #! /usr/bin/env python2.5
 
-__author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
-
-import sqlite3
-import misc
-import os
-import urllib
-
 """
 The script generates a HTML table that contains the grade for each student and for each homework
 The layout can be modified by editing the following CSS elements: 
@@ -20,9 +13,22 @@ table#hw-results-table td.grade {}  /* the grade cell */
 
 """
 
-db_path = misc.db_file()
+__author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
+
+
+import sqlite3
+import misc
+import os
+import urllib
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vmchecker.db_gentest")
+
+
+db_path = misc.vmcheckerPaths.db_file
 if None == db_path:
-    print "DB file does not exist"
+    logger.error("DB file %s does not exist" % db_path)
     exit()
 
 db_conn = sqlite3.connect(db_path)
@@ -101,7 +107,7 @@ def gen_html(results, hws):
 def main():
     (results, hws) = get_db_content()
     # send to the stdout all the HTML content 
-    print gen_html(results, hws)
+    print (gen_html(results, hws))
     db_cursor.close()
     db_conn.close()
 

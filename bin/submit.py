@@ -104,15 +104,12 @@ def submit_assignment(assignment_config):
     assert isfile(penalty)
 
     # builds archive with configuration
-    location = join(misc.vmchecker_root(), 'unchecked')
-    if not isdir(location):
-        os.makedirs(location)
 
     # creates the zip archive with a unique name
     fd = mkstemp(
             suffix='.zip',
             prefix='%s_%s_%s_' % (course, assignment, user),
-            dir=location)
+            dir=misc.vmcheckerPaths.dir_unchecked)
     print sys.stderr, 'Creating zip package at `%s\'' % fd[1]
 
     # adds the files to
@@ -128,7 +125,7 @@ def submit_assignment(assignment_config):
 
     # sends homework to tester
     submit = misc.config().get(assignment, 'Submit')
-    submit = join(misc.vmchecker_root(), submit)
+    submit = join(misc.vmcheckerPaths.abs_path(submit))
     check_call((submit, fd[1]))
 
 

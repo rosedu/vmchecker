@@ -17,7 +17,7 @@ LDLIBS = -ldl -lvix -lstdc++
 
 all: vm_executor
 
-uploader-dist: # do nothing
+storer-dist: # do nothing
 
 tester-dist: all
 	cp ./vm_executor ../bin/

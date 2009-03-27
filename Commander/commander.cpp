@@ -10,7 +10,7 @@
    Coding issues, Alexandru Mosoi <brtzsnr@gmail.com>
 
       This module copies from Uploader System  the two archives (file.zip and 
-   tests.zip),  parses  the  two  configuration   files    (vm_config.ini and 
+   tests.zip),  parses  the  two  configuration   files    (vmchecker_tester.ini and 
    homework.ini,  described in  the documentation file) and starts VMExecutor 
    (bin/vm_executor) accordingly.
 */
@@ -74,7 +74,7 @@ static const char* jobs_path;		/*path to temporary working files
 					for executor */
 
 static	dictionary* instance; 		/* homework.ini */
-static	dictionary* v_machines; 	/* vm_config.ini */
+static	dictionary* v_machines; 	/* vmchecker_tester.ini */
 /*--------------------------------------------------------------------------*/
 
 /*--------------------- Functions code -------------------------------------*/
@@ -873,7 +873,7 @@ int main(int argc, char * argv[])
 		assert(vmchecker_root_local != NULL);
 		parse_ini_files(argv[1], escape(concatenate(                 \
 					vmchecker_root_local,   	     \
-					"/vm_config.ini", NULL)).c_str());
+					"/vmchecker_tester.ini", NULL)).c_str());
 
 		if (get_archives() != 0)
 			abort_job();
