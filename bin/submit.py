@@ -110,7 +110,7 @@ def submit_assignment(assignment_config):
             suffix='.zip',
             prefix='%s_%s_%s_' % (course, assignment, user),
             dir=misc.vmcheckerPaths.dir_unchecked)
-    print sys.stderr, 'Creating zip package at `%s\'' % fd[1]
+    print >>sys.stderr, 'Creating zip package at `%s\'' % fd[1]
 
     # adds the files to
     with os.fdopen(fd[0], 'w+b') as handler:
