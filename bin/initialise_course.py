@@ -88,7 +88,7 @@ if __name__ == '__main__':
         exit(1)
     if   cmp(sys.argv[1], "storer") == 0:
         main_storer()
-    elif cmd(sys.argv[1], "tester") == 0:
+    elif cmp(sys.argv[1], "tester") == 0:
         main_tester()
     elif cmp(sys.argv[1], "--help") == 0:
         usage()
