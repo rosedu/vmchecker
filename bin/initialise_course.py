@@ -58,7 +58,7 @@ def create_storer_git_repo():
         # no git repo found in the dir.
         try:
             e = os.environ
-            e["GIT_DIR"] = '' + repo_path_git + '"'
+            e["GIT_DIR"] = repo_path_git
             check_call(['git', 'init'], env=e)
         except CalledProcessError:
             logging.error("cannot create git repo in %s" % repo_path_git)
