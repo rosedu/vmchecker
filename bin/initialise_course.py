@@ -11,6 +11,10 @@ import misc
 import sys
 import logging
 
+from subprocess import check_call, CalledProcessError
+
+
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("vmchecker.initialise_course")
 
@@ -31,6 +35,8 @@ def create_tester_paths():
     _create_paths(tester_paths)
 
 
+
+
 def create_storer_paths():
     """ Create all paths used by vmchecker on the storer machine""" 
     storer_paths = misc.vmcheckerPaths.storer_paths
@@ -39,8 +45,24 @@ def create_storer_paths():
 
 def create_storer_git_repo():
     """ Create the repo for the assignments on the storer """
-    repo_path = misc.config().get("DEFAULT", "Repository")
-    _mkdir_if_not_exist(repo_path)
+
+    # first make teh destination directory
+    rel_repo_path = misc.config().get("DEFAULT", "Repository")
+    abs_repo_path = misc.vmcheckerPaths.abs_path(rel_repo_path)
+    _mkdir_if_not_exist(abs_repo_path)
+    
+    
+    # then, if missing, initialize a git repo in it.
+    repo_path_git = os.path.join(abs_repo_path, ".git")
+    if not(os.path.isdir(repo_path_git)):
+        # no git repo found in the dir.
+        try:
+            e = os.environ
+            e["GIT_DIR"] = '' + repo_path_git + '"'
+            check_call(['git', 'init'], env=e)
+        except CalledProcessError:
+            logging.error("cannot create git repo in %s" % repo_path_git)
+
 
 def create_db_tables(db_path):
     db_conn = sqlite3.connect(db_path)
