@@ -49,7 +49,7 @@ def build_config(user, assignment, archive):
     assert not os.path.exists(location)
     os.makedirs(location)
 
-    check_call(('unzip', archive, '-d', join(location, 'archive')))
+    check_call(['unzip', archive, '-d', os.path.join(location, 'archive')])
 
     # writes assignment configuration file
     assignment_config = join(location, 'config')
@@ -116,7 +116,7 @@ def submit_assignment(assignment_config):
     with os.fdopen(fd[0], 'w+b') as handler:
         zip = ZipFile(handler, 'w')
         zip.write(assignment_config, 'config')   # assignment config
-        zip.write(misc.config_file(), 'global')  # global vmchecker config
+        zip.write(misc.vmcheckerPaths.config_file, 'global')  # global vmchecker config
         zip.write(archive, 'archive.zip')        # assignment archive
         zip.write(tests, 'tests.zip')            # the archive containing tests
         zip.write(penalty, 'penalty')            # penalty script
