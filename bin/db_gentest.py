@@ -16,7 +16,7 @@ GRADE = 10
 GRADE_FILENAME = 'NOTA'
 
 if __name__ == "__main__":
-    root = misc.VmcheckerPaths().dir_checked()
+    root = misc.VmcheckerPaths().dir_checked
     
     if not os.path.exists(root):
         print " %s directory does not exist " % root

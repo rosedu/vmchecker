@@ -32,7 +32,7 @@ def config():
 
 def relative_path(*args):
     """Joins the arguments and returns a path relative to root"""
-    return os.path.join(VmcheckerPaths().root(), os.path.join(*args))
+    return os.path.join(VmcheckerPaths().root, os.path.join(*args))
 
 
 def repository(assignment):
@@ -61,7 +61,7 @@ def db_file():
     @return
         - absolute path of config file
         - None if the path isn't a file"""
-    path = VmcheckerPaths().db_file()
+    path = VmcheckerPaths().db_file
     if os.path.isfile(path):
         return path
     else:
@@ -74,7 +74,7 @@ class VmcheckerPaths(object):
         pass
 
     def abs_path(self, relative):
-        return os.path.join(self.root(), relative)
+        return os.path.join(self.root, relative)
 
     @property
     def root(self):
@@ -85,13 +85,13 @@ class VmcheckerPaths(object):
     @property
     def tester_paths(self):
         """ A list of all the paths relevant to the tester machine."""
-        return [self.dir_queue()]
+        return [self.dir_queue]
 
     @property
     def storer_paths(self):
         """ A list of all the paths relevant to the storer machine."""
-        return [self.dir_unchecked(), self.dir_checked(),
-                self.dir_backup(), self.dir_tests()]
+        return [self.dir_unchecked, self.dir_checked,
+                self.dir_backup, self.dir_tests]
 
     @property
     def dir_unchecked(self):

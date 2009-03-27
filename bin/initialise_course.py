@@ -9,17 +9,21 @@ import os
 import sqlite3
 import misc
 import sys
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vmchecker.initialise_course")
+logger.setLevel(logging.DEBUG)
+#logger.basicConfig(level=logger.DEBUG)
 
 def create_storer_paths():
     """ Create all paths used by vmchecker on the storer machine""" 
-    storer_paths = misc.VmcheckerPaths().storer_paths()
+    storer_paths = misc.VmcheckerPaths().storer_paths
     for path in storer_paths:
         if not(os.path.isdir(path)):
             os.mkdir(path)
         else:
-            print("[%s] Skipping existing directory %s" % (
-                sys.argv[0], path))
+            logger.info("Skipping existing directory %s" % path)
 
 
 
@@ -47,12 +51,11 @@ def create_db_tables(db_path):
 
 def create_db():
     # check for DB existance
-    db_file = misc.VmcheckerPaths().db_file()
+    db_file = misc.VmcheckerPaths().db_file
     if None == db_file:
         create_db(db_file)
     else:
-        print("[%s] Skipping existing Sqlite3 DB file %s" % (
-            sys.argv[0], db_file))
+        logger.info("Skipping existing Sqlite3 DB file %s" % db_file)
 
         
 
@@ -60,8 +63,7 @@ def create_db():
 def main():
     create_storer_paths()
     create_db()
-    print("[%s] storer init done setting up paths and db file." % (
-            sys.argv[0]))
+    logger.info(" -- storer init done setting up paths and db file.")
 
 if __name__ == '__main__':
     main()

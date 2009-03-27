@@ -109,7 +109,7 @@ def submit_assignment(assignment_config):
     fd = mkstemp(
             suffix='.zip',
             prefix='%s_%s_%s_' % (course, assignment, user),
-            dir=VmcheckerPaths().dir_unchecked())
+            dir=VmcheckerPaths().dir_unchecked)
     print sys.stderr, 'Creating zip package at `%s\'' % fd[1]
 
     # adds the files to
