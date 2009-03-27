@@ -33,7 +33,7 @@ def config():
 
 def relative_path(*args):
     """Joins the arguments and returns a path relative to root"""
-    return os.path.join(vmcheckerPaths().root, os.path.join(*args))
+    return os.path.join(vmcheckerPaths.root, os.path.join(*args))
 
 
 def repository(assignment):
@@ -62,7 +62,7 @@ def db_file():
     @return
         - absolute path of config file
         - None if the path isn't a file"""
-    path = VmcheckerPaths().db_file
+    path = vmcheckerPaths.db_file
     if os.path.isfile(path):
         return path
     else:
