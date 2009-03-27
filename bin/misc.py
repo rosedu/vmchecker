@@ -15,6 +15,7 @@ import ConfigParser
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
+VMCHECKER_INI = 'vmchecker_storer.ini'
 
 _config = None
 
@@ -135,7 +136,6 @@ class VmcheckerPaths(object):
     @property
     def config_file(self):
         """Returns absolute path for config file 'VMCHECKER_INI'"""
-        VMCHECKER_INI = 'vmchecker.ini'
         path = self.abs_path(VMCHECKER_INI)
         assert os.path.isfile(path), '%s (%s) is not a file' % (
             VMCHECKER_INI, path)
