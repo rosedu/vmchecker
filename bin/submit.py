@@ -63,7 +63,7 @@ def build_config(user, assignment, archive):
     # commits the changes
     _call_git(repository, 'add', location)
     _call_git(repository, 'clean', location, '-f', '-d')
-    _call_git(repository, 'commit', location, '-m',
+    _call_git(repository, 'commit', '--allow-empty', location, '-m',
             'Updated assignment `%s\' from `%s\'' % (assignment, user))
 
     # XXX should create a clean zip from repository
