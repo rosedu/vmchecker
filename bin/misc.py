@@ -140,3 +140,7 @@ class VmcheckerPaths(object):
         assert os.path.isfile(path), '%s (%s) is not a file' % (
             VMCHECKER_INI, path)
         return path
+
+
+
+vmcheckerPaths = VmcheckerPaths()

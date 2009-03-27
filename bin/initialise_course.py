@@ -13,12 +13,10 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("vmchecker.initialise_course")
-logger.setLevel(logging.DEBUG)
-#logger.basicConfig(level=logger.DEBUG)
 
 def create_storer_paths():
     """ Create all paths used by vmchecker on the storer machine""" 
-    storer_paths = misc.VmcheckerPaths().storer_paths
+    storer_paths = misc.vmcheckerPaths.storer_paths
     for path in storer_paths:
         if not(os.path.isdir(path)):
             os.mkdir(path)
@@ -51,7 +49,7 @@ def create_db_tables(db_path):
 
 def create_db():
     # check for DB existance
-    db_file = misc.VmcheckerPaths().db_file
+    db_file = misc.vmcheckerPaths.db_file
     if None == db_file:
         create_db(db_file)
     else:

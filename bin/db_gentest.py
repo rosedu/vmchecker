@@ -8,7 +8,10 @@ __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
 
 import misc
 import os
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vmchecker.db_gentest")
 
 NO_OF_HWS = 10
 NO_OF_STUDENTS = 100
@@ -16,10 +19,10 @@ GRADE = 10
 GRADE_FILENAME = 'NOTA'
 
 if __name__ == "__main__":
-    root = misc.VmcheckerPaths().dir_checked
+    root = misc.vmcheckerPaths.dir_checked
     
     if not os.path.exists(root):
-        print " %s directory does not exist " % root
+        logger.error(" %s directory does not exist " % root)
         exit()
     
     for hw_index in range(0,NO_OF_HWS):
@@ -39,5 +42,5 @@ if __name__ == "__main__":
                 f.write(str(GRADE))
                 f.close()
 
-    print "Done."
+    logger.info(" -- Done.")
 

@@ -109,7 +109,7 @@ def submit_assignment(assignment_config):
     fd = mkstemp(
             suffix='.zip',
             prefix='%s_%s_%s_' % (course, assignment, user),
-            dir=VmcheckerPaths().dir_unchecked)
+            dir=misc.vmcheckerPaths.dir_unchecked)
     print sys.stderr, 'Creating zip package at `%s\'' % fd[1]
 
     # adds the files to
@@ -125,7 +125,7 @@ def submit_assignment(assignment_config):
 
     # sends homework to tester
     submit = misc.config().get(assignment, 'Submit')
-    submit = join(misc.VmcheckerPaths().abs_path(submit))
+    submit = join(misc.vmcheckerPaths.abs_path(submit))
     check_call((submit, fd[1]))
 
 
