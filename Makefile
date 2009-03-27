@@ -12,17 +12,18 @@ MAKEFLAGS += --no-print-directory
 COMPONENTS:= VMExecutor Commander semctl
 
 all:
-	@echo " run make tester-dist or make uploader-dist"
+	@echo " run make tester-dist or make storer-dist"
 
 
-uploader-dist:
-	./bin/initialise_course.py
+storer-dist:
+	./bin/initialise_course.py storer
 
 
 tester-dist:
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
+	./bin/initialise_course.py tester
 
 clean:
 	@for i in $(COMPONENTS); do \

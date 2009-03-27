@@ -14,15 +14,24 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("vmchecker.initialise_course")
 
-def create_storer_paths():
-    """ Create all paths used by vmchecker on the storer machine""" 
-    storer_paths = misc.vmcheckerPaths.storer_paths
-    for path in storer_paths:
+
+def _create_paths(paths):
+    for path in paths:
         if not(os.path.isdir(path)):
             os.mkdir(path)
         else:
             logger.info("Skipping existing directory %s" % path)
 
+def create_tester_paths():
+    """ Create all paths used by vmchecker on the storer machine""" 
+    tester_paths = misc.vmcheckerPaths.tester_paths
+    _create_paths(tester_paths)
+
+
+def create_storer_paths():
+    """ Create all paths used by vmchecker on the storer machine""" 
+    storer_paths = misc.vmcheckerPaths.storer_paths
+    _create_paths(storer_paths)
 
 
 def create_db_tables(db_path):
@@ -58,10 +67,31 @@ def create_db():
         
 
 
-def main():
+def main_storer():
     create_storer_paths()
     create_db()
     logger.info(" -- storer init done setting up paths and db file.")
 
+def main_tester():
+    create_tester_paths()
+    logger.info(" -- tester init done setting up paths and db file.")
+
+def usage():
+    print("""Usage: 
+\t%s storer - initialize storer machine
+\t%s tester - initialize tester machine
+\t%s --help - print this message""" % (sys.argv[0], sys.argv[0], sys.argv[0]))
+
 if __name__ == '__main__':
-    main()
+    if (len(sys.argv) < 2):
+        usage()
+        exit(1)
+    if   cmp(sys.argv[1], "storer") == 0:
+        main_storer()
+    elif cmd(sys.argv[1], "tester") == 0:
+        main_tester()
+    elif cmp(sys.argv[1], "--help") == 0:
+        usage()
+    else:
+        usage()
+        exit(1)
