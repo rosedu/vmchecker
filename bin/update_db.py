@@ -11,10 +11,10 @@ import misc
 
 GRADE_VALUE_FILE = 'nota'
 
-vmchk_root = os.path.abspath(misc.vmchecker_root())
-db_path = misc.db_file()
+vmchk_root = misc.VmcheckerPaths().root()
+db_path = misc.VmcheckerPaths().db_file()
 cwd = os.getcwd()
-checked_root = os.path.join(vmchk_root, 'checked')
+checked_root = misc.VmcheckerPaths().dir_checked()
 
 if not cwd.startswith(checked_root):
     print "Error: working directory not in the VMCHECKER_ROOT subtree "

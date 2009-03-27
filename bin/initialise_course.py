@@ -1,7 +1,8 @@
 #! /usr/bin/env python2.5
 # Initialises the directory path for one course 
 
-__author__ = 'Ana Savu, ana.savu86@gmail.com'
+__author__ = """ Ana Savu, <ana.savu86@gmail.com>
+             Lucian Adrian Grijincu <lucian.grijincu@gmail.com>"""
 
 
 import os
@@ -9,7 +10,20 @@ import sqlite3
 import misc
 import sys
 
-def create_db(db_path):
+
+def create_storer_paths():
+    """ Create all paths used by vmchecker on the storer machine""" 
+    storer_paths = misc.VmcheckerPaths().storer_paths()
+    for path in storer_paths:
+        if not(os.path.isdir(path)):
+            os.mkdir(path)
+        else:
+            print("[%s] Skipping existing directory %s" % (
+                sys.argv[0], path))
+
+
+
+def create_db_tables(db_path):
     db_conn = sqlite3.connect(db_path)
     db_cursor = db_conn.cursor()
     db_cursor.executescript("""
@@ -30,23 +44,24 @@ def create_db(db_path):
     db_cursor.close()
     db_conn.close()
 
-def main():
-    
-    base_path = misc.vmchecker_root()
 
-    dirnames = ['unchecked', 'back', 'checked', 'tests'];
-    for dirname in dirnames:
-        fullpath = os.path.join(base_path, dirname)
-        if not(os.path.isdir(fullpath)):
-            os.mkdir(fullpath)
-        else:
-            print "[" + sys.argv[0] + "] Directory ", fullpath, " already exists; skipping"
-        
-    # check for DB existance 
-    if None == misc.db_file():
-        create_db(os.path.join(base_path, misc.VMCHECKER_DB))
+def create_db():
+    # check for DB existance
+    db_file = misc.VmcheckerPaths().db_file()
+    if None == db_file:
+        create_db(db_file)
     else:
-        print "[" + sys.argv[0] + "] Sqlite3 DB file ", misc.db_file(), " already created; skipping"
+        print("[%s] Skipping existing Sqlite3 DB file %s" % (
+            sys.argv[0], db_file))
+
+        
+
+
+def main():
+    create_storer_paths()
+    create_db()
+    print("[%s] storer init done setting up paths and db file." % (
+            sys.argv[0]))
 
 if __name__ == '__main__':
     main()
