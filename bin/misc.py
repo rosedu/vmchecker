@@ -75,7 +75,7 @@ class VmcheckerPaths(object):
         pass
 
     def abs_path(self, relative):
-        return os.path.join(self.root, relative)
+        return os.path.normpath(os.path.join(self.root, relative))
 
     @property
     def root(self):
