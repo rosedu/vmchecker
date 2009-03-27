@@ -15,12 +15,15 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("vmchecker.initialise_course")
 
 
+def _mkdir_if_not_exist(path):
+    if not(os.path.isdir(path)):
+        os.mkdir(path)
+    else:
+        logger.info("Skipping existing directory %s" % path)
+
 def _create_paths(paths):
     for path in paths:
-        if not(os.path.isdir(path)):
-            os.mkdir(path)
-        else:
-            logger.info("Skipping existing directory %s" % path)
+        _mkdir_if_not_exist(path)
 
 def create_tester_paths():
     """ Create all paths used by vmchecker on the storer machine""" 
@@ -33,6 +36,11 @@ def create_storer_paths():
     storer_paths = misc.vmcheckerPaths.storer_paths
     _create_paths(storer_paths)
 
+
+def create_storer_git_repo():
+    """ Create the repo for the assignments on the storer """
+    repo_path = misc.config().get("DEFAULT", "Repository")
+    _mkdir_if_not_exist(repo_path)
 
 def create_db_tables(db_path):
     db_conn = sqlite3.connect(db_path)
@@ -69,6 +77,7 @@ def create_db():
 
 def main_storer():
     create_storer_paths()
+    create_storer_git_repo()
     create_db()
     logger.info(" -- storer init done setting up paths and db file.")
 

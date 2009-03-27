@@ -26,14 +26,14 @@ def config():
     global _config
     if _config is None:
         _config = ConfigParser.RawConfigParser()
-        with open(config_file()) as handle:
+        with open(vmcheckerPaths.config_file) as handle:
             _config.readfp(handle)
     return _config
 
 
 def relative_path(*args):
     """Joins the arguments and returns a path relative to root"""
-    return os.path.join(VmcheckerPaths().root, os.path.join(*args))
+    return os.path.join(vmcheckerPaths().root, os.path.join(*args))
 
 
 def repository(assignment):
