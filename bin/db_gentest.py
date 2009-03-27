@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
+""" The script generates a test tree for checked homeworks """
+
 
 __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
 
-""" The script generates a test tree for checked homeworks """
 
 import misc
 import os
