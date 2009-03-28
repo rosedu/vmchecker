@@ -35,7 +35,7 @@ def create_tester_paths():
 
 def create_storer_paths():
     """Create all paths used by vmchecker on the storer machine"""
-    _create_paths(vmcheckerpaths.storer_paths)
+    _create_paths(vmcheckerpaths.storer_paths())
 
 
 def create_storer_git_repo():
