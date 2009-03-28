@@ -21,7 +21,7 @@ GRADE_FILENAME = 'NOTA'
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    _logger = logging.get_Logger('vmchecker.db_gentest')
+    _logger = logging.get_logger('vmchecker.db_gentest')
 
     root = vmcheckerpaths.dir_checked()
     
