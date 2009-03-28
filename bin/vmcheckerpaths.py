@@ -78,3 +78,10 @@ def config_file():
         VMCHECKER_INI, path)
     return path
 
+
+def tester_config_file():
+    path = abspath('vmchecker_tester.ini')
+    assert os.path.isfile(path), '%s (%s) is not a file' % (
+            'vmchecker_tester.ini', path)
+    return path
+

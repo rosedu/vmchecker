@@ -17,17 +17,29 @@ import vmcheckerpaths
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
+
 _config = None
+_tester_config = None
 
 
 def config():
-    """Returns a RawConfigParse containing vmchecker's configuration."""
+    """Returns a RawConfigParser containing vmchecker's configuration."""
     global _config
     if _config is None:
         _config = ConfigParser.RawConfigParser()
         with open(vmcheckerpaths.config_file()) as handle:
             _config.readfp(handle)
     return _config
+
+
+def tester_config():
+    """Returns a RawConfigParser containing vmchecker tester's configuration."""
+    global _tester_config
+    if _tester_config is None:
+        _tester_config = ConfigParser.RawConfigParser()
+        with open(vmcheckerpaths.terster_config_file()) as handle:
+            _tester_config.readfp(handle)
+    return _tester_config
 
 
 def relative_path(*args):
