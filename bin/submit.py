@@ -14,6 +14,7 @@ import os
 import shutil
 import sys
 import time
+import logging
 from subprocess import check_call
 from os.path import join, split, abspath, isfile, isdir, dirname
 from tempfile import mkstemp
