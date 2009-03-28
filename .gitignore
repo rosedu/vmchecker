@@ -1,3 +1,9 @@
 *.pyc
 *.pyo
 *.patch
+*~
+unchecked/
+vmchecker.db
+checked/
+teme-de-test/
+tests/
