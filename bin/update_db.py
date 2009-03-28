@@ -1,44 +1,22 @@
 #! /usr/bin/env python2.5
+# -*- coding: utf-8 -*-
 
 from __future__ import with_statement
-__author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
+
+__author__ = 'Gheorghe Claudiu-Dan <claudiugh@gmail.com>'
 
 import sqlite3
 import os
 import time 
 import stat 
-import misc 
 import logging
 
+import misc 
+import vmcheckerpaths
 
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("vmchecker.initialise_course")
 
 GRADE_VALUE_FILE = 'nota'
 
-vmchk_root = misc.vmcheckerPaths.root
-db_path = misc.vmcheckerPaths.db_file
-cwd = os.getcwd()
-checked_root = misc.vmcheckerPaths.dir_checked
-
-if not cwd.startswith(checked_root):
-    logger.error("Error: working directory [%s] not in the VMCHECKER_ROOT [%s] subtree." % 
-                 (cwd, checked_root))
-    exit()
-
-if None == db_path:
-    logger.error("Error: DB file [%s] doesn't exist" % db_path)
-    exit()
-    
-db_conn = sqlite3.connect(db_path)
-db_conn.isolation_level = None  # this is for autocommiting updates 
-db_cursor = db_conn.cursor()
-
-##################################################
-#
-#  DB routines  
-# 
 
 def DB_get_hw(hw_name):
     """ Get a homework entry 
@@ -53,18 +31,20 @@ def DB_get_hw(hw_name):
     else:
         return result[0]
 
+
 def DB_save_hw(hw_name):
     """ If the homework identified by (hw_name)  
     exists then update the DB, else insert a new entry """
     global db_cursor
+
     id_hw = DB_get_hw(hw_name)
     if None == id_hw:
         db_cursor.execute('INSERT INTO teme (nume) values (?)', (hw_name,))
         db_cursor.execute('SELECT last_insert_rowid();');
         (id_hw,) = db_cursor.fetchone()
-        return id_hw
-    else:
-        return id_hw
+
+    return id_hw
+
 
 def DB_get_student(student_name):
     """ Get a student entry 
@@ -74,10 +54,11 @@ def DB_get_student(student_name):
     global db_cursor
     db_cursor.execute('SELECT id FROM studenti WHERE nume = ?;', (student_name,))
     result = db_cursor.fetchone()
-    if None == result:
+    if result is None:
         return result
     else:
         return result[0]
+
 
 def DB_save_student(student_name):
     """ If the student identified by (student_name)  
@@ -89,6 +70,7 @@ def DB_save_student(student_name):
         db_cursor.execute('SELECT last_insert_rowid();');        
         (id_student,) = db_cursor.fetchone()
     return id_student
+
 
 def DB_get_grade(id_hw, id_student):
     """ Get a grade entry 
@@ -103,6 +85,7 @@ def DB_get_grade(id_hw, id_student):
     else:
         return result
 
+
 def DB_save_grade(id_hw, id_student, grade, data):
     """ If the grade identified by (id_hw, id_student) 
     exists then update the DB, else insert a new entry """
@@ -113,8 +96,6 @@ def DB_save_grade(id_hw, id_student, grade, data):
     else:       
         db_cursor.execute('UPDATE note set nota = ?, data = ? where id = ?', (grade, data, id_grade))
 
-#        
-#################################################
 
 def update_hws(path):
     """ For each dentry from path, launch the next 
@@ -128,6 +109,7 @@ def update_hws(path):
             #print hw_name
             update_students(path_hw, id_hw)
 
+
 def update_students(path, id_hw):
     """ For each dentry from path, 
     launch the update_grade() routine"""
@@ -140,8 +122,10 @@ def update_students(path, id_hw):
             #print "\t ", student_name,
             update_grade(path_student, id_hw, id_student)
 
+
 def grade_modification_time(grade_filename):
-    return time.strftime("%Y-%m-%d %H-%M-%S", time.gmtime(os.path.getmtime(grade_filename)))
+    return time.strftime(misc.DATE_FORMAT, time.gmtime(os.path.getmtime(grade_filename)))
+
 
 def get_grade_value(grade_filename):
     """ read an integer from the first line of the file """
@@ -150,11 +134,12 @@ def get_grade_value(grade_filename):
             return int(f.readline())
         except ValueError:
             return -1;
+
     
 def update_grade(path, id_hw, id_student):
-    """ Reads the grade's value only if the file containing the
+    """Reads the grade's value only if the file containing the
     value was modified since the last update of the DB for this
-    submission. """
+    submission."""
     grade_filename = os.path.join(path, GRADE_VALUE_FILE)
     if not os.path.exists(grade_filename):
         logger.error("File [%s] for grade value does not exist " % grade_filename)
@@ -168,8 +153,7 @@ def update_grade(path, id_hw, id_student):
             # update information from DB
             DB_save_grade(id_hw, id_student, grade_value, data_modif)
             print path, " UPDATED "
-#    else:
-#        print " "
+
 
 def main():
     # determine the level 
@@ -177,32 +161,50 @@ def main():
     LEVEL_STUDENTI = 1
     LEVEL_GRADE = 2
 
-    path = cwd
+    path = os.getcwd()
     level = LEVEL_HWS
-    while path != checked_root:    
+    while path != vmcheckerpaths.dir_checked():    
         (path, tail) = os.path.split(path)
         level = level + 1
 
     if level == LEVEL_HWS:
-        update_hws(cwd)
+        update_hws(os.getcwd())
     elif level == LEVEL_STUDENTI:
         # get the name for homework
-        (head, nume_hw) = os.path.split(cwd)
+        (head, nume_hw) = os.path.split(os.getcwd())
         # get the id 
         id_hw = DB_save_hw(nume_hw)
-        update_students(cwd, id_hw)
+        update_students(os.getcwd(), id_hw)
     elif level == LEVEL_GRADE:
         # get the  names from the path 
-        (head, nume_student) = os.path.split(cwd)
+        (head, nume_student) = os.path.split(os.getcwd())
         (head, nume_hw) = os.path.split(head)
         # get the DB identifiers 
         id_hw = DB_save_hw(nume_hw)
         id_student = DB_save_student(nume_student)
-        update_grade(cwd, id_hw, id_student)
+        update_grade(os.getcwd(), id_hw, id_student)
 
         db_cursor.close() 
         db_conn.close() 
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger("vmchecker.initialise_course")
+
+    if not os.getcwd().startswith(vmcheckerpaths.dir_checked()):
+        logger.error("Error: working directory [%s] not in the VMCHECKER_ROOT [%s] subtree." % 
+                     (os.getcwd(), vmcheckerpaths.dir_checked()))
+        exit()
+
+    if not os.path.isfile(vmcheckerpaths.db_file()):
+        logger.error("Error: DB file [%s] doesn't exist" % db_path)
+        exit()
+
+    # TODO: rename for better encapsulation
+    global db_conn, db_cursor
+    db_conn = sqlite3.connect(db_path)
+    db_conn.isolation_level = None  # this is for autocommiting updates 
+    db_cursor = db_conn.cursor()
+
     main()

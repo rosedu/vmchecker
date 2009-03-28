@@ -1,7 +1,9 @@
 #! /usr/bin/env python2.5
+#! /usr/bin/env python2.5
+# -*- coding: utf-8 -*-
 
-"""
-The script generates a HTML table that contains the grade for each student and for each homework
+"""Generates a HTML table containing the students' grades.
+
 The layout can be modified by editing the following CSS elements: 
 
 table#hw-results-table {}           
@@ -10,29 +12,34 @@ table#hw-results-table tr.tr-even {}/* even rows from table */
 table#hw-results-table td.hw-h {}   /* home heading row */
 table#hw-results-table td.st-h {}   /* student heading column */
 table#hw-results-table td.grade {}  /* the grade cell */
-
 """
 
-__author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
+__author__ = 'Gheorghe Claudiu-Dan <claudiugh@gmail.com>'
 
 
 import sqlite3
-import misc
 import os
 import urllib
 import logging
+
+
+import misc
+import vmcheckerpaths
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("vmchecker.db_gentest")
 
 
-db_path = misc.vmcheckerPaths.db_file
-if None == db_path:
+db_path = vmcheckerpaths.db_file()
+if not os.path.isfile(db_path):
     logger.error("DB file %s does not exist" % db_path)
     exit()
 
+
 db_conn = sqlite3.connect(db_path)
 db_cursor = db_conn.cursor()
+
 
 def get_db_content():
     """ Retrieve all the information needed from the DB    
@@ -61,6 +68,7 @@ def get_db_content():
         
     return (results, hws)
 
+
 def href(target, text, title='Click pentru detalii'):
     """ Generate a HTML anchor with target, text, and title attributes
     @return
@@ -68,12 +76,14 @@ def href(target, text, title='Click pentru detalii'):
     """
     return "<a href='%s' title='%s'>%s</a>" % (target, title, text)
 
+
 def cpl_hack(student_name, hw_name, result):
     # TODO(alexandru): replace with something less specifi
     if result == '-1':
     	result = 'ok'
     return "<a href=\"Teme/nota.php?user=%s&homework=%s\">%s</a>" % (
         urllib.quote(student_name), urllib.quote(hw_name), result)
+
 
 def gen_html(results, hws):
     # table header 
@@ -104,12 +114,14 @@ def gen_html(results, hws):
     html += ' </table>'
     return html 
 
+
 def main():
     (results, hws) = get_db_content()
     # send to the stdout all the HTML content 
     print (gen_html(results, hws))
     db_cursor.close()
     db_conn.close()
+
 
 if __name__ == '__main__':
     main()

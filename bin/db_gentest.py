@@ -1,28 +1,32 @@
 #!/usr/bin/python
 
-""" The script generates a test tree for checked homeworks """
+"""The script generates a test tree for checked homeworks."""
 
 
 __author__ = 'Gheorghe Claudiu-Dan, claudiugh@gmail.com'
 
 
-import misc
 import os
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("vmchecker.db_gentest")
+import misc
+import vmcheckerpaths
+
 
 NO_OF_HWS = 10
 NO_OF_STUDENTS = 100
 GRADE = 10
 GRADE_FILENAME = 'NOTA'
 
+
 if __name__ == "__main__":
-    root = misc.vmcheckerPaths.dir_checked
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('vmchecker.db_gentest')
+
+    root = vmcheckerpaths.dir_checked()
     
     if not os.path.exists(root):
-        logger.error(" %s directory does not exist " % root)
+        logger.error('%s directory does not exist' % root)
         exit()
     
     for hw_index in range(0,NO_OF_HWS):

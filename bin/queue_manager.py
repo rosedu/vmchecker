@@ -35,7 +35,7 @@ def _process_job(path, name):
 def main():
     wm = WatchManager()
     notifier = Notifier(wm, _QueueManager())
-    wm.add_watch(misc.vmcheckerPaths.dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
+    wm.add_watch(vmcheckerpaths.dir_queue(), EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
     notifier.loop(callback=lambda self: self.proc_fun())
 
 
