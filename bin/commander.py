@@ -48,6 +48,8 @@ _FILES_TO_SEND = (
     'job_results',
     'job_km', )
 
+_logger = logging.getLogger('vmchecker.commander')
+
 
 def _run_callback(dir, ejobs):
     """Runs callback script to upload results"""
@@ -70,7 +72,7 @@ def _run_executor(machine, assignment):
     # parsing config should be executors' job
     tester = misc.tester_config()
     args = [
-            '/bin/echo',
+            # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
             '1',                                      # enables kernel_messages
