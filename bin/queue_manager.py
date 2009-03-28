@@ -30,17 +30,21 @@ class _QueueManager(ProcessEvent):
         _process_job(event.path, event.name)
 
 
+
 def _process_job(path, name):
     location = tempfile.mkdtemp(prefix='vmchecker-', 
                                 dir=vmcheckerpaths.dir_tester_unzip_tmp())
     archive = join(path, name)
-    print 'Expanding archive `%s\' at `%s\'.' % (archive, location)
-
-    check_call(['unzip', '-d', location, archive])
-
-    print 'Cleaning `%s\'' % location
-    shutil.rmtree(location)
-
+    try:
+        print 'Expanding archive `%s\' at `%s\'.' % (archive, location)
+        check_call(['unzip', '-d', location, archive])
+        
+        print 'Calling commander'
+        check_call(['./commander.py', location])
+    finally:
+        print 'Cleaning `%s\'' % location
+        shutil.rmtree(location)
+    
 
 def main():
     wm = WatchManager()
