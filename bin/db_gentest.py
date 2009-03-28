@@ -21,12 +21,12 @@ GRADE_FILENAME = 'NOTA'
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger('vmchecker.db_gentest')
+    _logger = logging.get_Logger('vmchecker.db_gentest')
 
     root = vmcheckerpaths.dir_checked()
     
     if not os.path.exists(root):
-        logger.error('%s directory does not exist' % root)
+        _logger.error('%s directory does not exist' % root)
         exit()
     
     for hw_index in range(0,NO_OF_HWS):
@@ -46,5 +46,5 @@ if __name__ == "__main__":
                 f.write(str(GRADE))
                 f.close()
 
-    logger.info(" -- Done.")
+    _logger.info(" -- Done.")
 
