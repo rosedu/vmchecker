@@ -1,23 +1,26 @@
 #! /usr/bin/env python
-# Creates a homework configuration file, uploads files to repository
-# and sends the homework for evaluation
+# -*- coding: utf-8 -*-
+"""Creates a homework configuration file, uploads files to repository
+and sends the homework for evaluation"""
 
 from __future__ import with_statement
 
+__author__ = """Ana Savu <ana.savu86@gmail.com>
+                Alexandru Moșoi <brtzsnr@gmail.com>"""
+
+
 import ConfigParser
-import misc
 import os
 import shutil
 import sys
 import time
-
 from subprocess import check_call
 from os.path import join, split, abspath, isfile, isdir, dirname
 from tempfile import mkstemp
 from zipfile import ZipFile
 
-
-__author__ = 'Ana Savu ana.savu86@gmail.com, Alexandru V. Mosoi brtzsnr@gmail.com'
+import misc
+import vmcheckerpaths
 
 
 def _call_git(repository, *args):
@@ -116,17 +119,16 @@ def submit_assignment(assignment_config):
     # adds the files to
     with os.fdopen(fd[0], 'w+b') as handler:
         zip = ZipFile(handler, 'w')
-        zip.write(assignment_config, 'config')   # assignment config
+        zip.write(assignment_config, 'config')             # assignment config
         zip.write(vmcheckerpaths.config_file(), 'storer')  # storer config
-        zip.write(archive, 'archive.zip')        # assignment archive
-        zip.write(tests, 'tests.zip')            # the archive containing tests
-        zip.write(penalty, 'penalty')            # penalty script
+        zip.write(archive, 'archive.zip')                  # assignment archive
+        zip.write(tests, 'tests.zip')                      # the archive containing tests
+        zip.write(penalty, 'penalty')                      # penalty script
         zip.close()
 
 
     # sends homework to tester
-    submit = misc.config().get(assignment, 'Submit')
-    submit = join(vmcheckerpaths.abs_path(submit))
+    submit = vmcheckerpaths.abspath(misc.config().get(assignment, 'Submit'))
     check_call((submit, fd[1]))
 
 
