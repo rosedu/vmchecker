@@ -37,7 +37,7 @@ def tester_config():
     global _tester_config
     if _tester_config is None:
         _tester_config = ConfigParser.RawConfigParser()
-        with open(vmcheckerpaths.terster_config_file()) as handle:
+        with open(vmcheckerpaths.tester_config_file()) as handle:
             _tester_config.readfp(handle)
     return _tester_config
 
