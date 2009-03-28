@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # Queue manager
 # This module depends on pyinotify: http://pyinotify.sourceforge.net/
+# should listen for new files on a directory, decompress archives
+# and pass archive.zip & tests.zip to commander, waits for the result,
+# applies penalty & submits back the results.
+#
+# Note, last two steps should be grouped together: queue_manager should
+# call a script ./callback located in archive which does this shit.
 
 
 import sys
