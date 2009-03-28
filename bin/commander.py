@@ -39,6 +39,7 @@ from os.path import join, isdir
 import misc
 import vmcheckerpaths
 
+_logger = logging.get_Logger("vmchecker.commander")
 
 _FILES_TO_SEND = (
     'job_build',
@@ -54,13 +55,13 @@ def _run_callback(dir, ejobs):
     args = (join(dir, 'callback'), join(dir, 'config'))
     args += tuple(join(ejobs, f) for f in _FILES_TO_SEND)
 
-    logging.info('Homework evaluated; sending results')
-    logging.debug('calling %s', args)
+    _logger.info('Homework evaluated; sending results')
+    _logger.debug('calling %s', args)
 
     try:
         check_call(args)
     except:
-        logging.error('Sending results failed')
+        _logger.error('Sending results failed')
         raise
 
 def _run_executor(machine, assignment):
@@ -83,13 +84,13 @@ def _run_executor(machine, assignment):
             vmcheckerpaths.root(),
             assignment,
             ]
-    logging.info('Begin homework evaluation')
-    logging.debug('calling %s', args)
+    _logger.info('Begin homework evaluation')
+    _logger.debug('calling %s', args)
 
     try:
         check_call(args)
     except:
-        logging.error('failed to run VMExecutor')
+        _logger.error('failed to run VMExecutor')
         raise
 
 
@@ -127,9 +128,9 @@ def main(dir):
         _run_executor(machine, assignment)
         _run_callback(dir, ejobs)
 
-        logging.info('all done')
+        _logger.info('all done')
     except:
-        logging.exception('failed miserable')
+        _logger.exception('failed miserable')
         raise
     finally:
         # clears files
