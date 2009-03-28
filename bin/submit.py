@@ -117,7 +117,7 @@ def submit_assignment(assignment_config):
     with os.fdopen(fd[0], 'w+b') as handler:
         zip = ZipFile(handler, 'w')
         zip.write(assignment_config, 'config')   # assignment config
-        zip.write(vmcheckerpaths.config_file(), 'global')  # global vmchecker config
+        zip.write(vmcheckerpaths.config_file(), 'storer')  # storer config
         zip.write(archive, 'archive.zip')        # assignment archive
         zip.write(tests, 'tests.zip')            # the archive containing tests
         zip.write(penalty, 'penalty')            # penalty script
