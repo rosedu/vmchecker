@@ -11,8 +11,8 @@ import os
 VMCHECKER_INI = 'vmchecker_storer.ini'
 
 
-def abspath(relative):
-    return os.path.normpath(os.path.join(root(), relative))
+def abspath(*relative):
+    return os.path.normpath(os.path.join(root(), *relative))
 
 
 def root():

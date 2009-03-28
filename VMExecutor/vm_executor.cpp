@@ -326,8 +326,8 @@ static int start_vm(void)
 			VIX_PROPERTY_NONE);
 	if (VIX_OK != err)
 	{
-		error("[EXECUTOR] VixVM_Open: %s: %llu\n",
-				Vix_GetErrorText(err,NULL), err); 
+		error("[EXECUTOR] VixVM_Open: %s: %s %llu\n",
+				Vix_GetErrorText(err,NULL), vmrun.vmpath.c_str(), err); 
 		return -1;
 	}
 
