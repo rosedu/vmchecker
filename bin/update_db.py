@@ -15,7 +15,7 @@ import misc
 import vmcheckerpaths
 
 
-_logger = logging.get_logger("vmchecker.update_db")
+_logger = logging.getLogger("vmchecker.update_db")
 
 GRADE_VALUE_FILE = 'nota'
 
