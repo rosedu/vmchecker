@@ -7,7 +7,7 @@ It should:
   * pass path of the directory to commander,
   * waits for the commander to finish.
 
-Note, the last two steps should be grouped together: queue_manager should
+Note, the last two steps must be grouped together: queue_manager should
 call a script ./callback located in archive which does this shit."""
 
 
