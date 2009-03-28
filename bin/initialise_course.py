@@ -16,11 +16,14 @@ import misc
 import vmcheckerpaths
 
 
+_logger = logging.get_Logger("vmchecker.initialise_course")
+
+
 def _mkdir_if_not_exist(path):
     if not(os.path.isdir(path)):
         os.mkdir(path)
     else:
-        logger.info('Skipping existing directory %s' % path)
+        _logger.info('Skipping existing directory %s' % path)
 
 
 def _create_paths(paths):
@@ -85,19 +88,19 @@ def create_db():
     if not os.path.isfile(db_file):
         create_db_tables(db_file)
     else:
-        logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
+        _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
 
 
 def main_storer():
     create_storer_paths()
     create_storer_git_repo()
     create_db()
-    logger.info(' -- storer init done setting up paths and db file.')
+    _logger.info(' -- storer init done setting up paths and db file.')
 
 
 def main_tester():
     create_tester_paths()
-    logger.info(' -- tester init done setting up paths and db file.')
+    _logger.info(' -- tester init done setting up paths and db file.')
 
 
 def usage():
@@ -108,7 +111,6 @@ def usage():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger("vmchecker.initialise_course")
 
     if (len(sys.argv) < 2):
         usage()

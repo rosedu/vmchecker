@@ -27,13 +27,12 @@ import misc
 import vmcheckerpaths
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("vmchecker.db_gentest")
+_logger = logging.get_Logger("vmchecker.view_grades")
 
 
 db_path = vmcheckerpaths.db_file()
 if not os.path.isfile(db_path):
-    logger.error("DB file %s does not exist" % db_path)
+    _logger.error("DB file %s does not exist" % db_path)
     exit()
 
 
@@ -124,4 +123,5 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     main()
