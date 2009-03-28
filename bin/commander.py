@@ -47,6 +47,8 @@ _FILES_TO_SEND = (
     'job_results',
     'job_km', )
 
+_logger = logging.getLogger('vmchecker.commander')
+
 
 def _run_callback(dir, ejobs):
     """Runs callback script to upload results"""
@@ -54,13 +56,13 @@ def _run_callback(dir, ejobs):
     args = (join(dir, 'callback'), join(dir, 'config'))
     args += tuple(join(ejobs, f) for f in _FILES_TO_SEND)
 
-    logging.info('Homework evaluated; sending results')
-    logging.debug('calling %s', args)
+    _logger.info('Homework evaluated; sending results')
+    _logger.debug('calling %s', args)
 
     try:
         check_call(args)
     except:
-        logging.error('Sending results failed')
+        _logger.error('Sending results failed')
         raise
 
 def _run_executor(machine, assignment):
@@ -69,7 +71,7 @@ def _run_executor(machine, assignment):
     # parsing config should be executors' job
     tester = misc.tester_config()
     args = [
-            '/bin/echo',
+            # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
             '1',                                      # enables kernel_messages
@@ -83,13 +85,13 @@ def _run_executor(machine, assignment):
             vmcheckerpaths.root(),
             assignment,
             ]
-    logging.info('Begin homework evaluation')
-    logging.debug('calling %s', args)
+    _logger.info('Begin homework evaluation')
+    _logger.debug('calling %s', args)
 
     try:
         check_call(args)
     except:
-        logging.error('failed to run VMExecutor')
+        _logger.error('failed to run VMExecutor')
         raise
 
 
@@ -127,9 +129,9 @@ def main(dir):
         _run_executor(machine, assignment)
         _run_callback(dir, ejobs)
 
-        logging.info('all done')
+        _logger.info('all done')
     except:
-        logging.exception('failed miserable')
+        _logger.exception('failed miserable')
         raise
     finally:
         # clears files
