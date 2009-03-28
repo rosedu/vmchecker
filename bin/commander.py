@@ -5,7 +5,7 @@
 
 Usage:
     ./commander.py directory - where directory contains (see submit.py)
-        `homework.zip' `tests.zip' `config' `storer' `callback'
+        `archive.zip' `tests.zip' `config' `storer' `callback'
 
 
 The script parses config and storer and invokes vm_executor with
@@ -139,7 +139,7 @@ def main(dir):
 def _print_help():
     print >>sys.stderr, """Usage:
     ./commander.py directory - where directory contains (see submit.py)
-        `homework.zip' `tests.zip' `config' `storer' `callback'"""
+        `archive.zip' `tests.zip' `config' `storer' `callback'"""
 
 
 if __name__ == '__main__':
