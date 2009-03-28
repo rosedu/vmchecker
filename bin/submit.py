@@ -4,8 +4,6 @@
 
 from __future__ import with_statement
 
-__author__ = 'Ana Savu ana.savu86@gmail.com, Alexandru V. Mosoi brtzsnr@gmail.com'
-
 import ConfigParser
 import misc
 import os
@@ -17,6 +15,9 @@ from subprocess import check_call
 from os.path import join, split, abspath, isfile, isdir, dirname
 from tempfile import mkstemp
 from zipfile import ZipFile
+
+
+__author__ = 'Ana Savu ana.savu86@gmail.com, Alexandru V. Mosoi brtzsnr@gmail.com'
 
 
 def _call_git(repository, *args):
