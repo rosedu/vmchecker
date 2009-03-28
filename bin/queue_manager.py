@@ -31,11 +31,12 @@ class _QueueManager(ProcessEvent):
 
 
 def _process_job(path, name):
-    location = tempfile.mkdtemp(prefix='vmchecker-')
+    location = tempfile.mkdtemp(prefix='vmchecker-', 
+                                dir=vmcheckerpaths.dir_tester_unzip_tmp())
     archive = join(path, name)
     print 'Expanding archive `%s\' at `%s\'.' % (archive, location)
 
-    check_call(('tar', '-C', location, '-xzvf', archive))
+    check_call(['unzip', '-d', location, archive])
 
     print 'Cleaning `%s\'' % location
     shutil.rmtree(location)
