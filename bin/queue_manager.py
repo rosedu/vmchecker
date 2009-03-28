@@ -1,5 +1,6 @@
-#!/usr/bin/python
-"""Queue manager
+#!/usr/bin/env python
+"""Queue manager - wait for assignments and invoke the commander for each
+
 This module depends on pyinotify: http://pyinotify.sourceforge.net/
 It should:
   * listen for new files on a directory,
@@ -8,7 +9,8 @@ It should:
   * waits for the commander to finish.
 
 Note, the last two steps must be grouped together: queue_manager should
-call a script ./callback located in archive which does this shit."""
+call a script ./callback located in archive which does this shit.
+"""
 
 
 import sys
@@ -43,7 +45,8 @@ def _process_job(path, name):
         check_call(['unzip', '-d', location, archive])
 
         logger.info('Calling commander for [%s]' % location)
-        check_call(['./commander.py', location])
+        commander_path = join(vmcheckerpaths.dir_bin(), 'commander.py')
+        check_call([commander_path, location])
     except:
         logger.exception('Caught exception while processing [%s]' % location)
     finally:
