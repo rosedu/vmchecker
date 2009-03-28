@@ -130,7 +130,11 @@ def submit_assignment(assignment_config):
     # sends homework to tester
     submit = vmcheckerpaths.abspath(misc.config().get(assignment, 'Submit'))
     logging.info('Calling submission script %s', submit)
-    check_call((submit, fd[1]))
+    try:
+        check_call((submit, fd[1]))
+    except:
+        logging.fatal('Cannot submit homework')
+        raise
 
 
 def print_help():
