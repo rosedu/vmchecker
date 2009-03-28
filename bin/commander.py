@@ -1,13 +1,26 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Commander
 
-./commander.py directory
+"""Evaluates one homework.
 
-directory contains: homework.zip tests.zip config vmchecker_storer.ini
+Usage:
+    ./commander.py directory - where directory contains (see submit.py)
+        `homework.zip' `tests.zip' `config' `storer' `callback'
 
-This commander is a major HACK (ie lots of wtf)
 
+The script parses config and storer and invokes vm_executor with
+the requiered arguments.
+
+VMExecutor excepts files in `executor_jobs' so it's not safe
+to run two instances of commander simultaneously.
+
+When done `callback' is invoked with arguments
+    ./callback config file1 file2 file3 ...
+Missing files should be ignored (except config)
+
+
+NOTE: This commander is a major HACK (ie lots of wtf)
+TODO: Split VMExecutor, one for each machine.
 """
 
 from __future__ import with_statement
@@ -19,8 +32,9 @@ import ConfigParser
 import logging
 import shutil
 import sys
+import os
 from subprocess import check_call
-from os.path import join
+from os.path import join, isdir
 
 import misc
 import vmcheckerpaths
@@ -41,6 +55,14 @@ def main(dir):
     machine = storer.get(assignment, 'Machine')
 
     # copies files to where vmchecker expects them (wtf
+    # XXX path is hardcoded
+
+    ejobs = vmcheckerpaths.abspath('executor_jobs')
+    # cleans up executor_jobs, if not already clean
+    if isdir(ejobs):
+        shutil.rmtree(ejobs)
+    os.mkdir(ejobs)
+
     shutil.copy(        # copies assignment
         join(dir, 'archive.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'file.zip'))
@@ -53,6 +75,7 @@ def main(dir):
     # parsing config should be executors' job
     tester = misc.tester_config()
     args = [
+            '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
             '1',                                      # enables kernel_messages
@@ -66,16 +89,37 @@ def main(dir):
             vmcheckerpaths.root(),
             assignment,
             ]
+    logging.info('Begin homework evaluation')
+    logging.debug('calling %s', args)
+    try:
+        check_call(args)
+    except:
+        logging.exception('failed to run VMExecutor')
+        shutil.rmtree(ejobs)
+        raise
 
-    logging.debug('calling VMExecutor: %s' % args)
-    check_call(args)
+    # uploads results
+    args = (
+            join(dir, 'callback'),
+            join(dir, 'config'),
+            join(ejobs, 'job_build'),
+            join(ejobs, 'job_run'),
+            join(ejobs, 'job_errors'),
+            join(ejobs, 'job_results'),
+            join(ejobs, 'job_km'),
+        )
+    logging.info('Homework evaluated; sending results')
+    logging.debug('calling %s', args)
+    try:
+        check_call(args)
+    except:
+        logging.exception('Sending results failed')
+        shutil.rmtree(ejobs)
+        raise
 
-
-
-
-    # upload_results (callback)
-
-    # clear stuff
+    # clears files
+    shutil.rmtree(ejobs)
+    logging.info('all done')
 
 
 if __name__ == '__main__':
