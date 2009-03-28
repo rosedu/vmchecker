@@ -16,7 +16,7 @@ to run two instances of commander simultaneously.
 
 When done `callback' is invoked with arguments
     ./callback config file1 file2 file3 ...
-Missing files should be ignored (except config)
+Missing files should be ignored (except config).
 
 
 NOTE: This commander is a major HACK (ie lots of wtf)
