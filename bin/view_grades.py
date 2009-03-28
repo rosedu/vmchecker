@@ -27,7 +27,7 @@ import misc
 import vmcheckerpaths
 
 
-_logger = logging.get_Logger("vmchecker.view_grades")
+_logger = logging.getLogger("vmchecker.view_grades")
 
 
 db_path = vmcheckerpaths.db_file()

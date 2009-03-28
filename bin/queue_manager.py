@@ -30,7 +30,7 @@ from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 __author__ = 'Alexandru Mosoi <brtzsnr@gmail.com>'
 
 
-_logger = logging.get_Logger("vmchecker.queue_manager")
+_logger = logging.getLogger("vmchecker.queue_manager")
 
 class _QueueManager(ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):

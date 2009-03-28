@@ -16,7 +16,7 @@ import misc
 import vmcheckerpaths
 
 
-_logger = logging.get_Logger("vmchecker.initialise_course")
+_logger = logging.getLogger("vmchecker.initialise_course")
 
 
 def _mkdir_if_not_exist(path):

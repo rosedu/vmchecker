@@ -39,7 +39,7 @@ from os.path import join, isdir
 import misc
 import vmcheckerpaths
 
-_logger = logging.get_Logger("vmchecker.commander")
+_logger = logging.getLogger("vmchecker.commander")
 
 _FILES_TO_SEND = (
     'job_build',
