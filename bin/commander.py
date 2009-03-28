@@ -53,7 +53,7 @@ def main(dir):
     # parsing config should be executors' job
     tester = misc.tester_config()
     args = [
-            vmcheckerpaths.abspath('/bin/echo'),
+            vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
             '1',                                      # enables kernel_messages
             tester.get(machine, 'VMPath'),
