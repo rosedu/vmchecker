@@ -10,6 +10,7 @@ import os
 import shutil
 import sys
 import time
+import vmcheckerpaths
 
 from subprocess import check_call
 from os.path import join, split, abspath, isfile, isdir, dirname
@@ -126,7 +127,7 @@ def submit_assignment(assignment_config):
 
     # sends homework to tester
     submit = misc.config().get(assignment, 'Submit')
-    submit = join(vmcheckerpaths.abs_path(submit))
+    submit = join(vmcheckerpaths.abspath(submit))
     check_call((submit, fd[1]))
 
 
