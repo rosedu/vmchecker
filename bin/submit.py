@@ -129,6 +129,7 @@ def submit_assignment(assignment_config):
 
     # sends homework to tester
     submit = vmcheckerpaths.abspath(misc.config().get(assignment, 'Submit'))
+    logging.info('Calling submission script %s', submit)
     check_call((submit, fd[1]))
 
 
@@ -169,5 +170,6 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     main()
 
