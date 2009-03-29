@@ -62,7 +62,6 @@ def build_config(user, assignment, archive):
         shutil.rmtree(location)
     assert not os.path.exists(location)
     os.makedirs(location)
-    os.makedirs(results_location)
 
     check_call(['unzip', archive, '-d', 
                 os.path.join(location, 'archive')])
