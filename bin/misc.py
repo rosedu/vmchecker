@@ -22,14 +22,29 @@ _config = None
 _tester_config = None
 
 
+def config_reader(config_file):
+    """Returns a RawConfigParser for the speciffied file."""
+    config = ConfigParser.RawConfigParser()
+    with open(config_file) as handle:
+        config.readfp(handle)
+    return config
+
+
 def config():
     """Returns a RawConfigParser containing vmchecker's configuration."""
     global _config
     if _config is None:
-        _config = ConfigParser.RawConfigParser()
-        with open(vmcheckerpaths.config_file()) as handle:
-            _config.readfp(handle)
+        _config = config_reader(vmcheckerpaths.config_file())
     return _config
+
+
+def config_variables(config_file, section_name):
+    """Return a dictionary with values from the config_path file.
+    NB:  the keys will be all lowercase!
+    """
+    conf_reader = config_reader(config_file)
+    l = conf_reader.items(section_name)
+    return dict(l)
 
 
 def tester_config():

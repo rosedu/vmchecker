@@ -18,23 +18,6 @@ import logging
 _logger = logging.getLogger("vmchecker.callback")
 
 
-def config_reader(config_path):
-    """Returns a RawConfigParser for 'config'
-    """
-    config = ConfigParser.RawConfigParser()
-    with open(config_path) as handle:
-        config.readfp(handle)
-    return config
-
-
-def config_variables(config_path):
-    """Return a dictionary with values from the config_path file.
-    """
-    conf_reader = config_reader(config_path)
-    section_name = 'Assignment'
-    l = conf_reader.items(section_name)
-    return dict(l)
-
 
 def _setup_logging():
     """Instruct paramiko to log stuff.
@@ -195,10 +178,9 @@ if __name__ == "__main__":
         print_usage()
         exit(1)
 
-    config_path = sys.argv[1]
-    conf_vars = config_variables(config_path)
+    config_file = sys.argv[1]
+    conf_vars = misc.config_variables(config_file, 'Assignment')
+
+    # skip first two: the script name and the config file :)
     files = sys.argv[2:]
-    print '[CALLBACK] files = %s' % str(files)
     send_results_and_notify(files, conf_vars)
-    print '[CALLBACK] YEAH! Callback ran! sys.argv[] = %s' % str(sys.argv)
-    print '[CALLBACK] test vmcheckerpaths-root: %s ' % vmcheckerpaths.root()
