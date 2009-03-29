@@ -9,9 +9,9 @@
 
    Coding issues, Razvan Deaconescu <razvan@rosedu.org>
 
-     This module starts the specified Virtual Machine, copies from the Tester 
-   System  the  two  archives  (file.zip  and tests.zip) and  the two scripts 
-   (build.sh and run.sh)  on  the Virtual  Machine, starts the scripts in the 
+     This module starts the specified Virtual Machine, copies from the Tester
+   System  the  two  archives  (file.zip  and tests.zip) and  the two scripts
+   (build.sh and run.sh)  on  the Virtual  Machine, starts the scripts in the
    Virtual Machine and collects the results.
 */
 /*--------------------------------------------------------------------------*/
@@ -68,8 +68,8 @@ Bool jobCompleted;
   system() function.
 
   @param    str: the string to be modified
-  @return   -1 if system() failed 
-            the returning code of the command invoked	
+  @return   -1 if system() failed
+            the returning code of the command invoked
 */
 /*--------------------------------------------------------------------------*/
 static int system_return_value(int ret, const char* message)
@@ -80,7 +80,7 @@ static int system_return_value(int ret, const char* message)
 		return -1;
 	}
 	else
-	{	
+	{
 		if (WIFEXITED(ret))
         {
             if ((WEXITSTATUS(ret) != 0))
@@ -88,7 +88,7 @@ static int system_return_value(int ret, const char* message)
 				error("%s\n",message);
 				return WEXITSTATUS(ret);
 			}
-			else 
+			else
                 return 0;
         }
 	}
@@ -99,12 +99,12 @@ static int system_return_value(int ret, const char* message)
 /*--------------------------------------------------------------------------*/
 /**
     This  function  fills vmrun  structure  with  virtual machine information
-  received  from  Commander  module.  "vmrun"  is  a  structure  declared  in 
+  received  from  Commander  module.  "vmrun"  is  a  structure  declared  in
   "vm_executor.h" header file. Its members are described in the configuration
   files.
-	
-  @param    argv : array of char* containing the arguments received from 
-                   Commander 
+
+  @param    argv : array of char* containing the arguments received from
+                   Commander
 */
 /*--------------------------------------------------------------------------*/
 static int fill_vmrun( char **argv)
@@ -127,7 +127,7 @@ static int fill_vmrun( char **argv)
 	}
 
 	/*if (strptime(argv[3], "%Y-%m-%d %H:%M:%S", &vmrun.deadline_time)   \
-          == NULL) 
+          == NULL)
 	{
 		error("strptime failed\n");
 		return -1;
@@ -158,7 +158,7 @@ static int fill_vmrun( char **argv)
 	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x "  \
 	+ vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" + 		     \
 	vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " + 		     \
-	vmrun.guest_home_in_bash + " \"";	
+	vmrun.guest_home_in_bash + " \"";
 
 	jobs_path = vmrun.vmchecker_root + "/executor_jobs/";
 	scripts_path = vmrun.vmchecker_root + "/executor_scripts/";
@@ -168,7 +168,7 @@ static int fill_vmrun( char **argv)
 
 /*--------------------------------------------------------------------------*/
 /**
-    This  function prints information about the current job. 
+    This  function prints information about the current job.
 */
 /*--------------------------------------------------------------------------*/
 static void print_run(void)
@@ -191,16 +191,16 @@ static void print_run(void)
 /*--------------------------------------------------------------------------*/
 /**
     This function  reads  the second line from BUILD_OUTPUT_FILE (the file
-  that contains tests  and  homework  building results) which contains the 
+  that contains tests  and  homework  building results) which contains the
   IP address of the Virtual Machine. Currently, the IP address is obtained
-  by  running  a  command  (written in build.sh) in  the  Virtual  Machine 
+  by  running  a  command  (written in build.sh) in  the  Virtual  Machine
   (ex. ifconfig/ipconfig).
 */
 /*--------------------------------------------------------------------------*/
 static int get_vm_ip()
 {
 	string line;
-	
+
 
 	ifstream infile((temp+jobs_path+BUILD_OUTPUT_FILE).c_str());
 
@@ -244,7 +244,7 @@ static int check_build(void)
 		error("[EXECUTOR] Unable to open file %s\n",
 				(temp+jobs_path+BUILD_OUTPUT_FILE).c_str());
 		return -1;
-	}	
+	}
 
 	while (!infile.eof())
 	{
@@ -255,7 +255,7 @@ static int check_build(void)
 
 	// we arrived at EOF if we could not find "checker: building" in the file
 	if (infile.eof())
-	{ 
+	{
 		infile.close();
 		error("[EXECUTOR] did not find a `checker: building` string in %s\n",
 				BUILD_OUTPUT_FILE);
@@ -270,7 +270,7 @@ static int check_build(void)
 				line.find("warning:") != string::npos)
 			warning_count++;
 	}
-	
+
 	infile.close();
 
 	if(oldline.find("failed") != string::npos)
@@ -281,14 +281,14 @@ static int check_build(void)
 
 /*--------------------------------------------------------------------------*/
 /**
-    This function  uses VIX API to  start the Virtual Machine. It doesn't 
+    This function  uses VIX API to  start the Virtual Machine. It doesn't
   power it on, it reverts it from a snapshot (it is quicker and you don't
   have to delete the files you put on it).
 */
 /*--------------------------------------------------------------------------*/
 static int start_vm(void)
 {
-	int tries;	
+	int tries;
 
 	log("[EXECUTOR] Connecting to server...\n");
 	jobHandle = VixHost_Connect(
@@ -315,7 +315,7 @@ static int start_vm(void)
 	}
 
 	Vix_ReleaseHandle(jobHandle);
- 
+
 	log("[EXECUTOR] Opening VM...\n");
 	jobHandle = VixVM_Open(
 			hostHandle,
@@ -331,7 +331,7 @@ static int start_vm(void)
 	if (VIX_OK != err)
 	{
 		error("[EXECUTOR] VixVM_Open: %s: %s %llu\n",
-				Vix_GetErrorText(err,NULL), vmrun.vmpath.c_str(), err); 
+				Vix_GetErrorText(err,NULL), vmrun.vmpath.c_str(), err);
 		return -1;
 	}
 
@@ -399,7 +399,7 @@ static int start_vm(void)
 
 		break;
 	}
-	
+
 	log("[EXECUTOR] Logging in...\n");
 
 	// authenticate for guest operations.
@@ -427,7 +427,7 @@ static int start_vm(void)
 
 /*--------------------------------------------------------------------------*/
 /**
-    This function copies the necessary files on the Virtual Machine  
+    This function copies the necessary files on the Virtual Machine
 */
 /*--------------------------------------------------------------------------*/
 static int copy_files(void)
@@ -451,7 +451,7 @@ static int copy_files(void)
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: CHECKER_FILE"
-		      "hostpath=%s guestpath=%s\n", 
+		      "hostpath=%s guestpath=%s\n",
 		      (temp+jobs_path + CHECKER_FILE).c_str(),
 		      (vmrun.guest_home + CHECKER_FILE).c_str());
 		return -1;
@@ -474,7 +474,7 @@ static int copy_files(void)
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest CHECKER_TEST : "
-		      "hostpath=%s guestpath=%s\n", 
+		      "hostpath=%s guestpath=%s\n",
 		      (temp+jobs_path + CHECKER_TEST).c_str(),
 		      (vmrun.guest_home + CHECKER_TEST).c_str());
 		{
@@ -490,11 +490,11 @@ static int copy_files(void)
 
         // copy build script
 	log("[EXECUTOR] Copying %s...\n", BUILD_SCRIPT);
-	jobHandle = VixVM_CopyFileFromHostToGuest(			
-			vmHandle,					
+	jobHandle = VixVM_CopyFileFromHostToGuest(
+			vmHandle,
 			(temp + scripts_path + vmrun.vmname + "_"	     \
-			+ BUILD_SCRIPT).c_str(),			
-			(vmrun.guest_home + BUILD_SCRIPT).c_str(),	
+			+ BUILD_SCRIPT).c_str(),
+			(vmrun.guest_home + BUILD_SCRIPT).c_str(),
 			0,				// options
 			VIX_INVALID_HANDLE,		// propertyListHandle
 			NULL,				// callbackProc
@@ -505,10 +505,18 @@ static int copy_files(void)
 	{
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
-		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest CHECKER_TEST : "
-		      "hostpath=%s guestpath=%s\n", 
-		      (temp+jobs_path + CHECKER_TEST).c_str(),
-		      (vmrun.guest_home + CHECKER_TEST).c_str());
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest BUILD_SCRIPT : "
+		      "hostpath=%s guestpath=%s\n",
+		      (temp + scripts_path + vmrun.vmname + "_" + BUILD_SCRIPT).c_str(),
+		      (vmrun.guest_home + BUILD_SCRIPT).c_str());
+		{
+		  int ret;
+		  struct stat st;
+		  const char * hostpath = (temp + scripts_path + vmrun.vmname + "_" + BUILD_SCRIPT).c_str();
+		  ret = stat(hostpath, &st);
+		  if (ret == -1)
+		    perror("stat failed for CHECKER_TEST:");
+		}
 		return -1;
 	}
 
@@ -571,8 +579,8 @@ static void set_signal()
 
 /*--------------------------------------------------------------------------*/
 /**
-    Callback  function  for  RunProgramInGuest. This is called, if set 
-  accordingly,  when  a  program  running  on the Virtual Machine, has 
+    Callback  function  for  RunProgramInGuest. This is called, if set
+  accordingly,  when  a  program  running  on the Virtual Machine, has
   finished   its  execution. It  is  used  in implementing the timeout
   for a running homework.
 */
@@ -586,7 +594,7 @@ static void run_cb(VixHandle jobHandle, VixEventType eventType,
 /*--------------------------------------------------------------------------*/
 /**
    This  function  runs the  two scripts in the Virtual Machine, checks if
-  building was succesful and collects the results from the Virtual Machine.. 
+  building was succesful and collects the results from the Virtual Machine..
 */
 /*--------------------------------------------------------------------------*/
 static int run_scripts(void)
@@ -595,7 +603,7 @@ static int run_scripts(void)
 	int timeout;
 
 	ofstream outfile((temp+jobs_path+RESULT_OUTPUT_FILE).c_str());
-	
+
 	if (!outfile.is_open())
 	{
 		error("[EXECUTOR] Unable to open "
@@ -603,7 +611,7 @@ static int run_scripts(void)
 		return -1;
 	}
 
-	// run the target program. 
+	// run the target program.
 	log("[EXECUTOR] Starting %s...\n", BUILD_SCRIPT);
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
@@ -622,11 +630,11 @@ static int run_scripts(void)
 		error("VixVM_RunProgramInGuest: BUILD_SCRIPT prog=%s: args=%s ",
 		      vmrun.guest_shell.c_str(),
 		      vmrun.build_command_args.c_str());
-		
+
 		return -1;
 	}
 
-	
+
 	// get BUILD_OUTPUT_FILE
 	log("[EXECUTOR] Fetching %s...\n", BUILD_OUTPUT_FILE);
 
@@ -680,7 +688,7 @@ static int run_scripts(void)
 	set_signal();
 	alarm(120);
 
-	// run the target program. 
+	// run the target program.
 	log("[EXECUTOR] Starting %s...\n", RUN_SCRIPT);
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
@@ -728,7 +736,7 @@ static int run_scripts(void)
 	//if kernel messages enabled, fetch KMESSAGE_OUTPUT_FILE
 	if (vmrun.km_enable)
 	{
-		log("[EXECUTOR] Fetching %s...\n", KMESSAGE_OUTPUT_FILE);	
+		log("[EXECUTOR] Fetching %s...\n", KMESSAGE_OUTPUT_FILE);
 		if (vmrun.vmname == "win")
 		{
 			jobHandle = VixVM_CopyFileFromGuestToHost(
@@ -750,34 +758,34 @@ static int run_scripts(void)
 				error("[EXECUTOR] VixVM_CopyFileFromGuestToHost:KMESSAGE_OUTPUT_FILE guest=%s host=%s\n",
 				      (vmrun.guest_home + KMESSAGE_OUTPUT_FILE).c_str(),
 				      (temp + jobs_path + KMESSAGE_OUTPUT_FILE).c_str());
-				
+
 				return -1;
 			}
 		}
 
 
-	}	
-	
+	}
+
 	if(build_c > 1)
 	{
 		ofstream build_file((temp + jobs_path + 		     \
 				    BUILD_OUTPUT_FILE).c_str(),
-				    ios_base::app); 
+				    ios_base::app);
 		build_file << "-1:  compilarea a produs " << build_c-1 <<    \
                                      " warning-uri" << endl;
 		build_file.close();
 	}
 
 
-	/* write timeout in RUN_OUTPUT_FILE */ 
+	/* write timeout in RUN_OUTPUT_FILE */
 	ofstream run_file((temp+jobs_path+RUN_OUTPUT_FILE).c_str(),
 			 ios_base::app);
 
-	if (timeout < 120) 
-		run_file << "timeout=" <<120-timeout;	
+	if (timeout < 120)
+		run_file << "timeout=" <<120-timeout;
 	else
-		run_file << "Tester timeouted";	
-	
+		run_file << "Tester timeouted";
+
 	run_file.close();
 	outfile.close();
 	return 0;
@@ -785,7 +793,7 @@ static int run_scripts(void)
 
 /*--------------------------------------------------------------------------*/
 /**
-   This  function uses VIX API to power off the Virtual Machine. 
+   This  function uses VIX API to power off the Virtual Machine.
 */
 /*--------------------------------------------------------------------------*/
 static int close_vm()
@@ -829,7 +837,7 @@ static int start_kernel_listener(void)
 				break;
 
 			case 0: /* child starts executing here */
-				fd = open(KMESSAGE_OUTPUT_FILE, 
+				fd = open(KMESSAGE_OUTPUT_FILE,
 					  O_RDWR | O_CREAT, 0644);
 
 				if (fd == -1)
@@ -845,9 +853,9 @@ static int start_kernel_listener(void)
 		command = command + "-c \"dbgview /l " +		     \
 			KMESSAGE_OUTPUT_FILE + " & sleep 3 && tail -f " +    \
 			KMESSAGE_OUTPUT_FILE + " >> " +			     \
-			KMESSAGE_OUTPUT_FILE + "\"";  
+			KMESSAGE_OUTPUT_FILE + "\"";
 
-		// run the target program. 
+		// run the target program.
 		log("[EXECUTOR] Starting dbgview...\n");
 		jobHandle = VixVM_RunProgramInGuest(
 				vmHandle,
@@ -857,7 +865,7 @@ static int start_kernel_listener(void)
 				VIX_INVALID_HANDLE,	// propertyListHandle,
 				NULL,			// callbackProc,
 				NULL);			// clientData
-	
+
 		err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 		if (VIX_OK != err)
 		{
@@ -867,7 +875,7 @@ static int start_kernel_listener(void)
 			      vmrun.guest_shell.c_str(), command.c_str());
 			return -1;
 		}
-	
+
 	}
 
 	return 0;
@@ -881,7 +889,7 @@ static int start_kernel_listener(void)
 static int install_local_tests(void)
 {
 	string command;
-	int ret;	
+	int ret;
 	command += "unzip " + jobs_path + "/" + CHECKER_TEST + " -d " +      \
 		jobs_path;
 
@@ -915,12 +923,12 @@ static void abort_job(int error_code)
 
 	if ( close_vm() != 0)
 		exit(-1);
-	
+
 	Vix_ReleaseHandle(jobHandle);
 	Vix_ReleaseHandle(snapshotHandle);
 	Vix_ReleaseHandle(vmHandle);
 	VixHost_Disconnect(hostHandle);
-	
+
 	exit(error_code);
 }
 
