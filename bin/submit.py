@@ -53,6 +53,7 @@ def build_config(user, assignment, archive):
 
     location = join(repository, assignment, user)
     location = os.path.normpath(location)
+    results_location = os.path.join(location, 'results')
     _logger.info("Storing student's files at `%s'", location)
 
     # removes the old homework and adds the new one
@@ -61,6 +62,7 @@ def build_config(user, assignment, archive):
         shutil.rmtree(location)
     assert not os.path.exists(location)
     os.makedirs(location)
+    os.makedirs(results_location)
 
     check_call(['unzip', archive, '-d', 
                 os.path.join(location, 'archive')])
@@ -73,13 +75,15 @@ def build_config(user, assignment, archive):
         handle.write('User=%s\n' % user)
         handle.write('Assignment=%s\n' % assignment)
         handle.write('UploadTime=%s\n' % upload_time)
-        handle.write('RepoPath=%s\n'   % location)
+        handle.write('ResultsDest=%s\n'   % results_location)
         handle.write('RemoteUsername=%s\n' % 'so')          ## XXX get currentuser
         handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')   ## XXX get localhost
 
     # commits the changes
-    _call_git(repository, 'add', location)
-    _call_git(repository, 'clean', location, '-f', '-d')
+    # commit all new files from 'location' that are not ignored by .gitignore
+    _call_git(repository, 'add', '--all', location)
+    # remove possibly harmfull, and without benefits call.
+    #_call_git(repository, 'clean', location, '-f', '-d')
     _call_git(repository, 'commit', '--allow-empty', location, '-m',
             'Updated assignment `%s\' from `%s\'' % (assignment, user))
 
