@@ -146,7 +146,7 @@ def transfer_files(sftp, files, conf_vars):
         # extract the name of the file from the path
         fname = os.path.basename(fpath)
         # append the name to the destination
-        fdest = os.path.join(conf_vars['repopath'], fname)
+        fdest = os.path.join(conf_vars['resultsdest'], fname)
         # actually transfer the files
         _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
         sftp.put(fpath, fdest)
