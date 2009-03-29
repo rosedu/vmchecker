@@ -147,7 +147,7 @@ def _print_help():
 def _check_required_files(path):
     found_all = True
     needed_files = ['archive.zip', 'tests.zip', 'config', 'storer', 'callback']
-    found_files = os.path.listdir(path)
+    found_files = os.listdir(path)
     for need in needed_files:
         if not need in found_files:
             _logger.error('Could not find necessary file [%s] in [%s]' % (
