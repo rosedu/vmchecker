@@ -51,6 +51,17 @@ _FILES_TO_SEND = (
 _logger = logging.getLogger('vmchecker.commander')
 
 
+def _env_with_python_module_search_path():
+    """ Setup python module search path to include '$VMCHECKER_ROOT/bin'
+    so that the callback python script can access misc, vmcheckerpaths, etc.
+    """
+    e = os.environ
+    module_search_path = os.path.join(vmcheckerpaths.root(), 'bin')
+    if 'PYTHONPATH' in e.keys():
+        newval = os.pathsep.join(e['PYTHONPATH'], module_search_path)
+    e['PYTHONPATH'] = module_search_path
+    return e
+
 def _run_callback(dir, ejobs):
     """Runs callback script to upload results"""
 
@@ -61,7 +72,8 @@ def _run_callback(dir, ejobs):
     _logger.debug('calling %s', args)
 
     try:
-        check_call(args)
+        env = _env_with_python_module_search_path()
+        check_call(args=args, env=env)
     except:
         _logger.error('Sending results failed')
         raise
@@ -137,7 +149,6 @@ def main(dir):
     finally:
         # clears files
         shutil.rmtree(ejobs)
-
 
 def _print_help():
     print >>sys.stderr, """Usage:
