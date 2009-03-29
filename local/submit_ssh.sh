@@ -2,15 +2,16 @@
 # An example script to submit a homework to queue manager
 
 # address of queue manager machine
-ADDRESS=192.168.1.2
+ADDRESS=sanctuary
 
 # vmchecker user on remote machine
-USER=vmchecker
+USER=so
 
 # location of vmchecker on remote machine
-VMCHECKER_ROOT=/home/vmchecker/vmchecker
+VMCHECKER_ROOT=/home/so/vmchecker/vmchecker
 
 
-# copies the file and notifies queue manager
-echo scp $1 $USER@$ADDRESS:$VMCHECKER_ROOT/queue/
-echo ssh $USER@$ADDRESS bash -c "cd $VMCHECKER_ROOT && bin/notify.sh"
+# copies the file and notifies (implicit) queue manager
+scp "$1" $USER@$ADDRESS:$VMCHECKER_ROOT/queue/
+echo "Sending "$1" to "$USER@$ADDRESS:$VMCHECKER_ROOT/queue/
+unzip -l "$1"
