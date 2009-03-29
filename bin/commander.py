@@ -61,6 +61,7 @@ def _env_with_python_module_search_path():
     e['PYTHONPATH'] = module_search_path
     return e
 
+
 def _run_callback(dir, ejobs):
     """Runs callback script to upload results"""
 
@@ -76,6 +77,7 @@ def _run_callback(dir, ejobs):
     except:
         _logger.error('Sending results failed')
         raise
+
 
 def _run_executor(machine, assignment):
     # starts job
@@ -149,10 +151,12 @@ def main(dir):
         # clears files
         shutil.rmtree(ejobs)
 
+
 def _print_help():
     print >>sys.stderr, """Usage:
     ./commander.py directory - where directory contains (see submit.py)
         `archive.zip' `tests.zip' `config' `storer' `callback'"""
+
 
 def _check_required_files(path):
     found_all = True
@@ -165,7 +169,7 @@ def _check_required_files(path):
             found_all = False
     if not found_all:
         exit(-1)
-    
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -174,7 +178,7 @@ if __name__ == '__main__':
         print >>sys.stderr, 'Invalid number of arguments.'
         _print_help()
         exit(1)
-    
+
     start_dir = sys.argv[1]
     if not os.path.isdir(start_dir):
         print >>sys.stderr, 'Not a directory', start_dir
