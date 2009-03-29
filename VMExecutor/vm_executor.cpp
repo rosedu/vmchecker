@@ -519,6 +519,9 @@ static int copy_files(void)
 	{
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: RUN_SCRIPT host=%s, guest=%s\n",
+		      (temp+scripts_path + vmrun.vmname + "_" + RUN_SCRIPT).c_str(),
+		      (vmrun.guest_home + RUN_SCRIPT).c_str());
 		return -1;
 	}
 
@@ -606,6 +609,10 @@ static int run_scripts(void)
 	{
 		error("VixVM_RunProgramInGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+		error("VixVM_RunProgramInGuest: BUILD_SCRIPT prog=%s: args=%s ",
+		      vmrun.guest_shell.c_str(),
+		      vmrun.build_command_args.c_str());
+		
 		return -1;
 	}
 
@@ -627,6 +634,9 @@ static int run_scripts(void)
 	{
                 error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+                error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: BUILD_OUTPUT_FILE guest=%s: host=%s\n",
+		      (vmrun.guest_home + BUILD_OUTPUT_FILE).c_str(),
+		      (temp+jobs_path + BUILD_OUTPUT_FILE).c_str());
 		return -1;
 	}
 
@@ -699,6 +709,9 @@ static int run_scripts(void)
 	{
                 error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+                error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: RUN_OUTPUT_FILE guest=%s host=%s\n",
+		      (vmrun.guest_home + RUN_OUTPUT_FILE).c_str(),
+		      (temp+jobs_path + RUN_OUTPUT_FILE).c_str());
 		return -1;
 	}
 
@@ -722,10 +735,11 @@ static int run_scripts(void)
 			err = VixJob_Wait(jobHandle, VIX_PROPERTY_NONE);
 			if (VIX_OK != err)
 			{
-				error("[EXECUTOR] "
-				"VixVM_CopyFileFromGuestToHost: %s:"
-				"%llu\n",
-				Vix_GetErrorText(err,NULL), err);
+				error("[EXECUTOR] VixVM_CopyFileFromGuestToHost: %s: %llu\n",
+				      Vix_GetErrorText(err,NULL), err);
+				error("[EXECUTOR] VixVM_CopyFileFromGuestToHost:KMESSAGE_OUTPUT_FILE guest=%s host=%s\n",
+				      (vmrun.guest_home + KMESSAGE_OUTPUT_FILE).c_str(),
+				      (temp + jobs_path + KMESSAGE_OUTPUT_FILE).c_str());
 				
 				return -1;
 			}
@@ -838,7 +852,9 @@ static int start_kernel_listener(void)
 		if (VIX_OK != err)
 		{
 			error("[EXECUTOR] VixVM_RunProgramInGuest: %s: %llu\n",
-					Vix_GetErrorText(err,NULL), err);
+			      Vix_GetErrorText(err,NULL), err);
+			error("[EXECUTOR] VixVM_RunProgramInGuest: guestshell=%s: commanad=%s\n",
+			      vmrun.guest_shell.c_str(), command.c_str());
 			return -1;
 		}
 	
