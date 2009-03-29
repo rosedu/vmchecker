@@ -83,9 +83,11 @@ def config_file():
         VMCHECKER_INI, path)
     return path
 
+
 def dir_bin():
     """Returns absolute path for the bin/ directory"""
     return abspath('bin')
+
 
 def tester_config_file():
     path = abspath('vmchecker_tester.ini')

@@ -62,15 +62,6 @@ def relative_path(*args):
     return os.path.join(vmcheckerpaths.root(), os.path.join(*args))
 
 
-def repository(assignment):
-    """Returns repository where sources for assignment are stored.
-
-    NOTE: Full path where they are actually stored is
-    `repository/assignment'
-    """
-    return relative_path(config().get(assignment, 'Repository'))
-
-
 def get_ip_address(ifname):
     """Returns ip address for network interface 'ifname'
     in standard dotted notation.
@@ -84,3 +75,7 @@ def get_ip_address(ifname):
         0x8915,  # SIOCGIFADDR
         struct.pack('256s', ifname[:15]))[20:24])
 
+
+def repository():
+    """Returns repository path"""
+    return vmcheckerpaths.abspath(config().get('DEFAULT', 'Repository'))
