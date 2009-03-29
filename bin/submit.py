@@ -80,8 +80,10 @@ def build_config(user, assignment, archive):
         handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')   ## XXX get localhost
 
     # commits the changes
-    _call_git(repository, 'add', location)
-    _call_git(repository, 'clean', location, '-f', '-d')
+    # commit all new files from 'location' that are not ignored by .gitignore
+    _call_git(repository, 'add', '--all', location)
+    # remove possibly harmfull, and without benefits call.
+    #_call_git(repository, 'clean', location, '-f', '-d')
     _call_git(repository, 'commit', '--allow-empty', location, '-m',
             'Updated assignment `%s\' from `%s\'' % (assignment, user))
 
