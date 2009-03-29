@@ -40,15 +40,15 @@ def config():
 
 def config_variables(config_file, section_name):
     """Return a dictionary with values from the config_path file.
+
     NB:  the keys will be all lowercase!
     """
-    conf_reader = config_reader(config_file)
-    l = conf_reader.items(section_name)
-    return dict(l)
+    config = config_reader(config_file)
+    return dict(config.items(section_name))
 
 
 def tester_config():
-    """Returns a RawConfigParser containing vmchecker tester's configuration."""
+    """Returns a RawConfigParser with vmchecker tester's configuration."""
     global _tester_config
     if _tester_config is None:
         _tester_config = ConfigParser.RawConfigParser()
@@ -64,7 +64,7 @@ def relative_path(*args):
 
 def repository(assignment):
     """Returns repository where sources for assignment are stored.
- 
+
     NOTE: Full path where they are actually stored is
     `repository/assignment'
     """
