@@ -42,7 +42,7 @@ def build_config(user, assignment, archive):
     XXX Locks should protect the directory access"""
     assert assignment in misc.config().sections(), (
         'No such assigment `%s\'.' % assignment)
-    repository = misc.repository(assignment)
+    repository = misc.repository()
 
     # the upload time is the system's current time
     upload_time = time.strftime(misc.DATE_FORMAT)
