@@ -135,7 +135,7 @@ def connect_to_host(conf_vars):
         raise
 
 
-def transfer_files(sftp, files, conf_vars):
+def sftp_transfer_files(sftp, files, conf_vars):
     """Transfers all existing files from the 'files' list
     through sftp.
     """
@@ -152,6 +152,16 @@ def transfer_files(sftp, files, conf_vars):
         sftp.put(fpath, fdest)
 
 
+def sftp_mkdir_if_not_exits(sftp, dir):
+    """If path does not exist mkdir it.
+    """
+    try:
+        sftp.chdir(dir)
+    except IOError:
+        sftp.mkdir(dir)
+        sftp.chdir(dir)
+
+
 def send_results_and_notify(files, conf_vars):
     """Opens a connection, transfers files, and
     TODO: calls a script on the storer.
@@ -160,7 +170,8 @@ def send_results_and_notify(files, conf_vars):
     try:
         if len(files) > 0:
             sftp = paramiko.SFTPClient.from_transport(t)
-            transfer_files(sftp, files, conf_vars)
+            sftp_mkdir_if_not_exits(sftp, conf_vars['resultsdest'])
+            sftp_transfer_files(sftp, files, conf_vars)
     except:
         _logger.exception('error while transferring files with paramiko')
     finally:
