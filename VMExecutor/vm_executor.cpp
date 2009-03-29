@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
+
 
 #include <vix.h>
 
@@ -475,6 +477,14 @@ static int copy_files(void)
 		      "hostpath=%s guestpath=%s\n", 
 		      (temp+jobs_path + CHECKER_TEST).c_str(),
 		      (vmrun.guest_home + CHECKER_TEST).c_str());
+		{
+		  int ret;
+		  struct stat st;
+		  const char * hostpath = (temp+jobs_path+ CHECKER_TEST).c_str();
+		  ret = stat(hostpath, &st);
+		  if (ret == -1)
+		    perror("stat failed for CHECKER_TEST:");
+		}
 		return -1;
 	}
 
