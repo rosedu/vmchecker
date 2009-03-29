@@ -14,6 +14,7 @@ import misc
 
 
 _DEFAULT_SSH_PORT = 22
+_DEFAULT_JOB_PENALTY_FILE = 'job_penalty'
 
 _logger = logging.getLogger('vmchecker.callback')
 
@@ -135,6 +136,16 @@ def connect_to_host(conf_vars):
         raise
 
 
+def sftp_mkdir_if_not_exits(sftp, dir):
+    """If path does not exist mkdir it.
+    """
+    try:
+        sftp.chdir(dir)
+    except IOError:
+        sftp.mkdir(dir)
+        sftp.chdir(dir)
+
+
 def sftp_transfer_files(sftp, files, conf_vars):
     """Transfers all existing files from the 'files' list
     through sftp.
@@ -152,14 +163,26 @@ def sftp_transfer_files(sftp, files, conf_vars):
         sftp.put(fpath, fdest)
 
 
-def sftp_mkdir_if_not_exits(sftp, dir):
-    """If path does not exist mkdir it.
+def get_penalty_script():
+    """This file and the penalty script are sent in a .zip to the
+    tester machine. When unzipped they should be in the same directory.
     """
-    try:
-        sftp.chdir(dir)
-    except IOError:
-        sftp.mkdir(dir)
-        sftp.chdir(dir)
+    d = os.path.basename(sys.argv[0])
+    return os.path.normpath(os.path.join(d, 'penalty'))
+
+
+def _sftp_transfer_penalty_output(sftp, penalty, upload_time, deadline):
+    """Call the penalty script and write results to sftp in _DEFAULT_JOB_PENALTY_FILE
+    """
+    output = Popen([penalty, upload_time, deadline], stdout=PIPE).communicate()[0]
+    sftp.open(_DEFAULT_JOB_PENALTY_FILE, 'w').write(output)
+
+
+def sftp_transfer_penalty_output(sftp, conf_vars, deadline):
+    penalty = get_penalty_script()
+    upload_time = conf_vars['uploadtime']
+    deadline = 0
+
 
 
 def send_results_and_notify(files, conf_vars):
