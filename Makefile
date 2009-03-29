@@ -24,6 +24,7 @@ tester-dist:
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
 	./bin/initialise_course.py tester
+	mkdir ./executor_jobs/
 
 clean:
 	@for i in $(COMPONENTS); do \
