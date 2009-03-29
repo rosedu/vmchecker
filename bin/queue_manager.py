@@ -12,21 +12,20 @@ It should:
 
 Note, the last two steps must be grouped together: queue_manager should
 call a script ./callback located in archive which does this shit.
-"""
 
+"""
 
 import sys
 import tempfile
 import shutil
-import misc
-import vmcheckerpaths
 import logging
 import os
 import time
-
 from subprocess import check_call
 from os.path import join
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
+
+import vmcheckerpaths
 
 
 __author__ = """Alexandru Moșoi <brtzsnr@gmail.com>,
@@ -35,10 +34,10 @@ __author__ = """Alexandru Moșoi <brtzsnr@gmail.com>,
 
 _logger = logging.getLogger("vmchecker.queue_manager")
 
+
 class _QueueManager(ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):
         process_job(event.path, event.name)
-
 
 
 def process_job(path, name):
@@ -52,13 +51,16 @@ def process_job(path, name):
 
         _logger.info('Calling commander for [%s]' % location)
         commander_path = join(vmcheckerpaths.dir_bin(), 'commander.py')
+
         check_call([commander_path, location])
     except:
-        _logger.exception('Caught exception while processing [%s]' % location)
-    finally:
-        _logger.info('Cleaning [%s]' % location)
-        shutil.rmtree(location)
+        _logger.exception('Failed to process [%s].' % location)
 
+    _logger.info('Cleaning [%s]' % location)
+    shutil.rmtree(location)
+
+    _logger.info('Removing job from the queue')
+    os.unlink(archive)
 
 
 def process_stale_jobs(dir_queue):
@@ -72,6 +74,11 @@ def process_stale_jobs(dir_queue):
                 stale_job, dir_queue))
         process_job(dir_queue, stale_job)
 
+
+def _callback(self):
+    _logger.info('Waiting for the next job to arrive')
+
+
 def start_queue():
     dir_queue = vmcheckerpaths.dir_queue()
 
@@ -84,14 +91,14 @@ def start_queue():
 
     # set callback to receive notifications (includes queued jobs after
     # setting up inotify but before we finished processing stale jobs)
-    notifier.loop(callback=lambda self: self.proc_fun())
+    notifier.loop(callback=_callback)
 
 
 def check_tester_setup_correctly():
     # check needed paths setup correctly
     for path in vmcheckerpaths.tester_paths():
         if not os.path.isdir(path):
-            _logger.error('Path [%s] missing. Run `make tester-dist` first!')
+            _logger.error('Path [%s] missing. Run `make tester-dist` first!', path)
             exit(1)
     # check binaries build
     # TODO: XXX: Hardcoded
