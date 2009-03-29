@@ -31,7 +31,7 @@ def _call_git(repository, *args):
 
 
 def build_config(user, assignment, archive):
-    """Builds a coonfiguration file for user's assignment.
+    """Builds a configuration file for user's assignment.
 
     Returns absolute path to assignment config.
 
