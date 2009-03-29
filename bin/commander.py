@@ -1,13 +1,26 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Commander
 
-./commander.py directory
+"""Evaluates one homework.
 
-directory contains: homework.zip tests.zip config vmchecker_storer.ini
+Usage:
+    ./commander.py directory - where directory contains (see submit.py)
+        `archive.zip' `tests.zip' `config' `storer' `callback'
 
-This commander is a major HACK (ie lots of wtf)
 
+The script parses config and storer and invokes vm_executor with
+the requiered arguments.
+
+VMExecutor excepts files in `executor_jobs' so it's not safe
+to run two instances of commander simultaneously.
+
+When done `callback' is invoked with arguments
+    ./callback config file1 file2 file3 ...
+Missing files should be ignored (except config).
+
+
+NOTE: This commander is a major HACK (ie lots of wtf)
+TODO: Split VMExecutor, one for each machine.
 """
 
 from __future__ import with_statement
@@ -19,11 +32,68 @@ import ConfigParser
 import logging
 import shutil
 import sys
+import os
 from subprocess import check_call
-from os.path import join
+from os.path import join, isdir
 
 import misc
 import vmcheckerpaths
+
+_logger = logging.getLogger("vmchecker.commander")
+
+_FILES_TO_SEND = (
+    'job_build',
+    'job_run',
+    'job_errors',
+    'job_results',
+    'job_km', )
+
+_logger = logging.getLogger('vmchecker.commander')
+
+
+def _run_callback(dir, ejobs):
+    """Runs callback script to upload results"""
+
+    args = (join(dir, 'callback'), join(dir, 'config'))
+    args += tuple(join(ejobs, f) for f in _FILES_TO_SEND)
+
+    _logger.info('Homework evaluated; sending results')
+    _logger.debug('calling %s', args)
+
+    try:
+        check_call(args)
+    except:
+        _logger.error('Sending results failed')
+        raise
+
+def _run_executor(machine, assignment):
+    # starts job
+    # XXX lots of wtf per minute
+    # parsing config should be executors' job
+    tester = misc.tester_config()
+    args = [
+            # '/bin/echo',
+            vmcheckerpaths.abspath('VMExecutor/vm_executor'),
+            machine,
+            '1',                                      # enables kernel_messages
+            tester.get(machine, 'VMPath'),
+            tester.get('Global', 'LocalAddress'),     # did I review commander.cpp?
+            tester.get(machine, 'GuestUser'),
+            tester.get(machine, 'GuestPassword'),     # XXX keys?
+            tester.get(machine, 'GuestBasePath'),
+            tester.get(machine, 'GuestShellPath'),
+            tester.get(machine, 'GuestHomeInBash'),   # why is this needed?
+            vmcheckerpaths.root(),
+            assignment,
+            ]
+    _logger.info('Begin homework evaluation')
+    _logger.debug('calling %s', args)
+
+    try:
+        check_call(args)
+    except:
+        _logger.error('failed to run VMExecutor')
+        raise
 
 
 def main(dir):
@@ -37,10 +107,15 @@ def main(dir):
         storer = ConfigParser.RawConfigParser()
         storer.readfp(handle)
 
-    assignment = config.get('Assignment', 'Assignment')
-    machine = storer.get(assignment, 'Machine')
-
     # copies files to where vmchecker expects them (wtf
+    # XXX 'executor_jobs' path is hardcoded in executor
+
+    ejobs = vmcheckerpaths.abspath('executor_jobs')
+    # cleans up executor_jobs, if not already clean
+    if isdir(ejobs):
+        shutil.rmtree(ejobs)
+    os.mkdir(ejobs)
+
     shutil.copy(        # copies assignment
         join(dir, 'archive.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'file.zip'))
@@ -48,37 +123,39 @@ def main(dir):
         join(dir, 'tests.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
 
-    # starts job
-    # XXX lots of wtf per minute
-    # parsing config should be executors' job
-    tester = misc.tester_config()
-    args = [
-            vmcheckerpaths.abspath('/bin/echo'),
-            machine,
-            '1',                                      # enables kernel_messages
-            tester.get(machine, 'VMPath'),
-            tester.get('Global', 'LocalAddress'),     # did I review commander.cpp?
-            tester.get(machine, 'GuestUser'),
-            tester.get(machine, 'GuestPassword'),     # XXX keys?
-            tester.get(machine, 'GuestBasePath'),
-            tester.get(machine, 'GuestShellPath'),
-            tester.get(machine, 'GuestHomeInBash'),   # why is this needed?
-            vmcheckerpaths.root(),
-            assignment,
-            ]
+    try:
+        assignment = config.get('Assignment', 'Assignment')
+        machine = storer.get(assignment, 'Machine')
 
-    logging.debug('calling VMExecutor: %s' % args)
-    check_call(args)
+        _run_executor(machine, assignment)
+        _run_callback(dir, ejobs)
+
+        _logger.info('all done')
+    except:
+        _logger.exception('failed miserable')
+        raise
+    finally:
+        # clears files
+        shutil.rmtree(ejobs)
 
 
-
-
-    # upload_results (callback)
-
-    # clear stuff
+def _print_help():
+    print >>sys.stderr, """Usage:
+    ./commander.py directory - where directory contains (see submit.py)
+        `archive.zip' `tests.zip' `config' `storer' `callback'"""
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    assert len(sys.argv) == 2
+
+    if len(sys.argv) != 2:
+        print >>sys.stderr, 'Invalid number of arguments.'
+        _print_help()
+        exit(1)
+
+    if not os.path.isdir(sys.argv[1]):
+        print >>sys.stderr, 'Not a directory', sys.argv[1]
+        _print_help()
+        exit(1)
+
     main(sys.argv[1])

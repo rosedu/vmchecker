@@ -23,7 +23,7 @@ def root():
 
 def tester_paths():
     """A list of all the paths relevant to the tester machine."""
-    return [dir_queue()]
+    return [dir_queue(), dir_tester_unzip_tmp()]
 
 
 def storer_paths():
@@ -58,6 +58,11 @@ def dir_queue():
     This path is valid on the tester machine."""
     return abspath('queue')
 
+def dir_tester_unzip_tmp():
+    """The absolute path of the directory where submission
+    archives are unzipped.
+    This path is valid on the tester machine."""
+    return abspath('tmpunzip')
 
 def dir_backup():
     """The absolute path of the directory where backups
@@ -78,6 +83,9 @@ def config_file():
         VMCHECKER_INI, path)
     return path
 
+def dir_bin():
+    """Returns absolute path for the bin/ directory"""
+    return abspath('bin')
 
 def tester_config_file():
     path = abspath('vmchecker_tester.ini')

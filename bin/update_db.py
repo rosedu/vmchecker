@@ -15,6 +15,8 @@ import misc
 import vmcheckerpaths
 
 
+_logger = logging.getLogger("vmchecker.update_db")
+
 GRADE_VALUE_FILE = 'nota'
 
 
@@ -142,7 +144,7 @@ def update_grade(path, id_hw, id_student):
     submission."""
     grade_filename = os.path.join(path, GRADE_VALUE_FILE)
     if not os.path.exists(grade_filename):
-        logger.error("File [%s] for grade value does not exist " % grade_filename)
+        _logger.error("File [%s] for grade value does not exist " % grade_filename)
         return None
     data_modif = grade_modification_time(grade_filename)
     (id_grade, db_data) = DB_get_grade(id_hw, id_student)
@@ -190,15 +192,14 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger("vmchecker.initialise_course")
 
     if not os.getcwd().startswith(vmcheckerpaths.dir_checked()):
-        logger.error("Error: working directory [%s] not in the VMCHECKER_ROOT [%s] subtree." % 
+        _logger.error("Error: working directory [%s] not in the VMCHECKER_ROOT [%s] subtree." % 
                      (os.getcwd(), vmcheckerpaths.dir_checked()))
         exit()
 
     if not os.path.isfile(vmcheckerpaths.db_file()):
-        logger.error("Error: DB file [%s] doesn't exist" % db_path)
+        _logger.error("Error: DB file [%s] doesn't exist" % db_path)
         exit()
 
     # TODO: rename for better encapsulation
