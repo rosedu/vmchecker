@@ -9,7 +9,7 @@
 
 MAKEFLAGS += --no-print-directory
 
-COMPONENTS:= VMExecutor Commander semctl
+COMPONENTS:= VMExecutor Commander
 
 all:
 	@echo " run make tester-dist or make storer-dist"
