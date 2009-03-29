@@ -44,6 +44,10 @@ def build_config(user, assignment, archive):
     # the upload time is the system's current time
     upload_time = time.strftime(misc.DATE_FORMAT)
 
+    # the path where files returned from the tester are stored (the git repo)
+    rel_repo_path = misc.config().get('DEFAULT', 'Repository')
+    abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
+
     location = join(repository, assignment, user)
     print >>sys.stderr, 'Storing files at `%s\'' % location
 
@@ -64,6 +68,7 @@ def build_config(user, assignment, archive):
         handle.write('User=%s\n' % user)
         handle.write('Assignment=%s\n' % assignment)
         handle.write('UploadTime=%s\n' % upload_time)
+        handle.write('RepoPath=%s\n'   % abs_repo_path)
 
     # commits the changes
     _call_git(repository, 'add', location)
