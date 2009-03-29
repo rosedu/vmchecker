@@ -52,7 +52,7 @@ def build_config(user, assignment, archive):
     abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
 
     location = join(repository, assignment, user)
-    print >>sys.stderr, 'Storing files at `%s\'' % location
+    _logger.info("Storing student's files at `%s'", location)
 
     # removes the old homework and adds the new one
     # NOTE: git is clever enough to store only diffs
@@ -113,10 +113,6 @@ def submit_assignment(assignment_config):
     archive = join(dirname(assignment_config), './archive.zip')
     tests = misc.relative_path('tests', assignment + '.zip')
 
-    # finds location of the callback script
-    callback = misc.relative_path(misc.config().get(assignment, 'Callback'))
-    assert isfile(callback)
-
     # builds archive with configuration
 
     # creates the zip archive with a unique name
@@ -124,7 +120,7 @@ def submit_assignment(assignment_config):
             suffix='.zip',
             prefix='%s_%s_%s_' % (course, assignment, user),
             dir=vmcheckerpaths.dir_unchecked())
-    print >>sys.stderr, 'Creating zip package at `%s\'' % fd[1]
+    _logger.info("Creating zip package at `%s'", fd[1])
 
     # populates the archive
     # Includes at least these files:
