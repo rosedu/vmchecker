@@ -74,9 +74,6 @@ def process_stale_jobs(dir_queue):
 
 def start_queue():
     dir_queue = vmcheckerpaths.dir_queue()
-    if not os.path.isdir(dir_queue):
-        _logger.error('Queue direcotry [%s] missing')
-        exit(1)
 
     # register for inotify envents before processing stale jobs
     wm = WatchManager()
@@ -85,7 +82,8 @@ def start_queue():
 
     process_stale_jobs(dir_queue)
 
-    # set callback to receive notifications
+    # set callback to receive notifications (includes queued jobs after
+    # setting up inotify but before we finished processing stale jobs)
     notifier.loop(callback=lambda self: self.proc_fun())
 
 
@@ -97,6 +95,7 @@ def check_tester_setup_correctly():
             exit(1)
     # check binaries build
     # TODO: XXX: Hardcoded
+    # VMExecutor is expected to die soon :)
     if not os.path.isfile(os.path.join(vmcheckerpaths.abspath('VMExecutor'),
                                        'vm_executor')):
         _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist` first!')
