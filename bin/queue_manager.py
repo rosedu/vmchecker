@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Queue manager - wait for assignments and invoke the commander for each
 
 This module depends on pyinotify: http://pyinotify.sourceforge.net/
@@ -27,18 +29,20 @@ from os.path import join
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 
-__author__ = 'Alexandru Mosoi <brtzsnr@gmail.com>'
+__author__ = """Alexandru Moșoi <brtzsnr@gmail.com>,
+                Lucian Adrian Grijincu <lucian.grijincu@gmail.com>"""
 
 
 _logger = logging.getLogger("vmchecker.queue_manager")
 
 class _QueueManager(ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):
-        _process_job(event.path, event.name)
+        process_job(event.path, event.name)
 
 
 
-def _process_job(path, name):
+def process_job(path, name):
+    """Unzip a job archive and call the commander"""
     location = tempfile.mkdtemp(prefix='vmchecker-',
                                 dir=vmcheckerpaths.dir_tester_unzip_tmp())
     archive = join(path, name)
@@ -57,33 +61,49 @@ def _process_job(path, name):
 
 
 
-def _process_stale_jobs(dir_queue):
+def process_stale_jobs(dir_queue):
+    """The queue_manager may die leaving jobs unchecked.
+    This function runs the commander for each"""
     stale_jobs = os.listdir(dir_queue)
     if len(stale_jobs) == 0:
         _logger.info('No stale jobs in queue dir [%s]' % dir_queue)
     for stale_job in stale_jobs:
         _logger.info('Processing stale job [%s] in queue dir %s' % (
                 stale_job, dir_queue))
-        _process_job(dir_queue, stale_job)
+        process_job(dir_queue, stale_job)
 
-def main():
+def start_queue():
     dir_queue = vmcheckerpaths.dir_queue()
-    if not os.path.isdir(dir_queue):
-        _logger.error('Queue direcotry [%s] missing')
-        exit(1)
 
     # register for inotify envents before processing stale jobs
     wm = WatchManager()
     notifier = Notifier(wm, _QueueManager())
     wm.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
-    
-    _process_stale_jobs(dir_queue)
 
-    # set callback to receive notifications
+    process_stale_jobs(dir_queue)
+
+    # set callback to receive notifications (includes queued jobs after
+    # setting up inotify but before we finished processing stale jobs)
     notifier.loop(callback=lambda self: self.proc_fun())
+
+
+def check_tester_setup_correctly():
+    # check needed paths setup correctly
+    for path in vmcheckerpaths.tester_paths():
+        if not os.path.isdir(path):
+            _logger.error('Path [%s] missing. Run `make tester-dist` first!')
+            exit(1)
+    # check binaries build
+    # TODO: XXX: Hardcoded
+    # VMExecutor is expected to die soon :)
+    if not os.path.isfile(os.path.join(vmcheckerpaths.abspath('VMExecutor'),
+                                       'vm_executor')):
+        _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist` first!')
+        exit(1)
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    check_tester_setup_correctly()
+    start_queue()
 
-    main()
