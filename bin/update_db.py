@@ -17,7 +17,7 @@ import vmcheckerpaths
 
 _logger = logging.getLogger("vmchecker.update_db")
 
-GRADE_VALUE_FILE = 'nota'
+GRADE_VALUE_FILE = 'job_results'
 
 
 def DB_get_hw(hw_name):
