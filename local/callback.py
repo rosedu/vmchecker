@@ -37,18 +37,19 @@ def config_variables(config_path):
 
 
 def _setup_logging():
-    """Instruct paramiko to log stuff. Should be disabled in production?
+    """Instruct paramiko to log stuff.
+    Should be disabled in production?
     """
     paramiko.util.log_to_file('callback_sftp.log')
 
 
-def get_default_host_keys():
+def get_default_remote_host_keys():
     """Search for host keys in default paths
     """
     # search two default paths (Linux & Windows)
-    default_search_paths = ['~/.ssh/known_hosts', '~/ssh/known_hosts']
-    default_search_paths = map(lambda x : os.path.expanduser(x), default_search_paths)
-    for path in default_search_paths:
+    search_paths = ['~/.ssh/known_hosts', '~/ssh/known_hosts']
+    paths = map(lambda x : os.path.expanduser(x), search_paths)
+    for path in paths:
         try:
             host_keys = paramiko.util.load_host_keys(path)
             return host_keys
@@ -63,7 +64,7 @@ def is_remote_server_key_known(key, hostname):
     """Return True if the remote hostname server key is found in
     default known_hosts files.
     """
-    keys = get_default_host_keys()
+    keys = get_default_remote_host_keys()
     if not keys.has_key(hostname):
         _logger.error('Remote server returned no host key!')
     elif not keys[hostname].has_key(key.get_name()):
@@ -77,6 +78,8 @@ def is_remote_server_key_known(key, hostname):
 
 
 def open_socket(hostname, port):
+    """Open a connection to the destination machine
+    """
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((hostname, port))
@@ -88,6 +91,9 @@ def open_socket(hostname, port):
 
 
 def get_default_private_RSA():
+    """Returns the private RSA key if it exists and can
+    be used without a password.
+    """
     path = os.path.join(os.environ['HOME'], '.ssh', 'id_rsa')
     try:
         key = paramiko.RSAKey.from_private_key_file(path)
@@ -95,7 +101,11 @@ def get_default_private_RSA():
     except paramiko.PasswordRequiredException:
         _logger.info('could not auth passwordless with RSA key %s' % path)
 
+
 def get_default_private_DSA():
+    """Returns the private DSA key if it exists and can
+    be used without a password.
+    """
     path = os.path.join(os.environ['HOME'], '.ssh', 'id_dsa')
     try:
         key = paramiko.DSAKey.from_private_key_file(path)
@@ -105,11 +115,13 @@ def get_default_private_DSA():
 
 
 def get_default_private_key():
+    """Returns a private key if one exists and can
+    be used without a password.
+    """
     key = get_default_private_RSA()
     if None == key:
         key = get_default_private_DSA()
     return key
-
 
 
 def connect_to_host(conf_vars):
@@ -140,23 +152,32 @@ def connect_to_host(conf_vars):
         t.close()
 
 
+def transfer_files(sftp, files, conf_vars):
+    """Transfers all existing files from the 'files' list
+    through sftp.
+    """
+    for fpath in files:
+        if not os.path.isfile(fpath):
+            _logger.info('Could not find file [%s] to transfer' % fpath)
+            continue
+        # extract the name of the file from the path
+        fname = os.path.basename(fpath)
+        # append the name to the destination
+        fdest = os.path.join(conf_vars['repopath'], fname)
+        # actually transfer the files
+        _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
+        sftp.put(fpath, fdest)
 
 
-def transfer_files(files, conf_vars):
+def send_results_and_notify(files, conf_vars):
+    """Opens a connection, transfers files, and
+    TODO: calls a script on the storer.
+    """
     t = connect_to_host(conf_vars)
     try:
         if len(files) > 0:
             sftp = paramiko.SFTPClient.from_transport(t)
-            for fpath in files:
-                if not os.path.isfile(fpath):
-                    _logger.info('Could not find file [%s] to transfer' % fpath)
-                    continue
-                # extract the name of the file from the path
-                fname = os.path.basename(fpath)
-                # append the name to the destination
-                fdest = os.path.join(conf_vars['repopath'], fname)
-                _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
-                sftp.put(fpath, fdest)
+            transfer_files(sftp, files, conf_vars)
     except:
         _logger.exception('error while transferring files with paramiko')
     finally:
@@ -178,6 +199,6 @@ if __name__ == "__main__":
     conf_vars = config_variables(config_path)
     files = sys.argv[2:]
     print '[CALLBACK] files = %s' % str(files)
-    transfer_files(files, conf_vars)
+    send_results_and_notify(files, conf_vars)
     print '[CALLBACK] YEAH! Callback ran! sys.argv[] = %s' % str(sys.argv)
     print '[CALLBACK] test vmcheckerpaths-root: %s ' % vmcheckerpaths.root()
