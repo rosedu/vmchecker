@@ -16,3 +16,5 @@ Commander/iniparser/libiniparser.a
 Commander/iniparser/libiniparser.so.0
 Commander/commander
 VMExecutor/vm_executor
+executor_jobs/
+queue/
