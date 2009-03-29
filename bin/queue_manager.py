@@ -72,8 +72,6 @@ def process_stale_jobs(dir_queue):
                 stale_job, dir_queue))
         process_job(dir_queue, stale_job)
 
-
-
 def start_queue():
     dir_queue = vmcheckerpaths.dir_queue()
     if not os.path.isdir(dir_queue):
@@ -91,7 +89,22 @@ def start_queue():
     notifier.loop(callback=lambda self: self.proc_fun())
 
 
+def check_tester_setup_correctly():
+    # check needed paths setup correctly
+    for path in vmcheckerpaths.tester_paths():
+        if not os.path.isdir(path):
+            _logger.error('Path [%s] missing. Run `make tester-dist` first!')
+            exit(1)
+    # check binaries build
+    # TODO: XXX: Hardcoded
+    if not os.path.isfile(os.path.join(vmcheckerpaths.abspath('VMExecutor'),
+                                       'vm_executor')):
+        _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist` first!')
+        exit(1)
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    check_tester_setup_correctly()
     start_queue()
 
