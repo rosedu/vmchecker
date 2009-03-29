@@ -31,14 +31,9 @@ def config_variables(config_path):
     """Return a dictionary with values from the config_path file.
     """
     conf_reader = config_reader(config_path)
-    keys = ['User', 'Assignment', 'UploadTime', 'RepoPath',
-            'RemoteHostname', 'RemoteUsername']
     section_name = 'Assignment'
-    ret = {}
-    for key in keys:
-        val = conf_reader.get(section_name, key)
-        ret[key] = val
-    return ret
+    l = conf_reader.items(section_name)
+    return dict(l)
 
 
 def _setup_logging():
@@ -123,8 +118,8 @@ def connect_to_host(conf_vars):
     Return a reference to the open connection.
     """
     default_ssh_port = 22
-    hostname = conf_vars['RemoteHostname']
-    username = conf_vars['RemoteUsername']
+    hostname = conf_vars['remotehostname']
+    username = conf_vars['remoteusername']
 
     sock = open_socket(hostname, default_ssh_port)
     t = paramiko.Transport(sock)
@@ -151,17 +146,15 @@ def transfer_files(files, conf_vars):
     t = connect_to_host(conf_vars)
     try:
         if len(files) > 0:
-            _logger.debug('before mk SFTPClient')
             sftp = paramiko.SFTPClient.from_transport(t)
-            _logger.debug('after  mk SFTPClient')
             for fpath in files:
-                print "-------", fpath
+                if not os.path.isfile(fpath):
+                    _logger.info('Could not find file [%s] to transfer' % fpath)
+                    continue
                 # extract the name of the file from the path
                 fname = os.path.basename(fpath)
-                print "-------NAME: ", fname
                 # append the name to the destination
-                fdest = os.path.join(conf_vars['RepoPath'], fname)
-                print "-------dest: ", fdest
+                fdest = os.path.join(conf_vars['repopath'], fname)
                 _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
                 sftp.put(fpath, fdest)
     except:
