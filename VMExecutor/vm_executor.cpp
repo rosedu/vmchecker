@@ -414,6 +414,9 @@ static int start_vm(void)
 	{
 		error("[EXECUTOR] VixVM_LoginInGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+		// TODO: XXX - we print the pass to the console here.
+		error("[EXECUTOR] VixVM_LoginInGuest: params were user=%s, pass=%s.\n",
+				vmrun.guest_user.c_str() , vmrun.guest_pass.c_str());
 		return -1;
 	}
 
@@ -445,6 +448,10 @@ static int copy_files(void)
 	{
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: CHECKER_FILE"
+		      "hostpath=%s guestpath=%s\n", 
+		      (temp+jobs_path + CHECKER_FILE).c_str(),
+		      (vmrun.guest_home + CHECKER_FILE).c_str());
 		return -1;
 	}
 
@@ -464,6 +471,10 @@ static int copy_files(void)
 	{
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest CHECKER_TEST : "
+		      "hostpath=%s guestpath=%s\n", 
+		      (temp+jobs_path + CHECKER_TEST).c_str(),
+		      (vmrun.guest_home + CHECKER_TEST).c_str());
 		return -1;
 	}
 
@@ -484,6 +495,10 @@ static int copy_files(void)
 	{
 		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest: %s: %llu\n",
 				Vix_GetErrorText(err,NULL), err);
+		error("[EXECUTOR] VixVM_CopyFileFromHostToGuest CHECKER_TEST : "
+		      "hostpath=%s guestpath=%s\n", 
+		      (temp+jobs_path + CHECKER_TEST).c_str(),
+		      (vmrun.guest_home + CHECKER_TEST).c_str());
 		return -1;
 	}
 
