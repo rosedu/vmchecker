@@ -4,19 +4,18 @@
 """
 from __future__ import with_statement
 
-import base64
-import getpass
 import os
 import socket
-import traceback
 import paramiko
 import sys
-import misc, vmcheckerpaths
-import ConfigParser
 import logging
 
-_logger = logging.getLogger("vmchecker.callback")
+import misc
 
+
+_DEFAULT_SSH_PORT = 22
+
+_logger = logging.getLogger('vmchecker.callback')
 
 
 def _setup_logging():
@@ -61,14 +60,13 @@ def is_remote_server_key_known(key, hostname):
 
 
 def open_socket(hostname, port):
-    """Open a connection to the destination machine
-    """
+    """Open a connection to the destination machine"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((hostname, port))
         return sock
-    except Exception, e:
-        _logger.exception('Cannot connect to host=%s port=%d' % (
+    except Exception:
+        _logger.exception('Cannot open connection to %s:%d' % (
                 hostname, port))
         raise
 
@@ -112,27 +110,29 @@ def connect_to_host(conf_vars):
 
     Return a reference to the open connection.
     """
-    default_ssh_port = 22
-    hostname = conf_vars['remotehostname']
+    port = _DEFAULT_SSH_PORT
+    host = conf_vars['remotehostname']
     username = conf_vars['remoteusername']
 
-    sock = open_socket(hostname, default_ssh_port)
+    sock = open_socket(host, port)
     t = paramiko.Transport(sock)
     try:
         try:
             t.start_client()
         except paramiko.SSHException:
-            _logger.exception('Cannot negociate SSH protocol for host=%s port=%d' % (
-                    hostname, default_ssh_port))
+            _logger.error(
+                    'Cannot negociate SSH protocol with %s:%d.', host, port)
             raise
         remotekey = t.get_remote_server_key()
-        if not is_remote_server_key_known(remotekey, hostname):
-            raise Exception, 'Cannot validate remote host key'
+        if not is_remote_server_key_known(remotekey, host):
+            raise RuntimeError('Cannot validate remote host key')
         key = get_default_private_key()
         t.auth_publickey(username, key)
         return t
     except:
+        _logger.exception('Connection to %s:%d failed.', host, port)
         t.close()
+        raise
 
 
 def transfer_files(sftp, files, conf_vars):
@@ -165,6 +165,7 @@ def send_results_and_notify(files, conf_vars):
         _logger.exception('error while transferring files with paramiko')
     finally:
         t.close()
+
 
 def print_usage():
     print 'Usage: %s config_file [files to send to storer]' % sys.argv[0]
