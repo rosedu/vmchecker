@@ -61,7 +61,8 @@ def build_config(user, assignment, archive):
     assert not os.path.exists(location)
     os.makedirs(location)
 
-    check_call(['unzip', archive, '-d', os.path.join(location, 'archive')])
+    check_call(['unzip', archive, '-d', 
+                os.path.join(location, 'archive')])
 
     # writes assignment configuration file
     assignment_config = join(location, 'config')
@@ -71,7 +72,7 @@ def build_config(user, assignment, archive):
         handle.write('User=%s\n' % user)
         handle.write('Assignment=%s\n' % assignment)
         handle.write('UploadTime=%s\n' % upload_time)
-        handle.write('RepoPath=%s\n'   % abs_repo_path)
+        handle.write('RepoPath=%s\n'   % location)
         handle.write('RemoteUsername=%s\n' % 'so')          ## XXX get currentuser
         handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')   ## XXX get localhost
 
