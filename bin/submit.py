@@ -69,6 +69,8 @@ def build_config(user, assignment, archive):
         handle.write('Assignment=%s\n' % assignment)
         handle.write('UploadTime=%s\n' % upload_time)
         handle.write('RepoPath=%s\n'   % abs_repo_path)
+        handle.write('RemoteUsername=%s\n' % 'so')          ## XXX get currentuser
+        handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')   ## XXX get localhost
 
     # commits the changes
     _call_git(repository, 'add', location)
