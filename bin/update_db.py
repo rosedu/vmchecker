@@ -17,7 +17,7 @@ import vmcheckerpaths
 
 _logger = logging.getLogger("vmchecker.update_db")
 
-GRADE_VALUE_FILE = 'nota'
+GRADE_VALUE_FILE = 'results/job_results'
 
 
 def DB_get_hw(hw_name):
@@ -104,11 +104,9 @@ def update_hws(path):
     level update routine - update_students() """
     for hw_name in os.listdir(path):
         path_hw = os.path.join(path, hw_name)
-        mode = os.stat(path_hw)[stat.ST_MODE]
-        if stat.S_ISDIR(mode):
+        if hw_name[0] != '.' and os.path.isdir(path_hw):
             # save hw in the DB
             id_hw = DB_save_hw(hw_name)
-            #print hw_name
             update_students(path_hw, id_hw)
 
 
@@ -116,11 +114,9 @@ def update_students(path, id_hw):
     """For each dentry from path, launch the update_grade() routine"""
     for student_name in os.listdir(path):
         path_student = os.path.join(path, student_name)
-        mode = os.stat(path_student)[stat.ST_MODE]
-        if stat.S_ISDIR(mode):
+        if student_name[0] != '.' and os.path.isdir(path_student):
             # save student in the DB
             id_student = DB_save_student(student_name)
-            #print "\t ", student_name,
             update_grade(path_student, id_hw, id_student)
 
 
