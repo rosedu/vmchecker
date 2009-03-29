@@ -239,6 +239,8 @@ static int check_build(void)
 	{
 		error("[EXECUTOR] Unable to open file %s\n",
 				BUILD_OUTPUT_FILE);
+		error("[EXECUTOR] Unable to open file %s\n",
+				(temp+jobs_path+BUILD_OUTPUT_FILE).c_str());
 		return -1;
 	}	
 
