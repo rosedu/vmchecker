@@ -15,10 +15,8 @@ all:
 	@echo " run make tester-dist or make storer-dist"
 
 
-local/submit.sh: local/submit_ssh.sh
-	cp local/submit_ssh.sh local/submit.sh
 
-storer-dist: local/submit.sh
+storer-dist:
 	./bin/initialise_course.py storer
 
 
