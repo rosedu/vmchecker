@@ -88,6 +88,7 @@ def submit_assignment(assignment_config):
         config - assignment config (eg. name, time of submission etc)
         global - global assignments config (eg. deadlines)
         archive.zip - a zip containing the homework
+        callback - a script executed by the tester to send results back
 
     """
     assignment_config = abspath(assignment_config)
@@ -104,9 +105,13 @@ def submit_assignment(assignment_config):
     archive = join(dirname(assignment_config), './archive.zip')
     tests = misc.relative_path('tests', assignment + '.zip')
 
-    # finds location of penalty script
+    # finds location of the penalty script
     penalty = misc.relative_path(misc.config().get(assignment, 'Penalty'))
     assert isfile(penalty)
+
+    # finds location of the callback script
+    callback = misc.relative_path(misc.config().get(assignment, 'Callback'))
+    assert isfile(callback)
 
     # builds archive with configuration
 
@@ -125,6 +130,7 @@ def submit_assignment(assignment_config):
         zip.write(archive, 'archive.zip')                  # assignment archive
         zip.write(tests, 'tests.zip')                      # the archive containing tests
         zip.write(penalty, 'penalty')                      # penalty script
+        zip.write(callback, 'callback')                    # callback script
         zip.close()
 
 
