@@ -52,6 +52,7 @@ def build_config(user, assignment, archive):
     abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
 
     location = join(repository, assignment, user)
+    location = os.path.normpath(location)
     _logger.info("Storing student's files at `%s'", location)
 
     # removes the old homework and adds the new one
