@@ -141,15 +141,21 @@ def main(dir):
         machine = storer.get(assignment, 'Machine')
 
         _run_executor(machine, assignment)
-        _run_callback(dir, ejobs)
-
-        _logger.info('all done')
     except:
         _logger.exception('failed miserable')
+        with open(join(ejobs, 'job_errors')) as handler:
+            print >>handler, 'VMExecutor died. Please contact administrators.'
         raise
     finally:
+        try:
+            _run_callback(dir, ejobs)
+        except:
+            _logger.exception('cannot run callback')
+
         # clears files
         shutil.rmtree(ejobs)
+
+    _logger.info('all done')
 
 
 def _print_help():
