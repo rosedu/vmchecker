@@ -145,6 +145,7 @@ def submit_assignment(assignment_config):
             for f in misc.config().options(assignment):
                 if not f.startswith('include '): continue
                 dst, src = f[8:], misc.config().get(assignment, f)
+                src = vmcheckerpaths.abspath(src)
                 _logger.info("Including `%s' as `%s'.", src, dst)
                 assert isfile(src), "`%s' is missing" % src
                 zip.write(src, dst)
