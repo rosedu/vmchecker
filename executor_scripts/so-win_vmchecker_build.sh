@@ -17,6 +17,7 @@ get_vm_ip()
 install_job()
 {
 	echo "unpacking ..."
+	cp archive.zip file.zip 2>&1
 	unzip -o file.zip 2>&1
 	return $?
 }
@@ -24,6 +25,7 @@ install_job()
 build_job()
 {
 	echo -e "\nchecker: building" 
+    export TMP="c:\\cygwin\\tmp"
 #	echo "fixing file dates ..."
 #	/usr/bin/find . | xargs touch 2>&1
 	echo $winbuildenv \&\& nmake build > __checker.bat; cmd /E:ON /V:ON /T:0E /C  __checker.bat  2>&1
@@ -89,6 +91,8 @@ main()
 {
     
 	# test it
+	touch job_build job_errors
+	echo 'checker: building' >> job_build
 	check_job > job_build 2>job_errors;  err=$?
      
 	if [ $err -gt 1 ]; then
