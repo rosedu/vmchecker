@@ -3,7 +3,7 @@
 #runs inside vm
 
 home=$1
-winbuildenv="\"\\program files\\Microsoft Visual Studio 8\\Common7\\Tools\\vsvars32.bat\" &&   \"\\program files\\Microsoft Platform SDK\\SetEnv.cmd\" /SRV32 "
+winbuildenv="\"C:\Program Files\Microsoft SDKs\Windows\v6.1\Bin\SetEnv.Cmd\""
 
 cd $home
 
@@ -26,7 +26,7 @@ build_job()
 	echo -e "\nchecker: building" 
 #	echo "fixing file dates ..."
 #	/usr/bin/find . | xargs touch 2>&1
-	echo $winbuildenv \&\& nmake build > __checker.bat; cmd /c __checker.bat  2>&1
+	echo $winbuildenv \&\& nmake build > __checker.bat; cmd /E:ON /V:ON /T:0E /C  __checker.bat  2>&1
 	if [ "$?" != 0 ]; then
 		echo "checker: building failed"
 		return 1       
@@ -44,7 +44,7 @@ install_tests()
 
 build_tests()
 {
-	if [ -f NMakefile.checker ]; then echo $winbuildenv \&\& nmake build -f NMakefile.checker build-$1 > __checker.bat; cmd /c __checker.bat;
+	if [ -f NMakefile.checker ]; then echo $winbuildenv \&\& nmake build -f NMakefile.checker build-$1 > __checker.bat; cmd /E:ON /V:ON /T:0E /C /c __checker.bat;
        	elif [ -f Makefile.checker ]; then make -f Makefile.checker build-$1;
        	else echo dont know how to build tests;
        	fi  2>&1 

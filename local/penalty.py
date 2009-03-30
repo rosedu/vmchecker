@@ -98,8 +98,8 @@ def verbose_time_difference(upload_time, deadline):
         str = 'tema trimisă după termenul limită cu'
 
     d = datetime.timedelta(seconds=interval)
-    return str + ' %d zile %d ore %d minute %d secunde' % (
-            d.days, d.seconds / 3600, d.seconds % 3600 / 60, d.seconds % 60)
+    return str + ' %d zile %d ore %d minute %d secunde.\n Tema a fost corectată la data %s' % (
+            d.days, d.seconds / 3600, d.seconds % 3600 / 60, d.seconds % 60, datetime.datetime.now())
 
 
 def main():
