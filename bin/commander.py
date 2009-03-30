@@ -57,7 +57,7 @@ def _env_with_python_module_search_path():
     e = os.environ
     module_search_path = os.path.join(vmcheckerpaths.root(), 'bin')
     if 'PYTHONPATH' in e.keys():
-        newval = os.pathsep.join(e['PYTHONPATH'], module_search_path)
+        module_search_path = os.pathsep.join(e['PYTHONPATH'], module_search_path)
     e['PYTHONPATH'] = module_search_path
     return e
 
@@ -144,7 +144,7 @@ def main(dir):
     except:
         _logger.exception('failed miserable')
         with open(join(ejobs, 'job_errors'), 'wb') as handler:
-            print >>handler, 'VMExecutor died. Please contact administrators.'
+            print >>handler, 'VMExecutor died. Please contact the administrators.'
         raise
     finally:
         try:
