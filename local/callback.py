@@ -151,16 +151,17 @@ def sftp_transfer_files(sftp, files, conf_vars):
     through sftp.
     """
     for fpath in files:
-        if not os.path.isfile(fpath):
-            _logger.info('Could not find file [%s] to transfer' % fpath)
-            continue
         # extract the name of the file from the path
         fname = os.path.basename(fpath)
         # append the name to the destination
         fdest = os.path.join(conf_vars['resultsdest'], fname)
-        # actually transfer the files
-        _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
-        sftp.put(fpath, fdest)
+        if not os.path.isfile(fpath):
+            _logger.info('Could not find file [%s] to transfer' % fpath)
+            sftp.open(fdest, 'w').write('--')
+        else:
+            # actually transfer the files
+            _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
+            sftp.put(fpath, fdest)
 
 
 def _get_unzipped_local_path(filename):
