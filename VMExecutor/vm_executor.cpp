@@ -150,12 +150,13 @@ static int fill_vmrun( char **argv)
 	vmrun.vmchecker_root = argv[10];
 	vmrun.job_id = argv[11];
 	vmrun.build_command_args = vmrun.build_command_args + 		     \
+	" --login " +							     \
 	"-c \" chmod +x " + vmrun.guest_home_in_bash + "/" + BUILD_SCRIPT +  \
 	";" + vmrun.guest_home_in_bash + "/"+ BUILD_SCRIPT + " " + 	     \
 	vmrun.guest_home_in_bash + " " + vmrun.local_ip + " " + 	     \
 	vmrun.job_id + " \"";
 
-	vmrun.run_command_args = vmrun.run_command_args + "-c \" chmod +x "  \
+	vmrun.run_command_args = vmrun.run_command_args + " --login -c \" chmod +x "  \
 	+ vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + ";" + 		     \
 	vmrun.guest_home_in_bash + "/" + RUN_SCRIPT + " " + 		     \
 	vmrun.guest_home_in_bash + " \"";
@@ -612,7 +613,8 @@ static int run_scripts(void)
 	}
 
 	// run the target program.
-	log("[EXECUTOR] Starting %s...\n", BUILD_SCRIPT);
+	log("[EXECUTOR] Starting %s... prog=[%s] args[%s]\n", BUILD_SCRIPT,
+	    vmrun.guest_shell.c_str(), vmrun.build_command_args.c_str());
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
 			vmrun.guest_shell.c_str(),
@@ -689,7 +691,8 @@ static int run_scripts(void)
 	alarm(120);
 
 	// run the target program.
-	log("[EXECUTOR] Starting %s...\n", RUN_SCRIPT);
+	log("[EXECUTOR] Starting %s... exe=[%s] args[%s]\n", RUN_SCRIPT,
+	    vmrun.guest_shell.c_str(), vmrun.run_command_args.c_str());
 	jobHandle = VixVM_RunProgramInGuest(
 			vmHandle,
 			vmrun.guest_shell.c_str(),
@@ -850,13 +853,14 @@ static int start_kernel_listener(void)
 	}
 	else
 	{
-		command = command + "-c \"dbgview /l " +		     \
+		command = command + " --login -c \"dbgview /l " +		     \
 			KMESSAGE_OUTPUT_FILE + " & sleep 3 && tail -f " +    \
 			KMESSAGE_OUTPUT_FILE + " >> " +			     \
 			KMESSAGE_OUTPUT_FILE + "\"";
 
 		// run the target program.
-		log("[EXECUTOR] Starting dbgview...\n");
+		log("[EXECUTOR] Starting dbgview... shell=[%s] args[%s]\n", 
+		    vmrun.guest_shell.c_str(), command.c_str());
 		jobHandle = VixVM_RunProgramInGuest(
 				vmHandle,
 				vmrun.guest_shell.c_str(),
@@ -899,7 +903,7 @@ static int install_local_tests(void)
 	if (ret != 0) return -1;
 
 	command = "";
-	command = command + "bash -c \"" + "chmod +x " + jobs_path + "/"     \
+	command = command + "bash --login -c \"" + "chmod +x " + jobs_path + "/"     \
 		 + LOCAL_SCRIPT + ";" + jobs_path + "/" + LOCAL_SCRIPT+      \
 		" " + "\'" + vmrun.local_ip + "\'" + " " + "\'" + 	     \
 		vmrun.guest_ip + "\'" + "\"";

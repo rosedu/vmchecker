@@ -18,3 +18,7 @@ Commander/commander
 VMExecutor/vm_executor
 executor_jobs/
 queue/
+*.log
+nohup.out
+tmpunzip/
+XXX*
