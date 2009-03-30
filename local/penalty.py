@@ -110,7 +110,7 @@ def main():
     deadline = time.strptime(sys.argv[2], DATE_FORMAT)
 
     # ++++ MODIFY NEXT LINE + MODIFY NEXT LINE + MODIFY NEXT LINE ++++
-    penalty_points, days_late = compute_penalty_fixed_penalty(upload_time, deadline)
+    penalty_points, days_late = compute_penalty_linear(upload_time, deadline)
 
     # prints penalty and number of days late
     print '-%.2f: %s' % (penalty_points, verbose_time_difference(upload_time, deadline))
