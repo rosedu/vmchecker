@@ -1,5 +1,9 @@
 #!/bin/sh
 
+echo DAAAAAAAAAAAAAAA
+echo DAAAAAAAAAAAAAAA 1>&2
+
+
 #runs inside vm
 
 home=$2
