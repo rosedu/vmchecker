@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 """Computes the penalty for one homework based on days passed after deadline.
 
 Usage:
@@ -43,6 +44,7 @@ def compute_penalty(upload_time, deadline, penalty, wheights, limit):
 
     penalty_points = 0
 
+    interval = time.mktime(upload_time) - time.mktime(deadline)
     # only if the number of days late is positive (deadline exceeded)
     if interval > 0:
         days_late = int(math.ceil(interval / (3600 * 24)))
@@ -90,10 +92,10 @@ def verbose_time_difference(upload_time, deadline):
     penalty_points = 0
 
     if interval < 0:
-        str = 'inainte de termenul limita cu'
+        str = 'tema trimisă inainte de termenul limită cu'
         interval = - interval
     else:
-        str = 'dupa termenul limita cu'
+        str = 'tema trimisă după termenul limită cu'
 
     d = datetime.timedelta(seconds=interval)
     return str + ' %d zile %d ore %d minute %d secunde' % (
@@ -109,7 +111,7 @@ def main():
     deadline = time.strptime(sys.argv[2], DATE_FORMAT)
 
     # ++++ MODIFY NEXT LINE + MODIFY NEXT LINE + MODIFY NEXT LINE ++++
-    penalty_points, days_late = compute_penalty_fixed_penalty(upload_time, deadline)
+    penalty_points, days_late = compute_penalty_linear(upload_time, deadline)
 
     # prints penalty and number of days late
     print '-%.2f: %s' % (penalty_points, verbose_time_difference(upload_time, deadline))
