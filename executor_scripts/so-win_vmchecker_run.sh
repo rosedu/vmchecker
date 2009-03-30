@@ -10,17 +10,13 @@ run_tests()
     echo -e "\nchecker: testing"
 
     if [ -f _checker.bat ]; then
-        echo '1'
         cmd /E:ON /V:ON /T:0E /C /c _checker.bat;
     elif [ -f NMakefile.checker ]; then
-        echo '2'
         echo $winbuildenv \&\& nmake -f NMakefile.checker > __checker.bat;
         cmd /E:ON /V:ON /T:0E /C /c __checker.bat;
     elif [ -f _checker.sh ]; then
-        echo '3'
         sh _checker.sh;
     elif [ -f Makefile.checker ]; then
-        echo '4'
         make -f Makefile.checker;
     else echo dont know how to run tests; fi  2>&1 
 }
