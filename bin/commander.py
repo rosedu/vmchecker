@@ -144,7 +144,7 @@ def main(dir):
     except:
         _logger.exception('failed miserable')
         with open(join(ejobs, 'job_errors'), 'wb') as handler:
-            print >>handler, 'VMExecutor died. Please contact administrators.'
+            print >>handler, 'VMExecutor died. Please contact the administrators.'
         raise
     finally:
         try:
