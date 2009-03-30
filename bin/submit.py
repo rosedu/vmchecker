@@ -10,11 +10,13 @@ __author__ = """Ana Savu <ana.savu86@gmail.com>
 
 
 import ConfigParser
+import errno
+import fcntl
+import logging
 import os
 import shutil
 import sys
 import time
-import logging
 from subprocess import check_call
 from os.path import join, split, abspath, isfile, isdir, dirname, basename
 from tempfile import mkstemp
@@ -33,6 +35,23 @@ def _call_git(repository, *args):
         '--work-tree=' + repository] + list(args))
 
 
+class _Locker(object):
+    def __init__(self, assignment):
+        self.fd = os.open(
+                join(misc.repository(), assignment, '.lock'),
+                os.O_CREAT | os.O_RDWR, 0600)
+        assert self.fd != -1
+
+    def __enter__(self):
+        fcntl.lockf(self.fd, fcntl.LOCK_EX)
+
+    def __exit__(self, type, value, traceback):
+        fcntl.lockf(self.fd, fcntl.LOCK_UN)
+
+    def __del__(self):
+        os.close(self.fd)
+
+
 def build_config(user, assignment, archive):
     """Builds a configuration file for user's assignment.
 
@@ -42,54 +61,62 @@ def build_config(user, assignment, archive):
     XXX Locks should protect the directory access"""
     assert assignment in misc.config().sections(), (
         'No such assigment `%s\'.' % assignment)
-    repository = misc.repository()
 
     # the upload time is the system's current time
     upload_time = time.strftime(misc.DATE_FORMAT)
 
-    # the path where files returned from the tester are stored (the git repo)
-    rel_repo_path = misc.config().get('DEFAULT', 'Repository')
-    abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
+    # repository's path
+    repository = misc.repository()
 
-    location = join(repository, assignment, user)
-    location = os.path.normpath(location)
-    results_location = os.path.join(location, 'results')
-    _logger.info("Storing student's files at `%s'", location)
+    # creates a temporary directory to store homework
+    location = join(repository, assignment)
+    try:
+        os.makedirs(location)
+        _logger.info("created `%s'", location)
+    except OSError, e:
+        if e.errno != errno.EEXIST: raise
+        _logger.info("`%s' already exists", location)
 
-    # removes the old homework and adds the new one
-    # NOTE: git is clever enough to store only diffs
-    if os.path.isdir(location):
-        shutil.rmtree(location)
-    assert not os.path.exists(location)
-    os.makedirs(location)
+    with _Locker(assignment):
+        location = join(location, user)
+        _logger.info("Storing student's files at `%s'", location)
 
-    check_call(['unzip', archive, '-d', 
-                os.path.join(location, 'archive')])
+        try:
+            shutil.rmtree(location)
+            _logger.info("Removed old `%s'", location)
+        except OSError, e:
+            if e.errno != errno.ENOENT: raise
+            _logger.info("Ignoring missing `%s'", location)
 
-    # writes assignment configuration file
-    assignment_config = join(location, 'config')
+        os.makedirs(location)
 
-    with open(assignment_config, 'w') as handle:
-        handle.write('[Assignment]\n')
-        handle.write('User=%s\n' % user)
-        handle.write('Assignment=%s\n' % assignment)
-        handle.write('UploadTime=%s\n' % upload_time)
-        handle.write('ResultsDest=%s\n'   % results_location)
-        handle.write('RemoteUsername=%s\n' % 'so')          ## XXX get currentuser
-        handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')   ## XXX get localhost
+        # brings necessary files
+        check_call(['unzip', archive, '-d',
+                    os.path.join(location, 'archive')])
 
-    # commits the changes
-    # commit all new files from 'location' that are not ignored by .gitignore
-    _call_git(repository, 'add', '--all', location)
-    # remove possibly harmfull, and without benefits call.
-    #_call_git(repository, 'clean', location, '-f', '-d')
-    _call_git(repository, 'commit', '--allow-empty', location, '-m',
-            'Updated assignment `%s\' from `%s\'' % (assignment, user))
+        # writes assignment configuration file
+        assignment_config = join(location, 'config')
 
-    # XXX should create a clean zip from repository
-    shutil.copy(archive, join(location, 'archive.zip'))
+        with open(assignment_config, 'w') as handle:
+            handle.write('[Assignment]\n')
+            handle.write('User=%s\n' % user)
+            handle.write('Assignment=%s\n' % assignment)
+            handle.write('UploadTime=%s\n' % upload_time)
+            # these should go to `callback'
+            handle.write('ResultsDest=%s\n'   % join(location, 'results'))
+            handle.write('RemoteUsername=%s\n' % 'so')
+            handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')
 
-    return assignment_config
+        _logger.info('stored homework files. overwriting old homework')
+
+        # commits all new files from 'location' that are not ignored by .gitignore
+        _call_git(repository, 'add', '--all', location)
+        _call_git(repository, 'commit', '--allow-empty', location, '-m',
+                "Updated `%s''s submition for `%s'." % (user, assignment))
+
+        # XXX should create a clean zip from repository
+        shutil.copy(archive, join(location, 'archive.zip'))
+        return assignment_config
 
 
 def submit_assignment(assignment_config):
@@ -117,53 +144,58 @@ def submit_assignment(assignment_config):
     assignment = config.get('Assignment', 'Assignment')
     course = misc.config().get(assignment, 'Course')
 
-    archive = join(dirname(assignment_config), './archive.zip')
-    tests = misc.relative_path('tests', assignment + '.zip')
+    # location of student's homework
+    archive = join(dirname(assignment_config), 'archive.zip')
+    assert isfile(archive), "Missing archive `%s'" % archive
+
+    # location of tests
+    tests = join(vmcheckerpaths.dir_tests(), assignment + '.zip')
+    assert isfile(tests), "Missing tests `%s'" % tests
 
     # builds archive with configuration
+    with _Locker(assignment):
+        # creates the zip archive with an unique name
+        fd = mkstemp(
+                suffix='.zip',
+                prefix='%s_%s_%s_' % (course, assignment, user),
+                dir=vmcheckerpaths.dir_unchecked())
+        _logger.info("Creating zip package at `%s'", fd[1])
 
-    # creates the zip archive with a unique name
-    fd = mkstemp(
-            suffix='.zip',
-            prefix='%s_%s_%s_' % (course, assignment, user),
-            dir=vmcheckerpaths.dir_unchecked())
-    _logger.info("Creating zip package at `%s'", fd[1])
+        # populates the archive
+        # Includes at least these files:
+        #   config -> homework config (see above)
+        #   archive.zip -> homework files (student's sources)
+        #   tests.zip -> assignment tests
+        try:
+            with os.fdopen(fd[0], 'w+b') as handler:
+                zip = ZipFile(handler, 'w')
+                zip.write(assignment_config, 'config')             # assignment config
+                zip.write(archive, 'archive.zip')                  # assignment archive
+                zip.write(tests, 'tests.zip')                      # the archive containing tests
 
-    # populates the archive
-    # Includes at least these files:
-    #   config -> homework config (see above)
-    #   archive.zip -> homework files (student's sources)
-    #   tests.zip -> assignment tests
-    try:
-        with os.fdopen(fd[0], 'w+b') as handler:
-            zip = ZipFile(handler, 'w')
-            zip.write(assignment_config, 'config')             # assignment config
-            zip.write(archive, 'archive.zip')                  # assignment archive
-            zip.write(tests, 'tests.zip')                      # the archive containing tests
+                # includes extra required files
+                for f in misc.config().options(assignment):
+                    if not f.startswith('include '): continue
+                    dst, src = f[8:], misc.config().get(assignment, f)
+                    src = vmcheckerpaths.abspath(src)
+                    _logger.info("Including `%s' as `%s'.", src, dst)
+                    assert isfile(src), "`%s' is missing" % src
+                    zip.write(src, dst)
 
-            # includes extra required files
-            for f in misc.config().options(assignment):
-                if not f.startswith('include '): continue
-                dst, src = f[8:], misc.config().get(assignment, f)
-                src = vmcheckerpaths.abspath(src)
-                _logger.info("Including `%s' as `%s'.", src, dst)
-                assert isfile(src), "`%s' is missing" % src
-                zip.write(src, dst)
+                zip.close()
+        except:
+            _logger.error("Failed to create archive `%s'", fd[1])
+            os.unlink(fd[1])
+            raise
 
-            zip.close()
-    except:
-        _logger.error("Failed to create archive `%s'", fd[1])
-        os.unlink(fd[1])
-        raise
-
-    # sends homework to tester
-    submit = vmcheckerpaths.abspath(misc.config().get(assignment, 'Submit'))
-    _logger.info('Calling submission script %s', submit)
-    try:
-        check_call((submit, fd[1]))
-    except:
-        _logger.fatal("Cannot submit homework. Archive `%s' not deleted.", fd[0])
-        raise
+        # sends homework to tester
+        submit = vmcheckerpaths.abspath(misc.config().get(assignment, 'Submit'))
+        _logger.info('Calling submission script %s', submit)
+        try:
+            check_call((submit, fd[1]))
+        except:
+            _logger.fatal("Cannot submit homework. Archive `%s' not deleted.", fd[1])
+            raise
 
 
 def print_help():

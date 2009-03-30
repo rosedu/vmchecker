@@ -58,11 +58,13 @@ def dir_queue():
     This path is valid on the tester machine."""
     return abspath('queue')
 
+
 def dir_tester_unzip_tmp():
     """The absolute path of the directory where submission
     archives are unzipped.
     This path is valid on the tester machine."""
     return abspath('tmpunzip')
+
 
 def dir_backup():
     """The absolute path of the directory where backups
