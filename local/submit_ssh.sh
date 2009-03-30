@@ -14,4 +14,4 @@ VMCHECKER_ROOT=/home/so/vmchecker/vmchecker
 # copies the file and notifies (implicit) queue manager
 scp "$1" $USER@$ADDRESS:$VMCHECKER_ROOT/queue/
 echo "Sending "$1" to "$USER@$ADDRESS:$VMCHECKER_ROOT/queue/
-unzip -l "$1"
+# unzip -l "$1"
