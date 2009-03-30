@@ -43,6 +43,7 @@ def compute_penalty(upload_time, deadline, penalty, wheights, limit):
 
     penalty_points = 0
 
+    interval = time.mktime(upload_time) - time.mktime(deadline)
     # only if the number of days late is positive (deadline exceeded)
     if interval > 0:
         days_late = int(math.ceil(interval / (3600 * 24)))
