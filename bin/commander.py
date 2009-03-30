@@ -88,7 +88,7 @@ def _run_executor(machine, assignment):
             # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
-            '1',                                      # enables kernel_messages
+            '0',                                      # enables kernel_messages
             tester.get(machine, 'VMPath'),
             tester.get('Global', 'LocalAddress'),     # did I review commander.cpp?
             tester.get(machine, 'GuestUser'),
