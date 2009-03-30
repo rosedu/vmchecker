@@ -35,7 +35,7 @@ if __name__ == '__main__':
             print >>sys.stderr, 'Unknown assignment `%s\'. Ignoring.' % a
             continue
 
-        repository = join(misc.repository(a), a)
+        repository = join(misc.repository(), a)
 
         users_ = users
         if users_ is None:
