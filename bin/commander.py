@@ -143,7 +143,7 @@ def main(dir):
         _run_executor(machine, assignment)
     except:
         _logger.exception('failed miserable')
-        with open(join(ejobs, 'job_errors')) as handler:
+        with open(join(ejobs, 'job_errors'), 'wb') as handler:
             print >>handler, 'VMExecutor died. Please contact administrators.'
         raise
     finally:
