@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 """Computes the penalty for one homework based on days passed after deadline.
 
 Usage:
@@ -91,10 +92,10 @@ def verbose_time_difference(upload_time, deadline):
     penalty_points = 0
 
     if interval < 0:
-        str = 'inainte de termenul limita cu'
+        str = 'tema trimisă inainte de termenul limită cu'
         interval = - interval
     else:
-        str = 'dupa termenul limita cu'
+        str = 'tema trimisă după termenul limită cu'
 
     d = datetime.timedelta(seconds=interval)
     return str + ' %d zile %d ore %d minute %d secunde' % (
