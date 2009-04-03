@@ -104,7 +104,7 @@ def build_config(user, assignment, archive):
             handle.write('UploadTime=%s\n' % upload_time)
             # these should go to `callback'
             handle.write('ResultsDest=%s\n'   % join(location, 'results'))
-            handle.write('RemoteUsername=%s\n' % 'so')
+            handle.write('RemoteUsername=%s\n' % os.environ['USERNAME'])
             handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')
 
         _logger.info('stored homework files. overwriting old homework')
