@@ -17,6 +17,7 @@ import os
 import shutil
 import sys
 import time
+import getpass
 from subprocess import check_call
 from os.path import join, split, abspath, isfile, isdir, dirname, basename
 from tempfile import mkstemp
@@ -104,7 +105,7 @@ def build_config(user, assignment, archive):
             handle.write('UploadTime=%s\n' % upload_time)
             # these should go to `callback'
             handle.write('ResultsDest=%s\n'   % join(location, 'results'))
-            handle.write('RemoteUsername=%s\n' % os.environ['USER'])
+            handle.write('RemoteUsername=%s\n' % getpass.getuser())
             handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')
 
         _logger.info('stored homework files. overwriting old homework')
