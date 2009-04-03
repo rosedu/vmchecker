@@ -157,7 +157,7 @@ def sftp_transfer_files(sftp, files, conf_vars):
         fdest = os.path.join(conf_vars['resultsdest'], fname)
         if not os.path.isfile(fpath):
             _logger.info('Could not find file [%s] to transfer' % fpath)
-            sftp.open(fdest, 'w').write('--')
+            sftp.open(fdest, 'w').write('-- (could not locate this file on the test vm) --')
         else:
             # actually transfer the files
             _logger.debug('PUTTING: local:[%s] remote:[%s]' % (fpath, fdest))
