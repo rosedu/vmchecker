@@ -22,8 +22,8 @@ install_job()
 build_job()
 {
 	echo -e "\nchecker: building" 
-	#echo "fixing file dates ..."
-	#/usr/bin/find . | xargs touch 2>&1
+	echo "fixing file dates ..."
+	/usr/bin/find . | xargs touch 2>&1
 	make build 2>&1
 	if [ "$?" != 0 ]; then
 		echo "checker: building failed"
