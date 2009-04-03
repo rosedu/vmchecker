@@ -15,12 +15,18 @@ all:
 	@echo " run make tester-dist or make storer-dist"
 
 
+vmchecker_root_var:
+	@if [ "x$VMCHECKER_ROOT" = "x" ]; then 		\
+		echo "VMCHECKER_ROOT variable is not set";	\
+		exit 1;						\
+	fi
 
-storer-dist:
+storer-dist: vmchecker_root_var
 	./bin/initialise_course.py storer
 
 
-tester-dist:
+tester-dist: vmchecker_root_var
+	@bin/assert_python_modules_installed.py
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
@@ -33,4 +39,5 @@ clean:
 	done;
 
 	rm -vf bin/semctl bin/vm_executor bin/commander;
-	rm -rf *~
+	rm -f *~
+	rm -f bin/*~
