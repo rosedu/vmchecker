@@ -26,7 +26,7 @@ storer-dist: vmchecker_root_var
 
 
 tester-dist: vmchecker_root_var
-	@bin/assert_python_modules_installed.py
+	@bin/assert_python_modules_installed.py paramiko pyinotify
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \
 	done;
