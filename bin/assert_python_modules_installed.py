@@ -9,11 +9,11 @@ if __name__ == "__main__":
     modules_not_loaded = []
     for m in modules_to_load:
         try:
-            import m
+            __import__(m)
         except:
-            modules_not_loaded += m;
+            modules_not_loaded.append(m);
     if len(modules_not_loaded) > 0:
-        print ("Could not load python modules: " + str(modules_not_loaded))
+        print ("Could not load python modules: %s"  % modules_not_loaded)
         exit(1)
     else:
         print ("All needed python modules loaded correctly.")
