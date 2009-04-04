@@ -31,9 +31,10 @@ __author__ = 'Alexandru Moșoi <brtzsnr@gmail.com>'
 import ConfigParser
 import logging
 import shutil
+import time
 import sys
 import os
-from subprocess import check_call
+from subprocess import check_call, Popen
 from os.path import join, isdir
 
 import misc
@@ -46,6 +47,7 @@ _FILES_TO_SEND = (
     'job_errors',
     'job_results',
     'job_km', )
+_MAX_VMCHECKER_TIME = 300
 
 _logger = logging.getLogger('vmchecker.commander')
 
@@ -79,7 +81,7 @@ def _run_callback(dir, ejobs):
         raise
 
 
-def _run_executor(machine, assignment):
+def _run_executor(ejobs, machine, assignment):
     # starts job
     # XXX lots of wtf per minute
     # parsing config should be executors' job
@@ -103,10 +105,39 @@ def _run_executor(machine, assignment):
     _logger.debug('calling %s', args)
 
     try:
-        check_call(args)
-    except:
-        _logger.error('failed to run VMExecutor')
-        raise
+        start = time.time()
+        popen = Popen(args)
+
+        # hardcoded five minutes
+        while time.time() < start + _MAX_VMCHECKER_TIME:
+            r = popen.poll()
+            if r is None:
+                # if process has not finished continue to sleep
+                time.sleep(5)
+            else:
+                with open(join(ejobs, 'job_errors'), 'w') as handler:
+                    print >>handler, 'VMExecutor returned', r
+                    if r:
+                        print >>handler, 'VMExecutor returned', r
+
+        else:
+            popen.kill()
+            _logger.error("VMChecker timeouted on assignment `%s' running on machine `%s'.",
+                    assignment, machine)
+
+            with open(join(ejobs, 'job_errors'), 'w') as handler:
+                print >>handler, 'VMExecutor is taking too long.'
+                print >>handler, 'Check your sources, makefiles, etc and resubmit.'
+                print >>handler, 'If the problem persists please contact administrators.'
+    finally:
+        _logger.exception('Cannot run VMExecutor.')
+        try: popen.kill()
+        except: pass
+
+        with open(join(ejobs, 'job_errors'), 'w') as handler:
+            print >>handler, 'Cannot run VMExecutor.'
+            print >>handler, 'Check your sources, makefiles, etc and resubmit.'
+            print >>handler, 'If the problem persists please contact administrators.'
 
 
 def main(dir):
@@ -136,24 +167,18 @@ def main(dir):
         join(dir, 'tests.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
 
+
+    assignment = config.get('Assignment', 'Assignment')
+    machine = storer.get(assignment, 'Machine')
+    _run_executor(ejobs, machine, assignment)
+
     try:
-        assignment = config.get('Assignment', 'Assignment')
-        machine = storer.get(assignment, 'Machine')
-
-        _run_executor(machine, assignment)
+        _run_callback(dir, ejobs)
     except:
-        _logger.exception('failed miserable')
-        with open(join(ejobs, 'job_errors'), 'wb') as handler:
-            print >>handler, 'VMExecutor died. Please contact the administrators.'
-        raise
-    finally:
-        try:
-            _run_callback(dir, ejobs)
-        except:
-            _logger.exception('cannot run callback')
+        _logger.exception('cannot run callback')
 
-        # clears files
-        shutil.rmtree(ejobs)
+    # clears files
+    shutil.rmtree(ejobs)
 
     _logger.info('all done')
 
