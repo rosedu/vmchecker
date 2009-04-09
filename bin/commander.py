@@ -104,40 +104,58 @@ def _run_executor(ejobs, machine, assignment):
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
 
-    try:
-        start = time.time()
-        popen = Popen(args)
+    start = time.time()
 
+    # first just try to open the process
+    try:
+        popen = Popen(args)
+    except:
+        _logger.exception('Cannot run VMExecutor.')
+        with open(join(ejobs, 'job_errors'), 'w') as handler:
+            print >>handler, 'Cannot run VMExecutor.'
+            print >>handler, 'Please contact administrators as soon as possible.'
+        # if we cannot open the process, there is nothing more to be done
+        return
+
+    # wait for the the process to finish
+    try:
         # hardcoded five minutes
         while time.time() < start + _MAX_VMCHECKER_TIME:
             r = popen.poll()
             if r is None:
-                # if process has not finished continue to sleep
+                # if process has not finished => continue to sleep
                 time.sleep(5)
             else:
                 with open(join(ejobs, 'job_errors'), 'w') as handler:
-                    print >>handler, 'VMExecutor returned', r
-                    if r:
-                        print >>handler, 'VMExecutor returned', r
-
+                    if r < 0:
+                        print >>handler, 'VMExecutor error: returcode =', r
+                    else:
+                        print >>handler, 'VMExecutor success: returcode =', r
+                # no reason staying in the loop after process exit terminates
+                popen = None
+                return
         else:
-            popen.kill()
             _logger.error("VMChecker timeouted on assignment `%s' running on machine `%s'.",
                     assignment, machine)
 
             with open(join(ejobs, 'job_errors'), 'w') as handler:
-                print >>handler, 'VMExecutor is taking too long.'
+                print >>handler, 'VMExecutor successfuly started, but taking too long.'
                 print >>handler, 'Check your sources, makefiles, etc and resubmit.'
                 print >>handler, 'If the problem persists please contact administrators.'
-    finally:
-        _logger.exception('Cannot run VMExecutor.')
-        try: popen.kill()
-        except: pass
+    except:
+        _logger.exception('Exception after starting VMExecutor.')
 
         with open(join(ejobs, 'job_errors'), 'w') as handler:
-            print >>handler, 'Cannot run VMExecutor.'
-            print >>handler, 'Check your sources, makefiles, etc and resubmit.'
+            print >>handler, 'Error after starting VMExecutor.'
             print >>handler, 'If the problem persists please contact administrators.'
+    finally:
+        # release any leftover resources
+        try:
+            if popen:
+                popen.kill()
+        except:
+            pass
+
 
 
 def main(dir):
