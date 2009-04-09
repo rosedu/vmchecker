@@ -65,40 +65,6 @@ Bool jobCompleted;
 /*--------------------- Functions code -------------------------------------*/
 /*--------------------------------------------------------------------------*/
 /**
-  This function inspects the returning value of the command invoked by
-  system() function.
-
-  @param    str: the string to be modified
-  @return   -1 if system() failed
-            the returning code of the command invoked
-*/
-/*--------------------------------------------------------------------------*/
-static int system_return_value(int ret, const char* message)
-{
-	if (ret==-1)
-	{
-		error("\"system()\" failed\n");
-		return -1;
-	}
-	else
-	{
-		if (WIFEXITED(ret))
-        {
-            if ((WEXITSTATUS(ret) != 0))
-			{
-				error("%s\n",message);
-				return WEXITSTATUS(ret);
-			}
-			else
-                return 0;
-        }
-	}
-
-	return -1;
-}
-
-/*--------------------------------------------------------------------------*/
-/**
     This  function  fills vmrun  structure  with  virtual machine information
   received  from  Commander  module.  "vmrun"  is  a  structure  declared  in
   "vm_executor.h" header file. Its members are described in the configuration
@@ -884,10 +850,48 @@ static int start_kernel_listener(void)
 
 /*--------------------------------------------------------------------------*/
 /**
+  This function inspects the returning value of the command invoked by
+  system() function.
+
+  @param    str: the string to be modified
+  @return   -1 if system() failed
+            the returning code of the command invoked
+*/
+/*--------------------------------------------------------------------------*/
+
+/*
+static int system_return_value(int ret, const char* message)
+{
+	if (ret==-1)
+	{
+		error("\"system()\" failed\n");
+		return -1;
+	}
+	else
+	{
+		if (WIFEXITED(ret))
+        {
+            if ((WEXITSTATUS(ret) != 0))
+			{
+				error("%s\n",message);
+				return WEXITSTATUS(ret);
+			}
+			else
+                return 0;
+        }
+	}
+
+	return -1;
+}
+*/
+
+/*--------------------------------------------------------------------------*/
+/**
    This function runs a script which installs locally the CHECKER_TEST
 */
 /*--------------------------------------------------------------------------*/
 
+ /*
 static int install_local_tests(void)
 {
 	string command;
@@ -911,6 +915,7 @@ static int install_local_tests(void)
 
 	return ret;
 }
+ */
 
 /*--------------------------------------------------------------------------*/
 /**
