@@ -31,9 +31,10 @@ __author__ = 'Alexandru Moșoi <brtzsnr@gmail.com>'
 import ConfigParser
 import logging
 import shutil
+import time
 import sys
 import os
-from subprocess import check_call
+from subprocess import check_call, Popen
 from os.path import join, isdir
 
 import misc
@@ -46,6 +47,7 @@ _FILES_TO_SEND = (
     'job_errors',
     'job_results',
     'job_km', )
+_MAX_VMCHECKER_TIME = 300
 
 _logger = logging.getLogger('vmchecker.commander')
 
@@ -79,7 +81,7 @@ def _run_callback(dir, ejobs):
         raise
 
 
-def _run_executor(machine, assignment):
+def _run_executor(ejobs, machine, assignment, timeout):
     # starts job
     # XXX lots of wtf per minute
     # parsing config should be executors' job
@@ -98,15 +100,63 @@ def _run_executor(machine, assignment):
             tester.get(machine, 'GuestHomeInBash'),   # why is this needed?
             vmcheckerpaths.root(),
             assignment,
+            timeout,
             ]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
 
+    start = time.time()
+
+    # first just try to open the process
     try:
-        check_call(args)
+        popen = Popen(args)
     except:
-        _logger.error('failed to run VMExecutor')
-        raise
+        _logger.exception('Cannot run VMExecutor.')
+        with open(join(ejobs, 'job_errors'), 'w') as handler:
+            print >>handler, 'Cannot run VMExecutor.'
+            print >>handler, 'Please contact administrators as soon as possible.'
+        # if we cannot open the process, there is nothing more to be done
+        return
+
+    # wait for the the process to finish
+    try:
+        # hardcoded five minutes
+        while time.time() < start + timeout:
+            r = popen.poll()
+            if r is None:
+                # if process has not finished => continue to sleep
+                time.sleep(5)
+            else:
+                with open(join(ejobs, 'job_errors'), 'w') as handler:
+                    if r < 0:
+                        print >>handler, 'VMExecutor error: returcode =', r
+                    else:
+                        print >>handler, 'VMExecutor success: returcode =', r
+                # no reason staying in the loop after process exit terminates
+                popen = None
+                return
+        else:
+            _logger.error("VMChecker timeouted on assignment `%s' running on machine `%s'.",
+                    assignment, machine)
+
+            with open(join(ejobs, 'job_errors'), 'w') as handler:
+                print >>handler, 'VMExecutor successfuly started, but taking too long.'
+                print >>handler, 'Check your sources, makefiles, etc and resubmit.'
+                print >>handler, 'If the problem persists please contact administrators.'
+    except:
+        _logger.exception('Exception after starting VMExecutor.')
+
+        with open(join(ejobs, 'job_errors'), 'w') as handler:
+            print >>handler, 'Error after starting VMExecutor.'
+            print >>handler, 'If the problem persists please contact administrators.'
+    finally:
+        # release any leftover resources
+        try:
+            if popen:
+                popen.kill()
+        except:
+            pass
+
 
 
 def main(dir):
@@ -136,24 +186,19 @@ def main(dir):
         join(dir, 'tests.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
 
+
+    assignment = config.get('Assignment', 'Assignment')
+    machine = storer.get(assignment, 'Machine')
+    timeout = storer.get(assignment, 'Timeout')
+    _run_executor(ejobs, machine, assignment, timeout)
+
     try:
-        assignment = config.get('Assignment', 'Assignment')
-        machine = storer.get(assignment, 'Machine')
-
-        _run_executor(machine, assignment)
+        _run_callback(dir, ejobs)
     except:
-        _logger.exception('failed miserable')
-        with open(join(ejobs, 'job_errors'), 'wb') as handler:
-            print >>handler, 'VMExecutor died. Please contact the administrators.'
-        raise
-    finally:
-        try:
-            _run_callback(dir, ejobs)
-        except:
-            _logger.exception('cannot run callback')
+        _logger.exception('cannot run callback')
 
-        # clears files
-        shutil.rmtree(ejobs)
+    # clears files
+    shutil.rmtree(ejobs)
 
     _logger.info('all done')
 

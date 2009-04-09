@@ -28,11 +28,9 @@ struct run_struct {
     string run_command_args;
     string vmchecker_root;
     string job_id;
+    int timeout;
     Bool km_enable;
 };
-
-/* define run timeout */
-#define TIMEOUT     120
 
 /* define file names */
 #define CHECKER_FILE        "file.zip"
