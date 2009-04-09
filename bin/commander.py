@@ -81,7 +81,7 @@ def _run_callback(dir, ejobs):
         raise
 
 
-def _run_executor(ejobs, machine, assignment):
+def _run_executor(ejobs, machine, assignment, timeout):
     # starts job
     # XXX lots of wtf per minute
     # parsing config should be executors' job
@@ -100,6 +100,7 @@ def _run_executor(ejobs, machine, assignment):
             tester.get(machine, 'GuestHomeInBash'),   # why is this needed?
             vmcheckerpaths.root(),
             assignment,
+            timeout,
             ]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
@@ -120,7 +121,7 @@ def _run_executor(ejobs, machine, assignment):
     # wait for the the process to finish
     try:
         # hardcoded five minutes
-        while time.time() < start + _MAX_VMCHECKER_TIME:
+        while time.time() < start + timeout:
             r = popen.poll()
             if r is None:
                 # if process has not finished => continue to sleep
@@ -188,7 +189,8 @@ def main(dir):
 
     assignment = config.get('Assignment', 'Assignment')
     machine = storer.get(assignment, 'Machine')
-    _run_executor(ejobs, machine, assignment)
+    timeout = storer.get(assignment, 'Timeout')
+    _run_executor(ejobs, machine, assignment, timeout)
 
     try:
         _run_callback(dir, ejobs)

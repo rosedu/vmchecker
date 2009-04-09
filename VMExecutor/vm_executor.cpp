@@ -18,6 +18,7 @@
 #include <iostream>
 #include <assert.h>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cstdlib>
 #include <stdio.h>
@@ -113,9 +114,10 @@ static int fill_vmrun( char **argv)
 
 	vmrun.vmname = argv[1];
 
+	// read the km_enable flag
 	if (strcmp(argv[2], "0") != 0) {
 		if (strcmp(argv[2], "1") != 0) {
-			fprintf(stderr, "Usage error.\n");
+			fprintf(stderr, "[VMEXECUTOR] Usage error.\n");
 			return -1;
 		}
 		else {
@@ -126,20 +128,6 @@ static int fill_vmrun( char **argv)
 		vmrun.km_enable = false;
 	}
 
-	/*if (strptime(argv[3], "%Y-%m-%d %H:%M:%S", &vmrun.deadline_time)   \
-          == NULL)
-	{
-		error("strptime failed\n");
-		return -1;
-	}
-	if (strptime(argv[4], "%Y-%m-%d %H:%M:%S", &vmrun.upload_time) 	     \
-	== NULL)
-	{
-		error("strptime failed\n");
-		return -1;
-	}*/
-
-	//vmrun.penalty = strtof(argv[5], &endp);
 	vmrun.vmpath = argv[3];
 	vmrun.local_ip = argv[4];
 	vmrun.guest_user = argv[5];
@@ -149,6 +137,15 @@ static int fill_vmrun( char **argv)
 	vmrun.guest_home_in_bash = argv[9];
 	vmrun.vmchecker_root = argv[10];
 	vmrun.job_id = argv[11];
+	{
+	  char * timeout_str = argv[12];
+	  std::istringstream strreader(timeout_str);
+	  if (!(strreader >> vmrun.timeout)) {
+	    fprintf(stderr, "[VMEXECUTOR] Argument [%s] is not a valid timeout value",
+		    timeout_str);
+	    return -1;
+	  }
+	}
 	vmrun.build_command_args = vmrun.build_command_args + 		     \
 	" --login " +							     \
 	"-c \" chmod +x " + vmrun.guest_home_in_bash + "/" + BUILD_SCRIPT +  \
@@ -686,9 +683,9 @@ static int run_scripts(void)
 
 	//build succesful, go on with runnig RUN_SCRIPT
 
-	/* setup alarm signal to be sent after 120 seconds */
+	/* setup alarm signal to be sent after vmrun.timeout seconds */
 	set_signal();
-	alarm(120);
+	alarm(vmrun.timeout);
 
 	// run the target program.
 	log("[EXECUTOR] Starting %s... exe=[%s] args[%s]\n", RUN_SCRIPT,
@@ -784,8 +781,8 @@ static int run_scripts(void)
 	ofstream run_file((temp+jobs_path+RUN_OUTPUT_FILE).c_str(),
 			 ios_base::app);
 
-	if (timeout < 120)
-		run_file << "timeout=" <<120-timeout;
+	if (timeout < vmrun.timeout)
+		run_file << "timeout=" <<vmrun.timeout-timeout;
 	else
 		run_file << "Tester timeouted";
 
@@ -890,6 +887,7 @@ static int start_kernel_listener(void)
    This function runs a script which installs locally the CHECKER_TEST
 */
 /*--------------------------------------------------------------------------*/
+
 static int install_local_tests(void)
 {
 	string command;
