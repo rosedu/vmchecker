@@ -81,7 +81,7 @@ def _run_callback(dir, ejobs):
         raise
 
 
-def _run_executor(ejobs, machine, assignment, timeout):
+def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     # starts job
     # XXX lots of wtf per minute
     # parsing config should be executors' job
@@ -90,7 +90,7 @@ def _run_executor(ejobs, machine, assignment, timeout):
             # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
-            '0',                                      # enables kernel_messages
+            kernel_messages,                          # enables kernel_messages
             tester.get(machine, 'VMPath'),
             tester.get('Global', 'LocalAddress'),     # did I review commander.cpp?
             tester.get(machine, 'GuestUser'),
@@ -190,7 +190,8 @@ def main(dir):
     assignment = config.get('Assignment', 'Assignment')
     machine = storer.get(assignment, 'Machine')
     timeout = storer.get(assignment, 'Timeout')
-    _run_executor(ejobs, machine, assignment, timeout)
+    kernel_messages = storer.get(assignment, 'KernelMessages')
+    _run_executor(ejobs, machine, assignment, timeout, kernel_messages)
 
     try:
         _run_callback(dir, ejobs)
