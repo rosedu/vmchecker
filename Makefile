@@ -39,5 +39,10 @@ clean:
 	done;
 
 	rm -vf bin/semctl bin/vm_executor
-	rm -f *~
-	rm -f bin/*~
+	rm -f *~ */*~
+	rm -f bin/*~ bin/*.pyc
+	@for d in queue tmpunzip; do				\
+		if [ -d $$d ]; then				\
+			rmdir  --ignore-fail-on-non-empty $$d;	\
+		fi;						\
+	done;
