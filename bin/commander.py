@@ -81,7 +81,7 @@ def _run_callback(dir, ejobs):
         raise
 
 
-def _run_executor(ejobs, machine, assignment, timeout):
+def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     # starts job
     # XXX lots of wtf per minute
     # parsing config should be executors' job
@@ -90,7 +90,7 @@ def _run_executor(ejobs, machine, assignment, timeout):
             # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
-            '0',                                      # enables kernel_messages
+            kernel_messages,                          # enables kernel_messages
             tester.get(machine, 'VMPath'),
             tester.get('Global', 'LocalAddress'),     # did I review commander.cpp?
             tester.get(machine, 'GuestUser'),
@@ -112,7 +112,7 @@ def _run_executor(ejobs, machine, assignment, timeout):
         popen = Popen(args)
     except:
         _logger.exception('Cannot run VMExecutor.')
-        with open(join(ejobs, 'job_errors'), 'w') as handler:
+        with open(join(ejobs, 'job_errors'), 'a') as handler:
             print >>handler, 'Cannot run VMExecutor.'
             print >>handler, 'Please contact administrators as soon as possible.'
         # if we cannot open the process, there is nothing more to be done
@@ -120,14 +120,16 @@ def _run_executor(ejobs, machine, assignment, timeout):
 
     # wait for the the process to finish
     try:
-        # hardcoded five minutes
-        while time.time() < start + timeout:
+        x = 0
+        while time.time() < start + int(timeout):
+            x += 1
             r = popen.poll()
             if r is None:
                 # if process has not finished => continue to sleep
+                _logger.debug('-- VMExecutor sleeping for 5 seconds, r is None: x=%d' % x)
                 time.sleep(5)
             else:
-                with open(join(ejobs, 'job_errors'), 'w') as handler:
+                with open(join(ejobs, 'job_errors'), 'a') as handler:
                     if r < 0:
                         print >>handler, 'VMExecutor error: returcode =', r
                     else:
@@ -139,14 +141,14 @@ def _run_executor(ejobs, machine, assignment, timeout):
             _logger.error("VMChecker timeouted on assignment `%s' running on machine `%s'.",
                     assignment, machine)
 
-            with open(join(ejobs, 'job_errors'), 'w') as handler:
+            with open(join(ejobs, 'job_errors'), 'a') as handler:
                 print >>handler, 'VMExecutor successfuly started, but taking too long.'
                 print >>handler, 'Check your sources, makefiles, etc and resubmit.'
                 print >>handler, 'If the problem persists please contact administrators.'
     except:
         _logger.exception('Exception after starting VMExecutor.')
 
-        with open(join(ejobs, 'job_errors'), 'w') as handler:
+        with open(join(ejobs, 'job_errors'), 'a') as handler:
             print >>handler, 'Error after starting VMExecutor.'
             print >>handler, 'If the problem persists please contact administrators.'
     finally:
@@ -190,7 +192,8 @@ def main(dir):
     assignment = config.get('Assignment', 'Assignment')
     machine = storer.get(assignment, 'Machine')
     timeout = storer.get(assignment, 'Timeout')
-    _run_executor(ejobs, machine, assignment, timeout)
+    kernel_messages = storer.get(assignment, 'KernelMessages')
+    _run_executor(ejobs, machine, assignment, timeout, kernel_messages)
 
     try:
         _run_callback(dir, ejobs)

@@ -803,13 +803,14 @@ static int start_kernel_listener(void)
 				break;
 
 			case 0: /* child starts executing here */
-				fd = open(KMESSAGE_OUTPUT_FILE,
-					  O_RDWR | O_CREAT, 0644);
+				string temp;
+				fd = open((temp + jobs_path + KMESSAGE_OUTPUT_FILE).c_str(),
+					  O_RDWR | O_CREAT | O_TRUNC | O_SYNC, 0644);
 
 				if (fd == -1)
 					return -1;
 				dup2(fd, STDOUT_FILENO);
-				execlp("nc", "nc", "-u", "-l", "-p6666",
+				execlp("nc", "nc", "-u", "-l", "-p", "6666",
 				       (char*)NULL);
 				break;
 		}
@@ -962,7 +963,7 @@ int main(int argc, char *argv[])
 	//struct args_struct args;
 	int ret;
 
-	if (argc != 12)
+	if (argc != 13)
 	{
 		usage(argv[0]);
 		exit(EXIT_FAILURE);
