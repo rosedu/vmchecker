@@ -5,6 +5,8 @@
 home=$1
 cd $home
 
+
+
 get_vm_ip()
 {
 	echo "Adresa IP a masinii virtuale este:"
@@ -25,33 +27,38 @@ install_job()
 
 build_job()
 {
-	echo -e "\nchecker: building" 
+	echo -e "\nchecker: building"
 	echo "fixing file dates ..."
 	/usr/bin/find . | xargs touch 2>&1
 	make build 2>&1
 	if [ "$?" != 0 ]; then
 		echo "checker: building failed"
-		return 1       
+		return 1
 	fi
-	
+
 	echo "checker: building done"
 	return 0
 }
 
+
 install_tests()
 {
 	echo -e "\ntests.zip size: " $(stat -c%s "tests.zip")
-	# note stdout redirected to stderr: do not output tests.zip contents (large output)
+	# note stdout redirected to stderr: do not output tests.zip contents
+	# (large output)
 	unzip -o tests.zip 1>&2
-	return $?	
+	return $?
 }
 
 build_tests()
 {
-	if [ -f Makefile.checker ]; then make -f Makefile.checker build-$1; else echo dont know how to build tests; fi  2>&1 
-	
+	if [ -f Makefile.checker ]; then make -f Makefile.checker build-$1; else echo dont know how to build tests; fi  2>&1
+
 	return  0
 }
+
+
+
 
 check_job()
 {
@@ -90,11 +97,11 @@ check_job()
 
 main()
 {
-    
+
 	# test it
 	check_job  > job_build 2>job_errors;  err=$?
-     
+
 	return $err
 }
- 
-main 
+
+main

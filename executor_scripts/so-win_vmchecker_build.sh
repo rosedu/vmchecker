@@ -16,22 +16,25 @@ get_vm_ip()
 
 install_job()
 {
+	echo "homework contents: "
+	unzip -l file.zip 2>&1
 	echo "unpacking ..."
-	cp archive.zip file.zip 2>&1
-	unzip -o file.zip 2>&1
+	# note stdout redirected to stderr: do not output file.zip contents
+	# contents printed with more info above with "unzip -l"
+	unzip -o file.zip 1>&2
 	return $?
 }
 
 build_job()
 {
-	echo -e "\nchecker: building" 
-    export TMP="c:\\cygwin\\tmp"
-#	echo "fixing file dates ..."
-#	/usr/bin/find . | xargs touch 2>&1
+	echo -e "\nchecker: building"
+	export TMP="c:\\cygwin\\tmp"
+	echo "fixing file dates ..."
+	/usr/bin/find . | xargs touch 2>&1
 	echo $winbuildenv \&\& nmake /nologo build > __checker.bat; cmd /E:ON /V:ON /T:0E /C  __checker.bat  2>&1
 	if [ "$?" != 0 ]; then
 		echo "checker: building failed"
-		return 1       
+		return 1
 	fi
 
 	echo "checker: building done"
@@ -40,8 +43,11 @@ build_job()
 
 install_tests()
 {
+	echo -e "\ntests.zip size: " $(stat -c%s "tests.zip")
+	# note stdout redirected to stderr: do not output tests.zip contents
+	# (large output)
 	unzip -o tests.zip 1>&2
-	return $?	
+	return $?
 }
 
 build_tests()
@@ -49,8 +55,8 @@ build_tests()
 	if [ -f NMakefile.checker ]; then echo $winbuildenv \&\& nmake /nologo -f NMakefile.checker build-$1 > __checker.bat; cmd /E:ON /V:ON /T:0E /C /c __checker.bat;
        	elif [ -f Makefile.checker ]; then make -f Makefile.checker build-$1;
        	else echo dont know how to build tests;
-       	fi  2>&1 
-	
+       	fi  2>&1
+
 	return  0
 }
 
@@ -77,7 +83,7 @@ check_job()
 	if [ $err != 0 ]; then
 		return $err
 	fi
-   
+
 	build_tests "post"; err=$?
 	if [ $err != 0 ]; then
 		return $err
@@ -89,17 +95,17 @@ check_job()
 
 main()
 {
-    
+
 	# test it
 	touch job_build job_errors
 	echo 'checker: building' >> job_build
 	check_job > job_build 2>job_errors;  err=$?
-     
+
 	if [ $err -gt 1 ]; then
-		echo "this looks like a checker system error, admins will be notified" >>job_output
+		echo "this looks like a checker system error, admins should be notified" >>job_output
 	fi
 
 	return $err
 }
- 
-main 
+
+main
