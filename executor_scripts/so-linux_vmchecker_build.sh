@@ -14,8 +14,10 @@ get_vm_ip()
 
 install_job()
 {
+	echo "homework contents: "
+	unzip -l file.zip 2>&1
 	echo "unpacking ..."
-	unzip -o file.zip 2>&1
+   	unzip -o file.zip 2>&1
 	return $?
 }
 
