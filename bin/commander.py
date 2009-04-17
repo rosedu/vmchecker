@@ -47,7 +47,7 @@ _FILES_TO_SEND = (
     'job_errors',
     'job_results',
     'job_km', )
-_MAX_VMCHECKER_TIME = 300
+_EXECUTOR_OVERHEAD = 300
 
 _logger = logging.getLogger('vmchecker.commander')
 
@@ -121,7 +121,7 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     # wait for the the process to finish
     try:
         x = 0
-        while time.time() < start + int(timeout):
+        while time.time() < start + int(timeout) + _EXECUTOR_OVERHEAD:
             x += 1
             r = popen.poll()
             if r is None:
