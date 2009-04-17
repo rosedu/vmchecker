@@ -36,6 +36,8 @@ build_job()
 
 install_tests()
 {
+	echo -e "\ntests.zip size: " $(stat -c%s "tests.zip")
+	# note stdout redirected to stderr: do not output tests.zip contents (large output)
 	unzip -o tests.zip 1>&2
 	return $?	
 }
