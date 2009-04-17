@@ -17,7 +17,9 @@ install_job()
 	echo "homework contents: "
 	unzip -l file.zip 2>&1
 	echo "unpacking ..."
-   	unzip -o file.zip 2>&1
+	# note stdout redirected to stderr: do not output file.zip contents
+	# contents printed with more info above with "unzip -l"
+	unzip -o file.zip 1>&2
 	return $?
 }
 
