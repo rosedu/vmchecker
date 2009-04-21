@@ -20,6 +20,7 @@ _logger = logging.getLogger("vmchecker.initialise_course")
 
 
 def _mkdir_if_not_exist(path):
+    """Make the path if it does not exist"""
     if not(os.path.isdir(path)):
         os.mkdir(path)
     else:
@@ -27,6 +28,7 @@ def _mkdir_if_not_exist(path):
 
 
 def _create_paths(paths):
+    """ Create all paths in the received 'paths' parameter"""
     for path in paths:
         _mkdir_if_not_exist(path)
 
@@ -47,33 +49,34 @@ def create_storer_git_repo():
     rel_repo_path = misc.config().get('DEFAULT', 'Repository')
     abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
     _mkdir_if_not_exist(abs_repo_path)
-    
+
     # then, if missing, initialize a git repo in it.
     repo_path_git = os.path.join(abs_repo_path, '.git')
     if not(os.path.isdir(repo_path_git)):
         # no git repo found in the dir.
         try:
-            e = os.environ
-            e['GIT_DIR'] = repo_path_git
-            check_call(['git', 'init'], env=e)
+            env = os.environ
+            env['GIT_DIR'] = repo_path_git
+            check_call(['git', 'init'], env=env)
         except CalledProcessError:
             logging.error('cannot create git repo in %s' % repo_path_git)
 
 
 def create_db_tables(db_path):
+    """Create a sqlite db file în db_path for grade management."""
     db_conn = sqlite3.connect(db_path)
     db_cursor = db_conn.cursor()
     db_cursor.executescript("""
-	CREATE TABLE studenti 
-		(id INTEGER PRIMARY KEY, 
+	CREATE TABLE studenti
+		(id INTEGER PRIMARY KEY,
 		nume TEXT);
-	CREATE TABLE teme 
+	CREATE TABLE teme
 		(id INTEGER PRIMARY KEY,
 		nume TEXT,
 		deadline DATE);
-	CREATE TABLE note 
-		(id INTEGER PRIMARY KEY, 
-		id_student INTEGER, 
+	CREATE TABLE note
+		(id INTEGER PRIMARY KEY,
+		id_student INTEGER,
 		id_tema INTEGER,
 		nota INTEGER,
 		data TIMESTAMP default CURRENT_TIMESTAMP);
@@ -83,6 +86,7 @@ def create_db_tables(db_path):
 
 
 def create_db():
+    """Create the implicit db if it does not exist."""
     # check for DB existance
     db_file = vmcheckerpaths.db_file()
     if not os.path.isfile(db_file):
@@ -92,6 +96,7 @@ def create_db():
 
 
 def main_storer():
+    """Run initialization tasks for the storer machine."""
     create_storer_paths()
     create_storer_git_repo()
     create_db()
@@ -99,17 +104,21 @@ def main_storer():
 
 
 def main_tester():
+    """Run initialization tasks for the tester machine."""
     create_tester_paths()
     _logger.info(' -- tester init done setting up paths and db file.')
 
 
 def usage():
-    print("""Usage: 
+    """Print usage for this program."""
+    print("""Usage:
 \t%s storer - initialize storer machine
 \t%s tester - initialize tester machine
 \t%s --help - print this message"""% (sys.argv[0], sys.argv[0], sys.argv[0]))
 
-if __name__ == '__main__':
+
+def main():
+    """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
 
     if (len(sys.argv) < 2):
@@ -124,3 +133,6 @@ if __name__ == '__main__':
     else:
         usage()
         exit(1)
+
+if __name__ == '__main__':
+    main()
