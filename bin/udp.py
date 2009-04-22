@@ -1,28 +1,31 @@
 #! /usr/bin/env python2.5
 # -*- coding: utf-8 -*-
-# vim: set expandtab :
+"""A UDP listener.
 
-from __future__ import with_statement
+This module is intended to be a simple replacement for netcat
 
-
-__author__ = 'Alexandru Moșoi <brtzsnr@gmail.com>'
-
+"""
 
 import SocketServer
 import sys
 
 
 class UDPHandler(SocketServer.BaseRequestHandler):
+    """A simple UDP handler which dumps datagrams to stdout"""
     def handle(self):
+        """Dumps datagrams to stdout"""
         sys.stdout.write(self.request[0])
         sys.stdout.flush()
 
 
-if __name__ == '__main__':
-    if len(sys.argv) == 1 or len(sys.argv) > 3:
-        print >>sys.stderr, 'Simple UDP listener. Dumps datagrams to stdout. Usage:'
-        print >>sys.stderr, '\t%s [host] port - listens on host:port (host defaults to localhost).' % sys.argv[0]
-        sys.exit()
+def main():
+    """Starts the UDP server"""
+    if not 2 <= len(sys.argv) <= 3:
+        print >> sys.stderr, 'A simple UDP listener which dumps',
+        print >> sys.stderr, 'datagrams to stdout. Usage:'
+        print >> sys.stderr, '\t%s [host] port - listens' % sys.argv[0],
+        print >> sys.stderr, 'on host:port (host defaults to localhost).'
+        exit()
 
     port = None
     host = None
@@ -33,3 +36,7 @@ if __name__ == '__main__':
         host, port = sys.argv[1:]
 
     SocketServer.UDPServer((host, port), UDPHandler).serve_forever()
+
+
+if __name__ == '__main__':
+    main()
