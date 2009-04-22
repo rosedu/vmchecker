@@ -87,6 +87,8 @@ def _set_logging_level(option, opt_str, value, parser):
 
 
 cmdline.add_option('-v', '--verbose', action='callback', nargs=0,
-                   callback=_set_logging_level, help='Prints more stuff')
+                   dest='verbose', default=False, callback=_set_logging_level,
+                   help='Prints more stuff')
 cmdline.add_option('-q', '--quiet', action='callback', nargs=0,
-                   callback=_set_logging_level, help='Prints less stuff')
+                   dest='quiet', default=False, callback=_set_logging_level,
+                   help='Prints less stuff')
