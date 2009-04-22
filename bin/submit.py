@@ -24,6 +24,7 @@ from tempfile import mkstemp
 from zipfile import ZipFile
 
 import misc
+import config
 import vmcheckerpaths
 
 
@@ -39,7 +40,7 @@ def _call_git(repository, *args):
 class _Locker(object):
     def __init__(self, assignment):
         self.fd = os.open(
-                join(misc.repository(), assignment, '.lock'),
+                join(vmcheckerpaths.repository, assignment, '.lock'),
                 os.O_CREAT | os.O_RDWR, 0600)
         assert self.fd != -1
 
@@ -60,14 +61,14 @@ def build_config(user, assignment, archive):
 
     XXX Exit code of child processes is not checked.
     XXX Locks should protect the directory access"""
-    assert assignment in misc.config().sections(), (
+    assert assignment in config.config.sections(), (
         'No such assigment `%s\'.' % assignment)
 
     # the upload time is the system's current time
-    upload_time = time.strftime(misc.DATE_FORMAT)
+    upload_time = time.strftime(config.DATE_FORMAT)
 
     # repository's path
-    repository = misc.repository()
+    repository = vmcheckerpaths.repository
 
     # creates a temporary directory to store homework
     location = join(repository, assignment)
@@ -143,7 +144,7 @@ def submit_assignment(assignment_config):
 
     user = config.get('Assignment', 'User')
     assignment = config.get('Assignment', 'Assignment')
-    course = misc.config().get(assignment, 'Course')
+    course = config.get(assignment, 'Course')
 
     # location of student's homework
     archive = join(dirname(assignment_config), 'archive.zip')
@@ -170,18 +171,21 @@ def submit_assignment(assignment_config):
         try:
             with os.fdopen(fd[0], 'w+b') as handler:
                 zip = ZipFile(handler, 'w')
-                zip.write(assignment_config, 'config')             # assignment config
-                zip.write(archive, 'archive.zip')                  # assignment archive
-                zip.write(tests, 'tests.zip')                      # the archive containing tests
+                zip.write(assignment_config, 'config')   # assignment config
+                zip.write(archive, 'archive.zip')        # assignment archive
+                zip.write(tests, 'tests.zip')            # the archive containing tests
 
                 # includes extra required files
-                for f in misc.config().options(assignment):
-                    if not f.startswith('include '): continue
-                    dst, src = f[8:], misc.config().get(assignment, f)
+                for f in config.options(assignment):
+                    if not f.startswith('include '):
+                        continue
+
+                    dst, src = f[8:], config.get(assignment, f)
                     src = vmcheckerpaths.abspath(src)
-                    _logger.info("Including `%s' as `%s'.", src, dst)
                     assert isfile(src), "`%s' is missing" % src
+
                     zip.write(src, dst)
+                    _logger.debug("Included `%s' as `%s'.", src, dst)
 
                 zip.close()
         except:
@@ -190,7 +194,7 @@ def submit_assignment(assignment_config):
             raise
 
         # sends homework to tester
-        submit = vmcheckerpaths.abspath(misc.config().get(assignment, 'Submit'))
+        submit = vmcheckerpaths.abspath(config.get(assignment, 'Submit'))
         _logger.info('Calling submission script %s', submit)
         try:
             check_call((submit, fd[1]))
@@ -200,12 +204,16 @@ def submit_assignment(assignment_config):
 
 
 def print_help():
-    """Prints help and exits"""
-    print >>sys.stderr, 'Usage:'
-    print >>sys.stderr, '\t%s user assignment archive' % sys.argv[0]
-    print >>sys.stderr, '\t\tbuilds config and submits assignment for evaluation'
-    print >>sys.stderr, '\t%s config' % sys.argv[0]
-    print >>sys.stderr, '\t\tresubmits assignment for reevaluation'
+    """Prints help and exits
+
+    XXX change to use optparse
+
+    """
+    print >> sys.stderr, 'Usage:'
+    print >> sys.stderr, '\t%s user assignment archive' % sys.argv[0]
+    print >> sys.stderr, '\t\tbuilds config and submits assignment for evaluation'
+    print >> sys.stderr, '\t%s config' % sys.argv[0]
+    print >> sys.stderr, '\t\tresubmits assignment for reevaluation'
 
 
 def main():
@@ -214,13 +222,13 @@ def main():
         exit(1)
     elif len(sys.argv) == 2:
         if not isfile(sys.argv[1]):
-            print >>sys.stderr, '`%s\' must be an existing file.' % sys.argv[1]
+            print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[1]
             print_help()
 
         assignment_config = sys.argv[1]
     elif len(sys.argv) == 4:
         if not isfile(sys.argv[3]):
-            print >>sys.stderr, '`%s\' must be an existing file.' % sys.argv[3]
+            print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[3]
             print_help()
 
         user = sys.argv[1]           # student's name
@@ -231,7 +239,7 @@ def main():
         print_help()
         exit(1)
 
-    print >>sys.stderr, 'Assignment config located at `%s\'' % assignment_config
+    print >> sys.stderr, 'Assignment config located at `%s\'' % assignment_config
     submit_assignment(assignment_config)
 
 

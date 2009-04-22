@@ -44,10 +44,10 @@ def create_storer_paths():
 def create_storer_git_repo():
     """Creates the repo for the assignments on the storer."""
     # first make teh destination directory
-    rel_repo_path = misc.config().get('DEFAULT', 'Repository')
+    rel_repo_path = vmcheckerpaths.repository
     abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
     _mkdir_if_not_exist(abs_repo_path)
-    
+
     # then, if missing, initialize a git repo in it.
     repo_path_git = os.path.join(abs_repo_path, '.git')
     if not(os.path.isdir(repo_path_git)):

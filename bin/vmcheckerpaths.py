@@ -8,17 +8,16 @@ __author__ = 'Lucian Adrian Grijincu <lucian.grijincu@gmail.com>'
 import os
 
 
-VMCHECKER_INI = 'vmchecker_storer.ini'
+_STORER_CONFIG_FILE = 'vmchecker_storer.ini'
+_TESTER_CONFIG_FILE = 'vmchecker_tester.ini'
+
+root = None
+repository = None
 
 
-def abspath(*relative):
-    return os.path.normpath(os.path.join(root(), *relative))
-
-
-def root():
-    assert 'VMCHECKER_ROOT' in os.environ, (
-            'VMCHECKER_ROOT environment variable not defined')
-    return os.path.abspath(os.environ['VMCHECKER_ROOT'])
+def abspath(*segments):
+    """Joins the path segments of path with VMChecker's root path"""
+    return os.path.normpath(os.path.join(root, *segments))
 
 
 def tester_paths():
@@ -78,22 +77,16 @@ def db_file():
     return abspath('vmchecker.db')
 
 
-def config_file():
-    """Returns absolute path for config file 'VMCHECKER_INI'"""
-    path = abspath(VMCHECKER_INI)
-    assert os.path.isfile(path), '%s (%s) is not a file' % (
-        VMCHECKER_INI, path)
-    return path
-
-
 def dir_bin():
     """Returns absolute path for the bin/ directory"""
     return abspath('bin')
 
 
 def tester_config_file():
-    path = abspath('vmchecker_tester.ini')
-    assert os.path.isfile(path), '%s (%s) is not a file' % (
-            'vmchecker_tester.ini', path)
-    return path
+    """Returns tester's config's absolute path"""
+    return abspath(_TESTER_CONFIG_FILE)
 
+
+def storer_config_file():
+    """Returns storer's config's absolute path"""
+    return abspath(_STORER_CONFIG_FILE)

@@ -9,22 +9,19 @@ __author__ = 'Gheorghe Claudiu-Dan <claudiugh@gmail.com>'
 import sqlite3
 import os
 import time
+import optparse
 import logging
 
 import misc
+import config
 import vmcheckerpaths
 import repo_walker
 
 
-_logger = logging.getLogger("vmchecker.update_db")
-db_cursor = None
-
 _GRADE_VALUE_FILE = 'results/job_results'
 
-
-repo_walker.cmdline.add_option(
-        '-f', '--force', action='store_true', dest='force', default=False,
-        help='Updates marks ignoring results modifications')
+_logger = logging.getLogger("vmchecker.update_db")
+db_cursor = None
 
 
 def _db_get_hw(hw_name):
@@ -129,7 +126,7 @@ def update_students(path, assigment):
 
 def grade_modification_time(grade_filename):
     """Returns the modification time for file named `grade_filename'"""
-    return time.strftime(misc.DATE_FORMAT,
+    return time.strftime(config.DATE_FORMAT,
             time.gmtime(os.path.getmtime(grade_filename)))
 
 
@@ -161,7 +158,7 @@ def update_grade(assigment, user, location):
     data_modif = grade_modification_time(grade_filename)
     id_grade, db_data = _db_get_grade(assigment, user)
 
-    if repo_walker.options.force or db_data != data_modif:
+    if config.options.force or db_data != data_modif:
         # modified since last db save
         grade_value = get_grade_value(grade_filename)
         if None != grade_value:
@@ -171,7 +168,7 @@ def update_grade(assigment, user, location):
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    config.config_storer()
 
     db_conn = sqlite3.connect(vmcheckerpaths.db_file())
     db_conn.isolation_level = None  # autocommits updates
@@ -179,10 +176,15 @@ def main():
     global db_cursor  # XXX make local and pass throu arguments
     db_cursor = db_conn.cursor()
 
-
-    repo_walker.parse_arguments()
     repo_walker.walk(update_grade)
 
     db_cursor.close()
     db_conn.close()
+
+
+group = optparse.OptionGroup(config.cmdline, 'update_db.py')
+group.add_option(
+        '-f', '--force', action='store_true', dest='force', default=False,
+        help='Updates marks ignoring results modifications')
+del group
 

@@ -38,6 +38,7 @@ from subprocess import check_call, Popen
 from os.path import join, isdir
 
 import misc
+import config
 import vmcheckerpaths
 
 
@@ -57,7 +58,7 @@ def _env_with_python_module_search_path():
     so that the callback python script can access misc, vmcheckerpaths, etc.
     """
     e = os.environ
-    module_search_path = os.path.join(vmcheckerpaths.root(), 'bin')
+    module_search_path = os.path.join(vmcheckerpaths.root, 'bin')
     if 'PYTHONPATH' in e.keys():
         module_search_path = os.pathsep.join(e['PYTHONPATH'], module_search_path)
     e['PYTHONPATH'] = module_search_path
@@ -82,23 +83,27 @@ def _run_callback(dir, ejobs):
 
 
 def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
-    # starts job
-    # XXX lots of wtf per minute
-    # parsing config should be executors' job
-    tester = misc.tester_config()
+    """Starts a job.
+
+    XXX lots of wtf per minute
+    XXX parsing config should be executors' job
+
+    """
+    from config import config
+
     args = [
             # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
             kernel_messages,                          # enables kernel_messages
-            tester.get(machine, 'VMPath'),
-            tester.get('Global', 'LocalAddress'),     # did I review commander.cpp?
-            tester.get(machine, 'GuestUser'),
-            tester.get(machine, 'GuestPassword'),     # XXX keys?
-            tester.get(machine, 'GuestBasePath'),
-            tester.get(machine, 'GuestShellPath'),
-            tester.get(machine, 'GuestHomeInBash'),   # why is this needed?
-            vmcheckerpaths.root(),
+            config.get(machine, 'VMPath'),
+            config.get('Global', 'LocalAddress'),     # did I review commander.cpp?
+            config.get(machine, 'GuestUser'),
+            config.get(machine, 'GuestPassword'),     # XXX keys?
+            config.get(machine, 'GuestBasePath'),
+            config.get(machine, 'GuestShellPath'),
+            config.get(machine, 'GuestHomeInBash'),   # why is this needed?
+            vmcheckerpaths.root,
             assignment,
             timeout,
             ]
