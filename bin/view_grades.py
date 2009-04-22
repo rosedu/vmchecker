@@ -23,21 +23,13 @@ import urllib
 import logging
 
 
-import misc
+import config
 import vmcheckerpaths
 
 
 _logger = logging.getLogger("vmchecker.view_grades")
 
 
-db_path = vmcheckerpaths.db_file()
-if not os.path.isfile(db_path):
-    _logger.error("DB file %s does not exist" % db_path)
-    exit()
-
-
-db_conn = sqlite3.connect(db_path)
-db_cursor = db_conn.cursor()
 
 
 def get_db_content():
@@ -115,6 +107,12 @@ def gen_html(results, hws):
 
 
 def main():
+    config.config_storer()
+
+    global db_connect, db_cursor
+    db_conn = sqlite3.connect(vmcheckerpaths.db_file())
+    db_cursor = db_conn.cursor()
+
     (results, hws) = get_db_content()
     # send to the stdout all the HTML content 
     print (gen_html(results, hws))
