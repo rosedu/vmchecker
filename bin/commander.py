@@ -37,7 +37,6 @@ import os
 from subprocess import check_call, Popen
 from os.path import join, isdir
 
-import misc
 import config
 import vmcheckerpaths
 
@@ -60,7 +59,8 @@ def _env_with_python_module_search_path():
     e = os.environ
     module_search_path = os.path.join(vmcheckerpaths.root, 'bin')
     if 'PYTHONPATH' in e.keys():
-        module_search_path = os.pathsep.join(e['PYTHONPATH'], module_search_path)
+        module_search_path = os.pathsep.join(
+                e['PYTHONPATH'], module_search_path)
     e['PYTHONPATH'] = module_search_path
     return e
 
@@ -89,15 +89,13 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     XXX parsing config should be executors' job
 
     """
-    from config import config
-
     args = [
             # '/bin/echo',
             vmcheckerpaths.abspath('VMExecutor/vm_executor'),
             machine,
-            kernel_messages,                          # enables kernel_messages
+            kernel_messages,                       # enables kernel_messages
             config.get(machine, 'VMPath'),
-            config.get('Global', 'LocalAddress'),     # did I review commander.cpp?
+            config.get('Global', 'LocalAddress'),  # did I review commander.cpp?
             config.get(machine, 'GuestUser'),
             config.get(machine, 'GuestPassword'),     # XXX keys?
             config.get(machine, 'GuestBasePath'),
@@ -115,47 +113,53 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     # first just try to open the process
     try:
         popen = Popen(args)
-    except:
-        _logger.exception('Cannot run VMExecutor.')
+    except Exception:
+        _logger.exception('Cannot invoke VMExecutor.')
         with open(join(ejobs, 'job_errors'), 'a') as handler:
-            print >>handler, 'Cannot run VMExecutor.'
-            print >>handler, 'Please contact administrators as soon as possible.'
+            print >> handler, 'Cannot run VMExecutor.'
+            print >> handler, 'Please contact the administrators.'
         # if we cannot open the process, there is nothing more to be done
         return
 
-    # wait for the the process to finish
+    # waits for the the process to finish
     try:
-        x = 0
-        while time.time() < start + int(timeout) + _EXECUTOR_OVERHEAD:
-            x += 1
-            r = popen.poll()
-            if r is None:
+        counter = 0
+        deadline = start + int(timeout) + _EXECUTOR_OVERHEAD
+
+        while time.time() < deadline:
+            counter += 1
+            exit_code = popen.poll()
+
+            if exit_code is None:
                 # if process has not finished => continue to sleep
-                _logger.debug('-- VMExecutor sleeping for 5 seconds, r is None: x=%d' % x)
+                _logger.debug('-- VMExecutor sleeping for 5 seconds, '
+                              'exit_code is None: x=%d', counter)
+                # polls every 5 seconds
                 time.sleep(5)
             else:
                 with open(join(ejobs, 'job_errors'), 'a') as handler:
-                    if r < 0:
-                        print >>handler, 'VMExecutor error: returcode =', r
-                    else:
-                        print >>handler, 'VMExecutor success: returcode =', r
-                # no reason staying in the loop after process exit terminates
+                    print >> handler, 'VMExecutor returned %d (%s)' % (
+                        exit_code, ['success', 'error'][exit_code < 0])
+
+                # no reason to stay in the loop after process exit terminates
                 popen = None
                 return
         else:
-            _logger.error("VMChecker timeouted on assignment `%s' running on machine `%s'.",
-                    assignment, machine)
+            _logger.error("VMChecker timeouted on assignment `%s' "
+                          "running on machine `%s'.", assignment, machine)
 
             with open(join(ejobs, 'job_errors'), 'a') as handler:
-                print >>handler, 'VMExecutor successfuly started, but taking too long.'
-                print >>handler, 'Check your sources, makefiles, etc and resubmit.'
-                print >>handler, 'If the problem persists please contact administrators.'
+                print >> handler, """\
+VMExecutor successfuly started, but it's taking too long.
+Check your sources, makefiles, etc and resubmit.
+If the problem persists please contact administrators."""
     except:
         _logger.exception('Exception after starting VMExecutor.')
 
         with open(join(ejobs, 'job_errors'), 'a') as handler:
-            print >>handler, 'Error after starting VMExecutor.'
-            print >>handler, 'If the problem persists please contact administrators.'
+            print >> handler, """\
+Error after starting VMExecutor.
+If the problem persists please contact administrators."""
     finally:
         # release any leftover resources
         try:
@@ -165,8 +169,8 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
             pass
 
 
-
 def main(dir):
+    """Unpacks archive and invokes executor"""
     # reads assignment config
     with open(join(dir, 'config')) as handle:
         config = ConfigParser.RawConfigParser()
@@ -193,7 +197,6 @@ def main(dir):
         join(dir, 'tests.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
 
-
     assignment = config.get('Assignment', 'Assignment')
     machine = storer.get(assignment, 'Machine')
     timeout = storer.get(assignment, 'Timeout')
@@ -212,7 +215,7 @@ def main(dir):
 
 
 def _print_help():
-    print >>sys.stderr, """Usage:
+    print >> sys.stderr, """Usage:
     ./commander.py directory - where directory contains (see submit.py)
         `archive.zip' `tests.zip' `config' `storer' `callback'"""
 
@@ -234,13 +237,13 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     if len(sys.argv) != 2:
-        print >>sys.stderr, 'Invalid number of arguments.'
+        print >> sys.stderr, 'Invalid number of arguments.'
         _print_help()
         exit(1)
 
     start_dir = sys.argv[1]
     if not os.path.isdir(start_dir):
-        print >>sys.stderr, 'Not a directory', start_dir
+        print >> sys.stderr, 'Not a directory', start_dir
         _print_help()
         exit(1)
     _check_required_files(start_dir)
