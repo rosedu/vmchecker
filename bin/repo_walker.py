@@ -1,6 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Provides functionality to manipulate batches homeworks"""
+"""Provides functionality to manipulate batches homeworks.
+
+NOTE: It's easy to verify which assignments are valid (by
+checking the sections in vmchecker_storer.ini). However,
+there is no way to check which users are valid. Nevertheless,
+only homeworks found in repository are submitted; invalid
+arguments are silently ignored.
+
+"""
 
 from __future__ import with_statement
 
@@ -8,7 +16,6 @@ import optparse
 import os
 import sys
 import logging
-from os import path
 
 import misc
 
@@ -19,51 +26,64 @@ options, args = None, None
 
 
 cmdline.add_option('-r', '--recursive', action='store_true', dest='recursive',
-                   default=False)
-cmdline.add_option('-u', '--user', dest='user')
-cmdline.add_option('-a', '--assignment', dest='assignment')
+                   default=False, help='Walks everything starting from '
+                                       'current working directory')
+cmdline.add_option('-u', '--user', dest='user',
+                   help="Specifies whose user's homeworks to walk")
+cmdline.add_option('-a', '--assignment', dest='assignment',
+                   help="Specifies which assignment to walk")
 cmdline.add_option('-s', '--simulate', action='store_true', dest='simulate',
-                   default=False)
+                   default=False, help='Does nothing. '
+                                       'Only prints homeworks to walk')
 cmdline.add_option('--all', action='store_true', dest='all',
-                   default=False)
+                   default=False, help='Walks all submitted homeworks')
+
 
 def parse_arguments():
-    """Parses comandline arguments"""
+    """Parses command-line arguments"""
     global options, args
     options, args = cmdline.parse_args()
 
-    error = ''
+    error = False
 
     if (options.user is None
             and options.assignment is None
             and options.recursive == False
             and options.all == False):
-        error = ('At least one of --user, --assignment, '
-                 '--recusive, --all should be specified')
+        error = True
+        print ('At least one of --user, --assignment, '
+               '--recursive or --all should be specified')
 
     if ((options.recursive or options.all)
             and (options.user is not None
                 or options.assignment is not None)):
-        error = ('Options --recursive and --all '
-                 'are incompatible with --user and --assignment')
+        error = True
+        print ('Options --recursive and --all '
+               'are incompatible with --user and --assignment')
 
     if options.recursive and options.all:
-        error = "You can't specify both --recursive and --all"
+        error = True
+        print "You can't specify both --recursive and --all"
 
     if error:
-        print error
         cmdline.print_help(file=sys.stdout)
         exit(1)
 
 
+def _simulate(assignment, user, location, func_name, args):
+    """Just prints the function the function call"""
+    print 'calling %s(%s, %s, %s, *%s)' % (
+            func_name, repr(assignment), repr(user), repr(location), repr(args))
+
+
 def walk(func, args=()):
-    """Walks the repository and calls func for the homeworks found"""
+    """Walks the repository and calls `func' for the homeworks found"""
     repo = misc.repository()
 
     for assignment in os.listdir(repo):
-        assignment_path = path.join(repo, assignment)
+        assignment_path = os.path.join(repo, assignment)
 
-        if not path.isdir(assignment_path):
+        if not os.path.isdir(assignment_path):
             _logger.debug('Ignoring %s (not a directory)', assignment_path)
             continue
 
@@ -78,14 +98,14 @@ def walk(func, args=()):
             continue
 
         for user in os.listdir(assignment_path):
-            user_path = path.join(assignment_path, user)
+            user_path = os.path.join(assignment_path, user)
 
-            if not path.isdir(user_path):
+            if not os.path.isdir(user_path):
                 _logger.debug('Ignoring %s (not a directory)', user_path)
                 continue
 
-            if not path.isfile(path.join(user_path, 'config')):
-                _logger.debug('Ignoring %s (no config file)', user_path)
+            if not os.path.isfile(os.path.join(user_path, 'config')):
+                _logger.debug("Ignoring %s (no `config' file)", user_path)
                 continue
 
             if options.user is not None and options.user != user:
@@ -93,26 +113,23 @@ def walk(func, args=()):
                 continue
 
             if options.recursive:
-                if path.commonprefix((os.getcwd(), user_path)) != os.getcwd():
+                if os.path.commonprefix((os.getcwd(), user_path)) != os.getcwd():
                     _logger.debug('Ignoring %s (in current directory)',
                                   user_path)
                     continue
 
             _logger.info('Walking on %s, %s (%s)', assignment, user, user_path)
-            if not options.simulate:
+            if options.simulate:
+                _simulate(assignment, user, user_path, func.func_name, args)
+            else:
                 func(assignment, user, user_path, *args)
 
-
-# XXX to be removed
-def show(assignment, user, location):
-    """Demo function"""
-    print 'A:', assignment, 'U:', user, 'P:', location
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     parse_arguments()
-    walk(show)
+    walk(_simulate, ('nothing', ()))
 
 
