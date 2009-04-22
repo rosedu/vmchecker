@@ -146,5 +146,6 @@ group.add_option('-s', '--simulate', action='store_true', dest='simulate',
                  default=False, help='Only prints homeworks to walk')
 group.add_option('--all', action='store_true', dest='all',
                  default=False, help='Walks all submitted homeworks')
+config.cmdline.add_option_group(group)
 del group
 

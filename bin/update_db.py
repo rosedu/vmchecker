@@ -20,7 +20,7 @@ import repo_walker
 
 _GRADE_VALUE_FILE = 'results/job_results'
 
-_logger = logging.getLogger("vmchecker.update_db")
+_logger = logging.getLogger('update_db')
 db_cursor = None
 
 
@@ -169,6 +169,7 @@ def update_grade(assigment, user, location):
 
 def main():
     config.config_storer()
+    logging.basicConfig(level=logging.DEBUG)
 
     db_conn = sqlite3.connect(vmcheckerpaths.db_file())
     db_conn.isolation_level = None  # autocommits updates
@@ -182,9 +183,14 @@ def main():
     db_conn.close()
 
 
-group = optparse.OptionGroup(config.cmdline, 'update_db.py')
+group = optparse.OptionGroup(config.cmdline, 'update_db.py', '')
 group.add_option(
         '-f', '--force', action='store_true', dest='force', default=False,
         help='Updates marks ignoring results modifications')
+config.cmdline.add_option_group(group)
 del group
+
+
+if __name__ == '__main__':
+    main()
 
