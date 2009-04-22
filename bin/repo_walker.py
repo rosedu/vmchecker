@@ -76,6 +76,35 @@ def _simulate(assignment, user, location, func_name, args):
             func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 
+def _walk_assigment(assignment, assignment_path, func, args):
+    for user in os.listdir(assignment_path):
+        user_path = os.path.join(assignment_path, user)
+
+        if not os.path.isdir(user_path):
+            _logger.debug('Ignoring %s (not a directory)', user_path)
+            continue
+
+        if not os.path.isfile(os.path.join(user_path, 'config')):
+            _logger.debug("Ignoring %s (no `config' file)", user_path)
+            continue
+
+        if options.user is not None and options.user != user:
+            _logger.debug('Ignoring %s (as requested by --user)', user_path)
+            continue
+
+        if options.recursive:
+            if os.path.commonprefix((os.getcwd(), user_path)) != os.getcwd():
+                _logger.debug('Ignoring %s (in current directory)',
+                              user_path)
+                continue
+
+        _logger.info('Walking on %s, %s (%s)', assignment, user, user_path)
+        if options.simulate:
+            _simulate(assignment, user, user_path, func.func_name, args)
+        else:
+            func(assignment, user, user_path, *args)
+
+
 def walk(func, args=()):
     """Walks the repository and calls `func' for the homeworks found"""
     repo = misc.repository()
@@ -97,33 +126,7 @@ def walk(func, args=()):
                           assignment_path)
             continue
 
-        for user in os.listdir(assignment_path):
-            user_path = os.path.join(assignment_path, user)
-
-            if not os.path.isdir(user_path):
-                _logger.debug('Ignoring %s (not a directory)', user_path)
-                continue
-
-            if not os.path.isfile(os.path.join(user_path, 'config')):
-                _logger.debug("Ignoring %s (no `config' file)", user_path)
-                continue
-
-            if options.user is not None and options.user != user:
-                _logger.debug('Ignoring %s (as requested by --user)', user_path)
-                continue
-
-            if options.recursive:
-                if os.path.commonprefix((os.getcwd(), user_path)) != os.getcwd():
-                    _logger.debug('Ignoring %s (in current directory)',
-                                  user_path)
-                    continue
-
-            _logger.info('Walking on %s, %s (%s)', assignment, user, user_path)
-            if options.simulate:
-                _simulate(assignment, user, user_path, func.func_name, args)
-            else:
-                func(assignment, user, user_path, *args)
-
+        _walk_assigment(assignment, assignment_path, func, args)
 
 
 if __name__ == '__main__':
