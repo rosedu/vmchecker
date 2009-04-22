@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 """Provides functionality to manipulate batches homeworks.
 
@@ -77,6 +77,7 @@ def _simulate(assignment, user, location, func_name, args):
 
 
 def _walk_assigment(assignment, assignment_path, func, args):
+    """Walks all user's sources for assignment"""
     for user in os.listdir(assignment_path):
         user_path = os.path.join(assignment_path, user)
 
@@ -106,7 +107,15 @@ def _walk_assigment(assignment, assignment_path, func, args):
 
 
 def walk(func, args=()):
-    """Walks the repository and calls `func' for the homeworks found"""
+    """Walks the repository and calls `func' for the homeworks found.
+
+    @param func function to be called
+    @param args extra arguments to be passed
+    
+    For each homework call func:
+        func(assigment, user, location, *args)
+
+    """
     repo = misc.repository()
 
     for assignment in os.listdir(repo):
