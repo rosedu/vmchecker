@@ -36,6 +36,7 @@ _logger = logging.getLogger("vmchecker.queue_manager")
 
 
 class _QueueManager(ProcessEvent):
+    """handler for """
     def process_IN_CLOSE_WRITE(self, event):
         process_job(event.path, event.name)
 
@@ -98,14 +99,14 @@ def check_tester_setup_correctly():
     # check needed paths setup correctly
     for path in vmcheckerpaths.tester_paths():
         if not os.path.isdir(path):
-            _logger.error('Path [%s] missing. Run `make tester-dist` first!', path)
+            _logger.error('"%s" missing. Run `make tester-dist`!', path)
             exit(1)
     # check binaries build
     # TODO: XXX: Hardcoded
     # VMExecutor is expected to die soon :)
     if not os.path.isfile(os.path.join(vmcheckerpaths.abspath('VMExecutor'),
                                        'vm_executor')):
-        _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist` first!')
+        _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist`!')
         exit(1)
 
 

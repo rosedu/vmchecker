@@ -4,14 +4,15 @@ List all modules which could not be installed.
 return 0 on success and 1 on error.
 """
 import sys
-if __name__ == "__main__":
-    modules_to_load = sys.argv[1:]
+
+def check_modules_loading(modules_to_load):
+    """Check modules loading correctly."""
     modules_not_loaded = []
-    for m in modules_to_load:
+    for module in modules_to_load:
         try:
-            __import__(m)
-        except:
-            modules_not_loaded.append(m);
+            __import__(module)
+        except ImportError:
+            modules_not_loaded.append(module)
     if len(modules_not_loaded) > 0:
         print ("Could not load python modules: %s"  % modules_not_loaded)
         exit(1)
@@ -19,3 +20,5 @@ if __name__ == "__main__":
         print ("All needed python modules loaded correctly.")
         exit(0)
 
+if __name__ == "__main__":
+    check_modules_loading(sys.argv[1:])
