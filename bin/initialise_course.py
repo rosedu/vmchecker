@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.5
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Initialises the directory path for one course"""
 
@@ -12,8 +12,8 @@ import sys
 import logging
 from subprocess import check_call, CalledProcessError
 
-import misc
 import vmcheckerpaths
+import config
 
 
 _logger = logging.getLogger("vmchecker.initialise_course")
@@ -67,19 +67,18 @@ def create_db_tables(db_path):
     db_conn = sqlite3.connect(db_path)
     db_cursor = db_conn.cursor()
     db_cursor.executescript("""
-	CREATE TABLE studenti
-		(id INTEGER PRIMARY KEY,
-		nume TEXT);
-	CREATE TABLE teme
-		(id INTEGER PRIMARY KEY,
-		nume TEXT,
-		deadline DATE);
-	CREATE TABLE note
-		(id INTEGER PRIMARY KEY,
-		id_student INTEGER,
-		id_tema INTEGER,
-		nota INTEGER,
-		data TIMESTAMP default CURRENT_TIMESTAMP);
+	CREATE TABLE users (
+        id INTEGER PRIMARY KEY,
+		name TEXT);
+	CREATE TABLE assignments (
+        id INTEGER PRIMARY KEY,
+		name TEXT);
+	CREATE TABLE grades (
+        id INTEGER PRIMARY KEY,
+		user_id INTEGER,
+		assignment_id INTEGER,
+		grade TEXT,
+		mtime TIMESTAMP default CURRENT_TIMESTAMP);
 	""")
     db_cursor.close()
     db_conn.close()
@@ -97,6 +96,7 @@ def create_db():
 
 def main_storer():
     """Run initialization tasks for the storer machine."""
+    config.config_storer()
     create_storer_paths()
     create_storer_git_repo()
     create_db()

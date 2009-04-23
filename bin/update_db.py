@@ -1,195 +1,161 @@
-#! /usr/bin/env python2.5
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Updates marks for modified results"""
 
 from __future__ import with_statement
 
-__author__ = 'Gheorghe Claudiu-Dan <claudiugh@gmail.com>'
-
 import sqlite3
 import os
-import time
 import optparse
 import logging
 
-import misc
 import config
 import vmcheckerpaths
 import repo_walker
 
 
-_GRADE_VALUE_FILE = 'results/job_results'
+_GRADE_FILENAME = 'results/job_results'
 
 _logger = logging.getLogger('update_db')
-db_cursor = None
 
 
-def _db_get_hw(hw_name):
-    """ Get a homework entry
+def _db_save_assignment(db_cursor, assignment):
+    """Creates an id of the homework and returns it."""
+    db_cursor.execute('INSERT INTO assignments (name) values (?)',
+                      (assignment,))
+    db_cursor.execute('SELECT last_insert_rowid();')
+    assignment_id, = db_cursor.fetchone()
+    return assignment_id
 
-    @return the id of the homework or None if it doesn't exist
 
-    """
-    db_cursor.execute('SELECT id FROM teme WHERE nume = ?;', (hw_name,))
+def _db_get_assignment_id(db_cursor, assignment):
+    """Returns the id of the assigment"""
+    db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
     result = db_cursor.fetchone()
-    if result is not None:
-        return result[0]
+    if result is None:
+        return _db_save_assignment(db_cursor, assignment)
+    return result[0]
 
 
-def _db_save_hw(hw_name):
-    """ If the homework identified by (hw_name)
-    exists then update the DB, else insert a new entry """
-
-    assigment = _db_get_hw(hw_name)
-    if assigment is None:
-        db_cursor.execute('INSERT INTO teme (nume) values (?)', (hw_name,))
-        db_cursor.execute('SELECT last_insert_rowid();')
-        assigment, = db_cursor.fetchone()
-
-    return assigment
+def _db_save_user(db_cursor, user):
+    """Creates an id of the user and returns it."""
+    db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
+    db_cursor.execute('SELECT last_insert_rowid();')
+    user_id, = db_cursor.fetchone()
+    return user_id
 
 
-def _db_get_student(student_name):
-    """ Get a student entry
-
-    @return the id of the entry or None if the entry doesn't exist
-
-    """
-    db_cursor.execute('SELECT id FROM studenti WHERE nume = ?;',
-                      (student_name,))
+def _db_get_user_id(db_cursor, user):
+    """Returns the id of the user"""
+    db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
     result = db_cursor.fetchone()
-    if result is not None:
-        return result[0]
+    if result is None:
+        return _db_save_user(db_cursor, user)
+    return result[0]
 
 
-def _db_save_student(student_name):
-    """ If the student identified by (student_name)
-    exists then update the DB, else insert a new entry """
-    id_student = _db_get_student(student_name)
-    if None == id_student:
-        db_cursor.execute('INSERT INTO studenti (nume) values (?)',
-                          (student_name,))
-        db_cursor.execute('SELECT last_insert_rowid();')
-        id_student, = db_cursor.fetchone()
-    return id_student
-
-
-def _db_get_grade(assigment, id_student):
-    """ Get a grade entry
-    @return
-     - a touple containing the id and the last modification timestamp
-     - (None, None) if it doesn't exist """
+def _db_get_grade(db_cursor, assignment_id, user_id):
+    """Returns the id and the mtime of a grade"""
     db_cursor.execute(
-            'SELECT id, data FROM note WHERE id_tema = ? and id_student = ?;',
-            (assigment, id_student))
+            'SELECT id, mtime FROM grades '
+            'WHERE assignment_id = ? and user_id = ?;', (
+                assignment_id, user_id))
     result = db_cursor.fetchone()
-    if None == result:
-        return (None, None)
-    else:
+    if result is not None:
+        return result[0], result[1]
+
+
+def _db_get_grade_id(db_cursor, assignment_id, user_id):
+    """Returns the id of a grade"""
+    result = _db_get_grade(db_cursor, assignment_id, user_id)
+    if result is not None:
         return result
 
 
-def _db_save_grade(assigment, id_student, grade, data):
-    """If the grade identified by (assigment, id_student)
-    exists then update the DB, else insert a new entry"""
-    id_grade, db_data = _db_get_grade(assigment, id_student)
-    if id_grade is None:
-        db_cursor.execute(
-                'INSERT INTO note (id_tema, id_student, nota, data) values (?, ?, ?, ?)',
-                (assigment, id_student, grade, data ))
-    else:
-        db_cursor.execute(
-                'UPDATE note set nota = ?, data = ? where id = ?',
-                (grade, data, id_grade))
+def _db_get_grade_mtime(db_cursor, assignment_id, user_id):
+    """Returns the mtime of a grade"""
+    result = _db_get_grade(db_cursor, assignment_id, user_id)
+    if result is not None:
+        return result
 
 
-def update_hws(path):
-    """ For each dentry from path, launch the next
-    level update routine - update_students() """
-    for hw_name in os.listdir(path):
-        path_hw = os.path.join(path, hw_name)
-        if hw_name[0] != '.' and os.path.isdir(path_hw):
-            # save hw in the DB
-            assigment = _db_save_hw(hw_name)
-            update_students(path_hw, assigment)
+def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
+    """Saves the grade into the database
 
+    If the grade identified by (assignment_id, user_id)
+    exists then update the DB, else inserts a new entry.
 
-def update_students(path, assigment):
-    """For each dentry from path, launch the update_grade() routine"""
-    for student_name in os.listdir(path):
-        path_student = os.path.join(path, student_name)
-        if student_name[0] != '.' and os.path.isdir(path_student):
-            # save student in the DB
-            id_student = _db_save_student(student_name)
-            update_grade(path_student, assigment, id_student)
-
-
-def grade_modification_time(grade_filename):
-    """Returns the modification time for file named `grade_filename'"""
-    return time.strftime(config.DATE_FORMAT,
-            time.gmtime(os.path.getmtime(grade_filename)))
-
-
-def get_grade_value(grade_filename):
-    """Reads an integer from the first line of the file.
-
-    XXX A string should actually be read (eg: ok, copied)
+    XXX should use ON DUPLICATE KEY UPDATE
 
     """
+    grade_id = _db_get_grade_id(db_cursor, assignment_id, user_id)
+
+    if grade_id is None:
+        db_cursor.execute(
+                'INSERT INTO grades (assignment_id, user_id, grade, mtime) '
+                'VALUES (?, ?, ?, ?)', (
+                    assignment_id, user_id, grade, mtime))
+    else:
+        db_cursor.execute(
+                'UPDATE grades set grade = ?, mtime = ? where id = ?', (
+                    grade, mtime, grade_id))
+
+
+def _get_grade_value(grade_filename):
+    """Reads the first line of the file which contains the mark."""
     with open(grade_filename) as handler:
-        try:
-            return int(handler.readline())
-        except ValueError:
-            return -1
+        return handler.readline().strip()
 
 
-def update_grade(assigment, user, location):
-    """Reads the grade's value only if the file containing the
+def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
+    """Updates grade for user's submission of assigment.
+
+    Reads the grade's value only if the file containing the
     value was modified since the last update of the DB for this
     submission.
 
     """
-    grade_filename = os.path.join(location, _GRADE_VALUE_FILE)
-    if not os.path.exists(grade_filename):
-        _logger.error('No results found for %s, %s (%s)',
-                assigment, user, location)
-        return None
+    mtime = os.path.getmtime(grade_filename)
+    db_mtime = _db_get_grade_mtime(db_cursor, assignment_id, user_id)
 
-    data_modif = grade_modification_time(grade_filename)
-    id_grade, db_data = _db_get_grade(assigment, user)
-
-    id_hw = DB_save_hw(assigment)
-    id_student = DB_save_student(nume_student)
-
-    if config.options.force or db_data != data_modif:
+    if config.options.force or db_mtime != mtime:
         # modified since last db save
-        grade_value = get_grade_value(grade_filename)
-        if None != grade_value:
-            # updates information from DB
-            _db_save_grade(id_hw, id_student, grade_value, data_modif)
-            _logger.info('Updated %s, %s (%s)', assigment, user, location)
+        grade_value = _get_grade_value(grade_filename)
+        # updates information from DB
+        _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
 
 def main():
+    """Checks for modified grades and updates the database"""
     config.config_storer()
-    logging.basicConfig(level=logging.DEBUG)
 
-    db_conn = sqlite3.connect(vmcheckerpaths.db_file())
-    db_conn.isolation_level = None  # autocommits updates
-
-    global db_cursor  # XXX make local and pass throu arguments
+    db_conn = sqlite3.connect(vmcheckerpaths.db_file(),
+                              isolation_level="EXCLUSIVE")
     db_cursor = db_conn.cursor()
 
-    repo_walker.walk(update_grade)
+    def _update_grades_wrapper(assignment, user, location, db_cursor):
+        """A wrapper over _update_grades to use with repo_walker"""
+        assignment_id = _db_get_assignment_id(db_cursor, assignment)
+        user_id = _db_get_user_id(db_cursor, user)
+
+        grade_filename = os.path.join(location, _GRADE_FILENAME)
+        if os.path.exists(grade_filename):
+            _update_grades(assignment_id, user_id, grade_filename, db_cursor)
+            _logger.info('Updated %s, %s (%s)', assignment, user, location)
+        else:
+            _logger.error('No results found for %s, %s (check %s)',
+                          assignment, user, grade_filename)
+
+    repo_walker.walk(_update_grades_wrapper, args=(db_cursor,))
 
     db_cursor.close()
     db_conn.close()
 
 
-group = optparse.OptionGroup(config.cmdline, 'update_db.py', '')
+group = optparse.OptionGroup(config.cmdline, 'update_db.py')
 group.add_option(
         '-f', '--force', action='store_true', dest='force', default=False,
-        help='Updates marks ignoring results modifications')
+        help='Force updating all marks ignoring modification times')
 config.cmdline.add_option_group(group)
 del group
 
