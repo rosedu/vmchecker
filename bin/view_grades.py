@@ -120,16 +120,16 @@ def main():
     db_conn.close()
 
     print """
-<div style="text-align:center">                                                                          |    html += "</tr>"
-    <div style="float:left">                                                   |    # table content 
-        Powered by <a href="http://github.com/vmchecker/vmchecker/tree/master">|    odd = True
-    </div>                                                                     |    for student_name in sorted(results.keys()):
-    <div style="float:left">                                                   |        if odd :
-        &nbsp;-&nbsp;                                                          |            tr_class = 'tr-odd' 
-    </div>                                                                     |        else: 
-    <div style="float:left">                                                   |            tr_class = 'tr-even'
-        <script type="text/javascript" src="http://www.ohloh.net/p/26869/widget|        html += "<tr class='%s'> <td class='st-h'> %s </td> " %(tr_class, stude
-    </div>                                                                     |        # for each student we generate a full row 
+<div>
+    <div style="float:left">
+        Powered by <a href="http://github.com/vmchecker/vmchecker/tree/master">vmchecker</a>
+    </div>
+    <div style="float:left">
+        &nbsp;-&nbsp;
+    </div>
+    <div style="float:left">
+        <script type="text/javascript" src="http://www.ohloh.net/p/26869/widgets/project_users_logo.js"></script>
+    </div>
 </div>
 """
 
