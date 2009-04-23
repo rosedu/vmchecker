@@ -86,7 +86,7 @@ def _set_logging_level(option, opt_str, value, parser):
         logging.getLogger().setLevel(logging.WARN)
 
 
-def assigments():
+def assignments():
     """Returns a list of assigments"""
     return list(config.sections())
 
