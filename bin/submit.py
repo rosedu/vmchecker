@@ -138,12 +138,12 @@ def submit_assignment(assignment_config):
     assignment_config = abspath(assignment_config)
 
     # reads user, assignment and course
-    config = ConfigParser.RawConfigParser()
+    aconfig = ConfigParser.RawConfigParser()
     with open(assignment_config) as handler:
-        config.readfp(handler)
+        aconfig.readfp(handler)
 
-    user = config.get('Assignment', 'User')
-    assignment = config.get('Assignment', 'Assignment')
+    user = aconfig.get('Assignment', 'User')
+    assignment = aconfig.get('Assignment', 'Assignment')
     course = config.get(assignment, 'Course')
 
     # location of student's homework
@@ -176,7 +176,7 @@ def submit_assignment(assignment_config):
                 zip.write(tests, 'tests.zip')            # the archive containing tests
 
                 # includes extra required files
-                for f in config.options(assignment):
+                for f in config.get(assignment):
                     if not f.startswith('include '):
                         continue
 
@@ -224,12 +224,14 @@ def main():
         if not isfile(sys.argv[1]):
             print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[1]
             print_help()
+            exit(1)
 
         assignment_config = sys.argv[1]
     elif len(sys.argv) == 4:
         if not isfile(sys.argv[3]):
             print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[3]
             print_help()
+            exit(1)
 
         user = sys.argv[1]           # student's name
         assignment = sys.argv[2]     # assignment
@@ -244,6 +246,7 @@ def main():
 
 
 if __name__ == '__main__':
+    config.config_storer()
     logging.basicConfig(level=logging.DEBUG)
     main()
 
