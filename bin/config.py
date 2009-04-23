@@ -80,9 +80,9 @@ def _set_logging_level(option, opt_str, value, parser):
     """Sets the logging level throu command-line arguments"""
     setattr(parser.values, option.dest, True)
 
-    if opt_str == 'verbose':
+    if option.dest == 'verbose':
         logging.getLogger().setLevel(logging.DEBUG)
-    if opt_str == 'quiet':
+    if option.dest == 'quiet':
         logging.getLogger().setLevel(logging.WARN)
 
 
