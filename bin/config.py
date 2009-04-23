@@ -86,6 +86,11 @@ def _set_logging_level(option, opt_str, value, parser):
         logging.getLogger().setLevel(logging.WARN)
 
 
+def assigments():
+    """Returns a list of assigments"""
+    return list(config.sections())
+
+
 cmdline.add_option('-v', '--verbose', action='callback', nargs=0,
                    dest='verbose', default=False, callback=_set_logging_level,
                    help='Prints more stuff')
