@@ -158,12 +158,15 @@ def update_grade(assigment, user, location):
     data_modif = grade_modification_time(grade_filename)
     id_grade, db_data = _db_get_grade(assigment, user)
 
+    id_hw = DB_save_hw(assigment)
+    id_student = DB_save_student(nume_student)
+
     if config.options.force or db_data != data_modif:
         # modified since last db save
         grade_value = get_grade_value(grade_filename)
         if None != grade_value:
             # updates information from DB
-            _db_save_grade(assigment, user, grade_value, data_modif)
+            _db_save_grade(id_hw, id_student, grade_value, data_modif)
             _logger.info('Updated %s, %s (%s)', assigment, user, location)
 
 
