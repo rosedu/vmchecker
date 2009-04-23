@@ -67,18 +67,18 @@ def create_db_tables(db_path):
     db_conn = sqlite3.connect(db_path)
     db_cursor = db_conn.cursor()
     db_cursor.executescript("""
-    CREATE TABLE users (
-        id INTEGER PRIMARY KEY,
-        name TEXT);
     CREATE TABLE assignments (
         id INTEGER PRIMARY KEY,
         name TEXT);
-    CREATE TABLE grades (
+    CREATE TABLE users (
         id INTEGER PRIMARY KEY,
-        user_id INTEGER,
+        name TEXT);
+    CREATE TABLE grades (
         assignment_id INTEGER,
+        user_id INTEGER,
         grade TEXT,
-        mtime TIMESTAMP default CURRENT_TIMESTAMP);
+        mtime TIMESTAMP NOT NULL,
+        PRIMARY KEY(assignment_id, user_id));
     """)
     db_cursor.close()
     db_conn.close()

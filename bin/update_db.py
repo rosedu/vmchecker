@@ -1,6 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Updates marks for modified results"""
+"""Updates marks for modified results
+
+For reference below is the (possible outdated) database schema.
+For the latest version check bin/initialise_course.py.
+
+    CREATE TABLE users (
+        id INTEGER PRIMARY KEY,
+        name TEXT);
+    CREATE TABLE assignments (
+        id INTEGER PRIMARY KEY,
+        name TEXT);
+    CREATE TABLE grades (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER,
+        assignment_id INTEGER,
+        grade TEXT,
+        mtime TIMESTAMP default CURRENT_TIMESTAMP);
+
+"""
 
 from __future__ import with_statement
 
@@ -52,29 +70,16 @@ def _db_get_user_id(db_cursor, user):
     return result[0]
 
 
-def _db_get_grade(db_cursor, assignment_id, user_id):
-    """Returns the id and the mtime of a grade"""
-    db_cursor.execute(
-            'SELECT id, mtime FROM grades '
-            'WHERE assignment_id = ? and user_id = ?', (
-                assignment_id, user_id))
-    result = db_cursor.fetchone()
-    if result is not None:
-        return result[0], result[1]
-
-
-def _db_get_grade_id(db_cursor, assignment_id, user_id):
-    """Returns the id of a grade"""
-    result = _db_get_grade(db_cursor, assignment_id, user_id)
-    if result is not None:
-        return result[0]
-
-
 def _db_get_grade_mtime(db_cursor, assignment_id, user_id):
     """Returns the mtime of a grade"""
-    result = _db_get_grade(db_cursor, assignment_id, user_id)
+    db_cursor.execute(
+            'SELECT mtime FROM grades '
+            'WHERE assignment_id = ? and user_id = ?', (
+                assignment_id, user_id))
+
+    result = db_cursor.fetchone()
     if result is not None:
-        return result[1]
+        return result[0]
 
 
 def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
@@ -83,20 +88,12 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
     If the grade identified by (assignment_id, user_id)
     exists then update the DB, else inserts a new entry.
 
-    XXX should use ON DUPLICATE KEY UPDATE
-
     """
-    grade_id = _db_get_grade_id(db_cursor, assignment_id, user_id)
-
-    if grade_id is None:
-        db_cursor.execute(
-                'INSERT INTO grades (assignment_id, user_id, grade, mtime) '
-                'VALUES (?, ?, ?, ?)', (
-                    assignment_id, user_id, grade, mtime))
-    else:
-        db_cursor.execute(
-                'UPDATE grades set grade = ?, mtime = ? where id = ?', (
-                    grade, mtime, grade_id))
+    db_cursor.execute(
+            'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
+            'VALUES (?, ?, ?, ?) ', (
+                grade, mtime, assignment_id, user_id))
+    print 'saving'
 
 
 def _get_grade_value(grade_path):
@@ -147,6 +144,7 @@ def main():
     repo_walker.walk(_update_grades_wrapper, args=(db_cursor,))
 
     db_cursor.close()
+    db_conn.commit()
     db_conn.close()
 
 
