@@ -10,6 +10,7 @@ import os
 
 _STORER_CONFIG_FILE = 'vmchecker_storer.ini'
 _TESTER_CONFIG_FILE = 'vmchecker_tester.ini'
+GRADE_FILENAME = 'results/job_results'
 
 root = None
 repository = None

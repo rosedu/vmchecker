@@ -14,8 +14,6 @@ import vmcheckerpaths
 import repo_walker
 
 
-_GRADE_FILENAME = 'results/job_results'
-
 _logger = logging.getLogger('update_db')
 
 
@@ -23,7 +21,7 @@ def _db_save_assignment(db_cursor, assignment):
     """Creates an id of the homework and returns it."""
     db_cursor.execute('INSERT INTO assignments (name) values (?)',
                       (assignment,))
-    db_cursor.execute('SELECT last_insert_rowid();')
+    db_cursor.execute('SELECT last_insert_rowid()')
     assignment_id, = db_cursor.fetchone()
     return assignment_id
 
@@ -40,7 +38,7 @@ def _db_get_assignment_id(db_cursor, assignment):
 def _db_save_user(db_cursor, user):
     """Creates an id of the user and returns it."""
     db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
-    db_cursor.execute('SELECT last_insert_rowid();')
+    db_cursor.execute('SELECT last_insert_rowid()')
     user_id, = db_cursor.fetchone()
     return user_id
 
@@ -58,7 +56,7 @@ def _db_get_grade(db_cursor, assignment_id, user_id):
     """Returns the id and the mtime of a grade"""
     db_cursor.execute(
             'SELECT id, mtime FROM grades '
-            'WHERE assignment_id = ? and user_id = ?;', (
+            'WHERE assignment_id = ? and user_id = ?', (
                 assignment_id, user_id))
     result = db_cursor.fetchone()
     if result is not None:
@@ -69,14 +67,14 @@ def _db_get_grade_id(db_cursor, assignment_id, user_id):
     """Returns the id of a grade"""
     result = _db_get_grade(db_cursor, assignment_id, user_id)
     if result is not None:
-        return result
+        return result[0]
 
 
 def _db_get_grade_mtime(db_cursor, assignment_id, user_id):
     """Returns the mtime of a grade"""
     result = _db_get_grade(db_cursor, assignment_id, user_id)
     if result is not None:
-        return result
+        return result[1]
 
 
 def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
@@ -101,9 +99,9 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
                     grade, mtime, grade_id))
 
 
-def _get_grade_value(grade_filename):
-    """Reads the first line of the file which contains the mark."""
-    with open(grade_filename) as handler:
+def _get_grade_value(grade_path):
+    """Reads the first line of grade_path containing the grade."""
+    with open(grade_path) as handler:
         return handler.readline().strip()
 
 
@@ -138,7 +136,7 @@ def main():
         assignment_id = _db_get_assignment_id(db_cursor, assignment)
         user_id = _db_get_user_id(db_cursor, user)
 
-        grade_filename = os.path.join(location, _GRADE_FILENAME)
+        grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
         if os.path.exists(grade_filename):
             _update_grades(assignment_id, user_id, grade_filename, db_cursor)
             _logger.info('Updated %s, %s (%s)', assignment, user, location)
