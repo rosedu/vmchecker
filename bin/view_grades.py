@@ -38,7 +38,7 @@ def get_db_content():
     """
     global db_cursor
     results = {}
-    assignments = config.assignments()
+    assignments = sorted(config.assignments())
 
     # build the 2-D dictionary, based on a JOIN selection
     db_cursor.execute(
