@@ -93,7 +93,6 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
             'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
             'VALUES (?, ?, ?, ?) ', (
                 grade, mtime, assignment_id, user_id))
-    print 'saving'
 
 
 def _get_grade_value(grade_path):
