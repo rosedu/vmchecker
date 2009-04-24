@@ -11,36 +11,24 @@ table#hw-results-table tr.tr-even {}/* even rows from table */
 table#hw-results-table td.hw-h {}   /* home heading row */
 table#hw-results-table td.st-h {}   /* student heading column */
 table#hw-results-table td.grade {}  /* the grade cell */
+
 """
-
-__author__ = 'Gheorghe Claudiu-Dan <claudiugh@gmail.com>'
-
 
 import sqlite3
 import urllib
-import logging
 
 import config
 import vmcheckerpaths
 
 
-_logger = logging.getLogger("vmchecker.view_grades")
+def _db_retrieve_grades(db_cursor):
+    """Retrieves all grades from database.
 
+    @return a 2-D dictionary mapping (users, assignment) to
+            user's grade on assignment
 
-def get_db_content():
-    """ Retrieve all the information needed from the DB
-    @return
-    a touple (results, assignemnts):
-    - a 2-D dictionary, having student names as rows and homework names as columns
-    - a list containing all the homeworks in the DB
-
-    XXX remove assignments from return
     """
-    global db_cursor
     results = {}
-    assignments = sorted(config.assignments())
-
-    # build the 2-D dictionary, based on a JOIN selection
     db_cursor.execute(
             'SELECT users.name, assignments.name, grades.grade '
             'FROM users, assignments, grades '
@@ -52,7 +40,7 @@ def get_db_content():
         user, assignment, grade = row
         results.setdefault(user, {})[assignment] = grade
 
-    return results, assignments
+    return results
 
 
 def href(target, text, title='Click pentru detalii'):
@@ -63,58 +51,53 @@ def href(target, text, title='Click pentru detalii'):
     return "<a href='%s' title='%s'>%s</a>" % (target, title, text)
 
 
-def cpl_hack(student_name, hw_name, result):
-    # TODO(alexandru): replace with something less specifi
-    if result == '-1':
-        result = 'ok'
+def _cpl_hack(user, assignment, result):
+    """A useful hack to link to results.
+
+    TODO replace with something less specific
+
+    """
     return "<a href=\"Teme/nota.php?user=%s&homework=%s\">%s</a>" % (
-        urllib.quote(student_name), urllib.quote(hw_name), result)
+        urllib.quote(user), urllib.quote(assignment), result)
 
 
-def gen_html(results, hws):
+def _generate_html(results, assignments):
+    """Generates a HTML table containing the results"""
+
     # table header
-    html = "<table id='hw-results-table'> <tr> <td > Nume </td> "
-    # the row with the name of the homeworks
-    for hw_name in hws:
-        html += "<td class='hw-h'> %s </td> \n" %hw_name
-    html += "</tr>"
-    # table content
+    html = "<table id='hw-results-table'>\n"
+
+    # the row with the names of the homeworks
+    html += "<tr>\n\t<td>Nume</td>\n"
+    for assignment in assignments:
+        html += "\t<td class='hw-h'>%s</td>\n" % assignment
+    html += "</tr>\n"
+
+    # the content
     odd = True
-    for student_name in sorted(results.keys()):
-        if odd :
-            tr_class = 'tr-odd'
-        else:
-            tr_class = 'tr-even'
-        html += "<tr class='%s'> <td class='st-h'> %s </td> " %(tr_class, student_name)
-        # for each student we generate a full row
-        for hw_name in hws:
-            html += '<td class="grade">'
-            if results[student_name].has_key(hw_name):
-                html += cpl_hack(
-                    student_name, hw_name, str(results[student_name][hw_name]))
+    for user in sorted(results.keys()):
+        html += "<tr class='%s'>\n\t<td class='st-h'>%s</td>\n" % (
+                ('tr-even', 'tr-odd')[odd], user)
+
+        # for each student generates a full row
+        for assignment in assignments:
+            html += '\t<td class="grade">'
+            if results[user].has_key(assignment):
+                html += _cpl_hack(user, assignment,
+                                  str(results[user][assignment]))
             else:
-                html += 'x'
-            html += '</td>'
-        html += "</tr> \n"
+                html += '-'
+            html += '</td>\n'
+
+        html += "</tr>\n"
         odd = not odd
-    html += ' </table>'
+    html += '</table>\n'
     return html
 
 
-def main():
-    config.config_storer()
-
-    global db_cursor
-    db_conn = sqlite3.connect(vmcheckerpaths.db_file())
-    db_cursor = db_conn.cursor()
-
-    (results, hws) = get_db_content()
-    # send to the stdout all the HTML content
-    print gen_html(results, hws)
-    db_cursor.close()
-    db_conn.close()
-
-    print """
+def _powered_by_vmchecker():
+    """Returns a HTML div showing 'Powered by vmchecker'"""
+    return """
 <div>
     <div style="float:left">
         Powered by <a href="http://github.com/vmchecker/vmchecker/tree/master">vmchecker</a>
@@ -128,7 +111,23 @@ def main():
 </div>
 """
 
+def main():
+    """Reads grades and generates the HTML table"""
+    config.config_storer()
+
+    db_conn = sqlite3.connect(vmcheckerpaths.db_file())
+    db_cursor = db_conn.cursor()
+
+    results = _db_retrieve_grades(db_cursor)
+    assignments = sorted(config.assignments())
+
+    # sends to the stdout all the HTML content
+    print _generate_html(results, assignments)
+    print _powered_by_vmchecker()
+
+    db_cursor.close()
+    db_conn.close()
+
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     main()
