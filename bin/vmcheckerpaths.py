@@ -15,6 +15,23 @@ GRADE_FILENAME = 'results/job_results'
 root = None
 repository = None
 
+def set_root(root_):
+    """Sets vmchecker root path"""
+    global root
+
+    root = os.path.expanduser(root_)
+    assert os.path.isabs(root)
+    root = os.path.normpath(root)
+
+
+def set_repository(repository_):
+    """Sets the repository path"""
+    global repository
+
+    repository = os.path.expanduser(repository_)
+    repository = os.path.join(root, repository)
+    repository = os.path.normpath(repository)
+
 
 def abspath(*segments):
     """Joins the path segments of path with VMChecker's root path"""

@@ -14,9 +14,23 @@ import vmcheckerpaths
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
+DEFAULT_CONFIG_FILE = '~/.vmcheckerrc'
 
 cmdline = optparse.OptionParser()
 options, args = None, None
+
+# Use OptionGroup to add commandline options. Here is an example:
+#
+# import config
+#
+# ... (at the end of the file)
+#
+# group = optparse.OptionGroup(config.cmdline, 'update_db.py')
+# group.add_option(
+#         '-f', '--force', action='store_true', dest='force', default=False,
+#         help='Force updating all marks ignoring modification times')
+# config.cmdline.add_option_group(group)
+# del group
 
 config = ConfigParser.RawConfigParser()
 
@@ -29,46 +43,35 @@ def parse_arguments():
 
 def _basic_config():
     """Common configuration"""
-
-    # sets root path
-    assert 'VMCHECKER_ROOT' in os.environ, (
-            'Environment variable $VMCHECKER_ROOT is not defined')
-    vmcheckerpaths.root = os.path.abspath(os.environ['VMCHECKER_ROOT'])
-
     # sets logging
     logging.basicConfig(level=logging.INFO)
 
     # parse command-line arguments
     parse_arguments()
 
+    # reads configuration
+    options.config = os.path.expanduser(options.config)
+    assert os.path.isabs(options.config)
+    with open(options.config) as handle:
+        config.readfp(handle)
+
+    vmcheckerpaths.set_root(config.get('vmchecker', 'root'))
+
 
 def config_storer():
     """Configures storer"""
     _basic_config()
-
-    with open(vmcheckerpaths.storer_config_file()) as handle:
-        config.readfp(handle)
-
-    # sets repository path
-    vmcheckerpaths.repository = path('DEFAULT', 'Repository')
+    vmcheckerpaths.set_repository(config.get('vmchecker', 'repository'))
 
 
 def config_tester():
     """Configures tester"""
     _basic_config()
-    with open(vmcheckerpaths.tester_config_file()) as handle:
-        config.readfp(handle)
 
 
-def get(*args):
-    """A convenient wrapper for config.get(), .options() and .sections()"""
-    if len(args) == 0:
-        return config.sections()
-    if len(args) == 1:
-        return config.options(args[0])
-    if len(args) == 2:
-        return config.get(args[0], args[1])
-    assert False
+def get(section, option):
+    """A convenient wrapper for config.get()"""
+    return config.get(section, option)
 
 
 def path(section, option):
@@ -86,14 +89,13 @@ def _set_logging_level(option, opt_str, value, parser):
         logging.getLogger().setLevel(logging.WARN)
 
 
-def assignments():
-    """Returns a list of assigments"""
-    return list(config.sections())
-
-
 cmdline.add_option('-v', '--verbose', action='callback', nargs=0,
                    dest='verbose', default=False, callback=_set_logging_level,
                    help='Prints more stuff')
 cmdline.add_option('-q', '--quiet', action='callback', nargs=0,
                    dest='quiet', default=False, callback=_set_logging_level,
                    help='Prints less stuff')
+cmdline.add_option('--config', dest='config', default=DEFAULT_CONFIG_FILE,
+                   metavar='FILE', help='Reads configuration from FILE ('
+                                        'defaults to %s)' % DEFAULT_CONFIG_FILE)
+

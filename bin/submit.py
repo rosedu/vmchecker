@@ -19,12 +19,13 @@ import sys
 import time
 import getpass
 from subprocess import check_call
-from os.path import join, split, abspath, isfile, isdir, dirname, basename
+from os.path import split, abspath, isfile, isdir, dirname, basename
 from tempfile import mkstemp
 from zipfile import ZipFile
 
 import misc
 import config
+import assigments
 import vmcheckerpaths
 
 
@@ -33,14 +34,14 @@ _logger = logging.getLogger('vmchecker.submit')
 
 def _call_git(repository, *args):
     return check_call(['git',
-        '--git-dir=' + join(repository, '.git'),
+        '--git-dir=' + os.path.join(repository, '.git'),
         '--work-tree=' + repository] + list(args))
 
 
 class _Locker(object):
     def __init__(self, assignment):
         self.fd = os.open(
-                join(vmcheckerpaths.repository, assignment, '.lock'),
+                os.path.join(vmcheckerpaths.repository, assignment, '.lock'),
                 os.O_CREAT | os.O_RDWR, 0600)
         assert self.fd != -1
 
@@ -61,7 +62,7 @@ def build_config(user, assignment, archive):
 
     XXX Exit code of child processes is not checked.
     XXX Locks should protect the directory access"""
-    assert assignment in config.config.sections(), (
+    assert assignment in assignments.assignments(), (
         'No such assigment `%s\'.' % assignment)
 
     # the upload time is the system's current time
@@ -71,7 +72,7 @@ def build_config(user, assignment, archive):
     repository = vmcheckerpaths.repository
 
     # creates a temporary directory to store homework
-    location = join(repository, assignment)
+    location = os.path.join(repository, assignment)
     try:
         os.makedirs(location)
         _logger.info("created `%s'", location)
@@ -80,7 +81,7 @@ def build_config(user, assignment, archive):
         _logger.info("`%s' already exists", location)
 
     with _Locker(assignment):
-        location = join(location, user)
+        location = os.path.join(location, user)
         _logger.info("Storing student's files at `%s'", location)
 
         try:
@@ -97,7 +98,7 @@ def build_config(user, assignment, archive):
                     os.path.join(location, 'archive')])
 
         # writes assignment configuration file
-        assignment_config = join(location, 'config')
+        assignment_config = os.path.join(location, 'config')
 
         with open(assignment_config, 'w') as handle:
             handle.write('[Assignment]\n')
@@ -105,7 +106,7 @@ def build_config(user, assignment, archive):
             handle.write('Assignment=%s\n' % assignment)
             handle.write('UploadTime=%s\n' % upload_time)
             # these should go to `callback'
-            handle.write('ResultsDest=%s\n'   % join(location, 'results'))
+            handle.write('ResultsDest=%s\n'   % os.path.join(location, 'results'))
             handle.write('RemoteUsername=%s\n' % getpass.getuser())
             handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')
 
@@ -117,16 +118,15 @@ def build_config(user, assignment, archive):
                 "Updated `%s''s submition for `%s'." % (user, assignment))
 
         # XXX should create a clean zip from repository
-        shutil.copy(archive, join(location, 'archive.zip'))
+        shutil.copy(archive, os.path.join(location, 'archive.zip'))
         return assignment_config
 
 
 def submit_assignment(assignment_config):
     """Submits config file for evaluation.
 
-    This function creates a zip archive, stores it in
-    $VMCHECKER_ROOT/unchecked/ directory and calls submit
-    script.
+    This function creates a zip archive in the ./unchecked/
+    directory and calls the submit script.
 
     The archive contains:
         config - assignment config (eg. name, time of submission etc)
@@ -147,11 +147,11 @@ def submit_assignment(assignment_config):
     course = config.get(assignment, 'Course')
 
     # location of student's homework
-    archive = join(dirname(assignment_config), 'archive.zip')
+    archive = os.path.join(dirname(assignment_config), 'archive.zip')
     assert isfile(archive), "Missing archive `%s'" % archive
 
     # location of tests
-    tests = join(vmcheckerpaths.dir_tests(), assignment + '.zip')
+    tests = os.path.join(vmcheckerpaths.dir_tests(), assignment + '.zip')
     assert isfile(tests), "Missing tests `%s'" % tests
 
     # builds archive with configuration

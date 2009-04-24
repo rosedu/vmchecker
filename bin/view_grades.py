@@ -18,6 +18,7 @@ import sqlite3
 import urllib
 
 import config
+import assignments
 import vmcheckerpaths
 
 
@@ -119,7 +120,7 @@ def main():
     db_cursor = db_conn.cursor()
 
     results = _db_retrieve_grades(db_cursor)
-    assignments = sorted(config.assignments())
+    assignments = sorted(assignments.assignments())
 
     # sends to the stdout all the HTML content
     print _generate_html(results, assignments)

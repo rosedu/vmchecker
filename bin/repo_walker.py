@@ -18,6 +18,7 @@ import sys
 import logging
 
 import vmcheckerpaths
+import assignments
 import config
 
 
@@ -103,7 +104,7 @@ def _walk_repository(repository, func, args):
             continue
 
         # XXX maybe an `assignment' module would be appropriate
-        if assignment not in config.get():
+        if assignment not in assignments.assignments():
             _logger.debug('Ignoring %s (not an assignment)', assignment_path)
             continue
 

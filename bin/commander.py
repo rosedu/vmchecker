@@ -53,8 +53,11 @@ _logger = logging.getLogger('vmchecker.commander')
 
 
 def _env_with_python_module_search_path():
-    """ Setup python module search path to include '$VMCHECKER_ROOT/bin'
+    """ Setup python module search path to include `./bin'
     so that the callback python script can access misc, vmcheckerpaths, etc.
+
+    XXX alexandru says: why is this needed?
+
     """
     e = os.environ
     module_search_path = os.path.join(vmcheckerpaths.root, 'bin')
