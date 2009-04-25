@@ -18,7 +18,6 @@ import sys
 import logging
 
 import vmcheckerpaths
-import assignments
 import config
 
 

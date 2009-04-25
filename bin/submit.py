@@ -16,62 +16,49 @@ __author__ = """Ana Savu <ana.savu86@gmail.com>
 
 import ConfigParser
 import errno
-import fcntl
+import getpass
 import logging
-import tempfile
 import os
 import shutil
-import sys
-import time
-import getpass
 import subprocess
+import tempfile
+import time
 import zipfile
 
 import config
 import vmcheckerpaths
 
 
-_logger = logging.getLogger('vmchecker.submit')
-
-
-def _call_git(repository, *args):
-    return subprocess.check_call(['git',
-        '--git-dir=' + os.path.join(repository, '.git'),
-        '--work-tree=' + repository] + list(args))
-
-
-class _Locker(object):
-    def __init__(self, assignment):
-        self.__fd = os.open(
-                os.path.join(vmcheckerpaths.repository, assignment, '.lock'),
-                os.O_CREAT | os.O_RDWR, 0600)
-        assert self.__fd != -1
-
-    def __enter__(self):
-        fcntl.lockf(self.__fd, fcntl.LOCK_EX)
-
-    def __exit__(self, type, value, traceback):
-        fcntl.lockf(self.__fd, fcntl.LOCK_UN)
-
-    def __del__(self):
-        os.close(self.__fd)
+_logger = logging.getLogger('submit')
 
 
 def _build_temporary_config(assignment, user, archive):
+    """Stores user's submission of assignment in a temporary directory"""
+
     # the upload time is the system's current time
     upload_time = time.strftime(config.DATE_FORMAT)
+    prefix = '%s_%s_%s_%s_' % (
+            config.assignments.course(assignment),
+            assignment, user, upload_time)
 
+    # first saves the zip archive
+    location = tempfile.mkstemp(
+            prefix=prefix,
+            suffix='.zip',
+            dir=vmcheckerpaths.dir_backup())
+    shutil.copy(archive, location[1])
+    os.close(location[0])
+
+    # location is the temporary destination directory
     location = tempfile.mkdtemp(
-            prefix='%s_%s_%s_%s_' % (
-                config.assignments.course(assignment),
-                assignment, user, upload_time),
+            prefix=prefix,
             dir=vmcheckerpaths.dir_backup())
 
     # unzips sources files
-    subprocess.check_call(['unzip', archive, '-d',
-                os.path.join(location, 'archive')])
+    subprocess.check_call(['unzip', archive,
+            '-d', os.path.join(location, 'archive')])
 
-    # creats homework's configuration file
+    # creates homework's configuration file
     # hrc = homework resource configuration
     hrc = ConfigParser.RawConfigParser()
     hrc.add_section('Homework')
@@ -81,7 +68,7 @@ def _build_temporary_config(assignment, user, archive):
 
     # XXX these should go to `callback'
     hrc.set('Homework', 'ResultsDest',
-                          os.path.join(location, 'results'))
+            os.path.join(location, 'results'))
     hrc.set('Homework', 'RemoteUsername', getpass.getuser())
     hrc.set('Homework', 'RemoteHostname', 'cs.pub.ro')
 
@@ -93,13 +80,13 @@ def _build_temporary_config(assignment, user, archive):
 
 
 def save_homework(assignment, user, location):
-    """Saves user's submition of assignment stored at location."""
+    """Saves user's submission of assignment stored at location."""
     # copies location to a temporary directory
     temp = tempfile.mkdtemp()
     src = os.path.join(temp, user)
     shutil.copytree(location, src)
 
-    with _Locker(assignment):
+    with config.assignments.lock(assignment):
         dest = os.path.join(vmcheckerpaths.repository, assignment, user)
         _logger.info("Storing user's files at %s", dest)
 
@@ -112,19 +99,18 @@ def save_homework(assignment, user, location):
                 raise
             _logger.info('Ignored missing directory %s', dest)
 
-        # brings new files
-        _logger.debug('moving\nfrom %s\n  to %s', src, dest)
+        # brings the new files
+        _logger.debug('Moving\nfrom %s\n  to %s', src, dest)
         shutil.move(src, dest)
         _logger.info('files stored')
 
         # and commits them
-        repository = vmcheckerpaths.repository
         cwd = os.getcwd()
         os.chdir(dest)
 
         subprocess.check_call(('git', 'add', '--all', '.'))
         subprocess.check_call(('git', 'commit', '--allow-empty', '.',
-                '-m', "Updated %s's submition for %s." % (user, assignment)))
+                '-m', "Updated %s's submission for %s." % (user, assignment)))
 
         os.chdir(cwd)
 
@@ -133,7 +119,7 @@ def save_homework(assignment, user, location):
 
 
 def build_config(assignment, user, archive):
-    """Builds a configuration file for user's assignment submition.
+    """Builds a configuration file for user's assignment submission.
 
     Returns the absolute path of the homework
 
@@ -163,16 +149,17 @@ def submit_homework(location):
         archive.zip - a zip containing the homework
         tests.zip - a zip containing the tests
         callback - a script executed by the tester to send results back
-        ... - assignment's extra files (see assigments.Assignments.include())
+        ... - assignment's extra files (see assignments.Assignments.include())
 
     """
     # reads user, assignment and course
+    # hrc = homework resource configuration
     hrc = ConfigParser.RawConfigParser()
     with open(os.path.join(location, 'config')) as handler:
         hrc.readfp(handler)
 
-    user = hrc.get('Homework', 'User')
     assignment = hrc.get('Homework', 'Assignment')
+    user = hrc.get('Homework', 'User')
     course = config.assignments.course(assignment)
 
     # location of student's homework
@@ -185,7 +172,7 @@ def submit_homework(location):
     assert os.path.isfile(tests), 'Missing tests %s' % tests
 
     # builds archive with configuration
-    with _Locker(assignment):
+    with config.assignments.lock(assignment):
         # creates the zip archive with an unique name
         fd = tempfile.mkstemp(
                 suffix='.zip',
@@ -217,62 +204,40 @@ def submit_homework(location):
             os.unlink(fd[1])
             raise
 
-    # package created, sends homework to tester by invoking submition script
+    # package created, sends homework to tester by invoking submission script
     submit = config.assignments.get(assignment, 'submit')
     submit = vmcheckerpaths.abspath(submit)
     _logger.info('Invoking submission script %s', submit)
     try:
         subprocess.check_call((submit, fd[1]))
     except:
-        _logger.fatal('Cannot submit homework. Archive %s not deleted.', fd[1])
+        _logger.fatal('Cannot submit homework %s, %s', assignment, user)
+        os.unlink(fd[1])
         raise
 
 
-def print_help():
-    """Prints help and exits
-
-    XXX change to use optparse
-
-    """
-    print >> sys.stderr, 'Usage:'
-    print >> sys.stderr, '\t%s assignmen user archive' % sys.argv[0]
-    print >> sys.stderr, '\t\tbuilds configuration and submits the '\
-                         'assignment for evaluation'
-    print >> sys.stderr, '\t%s config' % sys.argv[0]
-    print >> sys.stderr, '\t\tresubmits assignment for reevaluation'
-
-
 def main():
-    if len(sys.argv) == 1:
-        print_help()
-        exit(1)
-    elif len(sys.argv) == 2:
-        if not os.path.isfile(sys.argv[1]):
-            print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[1]
-            print_help()
-            exit(1)
+    """Parse arguments and submits the homework"""
 
-        assignment_config = sys.argv[1]
-    elif len(sys.argv) == 4:
-        if not os.path.isfile(sys.argv[3]):
-            print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[3]
-            print_help()
-            exit(1)
+    config.cmdline.set_usage('Usage: %prog [options] assignment user archive')
+    config.config_storer()
 
-        user = sys.argv[1]           # student's name
-        assignment = sys.argv[2]     # assignment
-        archive = sys.argv[3]        # archive
-        location = build_config(user, assignment, archive)
-    else:
-        print_help()
-        exit(1)
+    if len(config.argv) != 3:
+        config.cmdline.error('Not enough arguments')
 
-    print >> sys.stderr, 'Homework located at %s' % location
+    assignment = config.argv[0]
+    user = config.argv[1]
+    archive = config.argv[2]
+
+    if not os.path.isfile(archive):
+        config.cmdline.error('%s must be an existing file.' % archive)
+    if assignment not in config.assignments:
+        config.cmdline.error('%s must be a valid assignment.' % assignment)
+
+    location = build_config(assignment, user, archive)
     submit_homework(location)
 
 
 if __name__ == '__main__':
-    config.config_storer()
-    logging.basicConfig(level=logging.DEBUG)
     main()
 

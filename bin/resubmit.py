@@ -3,8 +3,6 @@
 """An useful script for mass homeworks resubmition"""
 
 
-import os
-
 import config
 import submit
 import repo_walker

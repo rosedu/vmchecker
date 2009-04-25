@@ -18,7 +18,7 @@ DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 DEFAULT_CONFIG_FILE = '~/.vmcheckerrc'
 
 cmdline = optparse.OptionParser()
-options, args = None, None
+options, argv = None, None
 
 # Use OptionGroup to add commandline options. Here is an example:
 #
@@ -39,8 +39,8 @@ assignments = None
 
 def parse_arguments():
     """Parses command-line arguments"""
-    global options, args
-    options, args = cmdline.parse_args()
+    global options, argv
+    options, argv = cmdline.parse_args()
 
 
 def _basic_config():
