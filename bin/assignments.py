@@ -20,11 +20,10 @@ options names are not.
 
 """
 
-
-
 import fcntl
 import logging
 import datetime
+import errno
 import os
 
 import vmcheckerpaths
@@ -45,6 +44,13 @@ class _Lock(object):
 
     """
     def __init__(self, assignment):
+        try:
+            # XXX move this from here
+            os.makedirs(os.path.join(vmcheckerpaths.repository, assignment))
+        except OSError, exc:
+            if exc.errno != errno.EEXIST:
+                raise
+
         self.__fd = os.open(
                 os.path.join(vmcheckerpaths.repository, assignment, '.lock'),
                 os.O_CREAT | os.O_RDWR, 0600)

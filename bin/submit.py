@@ -110,7 +110,7 @@ def save_homework(assignment, user, location):
         cwd = os.getcwd()
         os.chdir(dest)
 
-        subprocess.check_call(('git', 'add', '--all', '.'))
+        subprocess.check_call(('git', 'add', '--force', '.'))
         subprocess.check_call(('git', 'commit', '--allow-empty', '.',
                 '-m', "Updated %s's submission for %s." % (user, assignment)))
 
