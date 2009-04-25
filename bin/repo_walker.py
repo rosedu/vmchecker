@@ -60,7 +60,7 @@ def _simulate(assignment, user, location, func_name, args):
             func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 
-def _walk_assigment(assignment, assignment_path, func, args):
+def _walk_assignment(assignment, assignment_path, func, args):
     """Walks all user's sources for assignment"""
     from config import options
 
@@ -113,7 +113,7 @@ def _walk_repository(repository, func, args):
                           assignment_path)
             continue
 
-        _walk_assigment(assignment, assignment_path, func, args)
+        _walk_assignment(assignment, assignment_path, func, args)
 
 
 def walk(func, args=()):
@@ -123,7 +123,7 @@ def walk(func, args=()):
     @param args extra arguments to be passed
 
     For each homework call func:
-        func(assigment, user, location, *args)
+        func(assignment, user, location, *args)
     The behavior is controlled through command line arguments (see
     below for possible options)
 

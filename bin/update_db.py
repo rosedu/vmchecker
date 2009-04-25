@@ -45,7 +45,7 @@ def _db_save_assignment(db_cursor, assignment):
 
 
 def _db_get_assignment_id(db_cursor, assignment):
-    """Returns the id of the assigment"""
+    """Returns the id of the assignment"""
     db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
     result = db_cursor.fetchone()
     if result is None:
@@ -102,7 +102,7 @@ def _get_grade_value(grade_path):
 
 
 def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
-    """Updates grade for user's submission of assigment.
+    """Updates grade for user's submission of assignment.
 
     Reads the grade's value only if the file containing the
     value was modified since the last update of the DB for this

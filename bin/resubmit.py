@@ -11,7 +11,7 @@ import repo_walker
 
 
 def _submit(assignment, user, location):
-    """Submits assigment from `location'"""
+    """Submits assignment from `location'"""
     submit.submit_assignment(os.path.join(location, 'config'))
 
 
