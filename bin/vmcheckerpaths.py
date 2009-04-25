@@ -101,5 +101,5 @@ def dir_bin():
 
 
 def homework_path(assignment, user):
-    """Returns path to last user's assignment submission"""
+    """Returns path to the user's last assignment submission"""
     return os.path.join(repository, assignment, user)
