@@ -19,13 +19,12 @@ import sys
 import time
 import getpass
 from subprocess import check_call
-from os.path import split, abspath, isfile, isdir, dirname, basename
+from os.path import abspath, dirname
 from tempfile import mkstemp
 from zipfile import ZipFile
 
-import misc
 import config
-import assigments
+import assignments
 import vmcheckerpaths
 
 
@@ -63,7 +62,7 @@ def build_config(user, assignment, archive):
     XXX Exit code of child processes is not checked.
     XXX Locks should protect the directory access"""
     assert assignment in assignments.assignments(), (
-        'No such assigment `%s\'.' % assignment)
+        'No such assignment `%s\'.' % assignment)
 
     # the upload time is the system's current time
     upload_time = time.strftime(config.DATE_FORMAT)
@@ -76,8 +75,9 @@ def build_config(user, assignment, archive):
     try:
         os.makedirs(location)
         _logger.info("created `%s'", location)
-    except OSError, e:
-        if e.errno != errno.EEXIST: raise
+    except OSError, exc:
+        if exc.errno != errno.EEXIST:
+            raise
         _logger.info("`%s' already exists", location)
 
     with _Locker(assignment):
@@ -87,8 +87,9 @@ def build_config(user, assignment, archive):
         try:
             shutil.rmtree(location)
             _logger.info("Removed old `%s'", location)
-        except OSError, e:
-            if e.errno != errno.ENOENT: raise
+        except OSError, exc:
+            if exc.errno != errno.ENOENT:
+                raise
             _logger.info("Ignoring missing `%s'", location)
 
         os.makedirs(location)
@@ -106,7 +107,7 @@ def build_config(user, assignment, archive):
             handle.write('Assignment=%s\n' % assignment)
             handle.write('UploadTime=%s\n' % upload_time)
             # these should go to `callback'
-            handle.write('ResultsDest=%s\n'   % os.path.join(location, 'results'))
+            handle.write('ResultsDest=%s\n'    % os.path.join(location, 'results'))
             handle.write('RemoteUsername=%s\n' % getpass.getuser())
             handle.write('RemoteHostname=%s\n' % 'cs.pub.ro')
 
@@ -148,11 +149,11 @@ def submit_assignment(assignment_config):
 
     # location of student's homework
     archive = os.path.join(dirname(assignment_config), 'archive.zip')
-    assert isfile(archive), "Missing archive `%s'" % archive
+    assert os.path.isfile(archive), "Missing archive `%s'" % archive
 
     # location of tests
     tests = os.path.join(vmcheckerpaths.dir_tests(), assignment + '.zip')
-    assert isfile(tests), "Missing tests `%s'" % tests
+    assert os.path.isfile(tests), "Missing tests `%s'" % tests
 
     # builds archive with configuration
     with _Locker(assignment):
@@ -176,13 +177,9 @@ def submit_assignment(assignment_config):
                 zip.write(tests, 'tests.zip')            # the archive containing tests
 
                 # includes extra required files
-                for f in config.get(assignment):
-                    if not f.startswith('include '):
-                        continue
-
-                    dst, src = f[8:], config.get(assignment, f)
+                for dst, src in assignments.include(assignment):
                     src = vmcheckerpaths.abspath(src)
-                    assert isfile(src), "`%s' is missing" % src
+                    assert os.path.isfile(src), "`%s' is missing" % src
 
                     zip.write(src, dst)
                     _logger.debug("Included `%s' as `%s'.", src, dst)
@@ -221,14 +218,14 @@ def main():
         print_help()
         exit(1)
     elif len(sys.argv) == 2:
-        if not isfile(sys.argv[1]):
+        if not os.path.isfile(sys.argv[1]):
             print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[1]
             print_help()
             exit(1)
 
         assignment_config = sys.argv[1]
     elif len(sys.argv) == 4:
-        if not isfile(sys.argv[3]):
+        if not os.path.isfile(sys.argv[3]):
             print >> sys.stderr, '`%s\' must be an existing file.' % sys.argv[3]
             print_help()
             exit(1)

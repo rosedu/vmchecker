@@ -13,6 +13,7 @@ import vmcheckerpaths
 
 # the prefix of the sections' names describing assignments
 _SECTION_PREFIX = 'assignment '
+_INCLUDE_PREFIX = 'include '
 _DEFAULT_SECTION = _SECTION_PREFIX + 'DEFAULT'
 
 _logger = logging.getLogger('assignments')
@@ -37,6 +38,23 @@ def assignments():
     return _assignments
 
 
+def include(assignment):
+    """An iterator over the files to include when submitting an assignment.
+
+    The iterators yields pairs (destination, source) where
+        destination is the name of the file in the archive
+        source is the name of the file on the disk relative to vmchecker root
+
+    The include options is useful to include other scripts
+    and configuration files.
+
+    """
+    for option in options(assignment):
+        if option.startwith(_INCLUDE_PREFIX):
+            yield (option[len(_INCLUDE_PREFIX):],
+                   vmcheckerpaths.abspath(get(assignment, option)))
+
+
 def get(assignment, option):
     """Gets `option' of `assignment'"""
     try:
@@ -46,8 +64,16 @@ def get(assignment, option):
         return config.get(_DEFAULT_SECTION, option)
 
 
-def path(assigment, option):
+def options(assignment):
+    """Returns a set of options of assignment."""
+    opts = set()
+    opts.update(config.config.options(_SECTION_PREFIX + assignment))
+    opts.update(config.config.options(_DEFAULT_SECTION))
+    return opts
+
+
+def path(assignment, option):
     """Similar to get, but returns a path"""
     return os.path.join(vmcheckerpaths.root,
-                        get(assigment, option))
+                        get(assignment, option))
 
