@@ -100,6 +100,11 @@ def dir_bin():
     return abspath('bin')
 
 
-def homework_path(assignment, user):
+def dir_assignment(assignment):
+    """Returns path to all assignment submissions"""
+    return os.path.join(repository, assignment)
+
+
+def dir_user(assignment, user):
     """Returns path to last user's assignment submission"""
     return os.path.join(repository, assignment, user)

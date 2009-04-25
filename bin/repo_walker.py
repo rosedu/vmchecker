@@ -53,40 +53,39 @@ def _simulate(assignment, user, location, func_name, args):
             func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 
-def _walk_assignment(assignment, assignment_path, func, args):
+def _walk_assignment(assignment, func, args):
     """Walks all user's sources for assignment"""
     from config import options
 
-    for user in os.listdir(assignment_path):
-        user_path = os.path.join(assignment_path, user)
+    for user in os.listdir(vmcheckerpaths.dir_assignment(assignment)):
+        path = vmcheckerpaths.dir_user(assignment, user)
 
-        if not os.path.isdir(user_path):
-            _logger.debug('Ignoring %s (not a directory)', user_path)
+        if not os.path.isdir(path):
+            _logger.debug('Ignoring %s (not a directory)', path)
             continue
 
-        if not os.path.isfile(os.path.join(user_path, 'config')):
-            _logger.debug("Ignoring %s (no config file)", user_path)
+        if not os.path.isfile(os.path.join(path, 'config')):
+            _logger.debug("Ignoring %s (no config file)", path)
             continue
 
         if options.user is not None and options.user != user:
-            _logger.debug('Ignoring %s (as requested by --user)', user_path)
+            _logger.debug('Ignoring %s (as requested by --user)', path)
             continue
 
         if options.recursive:
-            if os.path.commonprefix((os.getcwd(), user_path)) != os.getcwd():
-                _logger.debug('Ignoring %s (in current directory)',
-                              user_path)
+            if os.path.commonprefix((os.getcwd(), path)) != os.getcwd():
+                _logger.debug('Ignoring %s (in current directory)', path)
                 continue
 
-        _logger.info('Walking on %s, %s (%s)', assignment, user, user_path)
+        _logger.info('Walking on %s, %s (%s)', assignment, user, path)
         if options.simulate:
-            _simulate(assignment, user, user_path, func.func_name, args)
+            _simulate(assignment, user, path, func.func_name, args)
         else:
             try:
-                func(assignment, user, user_path, *args)
+                func(assignment, user, path, *args)
             except:
-                _logger.fatal('%s failed for %s, %s (%s)',
-                              func.func_name, assignment, user, user_path)
+                _logger.exception('%s failed for %s, %s (%s)',
+                                  func.func_name, assignment, user, path)
                 if not config.options.ignore:
                     raise
 
@@ -96,22 +95,22 @@ def _walk_repository(repository, func, args):
     from config import options
 
     for assignment in os.listdir(repository):
-        assignment_path = os.path.join(repository, assignment)
+        path = vmcheckerpaths.dir_assignment(assignment)
 
-        if not os.path.isdir(assignment_path):
-            _logger.debug('Ignoring %s (not a directory)', assignment_path)
+        if not os.path.isdir(path):
+            _logger.debug('Ignoring %s (not a directory)', path)
             continue
 
         if assignment not in config.assignments:
-            _logger.debug('Ignoring %s (not an assignment)', assignment_path)
+            _logger.debug('Ignoring %s (not an assignment)', path)
             continue
 
         if options.assignment is not None and options.assignment != assignment:
             _logger.debug('Ignoring %s (as requested by --assignment)',
-                          assignment_path)
+                          path)
             continue
 
-        _walk_assignment(assignment, assignment_path, func, args)
+        _walk_assignment(assignment, func, args)
 
 
 def walk(func, args=()):

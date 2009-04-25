@@ -89,7 +89,7 @@ def save_homework(assignment, user, location):
     shutil.copytree(location, src)
 
     with config.assignments.lock(assignment):
-        dest = vmcheckerpaths.homework_path(assignment, user)
+        dest = vmcheckerpaths.dir_user(assignment, user)
         _logger.info("Storing user's files at %s", dest)
 
         # removes old files
@@ -220,7 +220,7 @@ def submit_homework(location):
 
 def _get_upload_time(assignment, user):
     """Returns a datetime object with upload time user's last submission"""
-    location = vmcheckerpaths.homework_path(assignment, user)
+    location = vmcheckerpaths.dir_user(assignment, user)
     config_file = os.path.join(location, 'config')
 
     if not os.path.isdir(location):

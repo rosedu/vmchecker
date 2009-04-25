@@ -44,15 +44,12 @@ class _Lock(object):
 
     """
     def __init__(self, assignment):
-        try:
-            # XXX move this from here
-            os.makedirs(os.path.join(vmcheckerpaths.repository, assignment))
-        except OSError, exc:
-            if exc.errno != errno.EEXIST:
-                raise
+        location = vmcheckerpaths.dir_assignment(assignment)
+        if not os.path.isdir(location):
+            os.makedirs(location)
 
         self.__fd = os.open(
-                os.path.join(vmcheckerpaths.repository, assignment, '.lock'),
+                os.path.join(location, '.lock'),
                 os.O_CREAT | os.O_RDWR, 0600)
         assert self.__fd != -1
 
