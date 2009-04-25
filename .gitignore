@@ -5,12 +5,9 @@
 unchecked/
 vmchecker.db
 checked/
-teme-de-test/
 tests/
 *.o
-bin/semctl
 bin/vm_executor
-semctl/semctl
 VMExecutor/vm_executor
 executor_jobs/
 queue/
