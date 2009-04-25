@@ -2,78 +2,90 @@
 # -*- coding: utf-8 -*-
 """Handles assignments and assignments options"""
 
-
-import ConfigParser
 import logging
 import os
 
-import config
 import vmcheckerpaths
 
 
 # the prefix of the sections' names describing assignments
 _SECTION_PREFIX = 'assignment '
 _INCLUDE_PREFIX = 'include '
-_DEFAULT_SECTION = _SECTION_PREFIX + 'DEFAULT'
+_DEFAULT = 'DEFAULT'
 
 _logger = logging.getLogger('assignments')
 
 _assignments = None     # the list of assignments
 
 
-def assignments():
-    """Returns the sorted list of assignments"""
-    global _assignments
-    if _assignments is None:
-        _assignments = []
+class Assignments(object):
+    def __init__(self, config):
+        """Returns the assignments from the RawConfigParser object, `config'"""
+        self.__assignments = {}
+        default = {}
 
-        for section in config.config.sections():
+        for section in config.sections():
             if section.startswith(_SECTION_PREFIX):
                 assignment = section[len(_SECTION_PREFIX):]
-                _assignments.append(assignment)
+                if assignment == _DEFAULT:
+                    default = config.items(section)
+                else:
+                    self.__assignments[assignment] = config.items(section)
 
-        _assignments.sort()
-        _logger.debug('Found assignments %s', _assignments)
+        default = dict(default)
+        for assignment, items in self.__assignments.iteritems():
+            temp = default.copy()
+            temp.update(items)
+            self.__assignments[assignment] = temp
 
-    return _assignments
+    def write(self, assignment, config):
+        """Dumps assigment's options to config"""
+        items = self.__assignments[assignment]
+        section = _SECTION_PREFIX + assignment
 
+        config.add_section(section)
+        for option, value in items:
+            config.set(section, option, value)
 
-def include(assignment):
-    """An iterator over the files to include when submitting an assignment.
+    def include(self, assignment):
+        """An iterator over the files to include when submitting an assignment.
 
-    The iterators yields pairs (destination, source) where
-        destination is the name of the file in the archive
-        source is the name of the file on the disk relative to vmchecker root
+        The iterators yields pairs (destination, source) where
+            destination is the name of the file in the archive
+            source is the name of the file on the disk relative to vmchecker root
 
-    The include options is useful to include other scripts
-    and configuration files.
+        The include options is useful to include other scripts
+        and configuration files.
 
-    """
-    for option in options(assignment):
-        if option.startswith(_INCLUDE_PREFIX):
-            yield (option[len(_INCLUDE_PREFIX):],
-                   vmcheckerpaths.abspath(get(assignment, option)))
+        """
+        for option in self.__assignments[assignment]:
+            if option.startswith(_INCLUDE_PREFIX):
+                yield (option[len(_INCLUDE_PREFIX):],
+                       vmcheckerpaths.abspath(self.get(assignment, option)))
 
+    def get(self, assignment, option):
+        """Returns value of `option' for `assignment'.
 
-def get(assignment, option):
-    """Gets `option' of `assignment'"""
-    try:
-        assert assignment.lower() != 'default'
-        return config.get(_SECTION_PREFIX + assignment, option)
-    except ConfigParser.NoOptionError:
-        return config.get(_DEFAULT_SECTION, option)
+        NOTE: section's name (thus assignment's name) is
+        case-sensitive while option is case-insensitive.
+        
+        """
+        return self.__assignments[assignment][option.lower()]
 
+    def __iter__(self):
+        """Returns an iterator over the assignments"""
+        return iter(self.__assignments)
 
-def options(assignment):
-    """Returns a set of options of assignment."""
-    opts = set()
-    opts.update(config.config.options(_SECTION_PREFIX + assignment))
-    opts.update(config.config.options(_DEFAULT_SECTION))
-    return opts
+    def __contains__(self, assignment):
+        """Returns True if `assignment' is a valid assignment"""
+        return assignment in self.__assignments
 
+    def course(self, assignment):
+        assert assignment in self.__assignments, (
+                'No such assignment %s' % repr(assignment))
+        return self.get(assignment, 'course')
 
-def path(assignment, option):
-    """Similar to get, but returns a path"""
-    return os.path.join(vmcheckerpaths.root,
-                        get(assignment, option))
-
+    def tests(self, assignment):
+        assert assignment in self.__assignments, (
+                'No such assignment %s' % repr(assignment))
+        return os.path.join(vmcheckerpaths.dir_tests(), assignment + '.zip')

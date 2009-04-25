@@ -11,6 +11,7 @@ import logging
 import ConfigParser
 
 import vmcheckerpaths
+import assignments as assignments_
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
@@ -33,6 +34,7 @@ options, args = None, None
 # del group
 
 config = ConfigParser.RawConfigParser()
+assignments = None
 
 
 def parse_arguments():
@@ -61,7 +63,11 @@ def _basic_config():
 def config_storer():
     """Configures storer"""
     _basic_config()
+
+    global assignments
     vmcheckerpaths.set_repository(config.get('vmchecker', 'repository'))
+    assignments = assignments_.Assignments(config)
+    print assignments
 
 
 def config_tester():
@@ -74,9 +80,9 @@ def get(section, option):
     return config.get(section, option)
 
 
-def path(section, option):
-    """Returns an absolute path derived from an option"""
-    return vmcheckerpaths.abspath(config.get(section, option))
+#def path(section, option):
+    #"""Returns an absolute path derived from an option"""
+    #return vmcheckerpaths.abspath(config.get(section, option))
 
 
 def _set_logging_level(option, opt_str, value, parser):

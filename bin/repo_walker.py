@@ -104,7 +104,7 @@ def _walk_repository(repository, func, args):
             continue
 
         # XXX maybe an `assignment' module would be appropriate
-        if assignment not in assignments.assignments():
+        if assignment not in config.assignments:
             _logger.debug('Ignoring %s (not an assignment)', assignment_path)
             continue
 

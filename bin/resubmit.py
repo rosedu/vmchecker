@@ -12,7 +12,7 @@ import repo_walker
 
 def _submit(assignment, user, location):
     """Submits assignment from `location'"""
-    submit.submit_assignment(os.path.join(location, 'config'))
+    submit.submit_homework(location)
 
 
 if __name__ == '__main__':
