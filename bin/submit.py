@@ -145,7 +145,7 @@ def submit_assignment(assignment_config):
 
     user = aconfig.get('Assignment', 'User')
     assignment = aconfig.get('Assignment', 'Assignment')
-    course = config.get(assignment, 'Course')
+    course = assignments.get(assignment, 'Course')
 
     # location of student's homework
     archive = os.path.join(dirname(assignment_config), 'archive.zip')
@@ -191,7 +191,7 @@ def submit_assignment(assignment_config):
             raise
 
         # sends homework to tester
-        submit = vmcheckerpaths.abspath(config.get(assignment, 'Submit'))
+        submit = assignments.path(assignment, 'submit')
         _logger.info('Calling submission script %s', submit)
         try:
             check_call((submit, fd[1]))

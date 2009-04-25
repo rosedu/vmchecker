@@ -50,7 +50,7 @@ def include(assignment):
 
     """
     for option in options(assignment):
-        if option.startwith(_INCLUDE_PREFIX):
+        if option.startswith(_INCLUDE_PREFIX):
             yield (option[len(_INCLUDE_PREFIX):],
                    vmcheckerpaths.abspath(get(assignment, option)))
 
