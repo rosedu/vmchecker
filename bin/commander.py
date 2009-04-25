@@ -200,10 +200,13 @@ def main(dir):
         join(dir, 'tests.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
 
-    assignment = config.get('Assignment', 'Assignment')
-    machine = storer.get(assignment, 'Machine')
-    timeout = storer.get(assignment, 'Timeout')
-    kernel_messages = storer.get(assignment, 'KernelMessages')
+    assignment = config.get('Homework', 'Assignment')  # yet another hack
+    section = assignments._SECTION_PREFIX + assignment
+
+    machine = storer.get(section, 'Machine')
+    timeout = storer.get(section, 'Timeout')
+    kernel_messages = storer.get(section, 'KernelMessages')
+
     _run_executor(ejobs, machine, assignment, timeout, kernel_messages)
 
     try:
