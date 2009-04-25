@@ -28,10 +28,6 @@ from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 import vmcheckerpaths
 
 
-__author__ = """Alexandru Moșoi <brtzsnr@gmail.com>,
-                Lucian Adrian Grijincu <lucian.grijincu@gmail.com>"""
-
-
 _logger = logging.getLogger("vmchecker.queue_manager")
 
 

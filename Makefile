@@ -1,12 +1,4 @@
-# Copyright (c) 2008 Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
 # See LICENSE file for license details.
-
-
-# One Makefile to rule them all, 
-# 	one Makefile to find them, 
-# 	one Makefile to bring them all, 
-#	and in the darkness bind them.
-
 MAKEFLAGS += --no-print-directory
 
 COMPONENTS:= VMExecutor
@@ -15,17 +7,28 @@ all:
 	@echo " run make tester-dist or make storer-dist"
 
 
-vmchecker_root_var:
-	@if [ "x$VMCHECKER_ROOT" = "x" ]; then 		\
-		echo "VMCHECKER_ROOT variable is not set";	\
-		exit 1;						\
+dot_vmcheckerrc-storer:
+	@if [ ! -f ~/.vmcheckerrc ]; then			\
+		ln -s `pwd`/vmchecker_storer.ini ~/.vmcheckerrc;\
+		if [ $$? != 0 ]; then				\
+			echo "failed creating .vmcheckerrc";	\
+			exit 1;					\
+		fi						\
+	fi
+dot_vmcheckerrc-tester:
+	@if [ ! -f ~/.vmcheckerrc ]; then			\
+		ln -s `pwd`/vmchecker_tester.ini ~/.vmcheckerrc;\
+		if [ $$? != 0 ]; then				\
+			echo "failed creating .vmcheckerrc";	\
+			exit 1;					\
+		fi						\
 	fi
 
-storer-dist: vmchecker_root_var
+storer-dist: dot_vmcheckerrc-storer
 	./bin/initialise_course.py storer
 
 
-tester-dist: vmchecker_root_var
+tester-dist: dot_vmcheckerrc-tester
 	@bin/assert_python_modules_installed.py paramiko pyinotify
 	@for i in $(COMPONENTS); do \
 		cd $$i && echo " -- Enter -- $$i to make $@" && $(MAKE) $@ && cd ..; \

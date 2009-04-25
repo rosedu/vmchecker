@@ -15,8 +15,6 @@ Output:
     days_late = number of days exceeding the deadline"""
 
 
-__author__='Ana Savu <ana.savu86@gmail.com>, Lucian Adrian Grijincu <lucian.grijincu@gmail.com>'
-
 
 import sys
 import time

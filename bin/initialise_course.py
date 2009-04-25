@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 """Initialises the directory path for one course"""
 
-__author__ = """Ana Savu, <ana.savu86@gmail.com>
-                Lucian Adrian Grijincu <lucian.grijincu@gmail.com>"""
-
-
 import os
 import sqlite3
 import sys
@@ -35,11 +31,13 @@ def _create_paths(paths):
 
 def create_tester_paths():
     """Create all paths used by vmchecker on the storer machine"""
+    config.config_tester()
     _create_paths(vmcheckerpaths.tester_paths())
 
 
 def create_storer_paths():
     """Create all paths used by vmchecker on the storer machine"""
+    config.config_storer()
     _create_paths(vmcheckerpaths.storer_paths())
 
 

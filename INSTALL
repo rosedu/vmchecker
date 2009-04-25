@@ -1,0 +1,34 @@
+
+== Dependencies ==
+
+1. get a newer git version
+   git clone git://git.kernel.org/pub/scm/git/git.git
+   cd git  
+         make prefix=/usr all doc info
+         sudo make prefix=/usr install install-doc install-html install-info
+   cd ..
+
+
+2. install needed python modules
+   apt-get install python-paramiko python-pyinotify
+
+
+3. install vmware-vix
+   # go to http://www.vmware.com/support/developer/vix-api/
+   # extract the archive
+   # tar xf VMware-vix-1.6.2-127388.i386.tar.gz
+   
+   # install vmware-vix
+   sudo ./vmware-vix-distrib/vmware-install.pl
+
+   # remove vmware-vix directory
+   rm -rf vmware-vix-distrib
+
+== Configure machines ==
+
+  # on storer:
+  make storer-dist
+
+  # on tester:
+  make tester-dist
+
