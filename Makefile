@@ -10,7 +10,7 @@ all:
 dot_vmcheckerrc-storer:
 	@if [ ! -f ~/.vmcheckerrc ]; then			\
 		ln -s `pwd`/vmchecker_storer.ini ~/.vmcheckerrc;\
-		if [ -ne $? 0 ]; then				\
+		if [ $$? != 0 ]; then				\
 			echo "failed creating .vmcheckerrc";	\
 			exit 1;					\
 		fi						\
@@ -18,7 +18,7 @@ dot_vmcheckerrc-storer:
 dot_vmcheckerrc-tester:
 	@if [ ! -f ~/.vmcheckerrc ]; then			\
 		ln -s `pwd`/vmchecker_tester.ini ~/.vmcheckerrc;\
-		if [ -ne $? 0 ]; then				\
+		if [ $$? != 0 ]; then				\
 			echo "failed creating .vmcheckerrc";	\
 			exit 1;					\
 		fi						\
