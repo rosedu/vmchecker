@@ -1,9 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Handles assignments and assignments options"""
+"""Handles assignments and assignments options
+
+An assigment `Example' is defined in .vmcheckerrc as follows:
+
+[assignment Example]
+Course = SO                         # name of the course
+Timedelta = 900                     # minumum delat between submissions
+Deadline = 2009.03.31 23:59:00      # format is config.DATE_FORMAT
+
+More, there can be a DEFAULT assignment where options
+are looked up if they are not defined inside assignment sections.
+
+[assignment DEFAULT]
+...
+
+Note that section names are case-sensitive while
+options names are not.
+
+"""
+
+
 
 import fcntl
 import logging
+import datetime
 import os
 
 import vmcheckerpaths
@@ -48,8 +69,9 @@ class _Lock(object):
 
 
 class Assignments(object):
+    """Provides functions to access assignments options"""
     def __init__(self, config):
-        """Returns the assignments from the RawConfigParser object, `config'"""
+        """Parses the assignments from the RawConfigParser object, `config'"""
         self.__assignments = {}
         default = {}
 
@@ -108,7 +130,6 @@ class Assignments(object):
         self._check_valid(assignment)
         return self.__assignments[assignment][option.lower()]
 
-
     def lock(self, assignment):
         """Returns a lock over assignment"""
         self._check_valid(assignment)
@@ -130,3 +151,8 @@ class Assignments(object):
         """Returns the path to the tests for assignment"""
         self._check_valid(assignment)
         return os.path.join(vmcheckerpaths.dir_tests(), assignment + '.zip')
+
+    def timedelta(self, assignment):
+        """Returns a timedelta object with minimum delay between submissions"""
+        return datetime.timedelta(seconds=int(
+                self.get(assignment, 'timedelta')))

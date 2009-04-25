@@ -67,7 +67,6 @@ def config_storer():
     global assignments
     vmcheckerpaths.set_repository(config.get('vmchecker', 'repository'))
     assignments = assignments_.Assignments(config)
-    print assignments
 
 
 def config_tester():

@@ -100,11 +100,6 @@ def dir_bin():
     return abspath('bin')
 
 
-def tester_config_file():
-    """Returns tester's config's absolute path"""
-    return abspath(_TESTER_CONFIG_FILE)
-
-
-def storer_config_file():
-    """Returns storer's config's absolute path"""
-    return abspath(_STORER_CONFIG_FILE)
+def homework_path(assignment, user):
+    """Returns path to last user's assignment submission"""
+    return os.path.join(repository, assignment, user)

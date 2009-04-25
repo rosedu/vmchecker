@@ -23,6 +23,8 @@ import shutil
 import subprocess
 import tempfile
 import time
+import datetime
+import optparse
 import zipfile
 
 import config
@@ -87,7 +89,7 @@ def save_homework(assignment, user, location):
     shutil.copytree(location, src)
 
     with config.assignments.lock(assignment):
-        dest = os.path.join(vmcheckerpaths.repository, assignment, user)
+        dest = vmcheckerpaths.homework_path(assignment, user)
         _logger.info("Storing user's files at %s", dest)
 
         # removes old files
@@ -205,7 +207,7 @@ def submit_homework(location):
             raise
 
     # package created, sends homework to tester by invoking submission script
-    submit = config.assignments.get(assignment, 'submit')
+    submit = config.assignments.get(assignment, 'Submit')
     submit = vmcheckerpaths.abspath(submit)
     _logger.info('Invoking submission script %s', submit)
     try:
@@ -214,6 +216,27 @@ def submit_homework(location):
         _logger.fatal('Cannot submit homework %s, %s', assignment, user)
         os.unlink(fd[1])
         raise
+
+
+def _get_upload_time(assignment, user):
+    """Returns a datetime object with upload time user's last submission"""
+    location = vmcheckerpaths.homework_path(assignment, user)
+    config_file = os.path.join(location, 'config')
+
+    if not os.path.isdir(location):
+        return None
+    if not os.path.isfile(config_file):
+        _logger.warn('%s found, but config (%s) is missing',
+                     location, config_file)
+        return None
+
+    hrc = ConfigParser.RawConfigParser()
+    with open(os.path.join(location, 'config')) as handler:
+        hrc.readfp(handler)
+
+    upload_time = hrc.get('Homework', 'UploadTime')
+    upload_time = time.strptime(upload_time, config.DATE_FORMAT)
+    return datetime.datetime(*upload_time[:6])
 
 
 def main():
@@ -234,8 +257,32 @@ def main():
     if assignment not in config.assignments:
         config.cmdline.error('%s must be a valid assignment.' % assignment)
 
+    # checks time difference
+    if not config.options.force:
+        upload_time = _get_upload_time(assignment, user)
+
+        if upload_time is not None:
+            remaining = upload_time
+            remaining += config.assignments.timedelta(assignment)
+            remaining -= datetime.datetime.now()
+
+            if remaining > datetime.timedelta():
+                _logger.fatal('You are submitting too fast')
+                _logger.fatal('Please allow %s between submissions',
+                        str(config.assignments.timedelta(assignment)))
+                _logger.fatal('Try again in %s', remaining)
+                exit(1)
+
     location = build_config(assignment, user, archive)
     submit_homework(location)
+
+
+group = optparse.OptionGroup(config.cmdline, 'submit.py')
+group.add_option(
+        '-f', '--force', action='store_true', dest='force', default=False,
+        help='Force submitting the homework ignoring the time difference')
+config.cmdline.add_option_group(group)
+del group
 
 
 if __name__ == '__main__':
