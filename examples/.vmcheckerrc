@@ -1,0 +1,23 @@
+[vmchecker]
+root = ~/src/vmchecker/brtzsnr/
+repository = ../repo
+
+[assignment DEFAULT]
+Course = POO
+Timedelta = 900
+
+KernelMessages = 0
+Timeout = 120
+Submit = local/submit_local.sh
+
+Include storer = vmchecker_storer.ini
+Include penalty = local/penalty.py
+Include callback = local/callback.py
+
+[assignment 1-minishell-linux]
+Deadline = 2009.03.31 23:59:00
+Machine = so-linux
+
+[assignment 1-minishell-windows]
+Deadline = 2009.03.31 23:59:00
+Machine = so-win
