@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 """Initialises the directory path for one course"""
 
-__author__ = """Ana Savu, <ana.savu86@gmail.com>
-                Lucian Adrian Grijincu <lucian.grijincu@gmail.com>"""
-
-
 import os
 import sqlite3
 import sys

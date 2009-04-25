@@ -1,6 +1,5 @@
 #!/bin/sh
 # Notify - ups a semaphore to notify the queue_manager
-# Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
 
 if [ -z $1 ]; then
     echo "[NOTIFY.SH] Usage: $0 course_id"

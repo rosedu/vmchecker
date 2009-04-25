@@ -1,12 +1,4 @@
-# Copyright (c) 2008 Lucian Adrian Grijincu (lucian.grijincu@gmail.com)
 # See LICENSE file for license details.
-
-
-# One Makefile to rule them all, 
-# 	one Makefile to find them, 
-# 	one Makefile to bring them all, 
-#	and in the darkness bind them.
-
 MAKEFLAGS += --no-print-directory
 
 COMPONENTS:= VMExecutor

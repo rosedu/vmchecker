@@ -2,9 +2,6 @@
 """All paths related to vmchecker."""
 
 
-__author__ = 'Lucian Adrian Grijincu <lucian.grijincu@gmail.com>'
-
-
 import os
 
 
