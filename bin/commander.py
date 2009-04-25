@@ -39,6 +39,7 @@ from os.path import join, isdir
 
 import config
 import vmcheckerpaths
+import assignments
 
 
 _FILES_TO_SEND = (
@@ -200,7 +201,7 @@ def main(dir):
         join(dir, 'tests.zip'),
         vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
 
-    assignment = config.get('Homework', 'Assignment')  # yet another hack
+    assignment = config.get('Assignment', 'Assignment')  # yet another hack
     section = assignments._SECTION_PREFIX + assignment
 
     machine = storer.get(section, 'Machine')

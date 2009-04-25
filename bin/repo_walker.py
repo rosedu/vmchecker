@@ -14,7 +14,6 @@ from __future__ import with_statement
 
 import optparse
 import os
-import sys
 import logging
 
 import vmcheckerpaths
@@ -28,29 +27,24 @@ def _check_arguments():
     """Checks that arguments don't conflict"""
     from config import options
 
-    error = False
     if (options.user is None
             and options.assignment is None
             and options.recursive == False
             and options.all == False):
-        error = True
-        print ('At least one of --user, --assignment, '
-               '--recursive or --all should be specified')
+        config.cmdline.error(
+                'At least one of --user, --assignment, '
+                '--recursive or --all should be specified')
 
     if ((options.recursive or options.all)
             and (options.user is not None
                 or options.assignment is not None)):
-        error = True
-        print ('Options --recursive and --all '
-               'are incompatible with --user and --assignment')
+        config.cmdline.error(
+                'Options --recursive and --all '
+                'are incompatible with --user and --assignment')
 
     if options.recursive and options.all:
-        error = True
-        print "You can't specify both --recursive and --all"
-
-    if error:
-        config.cmdline.print_help(file=sys.stdout)
-        exit(1)
+        config.cmdline.error(
+                "You can't specify both --recursive and --all")
 
 
 def _simulate(assignment, user, location, func_name, args):
@@ -71,7 +65,7 @@ def _walk_assignment(assignment, assignment_path, func, args):
             continue
 
         if not os.path.isfile(os.path.join(user_path, 'config')):
-            _logger.debug("Ignoring %s (no `config' file)", user_path)
+            _logger.debug("Ignoring %s (no config file)", user_path)
             continue
 
         if options.user is not None and options.user != user:
@@ -88,7 +82,13 @@ def _walk_assignment(assignment, assignment_path, func, args):
         if options.simulate:
             _simulate(assignment, user, user_path, func.func_name, args)
         else:
-            func(assignment, user, user_path, *args)
+            try:
+                func(assignment, user, user_path, *args)
+            except:
+                _logger.fatal('%s failed for %s, %s (%s)',
+                              func.func_name, assignment, user, user_path)
+                if not config.options.ignore:
+                    raise
 
 
 def _walk_repository(repository, func, args):
@@ -102,7 +102,6 @@ def _walk_repository(repository, func, args):
             _logger.debug('Ignoring %s (not a directory)', assignment_path)
             continue
 
-        # XXX maybe an `assignment' module would be appropriate
         if assignment not in config.assignments:
             _logger.debug('Ignoring %s (not an assignment)', assignment_path)
             continue
@@ -142,10 +141,12 @@ group.add_option('-a', '--assignment', dest='assignment',
 group.add_option('-r', '--recursive', action='store_true', dest='recursive',
                  default=False, help='Walks everything starting from '
                                      'current working directory')
-group.add_option('-s', '--simulate', action='store_true', dest='simulate',
+group.add_option('--simulate', action='store_true', dest='simulate',
                  default=False, help='Only prints homeworks to walk')
 group.add_option('--all', action='store_true', dest='all',
                  default=False, help='Walks all submitted homeworks')
+group.add_option('--ignore', action='store_true', dest='ignore',
+                 default=False, help='Ignore errors')
 config.cmdline.add_option_group(group)
 del group
 

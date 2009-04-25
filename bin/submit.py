@@ -63,16 +63,16 @@ def _build_temporary_config(assignment, user, archive):
     # creates homework's configuration file
     # hrc = homework resource configuration
     hrc = ConfigParser.RawConfigParser()
-    hrc.add_section('Homework')
-    hrc.set('Homework', 'User', user)
-    hrc.set('Homework', 'Assignment', assignment)
-    hrc.set('Homework', 'UploadTime', upload_time)
+    hrc.add_section('Assignment')
+    hrc.set('Assignment', 'User', user)
+    hrc.set('Assignment', 'Assignment', assignment)
+    hrc.set('Assignment', 'UploadTime', upload_time)
 
     # XXX these should go to `callback'
-    hrc.set('Homework', 'ResultsDest',
+    hrc.set('Assignment', 'ResultsDest',
             os.path.join(location, 'results'))
-    hrc.set('Homework', 'RemoteUsername', getpass.getuser())
-    hrc.set('Homework', 'RemoteHostname', 'cs.pub.ro')
+    hrc.set('Assignment', 'RemoteUsername', getpass.getuser())
+    hrc.set('Assignment', 'RemoteHostname', 'cs.pub.ro')
 
     with open(os.path.join(location, 'config'), 'w') as handler:
         hrc.write(handler)
@@ -134,7 +134,7 @@ def build_config(assignment, user, archive):
             _build_temporary_config(assignment, user, archive))
 
     # copies the zip archive
-    # XXX should create a clean zip from repository
+    # XXX should create a clean zip from the repository
     shutil.copy(archive, os.path.join(location, 'archive.zip'))
 
     return location
@@ -160,8 +160,8 @@ def submit_homework(location):
     with open(os.path.join(location, 'config')) as handler:
         hrc.readfp(handler)
 
-    assignment = hrc.get('Homework', 'Assignment')
-    user = hrc.get('Homework', 'User')
+    assignment = hrc.get('Assignment', 'Assignment')
+    user = hrc.get('Assignment', 'User')
     course = config.assignments.course(assignment)
 
     # location of student's homework
@@ -198,7 +198,7 @@ def submit_homework(location):
                     assert os.path.isfile(src), 'File %s is missing' % src
 
                     zip_.write(src, dest)
-                    _logger.info('Included %s as %s', src, dest)
+                    _logger.debug('Included %s as %s', src, dest)
 
                 zip_.close()
         except:
@@ -234,7 +234,7 @@ def _get_upload_time(assignment, user):
     with open(os.path.join(location, 'config')) as handler:
         hrc.readfp(handler)
 
-    upload_time = hrc.get('Homework', 'UploadTime')
+    upload_time = hrc.get('Assignment', 'UploadTime')
     upload_time = time.strptime(upload_time, config.DATE_FORMAT)
     return datetime.datetime(*upload_time[:6])
 
