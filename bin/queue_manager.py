@@ -20,7 +20,6 @@ import shutil
 import logging
 import os
 import subprocess
-from os.path import join
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 import vmcheckerpaths
@@ -41,13 +40,13 @@ def process_job(path, name):
     """Unzip a job archive and call the commander"""
     location = tempfile.mkdtemp(prefix='vmchecker-',
                                 dir=vmcheckerpaths.dir_tester_unzip_tmp())
-    archive = join(path, name)
+    archive = os.path.join(path, name)
     try:
         _logger.info('Expanding archive `%s\' at `%s\'.' % (archive, location))
         subprocess.check_call(['unzip', '-d', location, archive])
 
         _logger.info('Calling commander for [%s]' % location)
-        commander_path = join(vmcheckerpaths.dir_bin(), 'commander.py')
+        commander_path = os.path.join(vmcheckerpaths.dir_bin(), 'commander.py')
 
         subprocess.check_call([commander_path, location])
     except subprocess.CalledProcessError:
