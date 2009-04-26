@@ -105,3 +105,8 @@ def dir_assignment(assignment):
 def dir_user(assignment, user):
     """Returns path to last user's assignment submission"""
     return os.path.join(repository, assignment, user)
+
+
+def dir_results(assignment, user):
+    """Returns path to user's results on assignment"""
+    return os.path.join(repository, assignment, user, 'results')

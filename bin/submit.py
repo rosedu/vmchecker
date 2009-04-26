@@ -69,8 +69,7 @@ def _build_temporary_config(assignment, user, archive):
     hrc.set('Assignment', 'UploadTime', upload_time)
 
     # XXX these should go to `callback'
-    hrc.set('Assignment', 'ResultsDest',
-            os.path.join(location, 'results'))
+    hrc.set('Assignment', 'ResultsDest', vmcheckerpaths.dir_results())
     hrc.set('Assignment', 'RemoteUsername', getpass.getuser())
     hrc.set('Assignment', 'RemoteHostname', 'cs.pub.ro')
 
@@ -84,7 +83,7 @@ def _build_temporary_config(assignment, user, archive):
 def save_homework(assignment, user, location):
     """Saves user's submission of assignment stored at location."""
     # copies location to a temporary directory
-    temp = tempfile.mkdtemp()
+    temp = tempfile.mkdtemp()  # FIXME should be inside vmcheckerpaths.root
     src = os.path.join(temp, user)
     shutil.copytree(location, src)
 
@@ -179,7 +178,7 @@ def submit_homework(location):
         fd = tempfile.mkstemp(
                 suffix='.zip',
                 prefix='%s_%s_%s_' % (course, assignment, user),
-                dir=vmcheckerpaths.dir_unchecked())
+                dir=vmcheckerpaths.dir_unchecked())  # FIXME not here
         _logger.info('Creating zip package %s', fd[1])
 
         # populates the archive (see the function's docstring)
