@@ -32,12 +32,14 @@ class _InotifyHandler(ProcessEvent):
     """Dummy class needed to start processing events"""
     def process_IN_CLOSE_WRITE(self, event):
         """Called when a write ends (this means a new
-        archive has arrived). Imediatly start the new job"""
+        archive has arrived). Imediatly start the new job.
+
+        """
         process_job(event.path, event.name)
 
 
 def process_job(path, name):
-    """Unzip a job archive and call the commander"""
+    """Unzip a job archive and call the commander."""
     location = tempfile.mkdtemp(prefix='vmchecker-',
                                 dir=vmcheckerpaths.dir_tester_unzip_tmp())
     archive = os.path.join(path, name)
@@ -61,7 +63,10 @@ def process_job(path, name):
 
 def process_stale_jobs(dir_queue):
     """The queue_manager may die leaving jobs unchecked.
-    This function runs the commander for each"""
+    This function runs the commander for each job found
+    in the queue directory at startup.
+
+    """
     stale_jobs = os.listdir(dir_queue)
     if len(stale_jobs) == 0:
         _logger.info('No stale jobs in queue dir [%s]' % dir_queue)
@@ -77,7 +82,9 @@ def _callback():
 
 def start_queue():
     """ Process any stale jobs and register with inotify to wait
-    for new jobs."""
+    for new jobs to arrive.
+
+    """
     dir_queue = vmcheckerpaths.dir_queue()
 
     # register for inotify envents before processing stale jobs
@@ -93,9 +100,11 @@ def start_queue():
 
 
 def check_tester_setup_correctly():
-    """ Sanity checks: 
+    """ Sanity checks:
         * all needed paths are present
-        * there is a VMExecutor/vmexecutor file to run."""
+        * there is a VMExecutor/vmexecutor file to run.
+
+    """
     # check needed paths setup correctly
     for path in vmcheckerpaths.tester_paths():
         if not os.path.isdir(path):
@@ -109,9 +118,11 @@ def check_tester_setup_correctly():
         _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist`!')
         exit(1)
 
-
-if __name__ == '__main__':
+def main():
+    """Entry point for the queue manager."""
     logging.basicConfig(level=logging.DEBUG)
     check_tester_setup_correctly()
     start_queue()
 
+if __name__ == '__main__':
+    main()
