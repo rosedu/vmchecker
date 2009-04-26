@@ -15,13 +15,11 @@ call a script ./callback located in archive which does this shit.
 
 """
 
-import sys
 import tempfile
 import shutil
 import logging
 import os
-import time
-from subprocess import check_call
+import subprocess
 from os.path import join
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
@@ -31,9 +29,11 @@ import vmcheckerpaths
 _logger = logging.getLogger("vmchecker.queue_manager")
 
 
-class _QueueManager(ProcessEvent):
-    """handler for """
+class _InotifyHandler(ProcessEvent):
+    """Dummy class needed to start processing events"""
     def process_IN_CLOSE_WRITE(self, event):
+        """Called when a write ends (this means a new
+        archive has arrived). Imediatly start the new job"""
         process_job(event.path, event.name)
 
 
@@ -44,13 +44,13 @@ def process_job(path, name):
     archive = join(path, name)
     try:
         _logger.info('Expanding archive `%s\' at `%s\'.' % (archive, location))
-        check_call(['unzip', '-d', location, archive])
+        subprocess.check_call(['unzip', '-d', location, archive])
 
         _logger.info('Calling commander for [%s]' % location)
         commander_path = join(vmcheckerpaths.dir_bin(), 'commander.py')
 
-        check_call([commander_path, location])
-    except:
+        subprocess.check_call([commander_path, location])
+    except subprocess.CalledProcessError:
         _logger.exception('Failed to process [%s].' % location)
 
     _logger.info('Cleaning [%s]' % location)
@@ -72,17 +72,19 @@ def process_stale_jobs(dir_queue):
         process_job(dir_queue, stale_job)
 
 
-def _callback(self):
+def _callback():
     _logger.info('Waiting for the next job to arrive')
 
 
 def start_queue():
+    """ Process any stale jobs and register with inotify to wait
+    for new jobs."""
     dir_queue = vmcheckerpaths.dir_queue()
 
     # register for inotify envents before processing stale jobs
     wm = WatchManager()
-    notifier = Notifier(wm, _QueueManager())
     wm.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
+    notifier = Notifier(wm, _InotifyHandler())
 
     process_stale_jobs(dir_queue)
 
@@ -92,6 +94,9 @@ def start_queue():
 
 
 def check_tester_setup_correctly():
+    """ Sanity checks: 
+        * all needed paths are present
+        * there is a VMExecutor/vmexecutor file to run."""
     # check needed paths setup correctly
     for path in vmcheckerpaths.tester_paths():
         if not os.path.isdir(path):
