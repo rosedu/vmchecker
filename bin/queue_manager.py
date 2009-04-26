@@ -44,17 +44,17 @@ def process_job(path, name):
                                 dir=vmcheckerpaths.dir_tester_unzip_tmp())
     archive = os.path.join(path, name)
     try:
-        _logger.info('Expanding archive `%s\' at `%s\'.' % (archive, location))
+        _logger.info('Expanding archive "%s" at "%s".' % (archive, location))
         subprocess.check_call(['unzip', '-d', location, archive])
 
-        _logger.info('Calling commander for [%s]' % location)
+        _logger.info('Calling commander for "%s"' % location)
         commander_path = os.path.join(vmcheckerpaths.dir_bin(), 'commander.py')
 
         subprocess.check_call([commander_path, location])
     except subprocess.CalledProcessError:
-        _logger.exception('Failed to process [%s].' % location)
+        _logger.exception('Failed to process "%s".' % location)
 
-    _logger.info('Cleaning [%s]' % location)
+    _logger.info('Cleaning "%s"' % location)
     shutil.rmtree(location)
 
     _logger.info('Removing job from the queue')
@@ -69,9 +69,9 @@ def process_stale_jobs(dir_queue):
     """
     stale_jobs = os.listdir(dir_queue)
     if len(stale_jobs) == 0:
-        _logger.info('No stale jobs in queue dir [%s]' % dir_queue)
+        _logger.info('No stale jobs in queue dir "%s"' % dir_queue)
     for stale_job in stale_jobs:
-        _logger.info('Processing stale job [%s] in queue dir %s' % (
+        _logger.info('Processing stale job "%s" in queue dir "%s"' % (
                 stale_job, dir_queue))
         process_job(dir_queue, stale_job)
 
