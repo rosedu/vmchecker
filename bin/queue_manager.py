@@ -4,14 +4,14 @@
 """Queue manager - wait for assignments and invoke the commander for each
 
 This module depends on pyinotify: http://pyinotify.sourceforge.net/
-It should:
+For each submission:
   * listen for new files on a directory,
   * decompress the archives to a temporary directory,
   * pass path of the directory to commander,
   * waits for the commander to finish.
 
-Note, the last two steps must be grouped together: queue_manager should
-call a script ./callback located in archive which does this shit.
+At startup it checks whether there are any stale jobs and executes them 
+all as described above.
 
 """
 
@@ -76,7 +76,13 @@ def process_stale_jobs(dir_queue):
         process_job(dir_queue, stale_job)
 
 
-def _callback():
+def _callback(s):
+    """XXX: check python documentation about the _callback.
+    it receives an instance of the WatchManager.
+    
+    TODO.
+    
+    """
     _logger.info('Waiting for the next job to arrive')
 
 
@@ -88,9 +94,9 @@ def start_queue():
     dir_queue = vmcheckerpaths.dir_queue()
 
     # register for inotify envents before processing stale jobs
-    wm = WatchManager()
-    wm.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
-    notifier = Notifier(wm, _InotifyHandler())
+    wmgr = WatchManager()
+    wmgr.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
+    notifier = Notifier(wmgr, _InotifyHandler())
 
     process_stale_jobs(dir_queue)
 
