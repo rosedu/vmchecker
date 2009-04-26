@@ -77,7 +77,7 @@ def _build_temporary_config(assignment, user, archive):
     with open(os.path.join(location, 'config'), 'w') as handler:
         hrc.write(handler)
 
-    _logger.info('Stored homework at temporary directory %s', location)
+    _logger.info('Stored homework in temporary directory %s', location)
     return location
 
 
@@ -95,7 +95,7 @@ def save_homework(assignment, user, location):
         # removes old files
         try:
             shutil.rmtree(dest)
-            _logger.info('Removed old directory %s', dest)
+            _logger.info('Removed the old directory %s', dest)
         except OSError, exc:
             if exc.errno != errno.ENOENT:
                 raise
