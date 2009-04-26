@@ -69,7 +69,8 @@ def _build_temporary_config(assignment, user, archive):
     hrc.set('Assignment', 'UploadTime', upload_time)
 
     # XXX these should go to `callback'
-    hrc.set('Assignment', 'ResultsDest', vmcheckerpaths.dir_results())
+    hrc.set('Assignment', 'ResultsDest',
+            vmcheckerpaths.dir_results(assignment, user))
     hrc.set('Assignment', 'RemoteUsername', getpass.getuser())
     hrc.set('Assignment', 'RemoteHostname', 'cs.pub.ro')
 
