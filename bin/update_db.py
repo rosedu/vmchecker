@@ -31,6 +31,14 @@ import config
 import vmcheckerpaths
 import repo_walker
 
+import time
+
+from submissions import _get_upload_time
+from penalty import compute_penalty
+from penalty import DATE_FORMAT
+from assignments import _SECTION_PREFIX
+
+DATE_FORMAT2 = '%Y-%m-%d %H:%M:%S' 
 
 _logger = logging.getLogger('update_db')
 
@@ -95,11 +103,46 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
                 grade, mtime, assignment_id, user_id))
 
 
-def _get_grade_value(grade_path):
-    """Reads the first line of grade_path containing the grade."""
-    with open(grade_path) as handler:
-        return handler.readline().strip()
+def _get_grade_value(assignment_id, user_id, grade_path, db_cursor):
+    """Returns the grade value after applying penalties and bonuses.
+    
+    Computes the time penalty for the user, obtains the other
+    penalties and bonuses from the first line of grade_path
+    and computes the final grade.
 
+    """
+    
+    db_cursor.execute('SELECT name FROM assignments WHERE id=?',(assignment_id,))
+    assignment, = db_cursor.fetchone()
+
+    db_cursor.execute('SELECT name FROM users WHERE id=?',(user_id,))
+    user, = db_cursor.fetchone()
+
+    default_section = _SECTION_PREFIX + 'DEFAULT'
+    assignment_section = _SECTION_PREFIX + assignment
+ 
+    weights = [float(x) for x in config.get(default_section, 'PenaltyWeights').split()]
+    limit = config.get(default_section, 'PenaltyLimit')
+    
+    upload_time = time.strptime(
+                _get_upload_time(assignment, user).strftime(DATE_FORMAT2), DATE_FORMAT2)
+
+    deadline = time.strptime(config.get(assignment_section, 'Deadline'), DATE_FORMAT)
+
+    penalty, days = compute_penalty(upload_time, deadline, 1 , weights, limit)
+
+    handler = open(grade_path,'r')
+    grade = 10 - penalty
+    for word in handler.readline().split():
+        if word[0] in ['+','-']:
+            try:
+                grade += eval(word)
+            except:
+                grade += 0
+
+    grade = min(grade, 10)
+    
+    return grade
 
 def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
     """Updates grade for user's submission of assignment.
@@ -114,7 +157,7 @@ def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
 
     if config.options.force or db_mtime != mtime:
         # modified since last db save
-        grade_value = _get_grade_value(grade_filename)
+        grade_value = _get_grade_value(assignment_id, user_id, grade_filename, db_cursor)
         # updates information from DB
         _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
