@@ -24,14 +24,14 @@ import datetime
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'  # XXX must be the same as in bin/misc.py
 
 
-def compute_penalty(upload_time, deadline, penalty, wheights, limit):
+def compute_penalty(upload_time, deadline, penalty, weights, limit):
     """A generic function to compute penalty
 
     Args:
         penalty - for every day after the deadline the product
-                  of the penalty and the wheight is added to the
+                  of the penalty and the weight is added to the
                   penalty_points variable
-        wheights - the penalty's wheight per day (the last wheight
+        weights - the penalty's weight per day (the last weight
                    from the list is used for subsequent computations)
         limit - the limit for the penalty value
     Returns:
@@ -52,9 +52,9 @@ def compute_penalty(upload_time, deadline, penalty, wheights, limit):
             if penalty_points > limit:
                 break
             else:
-                # for every day late the specific wheight is used
-                wheight = wheights[min(i, len(wheights) - 1)]
-                penalty_points += wheight * penalty
+                # for every day late the specific weight is used
+                weight = weights[min(i, len(weights) - 1)]
+                penalty_points += weight * penalty
     else:
         days_late = 0
 
@@ -64,7 +64,7 @@ def compute_penalty(upload_time, deadline, penalty, wheights, limit):
 # common examples of `compute_penalty'. use any of your choice
 def compute_penalty_fixed_penalty(upload_time, deadline):
     # if the number of days past the deadline exceeds 'x' the homework is
-    # not graded (x = len(wheights) - 1)
+    # not graded (x = len(weights) - 1)
     return compute_penalty(upload_time, deadline, 1, [2, 0, 0, 0, 0, 0, 0, 9], 10)
 
 
@@ -76,12 +76,12 @@ def compute_penalty_linear(upload_time, deadline):
 
 def compute_penalty_fixed_deadline(upload_time, deadline):
     # if the number of days past the deadline exceeds 'x' the homework is
-    # not graded (x = len(wheights) - 1)
+    # not graded (x = len(weights) - 1)
     return compute_penalty(upload_time, deadline, 1, [1, 1, 1, 7], 10)
 
 
-def compute_penalty_wheighted(upload_time, deadline):
-    # the wheight for penalty is diferent depending on the day
+def compute_penalty_weighted(upload_time, deadline):
+    # the weight for penalty is diferent depending on the day
     return compute_penalty(upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
 
 
