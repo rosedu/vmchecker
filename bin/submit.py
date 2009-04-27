@@ -30,6 +30,8 @@ import zipfile
 import config
 import vmcheckerpaths
 
+from submissions import _get_upload_time
+
 
 _logger = logging.getLogger('submit')
 
@@ -216,27 +218,6 @@ def submit_homework(location):
         _logger.fatal('Cannot submit homework %s, %s', assignment, user)
         os.unlink(fd[1])
         raise
-
-
-def _get_upload_time(assignment, user):
-    """Returns a datetime object with upload time user's last submission"""
-    location = vmcheckerpaths.dir_user(assignment, user)
-    config_file = os.path.join(location, 'config')
-
-    if not os.path.isdir(location):
-        return None
-    if not os.path.isfile(config_file):
-        _logger.warn('%s found, but config (%s) is missing',
-                     location, config_file)
-        return None
-
-    hrc = ConfigParser.RawConfigParser()
-    with open(os.path.join(location, 'config')) as handler:
-        hrc.readfp(handler)
-
-    upload_time = hrc.get('Assignment', 'UploadTime')
-    upload_time = time.strptime(upload_time, config.DATE_FORMAT)
-    return datetime.datetime(*upload_time[:6])
 
 
 def main():
