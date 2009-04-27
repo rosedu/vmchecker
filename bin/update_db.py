@@ -33,15 +33,11 @@ import repo_walker
 
 import time
 
-from submissions import _get_upload_time
+from submissions import get_upload_time_str
 from penalty import compute_penalty
 from penalty import DATE_FORMAT
-from assignments import _SECTION_PREFIX
-
-DATE_FORMAT2 = '%Y-%m-%d %H:%M:%S' 
 
 _logger = logging.getLogger('update_db')
-
 
 def _db_save_assignment(db_cursor, assignment):
     """Creates an id of the homework and returns it."""
@@ -103,31 +99,20 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
                 grade, mtime, assignment_id, user_id))
 
 
-def _get_grade_value(assignment_id, user_id, grade_path, db_cursor):
+def _get_grade_value(assignment, user, grade_path, db_cursor):
     """Returns the grade value after applying penalties and bonuses.
-    
+
     Computes the time penalty for the user, obtains the other
     penalties and bonuses from the first line of grade_path
     and computes the final grade.
 
     """
-    
-    db_cursor.execute('SELECT name FROM assignments WHERE id=?',(assignment_id,))
-    assignment, = db_cursor.fetchone()
 
-    db_cursor.execute('SELECT name FROM users WHERE id=?',(user_id,))
-    user, = db_cursor.fetchone()
+    weights = [float(x) for x in config.get_default('PenaltyWeights').split()]
+    limit = config.get_default('PenaltyLimit')
 
-    default_section = _SECTION_PREFIX + 'DEFAULT'
-    assignment_section = _SECTION_PREFIX + assignment
- 
-    weights = [float(x) for x in config.get(default_section, 'PenaltyWeights').split()]
-    limit = config.get(default_section, 'PenaltyLimit')
-    
-    upload_time = time.strptime(
-                _get_upload_time(assignment, user).strftime(DATE_FORMAT2), DATE_FORMAT2)
-
-    deadline = time.strptime(config.get(assignment_section, 'Deadline'), DATE_FORMAT)
+    upload_time = get_upload_time_str(assignment, user)
+    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'), DATE_FORMAT)
 
     penalty, days = compute_penalty(upload_time, deadline, 1 , weights, limit)
 
@@ -136,15 +121,15 @@ def _get_grade_value(assignment_id, user_id, grade_path, db_cursor):
     for word in handler.readline().split():
         if word[0] in ['+','-']:
             try:
-                grade += eval(word)
+                grade += float(word)
             except:
-                grade += 0
+                pass
 
     grade = min(grade, 10)
-    
+
     return grade
 
-def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
+def _update_grades(assignment, user, grade_filename, db_cursor):
     """Updates grade for user's submission of assignment.
 
     Reads the grade's value only if the file containing the
@@ -152,12 +137,15 @@ def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
     submission.
 
     """
+    assignment_id = _db_get_assignment_id(db_cursor, assignment)
+    user_id = _db_get_user_id(db_cursor, user)
+
     mtime = os.path.getmtime(grade_filename)
     db_mtime = _db_get_grade_mtime(db_cursor, assignment_id, user_id)
 
     if config.options.force or db_mtime != mtime:
         # modified since last db save
-        grade_value = _get_grade_value(assignment_id, user_id, grade_filename, db_cursor)
+        grade_value = _get_grade_value(assignment, user, grade_filename, db_cursor)
         # updates information from DB
         _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
@@ -172,12 +160,9 @@ def main():
 
     def _update_grades_wrapper(assignment, user, location, db_cursor):
         """A wrapper over _update_grades to use with repo_walker"""
-        assignment_id = _db_get_assignment_id(db_cursor, assignment)
-        user_id = _db_get_user_id(db_cursor, user)
-
         grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
         if os.path.exists(grade_filename):
-            _update_grades(assignment_id, user_id, grade_filename, db_cursor)
+            _update_grades(assignment, user, grade_filename, db_cursor)
             _logger.info('Updated %s, %s (%s)', assignment, user, location)
         else:
             _logger.error('No results found for %s, %s (check %s)',

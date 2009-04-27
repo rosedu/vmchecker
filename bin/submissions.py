@@ -19,7 +19,8 @@ import vmcheckerpaths
 
 _logger = logging.getLogger('submit')
 
-def _get_upload_time(assignment, user):
+
+def get_upload_time_str(assignment, user):
     """Returns a datetime object with upload time user's last submission"""
     location = vmcheckerpaths.dir_user(assignment, user)
     config_file = os.path.join(location, 'config')
@@ -37,6 +38,7 @@ def _get_upload_time(assignment, user):
 
     upload_time = hrc.get('Assignment', 'UploadTime')
     upload_time = time.strptime(upload_time, config.DATE_FORMAT)
-    return datetime.datetime(*upload_time[:6])
+    return upload_time
 
-
+def get_upload_time(assignment, user):
+    return datetime.datetime(*get_upload_time_str(assignment, user)[:6])

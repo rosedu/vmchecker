@@ -12,7 +12,7 @@ import ConfigParser
 
 import vmcheckerpaths
 import assignments as assignments_
-
+from assignments import _SECTION_PREFIX
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 DEFAULT_CONFIG_FILE = '~/.vmcheckerrc'
@@ -78,6 +78,10 @@ def get(section, option):
     """A convenient wrapper for config.get()"""
     return config.get(section, option)
 
+def get_default(option):
+    """A convenient wrapper for config.get() in the default section"""
+    default_section = _SECTION_PREFIX + 'DEFAULT'
+    return config.get(default_section, option)
 
 #def path(section, option):
     #"""Returns an absolute path derived from an option"""
