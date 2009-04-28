@@ -32,9 +32,7 @@ import vmcheckerpaths
 
 import submissions
 
-
 _logger = logging.getLogger('submit')
-
 
 def _build_temporary_config(assignment, user, archive):
     """Stores user's submission of assignment in a temporary directory"""
@@ -240,7 +238,7 @@ def main():
 
     # checks time difference
     if not config.options.force:
-        upload_time = get_upload_time(assignment, user)
+        upload_time = submissions.get_upload_time(assignment, user)
 
         if upload_time is not None:
             remaining = upload_time
