@@ -86,7 +86,7 @@ def _walk_assignment(assignment, func, args):
             except:
                 _logger.exception('%s failed for %s, %s (%s)',
                                   func.func_name, assignment, user, path)
-                if not config.options.ignore:
+                if not config.options.ignore_errors:
                     raise
 
 
@@ -144,7 +144,7 @@ group.add_option('--simulate', action='store_true', dest='simulate',
                  default=False, help='Only prints homeworks to walk')
 group.add_option('--all', action='store_true', dest='all',
                  default=False, help='Walks all submitted homeworks')
-group.add_option('--ignore', action='store_true', dest='ignore',
+group.add_option('--ignore-errors', action='store_true', dest='ignore_errors',
                  default=False, help='Ignore errors')
 config.cmdline.add_option_group(group)
 del group
