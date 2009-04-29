@@ -97,7 +97,6 @@ def start_queue():
     watch_manager = WatchManager()
     watch_manager.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
     notifier = Notifier(watch_manager, _InotifyHandler())
-
     process_stale_jobs(dir_queue)
 
     # set callback to receive notifications (includes queued jobs after
