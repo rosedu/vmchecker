@@ -33,9 +33,8 @@ import repo_walker
 
 import time
 
-from submissions import get_upload_time_str
-from penalty import compute_penalty
-from penalty import DATE_FORMAT
+import submissions
+import penalty
 
 _logger = logging.getLogger('update_db')
 
@@ -103,29 +102,36 @@ def _get_grade_value(assignment, user, grade_path, db_cursor):
     """Returns the grade value after applying penalties and bonuses.
 
     Computes the time penalty for the user, obtains the other
-    penalties and bonuses from the first line of grade_path
+    penalties and bonuses from the grade_path file
     and computes the final grade.
 
+    The grade_path file can have any structure.
+    The only rule is the following: any number that starts with '-' 
+    or '+' is taken into account when computing the grade.
+
+    An example for the file:
+        +0.1 very good comments
+        -0.2  possible leak of memory on line 234 +0.1 treats exceptions
+        -0.2 use of magic numbers
     """
 
-    weights = [float(x) for x in config.get_default('PenaltyWeights').split()]
-    limit = config.get_default('PenaltyLimit')
+    weights = [float(x) for x in config.get('vmchecker','PenaltyWeights').split()]
+    limit = config.get('vmchecker','PenaltyLimit')
 
-    upload_time = get_upload_time_str(assignment, user)
-    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'), DATE_FORMAT)
+    upload_time = submissions.get_upload_time_str(assignment, user)
+    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'), penalty.DATE_FORMAT)
 
-    penalty, days = compute_penalty(upload_time, deadline, 1 , weights, limit)
+    penalty_value, days = penalty.compute_penalty(upload_time, deadline, 1 , weights, limit)
 
-    handler = open(grade_path,'r')
-    grade = 10 - penalty
-    for word in handler.readline().split():
-        if word[0] in ['+','-']:
-            try:
-                grade += float(word)
-            except:
-                pass
-
-    grade = min(grade, 10)
+    grade = 10 - penalty_value
+    with open(grade_path) as handler:
+        for line in handler.readlines():
+            for word in line.split():
+                if word[0] in ['+','-']:
+                    try:
+                        grade += float(word)
+                    except ValueError:
+                        pass
 
     return grade
 

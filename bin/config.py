@@ -78,11 +78,6 @@ def get(section, option):
     """A convenient wrapper for config.get()"""
     return config.get(section, option)
 
-def get_default(option):
-    """A convenient wrapper for config.get() in the default section"""
-    default_section = _SECTION_PREFIX + 'DEFAULT'
-    return config.get(default_section, option)
-
 #def path(section, option):
     #"""Returns an absolute path derived from an option"""
     #return vmcheckerpaths.abspath(config.get(section, option))
