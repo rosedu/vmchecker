@@ -31,13 +31,11 @@ def _create_paths(paths):
 
 def create_tester_paths():
     """Create all paths used by vmchecker on the storer machine"""
-    config.config_tester()
     _create_paths(vmcheckerpaths.tester_paths())
 
 
 def create_storer_paths():
     """Create all paths used by vmchecker on the storer machine"""
-    config.config_storer()
     _create_paths(vmcheckerpaths.storer_paths())
 
 
@@ -103,6 +101,7 @@ def main_storer():
 
 def main_tester():
     """Run initialization tasks for the tester machine."""
+    config.config_tester()
     create_tester_paths()
     _logger.info(' -- tester init done setting up paths and db file.')
 
