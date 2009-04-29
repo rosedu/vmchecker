@@ -32,7 +32,7 @@ import vmcheckerpaths
 # the prefix of the sections' names describing assignments
 _SECTION_PREFIX = 'assignment '
 _INCLUDE_PREFIX = 'include '
-_DEFAULT = 'DEFAULT'
+_DEFAULT_ASSIGNMENT = 'DEFAULT'
 
 _logger = logging.getLogger('assignments')
 
@@ -81,7 +81,7 @@ class Assignments(object):
         for section in config.sections():
             if section.startswith(_SECTION_PREFIX):
                 assignment = section[len(_SECTION_PREFIX):]
-                if assignment == _DEFAULT:
+                if assignment == _DEFAULT_ASSIGNMENT:
                     default = config.items(section)
                 else:
                     self.__assignments[assignment] = config.items(section)
@@ -106,7 +106,7 @@ class Assignments(object):
         if assignment not in self.__assignments:
             raise KeyError, 'No such assignment %s' % repr(assignment)
 
-    def include(self, assignment):
+    def files_to_include(self, assignment):
         """An iterator over the files to include when submitting an assignment.
 
         The iterators yields pairs (destination, source) where
@@ -150,7 +150,7 @@ class Assignments(object):
         """Returns a string representing course name of assignment"""
         return self.get(assignment, 'course')
 
-    def tests(self, assignment):
+    def tests_path(self, assignment):
         """Returns the path to the tests for assignment"""
         self._check_valid(assignment)
         return os.path.join(vmcheckerpaths.dir_tests(), assignment + '.zip')

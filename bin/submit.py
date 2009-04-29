@@ -60,28 +60,28 @@ def _build_temporary_config(assignment, user, archive):
     subprocess.check_call(['unzip', archive,
             '-d', os.path.join(location, 'archive')])
 
-    # creates homework's configuration file
-    # hrc = homework resource configuration
-    hrc = ConfigParser.RawConfigParser()
-    hrc.add_section('Assignment')
-    hrc.set('Assignment', 'User', user)
-    hrc.set('Assignment', 'Assignment', assignment)
-    hrc.set('Assignment', 'UploadTime', upload_time)
+    # creates submission's configuration file
+    # src = submission resource configuration
+    src = ConfigParser.RawConfigParser()
+    src.add_section('Assignment')
+    src.set('Assignment', 'User', user)
+    src.set('Assignment', 'Assignment', assignment)
+    src.set('Assignment', 'UploadTime', upload_time)
 
     # XXX these should go to `callback'
-    hrc.set('Assignment', 'ResultsDest',
+    src.set('Assignment', 'ResultsDest',
             vmcheckerpaths.dir_results(assignment, user))
-    hrc.set('Assignment', 'RemoteUsername', getpass.getuser())
-    hrc.set('Assignment', 'RemoteHostname', 'cs.pub.ro')
+    src.set('Assignment', 'RemoteUsername', getpass.getuser())
+    src.set('Assignment', 'RemoteHostname', 'cs.pub.ro')
 
     with open(os.path.join(location, 'config'), 'w') as handler:
-        hrc.write(handler)
+        src.write(handler)
 
-    _logger.info('Stored homework in temporary directory %s', location)
+    _logger.info('Stored submission in temporary directory %s', location)
     return location
 
 
-def save_homework(assignment, user, location):
+def save_submission(assignment, user, location):
     """Saves user's submission of assignment stored at location."""
     # copies location to a temporary directory
     temp = tempfile.mkdtemp()  # FIXME should be inside vmcheckerpaths.root
@@ -123,13 +123,13 @@ def save_homework(assignment, user, location):
 def build_config(assignment, user, archive):
     """Builds a configuration file for user's assignment submission.
 
-    Returns the absolute path of the homework
+    Returns the absolute path of the submission
 
     """
     assert assignment in config.assignments, (
         'No such assignment `%s\'.' % assignment)
 
-    location = save_homework(
+    location = save_submission(
             assignment, user,
             _build_temporary_config(assignment, user, archive))
 
@@ -140,37 +140,37 @@ def build_config(assignment, user, archive):
     return location
 
 
-def submit_homework(location):
-    """Submits homework at location for evaluation
+def send_submission(location):
+    """Sends the submission at location for evaluation
 
     This function creates a zip archive in the ./unchecked/
     directory and calls the submit script.
 
     The archive contains:
         config - assignment config (eg. name, time of submission etc)
-        archive.zip - a zip containing the homework
+        archive.zip - a zip containing the sources
         tests.zip - a zip containing the tests
         callback - a script executed by the tester to send results back
         ... - assignment's extra files (see assignments.Assignments.include())
 
     """
     # reads user, assignment and course
-    # hrc = homework resource configuration
-    hrc = ConfigParser.RawConfigParser()
+    # src = homework resource configuration
+    src = ConfigParser.RawConfigParser()
     with open(os.path.join(location, 'config')) as handler:
-        hrc.readfp(handler)
+        src.readfp(handler)
 
-    assignment = hrc.get('Assignment', 'Assignment')
-    user = hrc.get('Assignment', 'User')
+    assignment = src.get('Assignment', 'Assignment')
+    user = src.get('Assignment', 'User')
     course = config.assignments.course(assignment)
 
-    # location of student's homework
+    # location of student's submission
     # XXX should create a clean zip from the repository
     archive = os.path.join(location, 'archive.zip')
     assert os.path.isfile(archive), 'Missing archive %s' % archive
 
     # location of tests
-    tests = config.assignments.tests(assignment)
+    tests = config.assignments.tests_path(assignment)
     assert os.path.isfile(tests), 'Missing tests %s' % tests
 
     # builds archive with configuration
@@ -191,7 +191,7 @@ def submit_homework(location):
                 zip_.write(tests, 'tests.zip')
 
                 # includes extra required files
-                for dest, src in config.assignments.include(assignment):
+                for dest, src in config.assignments.files_to_include(assignment):
                     src = vmcheckerpaths.abspath(src)
 
                     # XXX do not assert, but raise
@@ -206,14 +206,14 @@ def submit_homework(location):
             os.unlink(fd[1])
             raise
 
-    # package created, sends homework to tester by invoking submission script
+    # package created, sends submission to tester by invoking submission script
     submit = config.assignments.get(assignment, 'Submit')
     submit = vmcheckerpaths.abspath(submit)
     _logger.info('Invoking submission script %s', submit)
     try:
         subprocess.check_call((submit, fd[1]))
     except:
-        _logger.fatal('Cannot submit homework %s, %s', assignment, user)
+        _logger.fatal('Cannot evaluate submission %s, %s', assignment, user)
         os.unlink(fd[1])
         raise
 
@@ -230,17 +230,17 @@ def _get_upload_time(assignment, user):
                      location, config_file)
         return None
 
-    hrc = ConfigParser.RawConfigParser()
+    src = ConfigParser.RawConfigParser()
     with open(os.path.join(location, 'config')) as handler:
-        hrc.readfp(handler)
+        src.readfp(handler)
 
-    upload_time = hrc.get('Assignment', 'UploadTime')
+    upload_time = src.get('Assignment', 'UploadTime')
     upload_time = time.strptime(upload_time, config.DATE_FORMAT)
     return datetime.datetime(*upload_time[:6])
 
 
 def main():
-    """Parse arguments and submits the homework"""
+    """Parse arguments and sends the submission for evaluation"""
 
     config.cmdline.set_usage('Usage: %prog [options] assignment user archive')
     config.config_storer()
@@ -274,7 +274,7 @@ def main():
                 exit(1)
 
     location = build_config(assignment, user, archive)
-    submit_homework(location)
+    send_submission(location)
 
 
 group = optparse.OptionGroup(config.cmdline, 'submit.py')
