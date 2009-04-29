@@ -2,6 +2,9 @@
 root = ~/vmchecker/
 repository = ../repo
 
+PenaltyWeights = 0.25
+PenaltyLimit = 3
+
 [assignment DEFAULT]
 Course = POO
 Timedelta = 900
@@ -9,9 +12,6 @@ Timedelta = 900
 KernelMessages = 0
 Timeout = 120
 Submit = local/submit_local.sh
-
-PenaltyWeights = 0.25
-PenaltyLimit = 3
 
 Include storer = vmchecker_storer.ini
 Include penalty = local/penalty.py

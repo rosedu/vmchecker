@@ -93,12 +93,11 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
 
     """
     db_cursor.execute(
-            'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
-            'VALUES (?, ?, ?, ?) ', (
-                grade, mtime, assignment_id, user_id))
+        'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
+        'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
 
 
-def _get_grade_value(assignment, user, grade_path, db_cursor):
+def _get_grade_value(assignment, user, grade_path):
     """Returns the grade value after applying penalties and bonuses.
 
     Computes the time penalty for the user, obtains the other
@@ -106,7 +105,7 @@ def _get_grade_value(assignment, user, grade_path, db_cursor):
     and computes the final grade.
 
     The grade_path file can have any structure.
-    The only rule is the following: any number that starts with '-' 
+    The only rule is the following: any number that starts with '-'
     or '+' is taken into account when computing the grade.
 
     An example for the file:
@@ -115,13 +114,18 @@ def _get_grade_value(assignment, user, grade_path, db_cursor):
         -0.2 use of magic numbers
     """
 
-    weights = [float(x) for x in config.get('vmchecker','PenaltyWeights').split()]
+    weights = [float(x) for x in
+                config.get('vmchecker','PenaltyWeights').split()]
+
     limit = config.get('vmchecker','PenaltyLimit')
 
     upload_time = submissions.get_upload_time_str(assignment, user)
-    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'), penalty.DATE_FORMAT)
 
-    penalty_value, days = penalty.compute_penalty(upload_time, deadline, 1 , weights, limit)
+    deadline = time.strptime(config.assignments.get( assignment, 'Deadline'),
+                                            penalty.DATE_FORMAT)
+
+    penalty_value = penalty.compute_penalty(
+                        upload_time, deadline, 1 , weights, limit)[0]
 
     grade = 10 - penalty_value
     with open(grade_path) as handler:
@@ -151,7 +155,7 @@ def _update_grades(assignment, user, grade_filename, db_cursor):
 
     if config.options.force or db_mtime != mtime:
         # modified since last db save
-        grade_value = _get_grade_value(assignment, user, grade_filename, db_cursor)
+        grade_value = _get_grade_value(assignment, user, grade_filename)
         # updates information from DB
         _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
