@@ -22,7 +22,9 @@ import os
 import subprocess
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
+import config
 import vmcheckerpaths
+
 
 
 _logger = logging.getLogger("vmchecker.queue_manager")
