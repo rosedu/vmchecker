@@ -242,7 +242,7 @@ def _check_required_files(path):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-
+    config.config_tester()
     if len(sys.argv) != 2:
         print >> sys.stderr, 'Invalid number of arguments.'
         _print_help()
