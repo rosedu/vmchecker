@@ -125,6 +125,7 @@ def check_tester_setup_correctly():
 
 def main():
     """Entry point for the queue manager."""
+    config.config_tester()
     logging.basicConfig(level=logging.DEBUG)
     check_tester_setup_correctly()
     start_queue()
