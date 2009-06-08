@@ -24,7 +24,8 @@ import datetime
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'  # XXX must be the same as in bin/misc.py
 
 
-def compute_penalty(upload_time, deadline, penalty, weights, limit):
+def compute_penalty(upload_time, deadline, penalty, weights, limit,
+                        holiday_start = [], holiday_finish = []):
     """A generic function to compute penalty
 
     Args:
@@ -38,13 +39,34 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit):
         Number of penalty points.
 
     Note: time interval between deadline and upload time (seconds)
-    is time.mktime(upload_time) - time.mktime(deadline)"""
+    is time.mktime(upload_time) - time.mktime(deadline)
+    """
 
+    sec_upload_time = time.mktime(upload_time)
+    sec_deadline = time.mktime(deadline)
+    interval = sec_upload_time - sec_deadline
     penalty_points = 0
 
-    interval = time.mktime(upload_time) - time.mktime(deadline)
+    if interval > 0:
+        #compute the interval representing the intersection between
+        #(deadline, upload_time) and (holiday_start[i], holiday_finish[i])
+
+        if holiday_start != []:
+            for i in range(len(holiday_start)):
+
+                sec_start = time.mktime(time.strptime(
+                                                holiday_start[i],DATE_FORMAT))
+                sec_finish = time.mktime(time.strptime(
+                                                holiday_finish[i],DATE_FORMAT))
+
+                maxim = max(sec_start, sec_deadline)
+                minim = min(sec_finish, sec_upload_time)
+                if minim > maxim:
+                    interval -= (minim - maxim)
+
     # only if the number of days late is positive (deadline exceeded)
     if interval > 0:
+
         days_late = int(math.ceil(interval / (3600 * 24)))
 
         for i in range(days_late):
@@ -65,7 +87,8 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit):
 def compute_penalty_fixed_penalty(upload_time, deadline):
     # if the number of days past the deadline exceeds 'x' the homework is
     # not graded (x = len(weights) - 1)
-    return compute_penalty(upload_time, deadline, 1, [2, 0, 0, 0, 0, 0, 0, 9], 10)
+    return compute_penalty(upload_time, deadline, 1,
+                                [2, 0, 0, 0, 0, 0, 0, 9], 10)
 
 
 def compute_penalty_linear(upload_time, deadline):
@@ -95,14 +118,15 @@ def verbose_time_difference(upload_time, deadline):
     else:
         str = 'tema trimisă după termenul limită cu'
 
-    d = datetime.timedelta(seconds=interval)
-    return str + ' %d zile %d ore %d minute %d secunde.\n Tema a fost corectată la data %s' % (
-            d.days, d.seconds / 3600, d.seconds % 3600 / 60, d.seconds % 60, datetime.datetime.now())
+    d = datetime.timedelta(seconds = interval)
+    return str + ' %d zile %d ore %d minute %d secunde.\n Tema a fost \
+            corectată la data %s ' % (d.days, d.seconds / 3600,
+            d.seconds % 3600 / 60, d.seconds % 60, datetime.datetime.now())
 
 
 def main():
     if len(sys.argv) != 3:
-        print >>sys.stderr, 'Usage:\n\t%s upload_time deadline' % sys.argv[0]
+        print >> sys.stderr, 'Usage:\n\t%s upload_time deadline' % sys.argv[0]
         sys.exit(1)
 
     upload_time = time.strptime(sys.argv[1], DATE_FORMAT)

@@ -93,6 +93,7 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
 
     """
     db_cursor.execute(
+
         'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
         'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
 
@@ -121,11 +122,18 @@ def _get_grade_value(assignment, user, grade_path):
 
     upload_time = submissions.get_upload_time_str(assignment, user)
 
-    deadline = time.strptime(config.assignments.get( assignment, 'Deadline'),
+    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'),
                                             penalty.DATE_FORMAT)
+    holidays = int(config.get('vmchecker','Holidays'))
 
-    penalty_value = penalty.compute_penalty(
-                        upload_time, deadline, 1 , weights, limit)[0]
+    if holidays != 0:
+        holiday_start = config.get('vmchecker', 'HolidayStart').split(' , ')
+        holiday_finish = config.get('vmchecker', 'HolidayFinish').split(' , ')
+        penalty_value = penalty.compute_penalty(upload_time, deadline, 1 , 
+                            weights, limit, holiday_start, holiday_finish)[0]
+    else:
+        penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
+                            weights, limit)[0]
 
     grade = 10 - penalty_value
     with open(grade_path) as handler:
