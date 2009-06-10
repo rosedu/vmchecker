@@ -40,7 +40,11 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit,
 
     Note: time interval between deadline and upload time (seconds)
     is time.mktime(upload_time) - time.mktime(deadline)
+
     """
+
+    # XXX refactor such that instead of holiday_start and holiday_finish
+    # only one list (of intervals) is used
 
     sec_upload_time = time.mktime(upload_time)
     sec_deadline = time.mktime(deadline)
