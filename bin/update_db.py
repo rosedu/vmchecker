@@ -126,6 +126,28 @@ def _get_grade_value(assignment, user, grade_path):
                                             penalty.DATE_FORMAT)
     holidays = int(config.get('vmchecker','Holidays'))
 
+    grade = 10
+    words = 0
+    word = ""
+
+    with open(grade_path) as handler:
+        for line in handler.readlines():
+            for word in line.split():
+                words += 1
+                if word[0] in ['+','-']:
+                    try:
+                        grade += float(word)
+                    except ValueError:
+                        pass
+
+    #word can be either 'copiat' or 'ok'
+    if words == 1:
+        return word
+
+    #at this point, grade is <= 0 if the homework didn't compile
+    if grade <= 0:
+        return 0
+
     if holidays != 0:
         holiday_start = config.get('vmchecker', 'HolidayStart').split(' , ')
         holiday_finish = config.get('vmchecker', 'HolidayFinish').split(' , ')
@@ -135,16 +157,7 @@ def _get_grade_value(assignment, user, grade_path):
         penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
                             weights, limit)[0]
 
-    grade = 10 - penalty_value
-    with open(grade_path) as handler:
-        for line in handler.readlines():
-            for word in line.split():
-                if word[0] in ['+','-']:
-                    try:
-                        grade += float(word)
-                    except ValueError:
-                        pass
-
+    grade -= penalty_value
     return grade
 
 def _update_grades(assignment, user, grade_filename, db_cursor):
