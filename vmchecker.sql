@@ -16,6 +16,7 @@ CREATE TABLE assignments (
     name VARCHAR(256) NOT NULL,
     url VARCHAR(256),                       -- location of the assignment's text
     repository VARCHAR(256) NOT NULL,       -- local repository path
+    deadline DATE NOT NULL,                 -- when is the assignment due
     timeout INTEGER NOT NULL,               -- how many seconds is a submission allowed to run
     maxgrade INTEGER NOT NULL,              -- eg. 10 or 100
 
