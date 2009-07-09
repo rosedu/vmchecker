@@ -3,7 +3,7 @@
 DROP TABLE IF EXISTS courses;
 CREATE TABLE courses (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    name VARCHAR NOT NULL,
+    name VARCHAR(255) NOT NULL,
 
     PRIMARY KEY (id),
     UNIQUE KEY (name)
@@ -13,9 +13,9 @@ DROP TABLE IF EXISTS assignments;
 CREATE TABLE assignments (
     id INTEGER NOT NULL AUTO_INCREMENT,
     course_id INTEGER NOT NULL,             -- assignment's course
-    name VARCHAR NOT NULL,
-    url VARCHAR,                            -- location of the assignment's text
-    repository VARCHAR NOT NULL,            -- local repository path
+    name VARCHAR(255) NOT NULL,
+    url VARCHAR(255),                            -- location of the assignment's text
+    repository VARCHAR(255) NOT NULL,            -- local repository path
     deadline TIMESTAMP NOT NULL,            -- when is the assignment due
     timeout INTEGER NOT NULL,               -- how many seconds is a submission allowed to run
     maxgrade INTEGER NOT NULL,              -- eg. 10 or 100
@@ -38,8 +38,8 @@ CREATE TABLE holidays (
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    username VARCHAR NOT NULL,              -- from LDAP, eg. lgrijincu
-    fullname VARCHAR NOT NULL,              -- from LDAP, eg. Lucian Adrian Grijincu
+    username VARCHAR(255) NOT NULL,         -- from LDAP, eg. lgrijincu
+    fullname VARCHAR(255) NOT NULL,         -- from LDAP, eg. Lucian Adrian Grijincu
 
     PRIMARY KEY (id),
     UNIQUE KEY (username)
@@ -71,10 +71,10 @@ CREATE TABLE assistants (
 DROP TABLE IF EXISTS submissions;
 CREATE TABLE submissions (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    assignment_id INTEGER NOT NULL,         -- assignment id
-    user_id INTEGER NOT NULL,               -- user id
-    upload TIMESTAMP,                       -- when was it uploaded
-    grade REAL,                             -- grade to be displayed, normally 
+    assignment_id INTEGER NOT NULL,                 -- assignment id
+    user_id INTEGER NOT NULL,                       -- user id
+    upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- when was it uploaded
+    grade REAL,                                     -- grade to be displayed, normally 
 
     PRIMARY KEY (id),
     FOREIGN KEY (assignment_id) REFERENCES assignments(id),
@@ -86,9 +86,9 @@ CREATE TABLE comments (
     id INTEGER NOT NULL AUTO_INCREMENT,
     submission_id INTEGER NOT NULL,         -- what submission was commented
     user_id INTEGER NOT NULL,               -- who made the comment
-    filename VARCHAR,                       -- if NULL, @submission
+    filename VARCHAR(255),                  -- if NULL, @submission
     line INTEGER,                           -- if NULL, @file
-    comment VARCHAR NOT NULL,               -- comment
+    comment VARCHAR(255) NOT NULL,          -- comment
     delta REAL,                             -- adjusts grade
 
     PRIMARY KEY (id),
