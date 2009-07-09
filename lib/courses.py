@@ -1,4 +1,4 @@
-from sqlalchemy.exceptions import IntegrityError
+from sqlalchemy.exceptions import IntegrityError, OperationalError
 
 from . import VmcheckerError
 from . import sql
@@ -15,7 +15,8 @@ def create(name):
     """Creates a new course an returns the new id"""
     insert = sql.courses.insert()
     try:
-        result = insert.execute(name = name)
+        result = insert.execute(
+                name = name)
         return result.last_inserted_ids()[0]
-    except IntegrityError, e:
+    except (IntegrityError, OperationalError), e:
         raise VmcheckerError('Cannot insert: %s' % str(e))
