@@ -1,8 +1,9 @@
+"""Functions to store a submission and send it for evaluation"""
+
 import shutil
 import os
 
 from . import sql, VmcheckerError
-from . import assignments
 
 
 SOURCES_FILE = 'sources.zip'

@@ -24,6 +24,7 @@ FULLNAME = 'Lucian Adrian Grijincu'
 class TestSubmit(unittest.TestCase):
     def setUp(self):
         """Creates a course, an assignment, and an user"""
+        sql.connect('mysql://root:alfabet@localhost/vmchecker')
         sql.clear_tables()
 
         # creates a course
