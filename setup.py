@@ -1,4 +1,16 @@
 #!/usr/bin/env python
+"""The distutils setup script.
+
+To install vmchecker run
+    $ ./setup.py install --home=~
+which install vmchecker to ~/lib/python.
+
+Probably, you'll need to setup PYTHONPATH for python
+to see your library
+    $ export PYTHONPATH=~/lib/python/
+
+
+"""
 
 from distutils.core import setup
 
