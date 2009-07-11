@@ -5,7 +5,6 @@
 unchecked/
 vmchecker.db
 checked/
-tests/
 *.o
 bin/vm_executor
 VMExecutor/vm_executor
