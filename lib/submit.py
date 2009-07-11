@@ -9,13 +9,13 @@ from . import sql, VmcheckerError
 SOURCES_FILE = 'sources.zip'
 
 
-def store(archive, assignment_id, user_id, upload = None):
-    """Stores archive into the corresponding location.
+def store(sources, assignment_id, user_id, upload = None):
+    """Stores sources into the corresponding location.
 
     Submission is stored at:
         <assignment.repository>/<submission_id>/<SOURCES_FILE>
 
-    @param archive path to the archive
+    @param sources path to the sources
     @param assignment_id the assignment solved
     @param user_id the author of the submission
     @param upload if not None a `datetime' object containg the upload time
@@ -49,12 +49,10 @@ def store(archive, assignment_id, user_id, upload = None):
 
         # copy fles
         os.makedirs(location)
-        shutil.copy(archive, os.path.join(location, SOURCES_FILE))
+        shutil.copy(sources, os.path.join(location, SOURCES_FILE))
 
         transaction.commit()
         return submission_id, location
     except VmcheckerError:
         transaction.rollback()
         raise
-
-
