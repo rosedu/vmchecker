@@ -9,6 +9,8 @@ Probably, you'll need to setup PYTHONPATH for python
 to see your library
     $ export PYTHONPATH=~/lib/python/
 
+You can run tests using
+    $ ./tests/run-all.sh
 
 """
 
