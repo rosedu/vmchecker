@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 """Initialises the directory path for one course"""
 
+from __future__ import with_statement
+
 import os
 import sqlite3
 import sys
 import logging
+import string
 from subprocess import check_call, CalledProcessError
 
 import vmcheckerpaths
@@ -14,6 +17,34 @@ import config
 
 _logger = logging.getLogger("vmchecker.initialise_course")
 
+
+def _install_example_config_file(machine):
+    """Install an example config file to ~/.vmcheckerrc"""
+
+    # get the data from the example .vmcheckerrc
+    template_data = ""
+    with open('examples/.vmcheckerrc_' + machine.strip()) as template:
+        template_data = template.read()
+
+    # the example is a template that contains some '$var' variables.
+    s = string.Template(template_data)
+
+    # first, determine some sane values for those variables
+    default_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    default_repo = os.path.normpath(os.path.join(default_root, '..', 'repo'))
+
+    # replace the $vars with these values and write the result in the destination file
+    with open(config.vmcheckerrc_path(), 'w') as handle:
+        handle.write(s.substitute(root=default_root, repo=default_repo))
+
+
+def _install_if_needed_example_config_file(machine):
+    if not os.path.exists(config.vmcheckerrc_path()):
+        _install_example_config_file(machine)
+        print(('A new default vmchecker configuration file was written to %s. ' +
+               'Please update it before running any vmchecker code.') % config.vmcheckerrc_path())
+    else:
+        print(('Configuration file %s exists. This script will not change it.') %  config.vmcheckerrc_path())
 
 def _mkdir_if_not_exist(path):
     """Make the path if it does not exist"""
@@ -117,13 +148,15 @@ def usage():
 def main():
     """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
-
+    config.parse_arguments()
     if (len(sys.argv) < 2):
         usage()
         exit(1)
     if cmp(sys.argv[1], 'storer') == 0:
+        _install_if_needed_example_config_file('storer')
         main_storer()
     elif cmp(sys.argv[1], 'tester') == 0:
+        _install_if_needed_example_config_file('tester')
         main_tester()
     elif cmp(sys.argv[1], '--help') == 0:
         usage()

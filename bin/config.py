@@ -58,9 +58,6 @@ def _basic_config():
     # sets logging
     logging.basicConfig(level=logging.INFO)
 
-    # parse command-line arguments
-    parse_arguments()
-
     # reads configuration
     assert os.path.isabs(vmcheckerrc_path())
     with open(vmcheckerrc_path()) as handle:
@@ -112,4 +109,3 @@ cmdline.add_option('-q', '--quiet', action='callback', nargs=0,
 cmdline.add_option('--config', dest='config', default=DEFAULT_CONFIG_FILE,
                    metavar='FILE', help='Reads configuration from FILE ('
                                         'defaults to %s)' % DEFAULT_CONFIG_FILE)
-
