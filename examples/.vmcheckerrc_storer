@@ -1,6 +1,6 @@
 [vmchecker]
-root = ~/src/vmchecker/brtzsnr/
-repository = ../repo
+root = $root
+repository = $repo
 
 [assignment DEFAULT]
 Course = POO
