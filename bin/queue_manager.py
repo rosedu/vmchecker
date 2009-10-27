@@ -107,23 +107,14 @@ def start_queue():
 
 
 def check_tester_setup_correctly():
-    """ Sanity checks:
+    """ Sanity check:
         * all needed paths are present
-        * there is a VMExecutor/vmexecutor file to run.
-
     """
     # check needed paths setup correctly
     for path in vmcheckerpaths.tester_paths():
         if not os.path.isdir(path):
             _logger.error('"%s" missing. Run `make tester-dist`!', path)
             exit(1)
-    # check binaries build
-    # TODO: XXX: Hardcoded
-    # VMExecutor is expected to die soon :)
-    if not os.path.isfile(os.path.join(vmcheckerpaths.abspath('VMExecutor'),
-                                       'vm_executor')):
-        _logger.error('VMExecutor/vm_executor missing. Run `make tester-dist`!')
-        exit(1)
 
 def main():
     """Entry point for the queue manager."""
