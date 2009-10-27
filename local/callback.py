@@ -10,8 +10,7 @@ import paramiko
 import sys
 import logging
 import subprocess
-import misc
-
+import ConfigParser
 
 _DEFAULT_SSH_PORT = 22
 _DEFAULT_JOB_PENALTY_FILE = 'job_penalty'
@@ -182,11 +181,26 @@ def get_unzipped_local_storer_config():
     return _get_unzipped_local_path('storer')
 
 
+def _config_variables(config_file, section_name):
+    """Return a dictionary with values from the config_path file.
+
+    NB:  the keys will be all lowercase!
+    """
+    _config = ConfigParser.RawConfigParser()
+    with open(config_file) as handle:
+        _config.readfp(handle)
+    return dict(_config.items(section_name))
+
+
 def get_deadline(conf_vars):
     """Return the deadline for the current homework"""
     assignment = conf_vars['assignment']
     storer_config = get_unzipped_local_storer_config()
-    storer_assignment_vars = misc.config_variables(storer_config, assignment)
+    # XXX the 'assignment ' + on the next line is a HACK!
+    # in the storer config the assignments are stored as 'assignment 1-minishell-linux'
+    # but our assignment variable is just '1-minishell-linux'.
+    # we shouldn't hardcode 'assignment ' here!
+    storer_assignment_vars = _config_variables(storer_config, 'assignment ' + assignment)
     return storer_assignment_vars['deadline']
 
 
@@ -234,7 +248,7 @@ if __name__ == "__main__":
         exit(1)
 
     config_file = sys.argv[1]
-    conf_vars = misc.config_variables(config_file, 'Assignment')
+    conf_vars = _config_variables(config_file, 'Assignment')
 
     # skip first two: the script name and the config file :)
     files = sys.argv[2:]
