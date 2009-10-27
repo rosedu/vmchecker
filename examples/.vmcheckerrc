@@ -3,16 +3,44 @@ root = $root
 repository = $repo
 
 [assignment DEFAULT]
-Course = POO
-Timedelta = 900
+# the name of the course
+# as of now this is only used in the name of some files
+# but in the future it may be used in scheduling tests
+Course = CPL
 
+# minimum time (in seconds) between two successive
+# submissions by the same student.
+Timedelta = 180
+
+# do we need to get kernel printk/dprintf ?
+# 0 - means no
+# non-zero means yes
 KernelMessages = 0
+
+# maximum execution time (in seconds) of a test on the vm
+# it this is exceeded, the test is stopped.
 Timeout = 120
+
+# script to use to submit archives to the tester
+# XXX: This is implementation speciffic; it shouldn't be in the config file
 Submit = local/submit_ssh.sh
 
+# which files to send to the tester
+# Syntax: 'Include $name_of_dst_file_in_the_archive = $name_of_source_file
+# XXX: This is implementation speciffic; it shouldn't be in the config file
 Include storer = examples/.vmcheckerrc
 Include penalty = local/penalty.py
 Include callback = local/callback.py
+
+
+# assignment configuration
+#
+# syntax:
+# [assignment $NAME]
+# Deadline = date
+# Machine = an id of the machine used in testing
+# timeout = a timeout for test execution (override the default)
+# kernelmessages = override the default kernelmessages
 
 [assignment 1-minishell-linux]
 Deadline = 2009.03.31 23:59:00
@@ -26,6 +54,10 @@ Machine = so-win
 Timeout=120
 KernelMessages=0
 
+
+
+
+# tester configuration
 [so-linux]
 VMPath=/home/so/vmware/so-vm-debian-sid/faust.vmx
 GuestUser=so
