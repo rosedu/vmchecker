@@ -10,7 +10,7 @@ KernelMessages = 0
 Timeout = 120
 Submit = local/submit_ssh.sh
 
-Include storer = examples/.vmcheckerrc_storer
+Include storer = examples/.vmcheckerrc
 Include penalty = local/penalty.py
 Include callback = local/callback.py
 
@@ -25,3 +25,12 @@ Deadline = 2009.03.31 23:59:00
 Machine = so-win
 Timeout=120
 KernelMessages=0
+
+[so-linux]
+VMPath=/home/so/vmware/so-vm-debian-sid/faust.vmx
+GuestUser=so
+GuestPassword=so
+GuestBasePath=/home/so/
+GuestShellPath=/bin/bash
+GuestHomeInBash=/home/so/
+

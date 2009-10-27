@@ -18,12 +18,12 @@ import config
 _logger = logging.getLogger("vmchecker.initialise_course")
 
 
-def _install_example_config_file(machine):
+def _install_example_config_file():
     """Install an example config file to ~/.vmcheckerrc"""
 
     # get the data from the example .vmcheckerrc
     template_data = ""
-    with open('examples/.vmcheckerrc_' + machine.strip()) as template:
+    with open('examples/.vmcheckerrc') as template:
         template_data = template.read()
 
     # the example is a template that contains some '$var' variables.
@@ -38,9 +38,9 @@ def _install_example_config_file(machine):
         handle.write(s.substitute(root=default_root, repo=default_repo))
 
 
-def _install_if_needed_example_config_file(machine):
+def _install_if_needed_example_config_file():
     if not os.path.exists(config.vmcheckerrc_path()):
-        _install_example_config_file(machine)
+        _install_example_config_file()
         print(('A new default vmchecker configuration file was written to %s. ' +
                'Please update it before running any vmchecker code.') % config.vmcheckerrc_path())
     else:
@@ -153,10 +153,10 @@ def main():
         usage()
         exit(1)
     if cmp(sys.argv[1], 'storer') == 0:
-        _install_if_needed_example_config_file('storer')
+        _install_if_needed_example_config_file()
         main_storer()
     elif cmp(sys.argv[1], 'tester') == 0:
-        _install_if_needed_example_config_file('tester')
+        _install_if_needed_example_config_file()
         main_tester()
     elif cmp(sys.argv[1], '--help') == 0:
         usage()
