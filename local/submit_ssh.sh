@@ -2,13 +2,13 @@
 # An example script to submit a homework to queue manager
 
 # address of queue manager machine
-ADDRESS=sanctuary
+ADDRESS=sanctuary.cs.pub.ro
 
 # vmchecker user on remote machine
-USER=so
+USER=lucian
 
 # location of vmchecker on remote machine
-VMCHECKER_ROOT=/home/so/vmchecker/vmchecker
+VMCHECKER_ROOT=/home/lucian/vmchecker/vmchecker
 
 
 # copies the file and notifies (implicit) queue manager
