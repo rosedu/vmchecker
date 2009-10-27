@@ -36,7 +36,7 @@ Timeout = 120
 Submit = local/submit_ssh.sh
 
 # which files to send to the tester
-# Syntax: 'Include $name_of_dst_file_in_the_archive = $name_of_source_file
+# Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
 # XXX: This is implementation speciffic; it shouldn't be in the config file
 Include storer = examples/.vmcheckerrc
 Include penalty = local/penalty.py
@@ -46,7 +46,7 @@ Include callback = local/callback.py
 # assignment configuration
 #
 # syntax:
-# [assignment $NAME]
+# [assignment NAME]
 # Deadline = date
 # Machine = an id of the machine used in testing
 # timeout = a timeout for test execution (override the default)
