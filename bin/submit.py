@@ -33,6 +33,29 @@ import vmcheckerpaths
 
 _logger = logging.getLogger('submit')
 
+import socket
+import fcntl
+import struct
+
+
+def get_ip_address(ifname):
+    """Recipe 439094: get the IP address associated with a network
+    interface (linux only).
+
+    Uses the Linux SIOCGIFADDR ioctl to find the IP address associated
+    with a network interface, given the name of that interface,
+    e.g. "eth0". The address is returned as a string containing a
+    dotted quad.
+
+    XXX: TODO: find a better way to do this.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+
 
 def _build_temporary_config(assignment, user, archive):
     """Stores user's submission of assignment in a temporary directory"""
@@ -72,7 +95,7 @@ def _build_temporary_config(assignment, user, archive):
     src.set('Assignment', 'ResultsDest',
             vmcheckerpaths.dir_results(assignment, user))
     src.set('Assignment', 'RemoteUsername', getpass.getuser())
-    src.set('Assignment', 'RemoteHostname', 'cs.pub.ro')
+    src.set('Assignment', 'RemoteHostname', get_ip_address('eth0')) #XXX HARDCODED eth0! change it!
 
     with open(os.path.join(location, 'config'), 'w') as handler:
         src.write(handler)
