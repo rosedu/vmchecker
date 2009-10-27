@@ -261,7 +261,7 @@ def main():
         config.cmdline.error('%s must be a valid assignment.' % assignment)
 
     # checks time difference
-    if not config.options.force:
+    if not config.options.force and submissions.submission_exists(assignment, user):
         upload_time = submissions.get_upload_time(assignment, user)
 
         if upload_time is not None:
