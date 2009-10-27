@@ -57,6 +57,7 @@ def _basic_config():
     """Common configuration"""
     # sets logging
     logging.basicConfig(level=logging.INFO)
+    parse_arguments()
 
     # reads configuration
     assert os.path.isabs(vmcheckerrc_path())
