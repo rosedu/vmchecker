@@ -5,7 +5,8 @@
    apt-get install python-paramiko python-pyinotify
 
 
-2. install vmware-vix
+2. (only on the tester machine)
+   install vmware-vix
    # go to http://www.vmware.com/support/developer/vix-api/
    # extract the archive
    # tar xf VMware-vix-1.6.2-127388.i386.tar.gz
@@ -15,6 +16,13 @@
 
    # remove vmware-vix directory
    rm -rf vmware-vix-distrib
+
+
+3. (only on the tester machine)
+   install pyvix
+   git clone git://github.com/luciang/pyvix.git
+   cd pyvix && python setup.py install
+
 
 == Configure machines ==
 
