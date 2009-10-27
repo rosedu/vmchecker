@@ -86,6 +86,45 @@ def _run_callback(dir, ejobs):
         raise
 
 
+def _make_test_config(ejobs, machine, timeout, kernel_messages, dst_file):
+    km = True if int(kernel_messages) != 0 else False
+    test = {
+        'km_enable' : km,
+        'host' : {
+            'vmx_path'       : config.get(machine, 'VMPath'),
+            'vmchecker_root' : vmcheckerpaths.root,
+            'jobs_path'      : 'executor_jobs/',
+            'scripts_path'   : 'executor_scripts/'},
+        'guest' : {
+            'username'  : config.get(machine, 'GuestUser'),
+            'password'  : config.get(machine, 'GuestPassword'),
+            'shell'     : config.get(machine, 'GuestShellPath'),
+            'root_path' : {
+                'native_style' : config.get(machine, 'GuestBasePath'),
+                'shell_style'  : config.get(machine, 'GuestHomeInBash'),
+                'separator'    : '/',
+                },
+            },
+        'test'  : {
+            0 : {
+                'input'  : ['file.zip', 'tests.zip'],
+                'script' : ['vmchecker_build.sh'],
+                'output' : ['job_build'],
+                'timeout': int(timeout),
+                },
+            1  : {
+                'input'  : [],
+                'script' : ['vmchecker_run.sh'],
+                'output' : ['job_run', 'job_errors'],
+                'timeout': int(timeout)
+                }
+            }
+        }
+    with open(dst_file, 'w') as f:
+        f.write ('test='+str(test))
+
+
+
 def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     """Starts a job.
 
@@ -93,22 +132,9 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
     XXX parsing config should be executors' job
 
     """
-    args = [
-            # '/bin/echo',
-            vmcheckerpaths.abspath('VMExecutor/vm_executor'),
-            machine,
-            kernel_messages,                       # enables kernel_messages
-            config.get(machine, 'VMPath'),
-            config.get('Global', 'LocalAddress'),  # did I review commander.cpp?
-            config.get(machine, 'GuestUser'),
-            config.get(machine, 'GuestPassword'),     # XXX keys?
-            config.get(machine, 'GuestBasePath'),
-            config.get(machine, 'GuestShellPath'),
-            config.get(machine, 'GuestHomeInBash'),   # why is this needed?
-            vmcheckerpaths.root,
-            assignment,
-            timeout,
-            ]
+    dst_file = 'input_config.py'
+    _make_test_config(ejobs, machine, timeout, kernel_messages, dst_file)
+    args = [vmcheckerpaths.abspath('bin/vm_executor.py'), dst_file]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
 
