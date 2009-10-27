@@ -86,11 +86,6 @@ def get(section, option):
     return config.get(section, option)
 
 
-#def path(section, option):
-    #"""Returns an absolute path derived from an option"""
-    #return vmcheckerpaths.abspath(config.get(section, option))
-
-
 def _set_logging_level(option, opt_str, value, parser):
     """Sets the logging level throu command-line arguments"""
     setattr(parser.values, option.dest, True)
