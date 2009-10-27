@@ -8,9 +8,9 @@ Timedelta = 900
 
 KernelMessages = 0
 Timeout = 120
-Submit = local/submit_local.sh
+Submit = local/submit_ssh.sh
 
-Include storer = vmchecker_storer.ini
+Include storer = examples/.vmcheckerrc_storer
 Include penalty = local/penalty.py
 Include callback = local/callback.py
 
