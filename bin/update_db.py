@@ -31,9 +31,12 @@ import config
 import vmcheckerpaths
 import repo_walker
 
+import time
+
+import submissions
+import penalty
 
 _logger = logging.getLogger('update_db')
-
 
 def _db_save_assignment(db_cursor, assignment):
     """Creates an id of the homework and returns it."""
@@ -90,18 +93,74 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
 
     """
     db_cursor.execute(
-            'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
-            'VALUES (?, ?, ?, ?) ', (
-                grade, mtime, assignment_id, user_id))
+
+        'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
+        'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
 
 
-def _get_grade_value(grade_path):
-    """Reads the first line of grade_path containing the grade."""
+def _get_grade_value(assignment, user, grade_path):
+    """Returns the grade value after applying penalties and bonuses.
+
+    Computes the time penalty for the user, obtains the other
+    penalties and bonuses from the grade_path file
+    and computes the final grade.
+
+    The grade_path file can have any structure.
+    The only rule is the following: any number that starts with '-'
+    or '+' is taken into account when computing the grade.
+
+    An example for the file:
+        +0.1 very good comments
+        -0.2  possible leak of memory on line 234 +0.1 treats exceptions
+        -0.2 use of magic numbers
+    """
+
+    weights = [float(x) for x in
+                config.get('vmchecker','PenaltyWeights').split()]
+
+    limit = config.get('vmchecker','PenaltyLimit')
+
+    upload_time = submissions.get_upload_time_str(assignment, user)
+
+    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'),
+                                            penalty.DATE_FORMAT)
+    holidays = int(config.get('vmchecker','Holidays'))
+
+    grade = 10
+    words = 0
+    word = ""
+
     with open(grade_path) as handler:
-        return handler.readline().strip()
+        for line in handler.readlines():
+            for word in line.split():
+                words += 1
+                if word[0] in ['+','-']:
+                    try:
+                        grade += float(word)
+                    except ValueError:
+                        pass
 
+    #word can be either 'copiat' or 'ok'
+    if words == 1:
+        return word
 
-def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
+    #at this point, grade is <= 0 if the homework didn't compile
+    if grade <= 0:
+        return 0
+
+    if holidays != 0:
+        holiday_start = config.get('vmchecker', 'HolidayStart').split(' , ')
+        holiday_finish = config.get('vmchecker', 'HolidayFinish').split(' , ')
+        penalty_value = penalty.compute_penalty(upload_time, deadline, 1 , 
+                            weights, limit, holiday_start, holiday_finish)[0]
+    else:
+        penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
+                            weights, limit)[0]
+
+    grade -= penalty_value
+    return grade
+
+def _update_grades(assignment, user, grade_filename, db_cursor):
     """Updates grade for user's submission of assignment.
 
     Reads the grade's value only if the file containing the
@@ -109,12 +168,15 @@ def _update_grades(assignment_id, user_id, grade_filename, db_cursor):
     submission.
 
     """
+    assignment_id = _db_get_assignment_id(db_cursor, assignment)
+    user_id = _db_get_user_id(db_cursor, user)
+
     mtime = os.path.getmtime(grade_filename)
     db_mtime = _db_get_grade_mtime(db_cursor, assignment_id, user_id)
 
     if config.options.force or db_mtime != mtime:
         # modified since last db save
-        grade_value = _get_grade_value(grade_filename)
+        grade_value = _get_grade_value(assignment, user, grade_filename)
         # updates information from DB
         _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
@@ -129,12 +191,9 @@ def main():
 
     def _update_grades_wrapper(assignment, user, location, db_cursor):
         """A wrapper over _update_grades to use with repo_walker"""
-        assignment_id = _db_get_assignment_id(db_cursor, assignment)
-        user_id = _db_get_user_id(db_cursor, user)
-
         grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
         if os.path.exists(grade_filename):
-            _update_grades(assignment_id, user_id, grade_filename, db_cursor)
+            _update_grades(assignment, user, grade_filename, db_cursor)
             _logger.info('Updated %s, %s (%s)', assignment, user, location)
         else:
             _logger.error('No results found for %s, %s (check %s)',

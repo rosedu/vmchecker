@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """General configuration module"""
 
@@ -12,7 +12,7 @@ import ConfigParser
 
 import vmcheckerpaths
 import assignments as assignments_
-
+from assignments import _SECTION_PREFIX
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 DEFAULT_CONFIG_FILE = '~/.vmcheckerrc'

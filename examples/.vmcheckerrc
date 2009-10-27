@@ -2,6 +2,16 @@
 root = $root
 repository = $repo
 
+
+PenaltyWeights = 0.25
+PenaltyLimit = 3
+
+Holidays = 1
+
+HolidayStart = 2009.03.31 23:59:00
+HolidayFinish = 2009.04.02 23:59:00
+
+
 [assignment DEFAULT]
 # the name of the course
 # as of now this is only used in the name of some files

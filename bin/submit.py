@@ -30,6 +30,7 @@ import zipfile
 import config
 import vmcheckerpaths
 
+import submissions
 
 _logger = logging.getLogger('submit')
 
@@ -241,27 +242,6 @@ def send_submission(location):
         raise
 
 
-def _get_upload_time(assignment, user):
-    """Returns a datetime object with upload time user's last submission"""
-    location = vmcheckerpaths.dir_user(assignment, user)
-    config_file = os.path.join(location, 'config')
-
-    if not os.path.isdir(location):
-        return None
-    if not os.path.isfile(config_file):
-        _logger.warn('%s found, but config (%s) is missing',
-                     location, config_file)
-        return None
-
-    src = ConfigParser.RawConfigParser()
-    with open(os.path.join(location, 'config')) as handler:
-        src.readfp(handler)
-
-    upload_time = src.get('Assignment', 'UploadTime')
-    upload_time = time.strptime(upload_time, config.DATE_FORMAT)
-    return datetime.datetime(*upload_time[:6])
-
-
 def main():
     """Parse arguments and sends the submission for evaluation"""
 
@@ -282,7 +262,7 @@ def main():
 
     # checks time difference
     if not config.options.force:
-        upload_time = _get_upload_time(assignment, user)
+        upload_time = submissions.get_upload_time(assignment, user)
 
         if upload_time is not None:
             remaining = upload_time
