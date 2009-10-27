@@ -39,7 +39,6 @@ Submit = local/submit_ssh.sh
 # Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
 # XXX: This is implementation speciffic; it shouldn't be in the config file
 Include storer = examples/.vmcheckerrc
-Include penalty = local/penalty.py
 Include callback = local/callback.py
 
 

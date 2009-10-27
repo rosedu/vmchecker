@@ -151,6 +151,9 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
         # if we cannot open the process, there is nothing more to be done
         return
 
+    with open(join(ejobs, 'job_results'), 'w') as handler:
+        print >> handler, 'ok'
+
     # waits for the the process to finish
     try:
         counter = 0

@@ -13,7 +13,6 @@ import subprocess
 import ConfigParser
 
 _DEFAULT_SSH_PORT = 22
-_DEFAULT_JOB_PENALTY_FILE = 'job_penalty'
 
 _logger = logging.getLogger('vmchecker.callback')
 
@@ -171,11 +170,6 @@ def _get_unzipped_local_path(filename):
     return os.path.normpath(os.path.join(d, filename))
 
 
-def get_unzipped_local_penalty_script():
-    """Get the path of the local penalty script."""
-    return _get_unzipped_local_path('penalty')
-
-
 def get_unzipped_local_storer_config():
     """Get the path of the local storer config file."""
     return _get_unzipped_local_path('storer')
@@ -204,18 +198,6 @@ def get_deadline(conf_vars):
     return storer_assignment_vars['deadline']
 
 
-def sftp_transfer_penalty_output(sftp, conf_vars):
-    """Call the penalty script and write results to sftp in _DEFAULT_JOB_PENALTY_FILE
-    """
-    penalty = get_unzipped_local_penalty_script()
-    upload_time = conf_vars['uploadtime']
-    deadline = get_deadline(conf_vars)
-
-    _logger.debug('penalty=%s, upload_time=%s, deadline=%s' % (
-            penalty, upload_time, deadline))
-    output = subprocess.Popen([penalty, upload_time, deadline],
-                              stdout=subprocess.PIPE).communicate()[0]
-    sftp.open(_DEFAULT_JOB_PENALTY_FILE, 'w').write(output)
 
 
 def send_results_and_notify(files, conf_vars):
@@ -228,7 +210,6 @@ def send_results_and_notify(files, conf_vars):
             sftp = paramiko.SFTPClient.from_transport(t)
             sftp_mkdir_if_not_exits(sftp, conf_vars['resultsdest'])
             sftp_transfer_files(sftp, files, conf_vars)
-            sftp_transfer_penalty_output(sftp, conf_vars)
     except:
         _logger.exception('error while transferring files with paramiko')
     finally:
