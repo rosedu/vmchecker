@@ -61,8 +61,12 @@ def get_ip_address(ifname):
 def _build_temporary_config(assignment, user, archive):
     """Stores user's submission of assignment in a temporary directory"""
 
-    # the upload time is the system's current time
-    upload_time = time.strftime(config.DATE_FORMAT)
+    # if the user forced upload time at some value, grant his wish
+    # if not, the upload time is the system's current time
+    if config.options.forced_upload_time != None:
+        upload_time = config.options.forced_upload_time
+    else:
+        upload_time = time.strftime(config.DATE_FORMAT)
     prefix = '%s_%s_%s_%s_' % (
             config.assignments.course(assignment),
             assignment, user, upload_time)
@@ -281,9 +285,11 @@ def main():
 
 
 group = optparse.OptionGroup(config.cmdline, 'submit.py')
-group.add_option(
-        '-f', '--force', action='store_true', dest='force', default=False,
-        help='Force submitting the homework ignoring the time difference')
+group.add_option('-f', '--force', action='store_true', dest='force', default=False,
+                 help='Force submitting the homework ignoring the time difference')
+group.add_option('-u', '--forced-upload-time',
+                 help='Force the time of upload to be the one specified. ' +
+                      'If not supplied the current system time is used')
 config.cmdline.add_option_group(group)
 del group
 
