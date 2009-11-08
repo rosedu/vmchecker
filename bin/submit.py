@@ -287,7 +287,7 @@ def main():
 group = optparse.OptionGroup(config.cmdline, 'submit.py')
 group.add_option('-f', '--force', action='store_true', dest='force', default=False,
                  help='Force submitting the homework ignoring the time difference')
-group.add_option('-u', '--forced-upload-time',
+group.add_option('-t', '--forced-upload-time',
                  help='Force the time of upload to be the one specified. ' +
                       'If not supplied the current system time is used')
 config.cmdline.add_option_group(group)
