@@ -1,0 +1,18 @@
+#!/bin/bash
+
+VMCHECKER_CONFIG_LIST=/etc/vmchecker/config.list
+
+case "$1" in
+  start)
+	cat $VMCHECKER_CONFIG_LIST | while read cfg ; do
+		vmchecker start --config $cfg
+	done;
+	;;
+  stop)
+	cat $VMCHECKER_CONFIG_LIST | while read cfg ; do
+		vmchecker stop --config $cfg
+	done;
+	;;
+esac
+
+

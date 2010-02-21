@@ -13,6 +13,17 @@ tester-dist:
 	./bin/initialise_course.py tester
 	mkdir -p ./executor_jobs/
 
+tester-install: tester-dist
+	test -d /etc/init.d/    || mkdir /etc/init.d/
+	test -d /etc/vmchecker/ || mkdir /etc/vmchecker/
+	cp etc/init.d/vmchecker /etc/init.d/vmchecker
+	cp etc/vmchecker/config.list /etc/vmchecker/config.list
+
+storer-install: storer-dist
+	test -d /etc/vmchecker  || mkdir /etc/vmchecker/
+	cp etc/vmchecker/config.list /etc/vmchecker/config.list
+
+
 clean:
 	rm -f *~ */*~
 	rm -f bin/*~ bin/*.pyc

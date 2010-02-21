@@ -28,7 +28,9 @@
 
   # on storer:
   make storer-dist
+  sudo make storer-install
 
   # on tester:
   make tester-dist
+  sudo make tester-install
 
