@@ -25,4 +25,7 @@ setup(name = 'vmchecker',
       license = 'MIT',
       platforms = 'Linux',
       packages = ['vmchecker'],
-      package_dir = {'vmchecker': 'bin'})
+      package_dir = {'vmchecker': 'bin'},
+      data_files = [('/etc/init.d/', ['etc/init.d/vmchecker']),
+	            ('/etc/vmchecker/', ['etc/vmchecker/config.list'])])
+
