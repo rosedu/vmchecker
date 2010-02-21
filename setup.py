@@ -25,4 +25,4 @@ setup(name = 'vmchecker',
       license = 'MIT',
       platforms = 'Linux',
       packages = ['vmchecker'],
-      package_dir = {'vmchecker': 'lib'})
+      package_dir = {'vmchecker': 'bin'})
