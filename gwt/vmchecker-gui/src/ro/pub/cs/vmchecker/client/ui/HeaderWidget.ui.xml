@@ -1,0 +1,105 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+			 xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+	<ui:style>
+		.headerPanel {
+			width: 100%;
+		}
+	
+		.header {
+			background-color: #EEEEEE;
+			height: 50px; 
+			width: 100%;
+		}
+	
+		.logo {
+			font-weight: bold; 
+			color: green;
+			font-size: 18px;
+			margin: 10px;
+			line-height: 26px;    
+		}
+		
+		.list {
+			margin: 10px; 
+		}
+		
+		.spacer {
+			width: 100%; 
+		}
+		
+		.username {
+			font-weight: bold;
+			padding-right: 10px;
+			line-height: 20px;  
+		}
+		
+		.rightPanel{
+			margin: 15px;
+			vertical-align: middle;  
+		}
+		
+		.leftPanel {
+			margin: 3px; 
+		}
+			
+		.anchor {
+			color: green;
+			margin: 3px;
+			padding-right: 5px;
+			font-size: 14px;
+			border-right: 1px solid green;    
+		}
+		
+		.last {
+			border-right: none; 
+		}
+		
+		a, a:visited, a:hover {
+			color: green; 
+		}
+		
+		a:hover {
+			text-decoration: underline; 
+		}
+		
+		.statusPanel {
+			height: 30px; 
+			width: 100%;
+			text-align: center;
+			padding-top: 15px;  
+		}
+		
+		.statusLabel {
+			display: inline;
+			padding: 3px; 
+			font-weight: bold;
+			background-color: #FFCC66;  
+		}
+		
+	</ui:style>
+	<g:VerticalPanel styleName="{style.headerPanel}">
+	<g:DockLayoutPanel styleName="{style.header}" unit='EM'>
+		<g:west size="40">
+			<g:HorizontalPanel styleName="{style.leftPanel}" verticalAlignment='ALIGN_MIDDLE'>
+				<g:HTML>
+					<div class="logo"></div>
+				</g:HTML>
+				<g:ListBox ui:field="coursesList" visibleItemCount='1'
+					styleName="{style.list}" />
+			</g:HorizontalPanel>
+		</g:west>
+		<g:east size="21">
+			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
+				verticalAlignment='ALIGN_MIDDLE'>
+				<g:Label styleName="{style.username}">nume.prenume</g:Label>
+				<g:Hyperlink targetHistoryToken="settings" styleName="{style.anchor}">Settings</g:Hyperlink>
+				<g:Hyperlink styleName="{style.anchor} {style.last}">Logout</g:Hyperlink>
+			</g:HorizontalPanel>
+		</g:east>
+	</g:DockLayoutPanel>
+	<g:SimplePanel styleName="{style.statusPanel}">
+		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}">Status message</g:Label>
+	</g:SimplePanel>
+	</g:VerticalPanel>
+</ui:UiBinder>
