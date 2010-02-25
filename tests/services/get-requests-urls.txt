@@ -1,0 +1,4 @@
+
+http://localhost/vmchecker/getCourses
+http://localhost/vmchecker/getAssignments?courseId=so
+http://localhost/vmchecker/getResults?courseId=so&assignmentId=tema1-lin&username=nume.prenume
