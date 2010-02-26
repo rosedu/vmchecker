@@ -45,6 +45,7 @@ def uploadAssignment(req, courseid, assignmentid, username, archivefile):
 
          ###  Call submit.py
          #TODO xxx de-harcode
+	 #config.config_storer() 	
          #s_path = os.path.join(vmcheckerpaths.dir_bin(),'submit.py')
          s_path = '/home/szekeres/Desktop/vmchecker/bin/submit.py'
          process = subprocess.Popen(['python', s_path, assignmentid, 
@@ -67,6 +68,7 @@ def uploadAssignment(req, courseid, assignmentid, username, archivefile):
 def getResults(req, courseid, assignmentid, username): 
    if Cookie.get_cookie(req, 'username'):
       #TODO xxx de-hardcode	
+      #config.config_storer()
       #r_path = vmcheckerpaths.dir_results(courseid, assignmentid, username)
       r_path = "/home/szekeres/vmchecker/repo/"+courseid + "/" + assignmentid +"/" + username + "/results/"
 
@@ -102,6 +104,7 @@ def getAssignments(req, courseid):
    if Cookie.get_cookie(req, 'username'):
       #TODO Nu stiu inca layoutul final al fisierelor de configurare - dupa ce termina Lucian
       #TODO xxx path to .vmcheckerrc for this courseid
+      #config.config_storer()
       c_path = '/home/szekeres/storer.ini'
       parser = ConfigParser.RawConfigParser()
       assignments = []      
