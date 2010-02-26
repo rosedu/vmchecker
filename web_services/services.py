@@ -17,7 +17,6 @@ def fbuffer(f, chunk_size=10000):
 
 ########## @ServiceMethod
 def uploadAssignment(req, courseid, assignmentid, username, archivefile):
-
    ###  Save file in a temp  
    fileitem = req.form['archivefile']
    # Test if the file was uploaded
@@ -30,7 +29,7 @@ def uploadAssignment(req, courseid, assignmentid, username, archivefile):
       f.close()
 
       ###  Call submit.py
-      #TODO de-harcode
+      #TODO xxx de-harcode
       #s_path = os.path.join(vmcheckerpaths.dir_bin(),'submit.py')
       s_path = '/home/szekeres/Desktop/vmchecker/bin/submit.py'
       process = subprocess.Popen(['python', s_path, assignmentid, 
@@ -49,7 +48,7 @@ def uploadAssignment(req, courseid, assignmentid, username, archivefile):
 
 ########## @ServiceMethod
 def getResults(req, courseid, assignmentid, username):
-   #TODO de-hardcode	
+   #TODO xxx de-hardcode	
    #r_path = vmcheckerpaths.dir_results(courseid, assignmentid, username)
    r_path = "/home/szekeres/vmchecker/repo/"+courseid + "/" + assignmentid +"/" + username + "/results/"
 
@@ -70,13 +69,13 @@ def getResults(req, courseid, assignmentid, username):
 
 ######### @ServiceMethod
 def getCourses(req):
-   #TODO Dupa ce termina Lucian
+   #TODO xxx Dupa ce termina Lucian
    return json.dumps([{'id':'so','title':'Sisteme de Operare'},{'id':'pso','title':'Sisteme de Operare 2'},{'id':'cpl','title':'Compilatoare'},{'id':'pa','title':'Proiectarea Algoritmilor'}])
 
 ######### @ServiceMethod
 def getAssignments(req, courseid):
    #TODO Nu stiu inca layoutul final al fisierelor de configurare - dupa ce termina Lucian
-   #path to .vmcheckerrc
+   #TODO xxx path to .vmcheckerrc for this courseid
    c_path = '/home/szekeres/storer.ini'
    parser = ConfigParser.RawConfigParser()
    assignments = []      
@@ -85,13 +84,11 @@ def getAssignments(req, courseid):
 	  s = section.split() 	
           if s[0] == 'assignment' and s[1] !=  'DEFAULT':
           #for each assignment section
-	     if parser.get(section, 'Course') == courseid:
 		a = {}
 		a['assignmentId'] = s[1]
                 a['assignmentTitle'] = parser.get(section, 'Title')
 		a['deadline'] = parser.get(section, 'Deadline')
 		assignments.append(a)
- 		
       return json.dumps(assignments)	
    else:
       return 'The configuration file doesn\'t exist'
