@@ -2,6 +2,11 @@ import os
 import sys
 import subprocess
 import json
+import tempfile
+import ConfigParser
+
+#import config
+#import vmcheckerpaths
 
 # Generator to buffer file chunks
 def fbuffer(f, chunk_size=10000):
@@ -13,26 +18,23 @@ def fbuffer(f, chunk_size=10000):
 ########## @ServiceMethod
 def uploadAssignment(req, courseid, assignmentid, username, archivefile):
 
-   ### 1) Save file in a temp
-   #TODO  generate a unique temp name (username is unique?) + chmod + delete   
+   ###  Save file in a temp  
    fileitem = req.form['archivefile']
    # Test if the file was uploaded
    if fileitem.filename:
-      # strip leading path from file name 
-      fname = os.path.basename(fileitem.filename)
-      # build absolute path to files directory
-      dir_path = os.path.join(os.path.dirname(req.filename), 'files')
-      file_path = os.path.join(dir_path, fname) 	
-      f = open(file_path, 'wb', 10000)
+      fd, tmpname = tempfile.mkstemp('.zip')
+      f = open(tmpname, 'wb', 10000)
       # Read the file in chunks
       for chunk in fbuffer(fileitem.file):
          f.write(chunk)
       f.close()
 
-      ### 2) Call submit.py
-      #TODO de-hardcode	
-      hard_path = '/home/szekeres/Desktop/vmchecker/bin/submit.py'
-      process = subprocess.Popen(['python', hard_path, assignmentid, username],
+      ###  Call submit.py
+      #TODO de-harcode
+      #s_path = os.path.join(vmcheckerpaths.dir_bin(),'submit.py')
+      s_path = '/home/szekeres/Desktop/vmchecker/bin/submit.py'
+      process = subprocess.Popen(['python', s_path, assignmentid, 
+				 username, tmpname],
 				 shell=False, 
 				 stderr=subprocess.STDOUT, 
 				 stdout=subprocess.PIPE)
@@ -47,14 +49,53 @@ def uploadAssignment(req, courseid, assignmentid, username, archivefile):
 
 ########## @ServiceMethod
 def getResults(req, courseid, assignmentid, username):
+   #TODO de-hardcode	
+   #r_path = vmcheckerpaths.dir_results(courseid, assignmentid, username)
+   r_path = "/home/szekeres/vmchecker/repo/"+courseid + "/" + assignmentid +"/" + username + "/results/"
 
+   if not os.path.isdir(r_path):
+      #TODO fortune 
+      #TODO cand s updateaza baza de date?	
+      return json.dumps({'resultLog':'not yet'});
+   else:
+      resultlog = ""
+      for fname in os.listdir(r_path):
+	f_path = os.path.join(r_path, fname)
+	if os.path.isfile(f_path):
+          f = open(f_path, "r")
+          resultlog += "===== " + fname + " =====\n"		
+	  resultlog += f.read()		
 
+   return json.dumps({'resultlog':resultlog})
 
 ######### @ServiceMethod
 def getCourses(req):
+   #TODO Dupa ce termina Lucian
+   return json.dumps([{'id':'so','title':'Sisteme de Operare'},{'id':'pso','title':'Sisteme de Operare 2'},{'id':'cpl','title':'Compilatoare'},{'id':'pa','title':'Proiectarea Algoritmilor'}])
 
 ######### @ServiceMethod
 def getAssignments(req, courseid):
+   #TODO Nu stiu inca layoutul final al fisierelor de configurare - dupa ce termina Lucian
+   #path to .vmcheckerrc
+   c_path = '/home/szekeres/storer.ini'
+   parser = ConfigParser.RawConfigParser()
+   assignments = []      
+   if parser.read(c_path):
+      for section in parser.sections():
+	  s = section.split() 	
+          if s[0] == 'assignment' and s[1] !=  'DEFAULT':
+          #for each assignment section
+	     if parser.get(section, 'Course') == courseid:
+		a = {}
+		a['assignmentId'] = s[1]
+                a['assignmentTitle'] = parser.get(section, 'Title')
+		a['deadline'] = parser.get(section, 'Deadline')
+		assignments.append(a)
+ 		
+      return json.dumps(assignments)	
+   else:
+      return 'The configuration file doesn\'t exist'
 
 ######### @ServiceMethod
-def login(req, username, password): 
+def login(req, username, password):
+   return 0 
