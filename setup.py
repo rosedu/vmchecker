@@ -17,7 +17,7 @@ You can run tests using
 from distutils.core import setup
 
 setup(name = 'vmchecker',
-      version = '0.3a1',
+      version = '0.5',
       author = 'vmchecker',
       author_email = 'vmchecker-dev@lists.rosedu.org',
       url = 'http://github.com/vmchecker/vmchecker/tree/master',
