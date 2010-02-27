@@ -98,7 +98,7 @@ def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
         'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
 
 
-def _get_grade_value(assignment, user, grade_path):
+def _get_grade_value(vmcfg, assignment, user, grade_path):
     """Returns the grade value after applying penalties and bonuses.
 
     Computes the time penalty for the user, obtains the other
@@ -116,15 +116,15 @@ def _get_grade_value(assignment, user, grade_path):
     """
 
     weights = [float(x) for x in
-                config.get('vmchecker','PenaltyWeights').split()]
+                vmcfg.get('vmchecker','PenaltyWeights').split()]
 
-    limit = config.get('vmchecker','PenaltyLimit')
+    limit = vmcfg.get('vmchecker','PenaltyLimit')
 
     upload_time = submissions.get_upload_time_str(assignment, user)
 
-    deadline = time.strptime(config.assignments.get(assignment, 'Deadline'),
+    deadline = time.strptime(vmcfg.assignments.get(assignment, 'Deadline'),
                                             penalty.DATE_FORMAT)
-    holidays = int(config.get('vmchecker','Holidays'))
+    holidays = int(vmcfg.get('vmchecker','Holidays'))
 
     grade = 10
     words = 0
@@ -149,8 +149,8 @@ def _get_grade_value(assignment, user, grade_path):
         return 0
 
     if holidays != 0:
-        holiday_start = config.get('vmchecker', 'HolidayStart').split(' , ')
-        holiday_finish = config.get('vmchecker', 'HolidayFinish').split(' , ')
+        holiday_start = vmcfg.get('vmchecker', 'HolidayStart').split(' , ')
+        holiday_finish = vmcfg.get('vmchecker', 'HolidayFinish').split(' , ')
         penalty_value = penalty.compute_penalty(upload_time, deadline, 1 , 
                             weights, limit, holiday_start, holiday_finish)[0]
     else:
@@ -160,7 +160,7 @@ def _get_grade_value(assignment, user, grade_path):
     grade -= penalty_value
     return grade
 
-def _update_grades(assignment, user, grade_filename, db_cursor):
+def _update_grades(vmcfg, assignment, user, grade_filename, db_cursor):
     """Updates grade for user's submission of assignment.
 
     Reads the grade's value only if the file containing the
@@ -176,14 +176,14 @@ def _update_grades(assignment, user, grade_filename, db_cursor):
 
     if config.options.force or db_mtime != mtime:
         # modified since last db save
-        grade_value = _get_grade_value(assignment, user, grade_filename)
+        grade_value = _get_grade_value(vmcfg, assignment, user, grade_filename)
         # updates information from DB
         _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
 
 def main():
     """Checks for modified grades and updates the database"""
-    config.config_storer()
+    vmcfg = config.config_storer()
 
     db_conn = sqlite3.connect(vmcheckerpaths.db_file(),
                               isolation_level="EXCLUSIVE")
@@ -193,13 +193,13 @@ def main():
         """A wrapper over _update_grades to use with repo_walker"""
         grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
         if os.path.exists(grade_filename):
-            _update_grades(assignment, user, grade_filename, db_cursor)
+            _update_grades(vmcfg, assignment, user, grade_filename, db_cursor)
             _logger.info('Updated %s, %s (%s)', assignment, user, location)
         else:
             _logger.error('No results found for %s, %s (check %s)',
                           assignment, user, grade_filename)
 
-    repo_walker.walk(_update_grades_wrapper, args=(db_cursor,))
+    repo_walker.walk(vmcfg, _update_grades_wrapper, args=(db_cursor,))
 
     db_cursor.close()
     db_conn.commit()

@@ -14,5 +14,5 @@ def _submit(assignment, user, location):
 
 
 if __name__ == '__main__':
-    config.config_storer()
-    repo_walker.walk(_submit)
+    vmcfg = config.config_storer()
+    repo_walker.walk(vmcfg, _submit)

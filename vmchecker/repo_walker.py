@@ -90,7 +90,7 @@ def _walk_assignment(assignment, func, args):
                     raise
 
 
-def _walk_repository(repository, func, args):
+def _walk_repository(vmcfg, repository, func, args):
     """Walks the repository."""
     from config import options
 
@@ -101,7 +101,7 @@ def _walk_repository(repository, func, args):
             _logger.debug('Ignoring %s (not a directory)', path)
             continue
 
-        if assignment not in config.assignments:
+        if assignment not in vmcfg.assignments():
             _logger.debug('Ignoring %s (not an assignment)', path)
             continue
 
@@ -113,7 +113,7 @@ def _walk_repository(repository, func, args):
         _walk_assignment(assignment, func, args)
 
 
-def walk(func, args=()):
+def walk(vmcfg, func, args=()):
     """Walks the repository and calls `func' for each homework found.
 
     @param func function to be called
@@ -129,7 +129,7 @@ def walk(func, args=()):
 
     """
     _check_arguments()
-    _walk_repository(vmcheckerpaths.repository, func, args)
+    _walk_repository(vmcfg, vmcfg.repository_path(), func, args)
 
 
 group = optparse.OptionGroup(config.cmdline, 'repo_walker.py')
