@@ -34,7 +34,6 @@ options, argv = None, None
 # del group
 
 assignments = None
-vmcfg = None
 
 class VmcheckerConfig:
     def __init__(self, config_file_):
@@ -77,25 +76,24 @@ def _basic_config():
     assert os.path.isabs(options.config)
     vmcfg = VmcheckerConfig(options.config)
     vmcheckerpaths.set_root(vmcfg.root_path())
+    return vmcfg
 
 
 def config_storer():
     """Configures storer"""
-    _basic_config()
+    vmcfg = _basic_config()
 
     global assignments
     vmcheckerpaths.set_repository(vmcfg.repository_path())
     assignments = vmcfg.assignments()
+    return vmcfg
 
 
 def config_tester():
     """Configures tester"""
-    _basic_config()
+    vmcfg = _basic_config()
+    return vmcfg
 
-
-def get(section, option):
-    """A convenient wrapper for config.get()"""
-    return vmcfg.get(section, option)
 
 
 def _set_logging_level(option, opt_str, value, parser):
