@@ -86,22 +86,22 @@ def _run_callback(dir, ejobs):
         raise
 
 
-def _make_test_config(ejobs, machine, timeout, kernel_messages, dst_file):
+def _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file):
     km = True if int(kernel_messages) != 0 else False
     test = {
         'km_enable' : km,
         'host' : {
-            'vmx_path'       : config.get(machine, 'VMPath'),
-            'vmchecker_root' : vmcheckerpaths.root,
+            'vmx_path'       : vmcfg.get(machine, 'VMPath'),
+            'vmchecker_root' : vmcfg.root_path(),
             'jobs_path'      : 'executor_jobs/',
             'scripts_path'   : 'executor_scripts/'},
         'guest' : {
-            'username'  : config.get(machine, 'GuestUser'),
-            'password'  : config.get(machine, 'GuestPassword'),
-            'shell'     : config.get(machine, 'GuestShellPath'),
+            'username'  : vmcfg.get(machine, 'GuestUser'),
+            'password'  : vmcfg.get(machine, 'GuestPassword'),
+            'shell'     : vmcfg.get(machine, 'GuestShellPath'),
             'root_path' : {
-                'native_style' : config.get(machine, 'GuestBasePath'),
-                'shell_style'  : config.get(machine, 'GuestHomeInBash'),
+                'native_style' : vmcfg.get(machine, 'GuestBasePath'),
+                'shell_style'  : vmcfg.get(machine, 'GuestHomeInBash'),
                 'separator'    : '/',
                 },
             },
@@ -125,7 +125,7 @@ def _make_test_config(ejobs, machine, timeout, kernel_messages, dst_file):
 
 
 
-def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
+def _run_executor(vmcfg, ejobs, machine, assignment, timeout, kernel_messages):
     """Starts a job.
 
     XXX lots of wtf per minute
@@ -133,7 +133,7 @@ def _run_executor(ejobs, machine, assignment, timeout, kernel_messages):
 
     """
     dst_file = 'input_config.py'
-    _make_test_config(ejobs, machine, timeout, kernel_messages, dst_file)
+    _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file)
     args = [vmcheckerpaths.abspath('bin/vm_executor.py'), dst_file]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
@@ -202,7 +202,7 @@ If the problem persists please contact administrators."""
             pass
 
 
-def main(dir):
+def main(vmcfg, dir):
     """Unpacks archive and invokes executor"""
     # reads assignment config
     with open(join(dir, 'config')) as handle:
@@ -237,7 +237,7 @@ def main(dir):
     timeout = storer.get(section, 'Timeout')
     kernel_messages = storer.get(section, 'KernelMessages')
 
-    _run_executor(ejobs, machine, assignment, timeout, kernel_messages)
+    _run_executor(vmcfg, ejobs, machine, assignment, timeout, kernel_messages)
 
     try:
         _run_callback(dir, ejobs)
@@ -271,7 +271,7 @@ def _check_required_files(path):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    config.config_tester()
+    vmcfg = config.config_tester()
     if len(sys.argv) != 2:
         print >> sys.stderr, 'Invalid number of arguments.'
         _print_help()
@@ -283,4 +283,4 @@ if __name__ == '__main__':
         _print_help()
         exit(1)
     _check_required_files(start_dir)
-    main(start_dir)
+    main(vmcfg, start_dir)
