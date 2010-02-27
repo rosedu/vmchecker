@@ -9,42 +9,45 @@ import sqlite3
 import sys
 import logging
 import string
+import pkg_resources
 from subprocess import check_call, CalledProcessError
 
-import vmcheckerpaths
-import config
+from vmchecker import vmcheckerpaths
+from vmchecker import config
 
 
 _logger = logging.getLogger("vmchecker.initialise_course")
 
 
-def _install_example_config_file():
-    """Install an example config file to ~/.vmcheckerrc"""
+def _install_example_config_file(default_root_path, default_repo_path, default_config_path):
+    """Install an example config file to a file named 'config' in the current directory
 
-    # get the data from the example .vmcheckerrc
+    Initalize some config file variables to point to the location of:
+        root = the root of a course's data -- the current directory
+        repo = a subdir in the current directory where the git repo will be stored
+    """
+
+    # get the data from the package-provided example config template.
     template_data = ""
-    with open('examples/.vmcheckerrc') as template:
+    with pkg_resources.resource_stream('vmchecker', 'examples/config-template') as template:
         template_data = template.read()
 
     # the example is a template that contains some '$var' variables.
     s = string.Template(template_data)
 
-    # first, determine some sane values for those variables
-    default_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    default_repo = os.path.normpath(os.path.join(default_root, '..', 'repo'))
-
     # replace the $vars with these values and write the result in the destination file
-    with open(config.vmcheckerrc_path(), 'w') as handle:
-        handle.write(s.substitute(root=default_root, repo=default_repo))
+    with open(default_config_path, 'w') as handle:
+        handle.write(s.substitute(root=default_root_path, repo=default_repo_path))
 
 
-def _install_if_needed_example_config_file():
-    if not os.path.exists(config.vmcheckerrc_path()):
-        _install_example_config_file()
+
+def _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path):
+    if not os.path.exists(default_config_path):
+        _install_example_config_file(default_root_path, default_repo_path, default_config_path)
         print(('A new default vmchecker configuration file was written to %s. ' +
-               'Please update it before running any vmchecker code.') % config.vmcheckerrc_path())
+               'Please update it before running any vmchecker code.') % default_config_path)
     else:
-        print(('Configuration file %s exists. This script will not change it.') %  config.vmcheckerrc_path())
+        print(('Configuration file %s exists. This script will not change it.') %  default_config_path)
 
 def _mkdir_if_not_exist(path):
     """Make the path if it does not exist"""
@@ -149,14 +152,18 @@ def main():
     """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
     config.parse_arguments()
+
+    default_root_path = os.getcwd()
+    default_repo_path = os.path.join(default_root_path, 'repo')
+    default_config_path = os.path.join(default_root_path, 'config')
     if (len(sys.argv) < 2):
         usage()
         exit(1)
     if cmp(sys.argv[1], 'storer') == 0:
-        _install_if_needed_example_config_file()
+        _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path)
         main_storer()
     elif cmp(sys.argv[1], 'tester') == 0:
-        _install_if_needed_example_config_file()
+        _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path)
         main_tester()
     elif cmp(sys.argv[1], '--help') == 0:
         usage()

@@ -15,7 +15,7 @@ import assignments as assignments_
 from assignments import _SECTION_PREFIX
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
-DEFAULT_CONFIG_FILE = '~/.vmcheckerrc'
+DEFAULT_CONFIG_FILE = '/root/cucu/config'
 
 cmdline = optparse.OptionParser()
 options, argv = None, None
@@ -37,16 +37,6 @@ config = ConfigParser.RawConfigParser()
 assignments = None
 
 
-def vmcheckerrc_path():
-    """Returns the path to the .vmcheckerrc file
-
-    This respects the user's choice through the '--config'/'-c'
-    commandline option. If no '--config'/'-c' was specified it uses
-    DEFAULT_CONFIG_FILE.
-
-    """
-    return os.path.expanduser(options.config)
-
 def parse_arguments():
     """Parses command-line arguments"""
     global options, argv
@@ -60,8 +50,8 @@ def _basic_config():
     parse_arguments()
 
     # reads configuration
-    assert os.path.isabs(vmcheckerrc_path())
-    with open(vmcheckerrc_path()) as handle:
+    assert os.path.isabs(options.config)
+    with open(options.config) as handle:
         config.readfp(handle)
 
     vmcheckerpaths.set_root(config.get('vmchecker', 'root'))
