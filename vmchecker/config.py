@@ -33,8 +33,32 @@ options, argv = None, None
 # config.cmdline.add_option_group(group)
 # del group
 
-config = ConfigParser.RawConfigParser()
 assignments = None
+vmcfg = None
+
+class VmcheckerConfig:
+    def __init__(self, config_file_):
+        self.config_file = config_file_
+        self.config = ConfigParser.RawConfigParser()
+        with open(config_file_) as handle:
+            self.config.readfp(handle)
+
+    def get(self, section, option):
+        """A convenient wrapper for config.get()"""
+        return self.config.get(section, option)
+
+    def repository_path(self):
+        """Get the submission (git) repository path for this course."""
+        return self.config.get('vmchecker', 'repository')
+
+    def root_path(self):
+        """Get the root path for this course"""
+        return self.config.get('vmchecker', 'root')
+
+    def assignments(self):
+        """Return an Assignment object describing the assignments in
+        this course's config file"""
+        return assignments_.Assignments(self.config)
 
 
 def parse_arguments():
@@ -51,10 +75,8 @@ def _basic_config():
 
     # reads configuration
     assert os.path.isabs(options.config)
-    with open(options.config) as handle:
-        config.readfp(handle)
-
-    vmcheckerpaths.set_root(config.get('vmchecker', 'root'))
+    vmcfg = VmcheckerConfig(options.config)
+    vmcheckerpaths.set_root(vmcfg.root_path())
 
 
 def config_storer():
@@ -62,8 +84,8 @@ def config_storer():
     _basic_config()
 
     global assignments
-    vmcheckerpaths.set_repository(config.get('vmchecker', 'repository'))
-    assignments = assignments_.Assignments(config)
+    vmcheckerpaths.set_repository(vmcfg.repository_path())
+    assignments = vmcfg.assignments()
 
 
 def config_tester():
@@ -73,7 +95,7 @@ def config_tester():
 
 def get(section, option):
     """A convenient wrapper for config.get()"""
-    return config.get(section, option)
+    return vmcfg.get(section, option)
 
 
 def _set_logging_level(option, opt_str, value, parser):
