@@ -6,9 +6,6 @@
    It is based on apache2 and mod_python.
 """
 
-
-__author__ = """Vancouver <vancouver@google.com>"""
-
 import os
 import sys
 import subprocess
