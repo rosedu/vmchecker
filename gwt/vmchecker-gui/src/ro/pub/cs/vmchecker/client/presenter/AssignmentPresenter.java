@@ -73,7 +73,6 @@ public class AssignmentPresenter implements Presenter {
 		boardPresenter.go(widget.getBoardPanel()); 
 		/* init */
 		menuPresenter.getWidget().setSelectedIndex(0);
-		
 		//fireAssignmentSelected(0); 
 		boardPresenter.assignmentSelected(assignments.get(0)); 
 		container.add((Widget)widget);

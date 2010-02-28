@@ -8,4 +8,8 @@ public class Course {
 		this.id = id; 
 		this.title = title;
 	}
+	
+	public String toString() {
+		return "id: " + id + ", title: " + title; 
+	}
 }

@@ -10,6 +10,7 @@ import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
 import ro.pub.cs.vmchecker.client.presenter.Presenter;
+import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.ui.AssignmentWidget;
 import ro.pub.cs.vmchecker.client.ui.HeaderWidget;
 
@@ -20,13 +21,15 @@ import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 
 public class AppController implements ValueChangeHandler<String> {
 	
-	private HandlerManager eventBus; 
+	private HandlerManager eventBus;
+	private HTTPService service; 
 	private HasWidgets container;
 	private SimplePanel content = new SimplePanel(); 
 	private Presenter mainPresenter = null; 
@@ -37,8 +40,9 @@ public class AppController implements ValueChangeHandler<String> {
 	private HashMap<String, Course> idToCourse = new HashMap<String, Course>(); 
 	private String selectedCourseId; 
 	
-	public AppController(HandlerManager eventBus) {
-		this.eventBus = eventBus; 
+	public AppController(HandlerManager eventBus, HTTPService service) {
+		this.eventBus = eventBus;
+		this.service = service; 
 		bindHistory();
 		listenCourseChange(); 
 	}
@@ -57,31 +61,42 @@ public class AppController implements ValueChangeHandler<String> {
 	}
 	
 	public void go(final HasWidgets container) {
-		courses.add(new Course("so", "Sisteme de Operare")); 
-		courses.add(new Course("cpl", "Compilatoare")); 
-		courses.add(new Course("pa", "Proiectarea algoritmilor")); 
-		for (Course course : courses) {
-			coursesTags.add(course.id);
-			idToCourse.put(course.id, course); 
-		}
-		
 		this.container = container;
+		service.getCourses(new AsyncCallback<Course[]>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				Window.alert(caught.getMessage()); 
+			}
+
+			@Override
+			public void onSuccess(Course[] result) {
+				for (int i = 0; i < result.length; i++) {
+					Course course = result[i]; 
+					coursesTags.add(course.id);
+					idToCourse.put(course.id, course);
+					courses.add(course); 
+				}
+				
+				/* initialize header presenter */
+				headerPresenter = new HeaderPresenter(eventBus, new HeaderWidget());
+				headerPresenter.setCourses(courses); 
+				 
+				headerPresenter.go(container); 
+				selectCourse(courses.get(0).id); 
+				/* add the content container */
+				container.add(content); 
+				/* initialize history entries */
+				if ("".equals(History.getToken())) {
+					History.newItem(courses.get(0).id);
+					//History.newItem("assignments");
+				} else {
+					History.fireCurrentHistoryState(); 
+				}				
+			}
+			
+		}); 		
 		
-		/* initialize header presenter */
-		headerPresenter = new HeaderPresenter(eventBus, new HeaderWidget());
-		headerPresenter.setCourses(courses); 
-		 
-		headerPresenter.go(container); 
-		selectCourse(courses.get(0).id); 
-		/* add the content container */
-		container.add(content); 
-		/* initialize history entries */
-		if ("".equals(History.getToken())) {
-			History.newItem(courses.get(0).id);
-			//History.newItem("assignments");
-		} else {
-			History.fireCurrentHistoryState(); 
-		}
 	}
 	
 	public void onValueChange(ValueChangeEvent<String> event) {
