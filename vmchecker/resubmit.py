@@ -8,11 +8,19 @@ import submit
 import repo_walker
 
 
-def _submit(assignment, user, location):
-    """Submits assignment from `location'"""
-    submit.send_submission(location)
+class Resubmit(repo_walker.RepoWalker):
+    def __init__(self, vmcfg):
+        RepoWalker(self)
+        self.vmcfg = vmcfg
+
+    def resubmit(self, options):
+        def _submit(assignment, user, location):
+            """Submits assignment from `location'"""
+            submit.send_submission(location)
+        self.walk(vmcfg, options, _submit)
 
 
 if __name__ == '__main__':
     vmcfg = config.config_storer()
-    repo_walker.walk(vmcfg, _submit)
+    r = Resubmit(vmcfg)
+    r.resubmit(config.options)

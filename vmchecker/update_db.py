@@ -38,148 +38,165 @@ import penalty
 
 _logger = logging.getLogger('update_db')
 
-def _db_save_assignment(db_cursor, assignment):
-    """Creates an id of the homework and returns it."""
-    db_cursor.execute('INSERT INTO assignments (name) values (?)',
-                      (assignment,))
-    db_cursor.execute('SELECT last_insert_rowid()')
-    assignment_id, = db_cursor.fetchone()
-    return assignment_id
+class UpdateDb(repo_walker.RepoWalker):
+    def __init__(self):
+        repo_walker.RepoWalker(self)
+
+    def _db_save_assignment(self, db_cursor, assignment):
+        """Creates an id of the homework and returns it."""
+        db_cursor.execute('INSERT INTO assignments (name) values (?)',
+                          (assignment,))
+        db_cursor.execute('SELECT last_insert_rowid()')
+        assignment_id, = db_cursor.fetchone()
+        return assignment_id
 
 
-def _db_get_assignment_id(db_cursor, assignment):
-    """Returns the id of the assignment"""
-    db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
-    result = db_cursor.fetchone()
-    if result is None:
-        return _db_save_assignment(db_cursor, assignment)
-    return result[0]
-
-
-def _db_save_user(db_cursor, user):
-    """Creates an id of the user and returns it."""
-    db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
-    db_cursor.execute('SELECT last_insert_rowid()')
-    user_id, = db_cursor.fetchone()
-    return user_id
-
-
-def _db_get_user_id(db_cursor, user):
-    """Returns the id of the user"""
-    db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
-    result = db_cursor.fetchone()
-    if result is None:
-        return _db_save_user(db_cursor, user)
-    return result[0]
-
-
-def _db_get_grade_mtime(db_cursor, assignment_id, user_id):
-    """Returns the mtime of a grade"""
-    db_cursor.execute(
-            'SELECT mtime FROM grades '
-            'WHERE assignment_id = ? and user_id = ?', (
-                assignment_id, user_id))
-
-    result = db_cursor.fetchone()
-    if result is not None:
+    def _db_get_assignment_id(self, db_cursor, assignment):
+        """Returns the id of the assignment"""
+        db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
+        result = db_cursor.fetchone()
+        if result is None:
+            return self._db_save_assignment(db_cursor, assignment)
         return result[0]
 
 
-def _db_save_grade(db_cursor, assignment_id, user_id, grade, mtime):
-    """Saves the grade into the database
-
-    If the grade identified by (assignment_id, user_id)
-    exists then update the DB, else inserts a new entry.
-
-    """
-    db_cursor.execute(
-
-        'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
-        'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
+    def _db_save_user(self, db_cursor, user):
+        """Creates an id of the user and returns it."""
+        db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
+        db_cursor.execute('SELECT last_insert_rowid()')
+        user_id, = db_cursor.fetchone()
+        return user_id
 
 
-def _get_grade_value(vmcfg, assignment, user, grade_path):
-    """Returns the grade value after applying penalties and bonuses.
+    def _db_get_user_id(self, db_cursor, user):
+        """Returns the id of the user"""
+        db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
+        result = db_cursor.fetchone()
+        if result is None:
+            return _db_save_user(db_cursor, user)
+        return result[0]
 
-    Computes the time penalty for the user, obtains the other
-    penalties and bonuses from the grade_path file
-    and computes the final grade.
 
-    The grade_path file can have any structure.
-    The only rule is the following: any number that starts with '-'
-    or '+' is taken into account when computing the grade.
+    def _db_get_grade_mtime(self, db_cursor, assignment_id, user_id):
+        """Returns the mtime of a grade"""
+        db_cursor.execute(
+                'SELECT mtime FROM grades '
+                'WHERE assignment_id = ? and user_id = ?', (
+                    assignment_id, user_id))
 
-    An example for the file:
-        +0.1 very good comments
-        -0.2  possible leak of memory on line 234 +0.1 treats exceptions
-        -0.2 use of magic numbers
-    """
+        result = db_cursor.fetchone()
+        if result is not None:
+            return result[0]
 
-    weights = [float(x) for x in
-                vmcfg.get('vmchecker','PenaltyWeights').split()]
 
-    limit = vmcfg.get('vmchecker','PenaltyLimit')
+    def _db_save_grade(self, db_cursor, assignment_id, user_id, grade, mtime):
+        """Saves the grade into the database
 
-    upload_time = submissions.get_upload_time_str(assignment, user)
+        If the grade identified by (assignment_id, user_id)
+        exists then update the DB, else inserts a new entry.
 
-    deadline = time.strptime(vmcfg.assignments.get(assignment, 'Deadline'),
-                                            penalty.DATE_FORMAT)
-    holidays = int(vmcfg.get('vmchecker','Holidays'))
+        """
+        db_cursor.execute(
 
-    grade = 10
-    words = 0
-    word = ""
+            'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
+            'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
 
-    with open(grade_path) as handler:
-        for line in handler.readlines():
-            for word in line.split():
-                words += 1
-                if word[0] in ['+','-']:
-                    try:
-                        grade += float(word)
-                    except ValueError:
-                        pass
 
-    #word can be either 'copiat' or 'ok'
-    if words == 1:
-        return word
+    def _get_grade_value(self, vmcfg, assignment, user, grade_path):
+        """Returns the grade value after applying penalties and bonuses.
 
-    #at this point, grade is <= 0 if the homework didn't compile
-    if grade <= 0:
-        return 0
+        Computes the time penalty for the user, obtains the other
+        penalties and bonuses from the grade_path file
+        and computes the final grade.
 
-    if holidays != 0:
-        holiday_start = vmcfg.get('vmchecker', 'HolidayStart').split(' , ')
-        holiday_finish = vmcfg.get('vmchecker', 'HolidayFinish').split(' , ')
-        penalty_value = penalty.compute_penalty(upload_time, deadline, 1 , 
-                            weights, limit, holiday_start, holiday_finish)[0]
-    else:
-        penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
-                            weights, limit)[0]
+        The grade_path file can have any structure.
+        The only rule is the following: any number that starts with '-'
+        or '+' is taken into account when computing the grade.
 
-    grade -= penalty_value
-    return grade
+        An example for the file:
+            +0.1 very good comments
+            -0.2  possible leak of memory on line 234 +0.1 treats exceptions
+            -0.2 use of magic numbers
+        """
 
-def _update_grades(vmcfg, assignment, user, grade_filename, db_cursor):
-    """Updates grade for user's submission of assignment.
+        weights = [float(x) for x in
+                    vmcfg.get('vmchecker','PenaltyWeights').split()]
 
-    Reads the grade's value only if the file containing the
-    value was modified since the last update of the DB for this
-    submission.
+        limit = vmcfg.get('vmchecker','PenaltyLimit')
 
-    """
-    assignment_id = _db_get_assignment_id(db_cursor, assignment)
-    user_id = _db_get_user_id(db_cursor, user)
+        upload_time = submissions.get_upload_time_str(assignment, user)
 
-    mtime = os.path.getmtime(grade_filename)
-    db_mtime = _db_get_grade_mtime(db_cursor, assignment_id, user_id)
+        deadline = time.strptime(vmcfg.assignments.get(assignment, 'Deadline'),
+                                                penalty.DATE_FORMAT)
+        holidays = int(vmcfg.get('vmchecker','Holidays'))
 
-    if config.options.force or db_mtime != mtime:
-        # modified since last db save
-        grade_value = _get_grade_value(vmcfg, assignment, user, grade_filename)
-        # updates information from DB
-        _db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
+        grade = 10
+        words = 0
+        word = ""
 
+        with open(grade_path) as handler:
+            for line in handler.readlines():
+                for word in line.split():
+                    words += 1
+                    if word[0] in ['+','-']:
+                        try:
+                            grade += float(word)
+                        except ValueError:
+                            pass
+
+        #word can be either 'copiat' or 'ok'
+        if words == 1:
+            return word
+
+        #at this point, grade is <= 0 if the homework didn't compile
+        if grade <= 0:
+            return 0
+
+        if holidays != 0:
+            holiday_start = vmcfg.get('vmchecker', 'HolidayStart').split(' , ')
+            holiday_finish = vmcfg.get('vmchecker', 'HolidayFinish').split(' , ')
+            penalty_value = penalty.compute_penalty(upload_time, deadline, 1 , 
+                                weights, limit, holiday_start, holiday_finish)[0]
+        else:
+            penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
+                                weights, limit)[0]
+
+        grade -= penalty_value
+        return grade
+
+    def _update_grades(self, vmcfg, force, assignment, user, grade_filename, db_cursor):
+        """Updates grade for user's submission of assignment.
+
+        Reads the grade's value only if the file containing the
+        value was modified since the last update of the DB for this
+        submission.
+
+        """
+        assignment_id = self._db_get_assignment_id(db_cursor, assignment)
+        user_id = self._db_get_user_id(db_cursor, user)
+
+        mtime = os.path.getmtime(grade_filename)
+        db_mtime = self._db_get_grade_mtime(db_cursor, assignment_id, user_id)
+
+        if force or db_mtime != mtime:
+            # modified since last db save
+            grade_value = self._get_grade_value(vmcfg, assignment, user, grade_filename)
+            # updates information from DB
+            self._db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
+
+    def walk(self, options, db_cursor):
+        def _update_grades_wrapper(assignment, user, location, db_cursor, options):
+            """A wrapper over _update_grades to use with repo_walker"""
+            grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
+            if os.path.exists(grade_filename):
+                _update_grades(vmcfg, options, assignment, user, grade_filename, db_cursor)
+                _logger.info('Updated %s, %s (%s)', assignment, user, location)
+            else:
+                _logger.error('No results found for %s, %s (check %s)',
+                              assignment, user, grade_filename)
+
+        # call the base implemnetation in RepoWalker.
+        self.walk(_update_grades_wrapper, options, args=(db_cursor, options))
 
 def main():
     """Checks for modified grades and updates the database"""
@@ -189,17 +206,8 @@ def main():
                               isolation_level="EXCLUSIVE")
     db_cursor = db_conn.cursor()
 
-    def _update_grades_wrapper(assignment, user, location, db_cursor):
-        """A wrapper over _update_grades to use with repo_walker"""
-        grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
-        if os.path.exists(grade_filename):
-            _update_grades(vmcfg, assignment, user, grade_filename, db_cursor)
-            _logger.info('Updated %s, %s (%s)', assignment, user, location)
-        else:
-            _logger.error('No results found for %s, %s (check %s)',
-                          assignment, user, grade_filename)
-
-    repo_walker.walk(vmcfg, _update_grades_wrapper, args=(db_cursor,))
+    r = UpdateDb(vmcfg)
+    r.walk(config.options, db_cursor)
 
     db_cursor.close()
     db_conn.commit()

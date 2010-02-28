@@ -22,114 +22,114 @@ import config
 
 _logger = logging.getLogger('repo_walker')
 
+class RepoWalker:
+    def __init__(self, vmcfg):
+        self.vmcfg = vmcfg
 
-def _check_arguments():
-    """Checks that arguments don't conflict"""
-    from config import options
+    def _check_arguments(self, options):
+        """Checks that arguments don't conflict"""
 
-    if (options.user is None
-            and options.assignment is None
-            and options.recursive == False
-            and options.all == False):
-        config.cmdline.error(
-                'At least one of --user, --assignment, '
-                '--recursive or --all should be specified')
+        if (options.user is None
+                and options.assignment is None
+                and options.recursive == False
+                and options.all == False):
+            config.cmdline.error(
+                    'At least one of --user, --assignment, '
+                    '--recursive or --all should be specified')
 
-    if ((options.recursive or options.all)
-            and (options.user is not None
-                or options.assignment is not None)):
-        config.cmdline.error(
-                'Options --recursive and --all '
-                'are incompatible with --user and --assignment')
+        if ((options.recursive or options.all)
+                and (options.user is not None
+                    or options.assignment is not None)):
+            config.cmdline.error(
+                    'Options --recursive and --all '
+                    'are incompatible with --user and --assignment')
 
-    if options.recursive and options.all:
-        config.cmdline.error(
-                "You can't specify both --recursive and --all")
-
-
-def _simulate(assignment, user, location, func_name, args):
-    """Just prints the function the function call"""
-    print 'calling %s(%s, %s, %s, *%s)' % (
-            func_name, repr(assignment), repr(user), repr(location), repr(args))
+        if options.recursive and options.all:
+            config.cmdline.error(
+                    "You can't specify both --recursive and --all")
 
 
-def _walk_assignment(assignment, func, args):
-    """Walks all user's sources for assignment"""
-    from config import options
+    def _simulate(self, assignment, user, location, func_name, args):
+        """Just prints the function the function call"""
+        print 'calling %s(%s, %s, %s, *%s)' % (
+                func_name, repr(assignment), repr(user), repr(location), repr(args))
 
-    for user in os.listdir(vmcheckerpaths.dir_assignment(assignment)):
-        path = vmcheckerpaths.dir_user(assignment, user)
 
-        if not os.path.isdir(path):
-            _logger.debug('Ignoring %s (not a directory)', path)
-            continue
+    def _walk_assignment(self, assignment, options, func, args):
+        """Walks all user's sources for assignment"""
 
-        if not os.path.isfile(os.path.join(path, 'config')):
-            _logger.debug("Ignoring %s (no config file)", path)
-            continue
+        for user in os.listdir(vmcheckerpaths.dir_assignment(assignment)):
+            path = vmcheckerpaths.dir_user(assignment, user)
 
-        if options.user is not None and options.user != user:
-            _logger.debug('Ignoring %s (as requested by --user)', path)
-            continue
-
-        if options.recursive:
-            if os.path.commonprefix((os.getcwd(), path)) != os.getcwd():
-                _logger.debug('Ignoring %s (in current directory)', path)
+            if not os.path.isdir(path):
+                _logger.debug('Ignoring %s (not a directory)', path)
                 continue
 
-        _logger.info('Walking on %s, %s (%s)', assignment, user, path)
-        if options.simulate:
-            _simulate(assignment, user, path, func.func_name, args)
-        else:
-            try:
-                func(assignment, user, path, *args)
-            except:
-                _logger.exception('%s failed for %s, %s (%s)',
-                                  func.func_name, assignment, user, path)
-                if not config.options.ignore_errors:
-                    raise
+            if not os.path.isfile(os.path.join(path, 'config')):
+                _logger.debug("Ignoring %s (no config file)", path)
+                continue
+
+            if options.user is not None and options.user != user:
+                _logger.debug('Ignoring %s (as requested by --user)', path)
+                continue
+
+            if options.recursive:
+                if os.path.commonprefix((os.getcwd(), path)) != os.getcwd():
+                    _logger.debug('Ignoring %s (in current directory)', path)
+                    continue
+
+            _logger.info('Walking on %s, %s (%s)', assignment, user, path)
+            if options.simulate:
+                self._simulate(assignment, user, path, func.func_name, args)
+            else:
+                try:
+                    func(assignment, user, path, *args)
+                except:
+                    _logger.exception('%s failed for %s, %s (%s)',
+                                      func.func_name, assignment, user, path)
+                    if not options.ignore_errors:
+                        raise
 
 
-def _walk_repository(vmcfg, repository, func, args):
-    """Walks the repository."""
-    from config import options
+    def _walk_repository(self, repository, options, func, args):
+        """Walks the repository."""
 
-    for assignment in os.listdir(repository):
-        path = vmcheckerpaths.dir_assignment(assignment)
+        for assignment in os.listdir(repository):
+            path = vmcheckerpaths.dir_assignment(assignment)
 
-        if not os.path.isdir(path):
-            _logger.debug('Ignoring %s (not a directory)', path)
-            continue
+            if not os.path.isdir(path):
+                _logger.debug('Ignoring %s (not a directory)', path)
+                continue
 
-        if assignment not in vmcfg.assignments():
-            _logger.debug('Ignoring %s (not an assignment)', path)
-            continue
+            if assignment not in self.vmcfg.assignments():
+                _logger.debug('Ignoring %s (not an assignment)', path)
+                continue
 
-        if options.assignment is not None and options.assignment != assignment:
-            _logger.debug('Ignoring %s (as requested by --assignment)',
-                          path)
-            continue
+            if options.assignment is not None and options.assignment != assignment:
+                _logger.debug('Ignoring %s (as requested by --assignment)',
+                              path)
+                continue
 
-        _walk_assignment(assignment, func, args)
+            self._walk_assignment(assignment, options, func, args)
 
 
-def walk(vmcfg, func, args=()):
-    """Walks the repository and calls `func' for each homework found.
+    def walk(self, options, func, args=()):
+        """Walks the repository and calls `func' for each homework found.
 
-    @param func function to be called
-    @param args extra arguments to be passed
+        @param func function to be called
+        @param args extra arguments to be passed
 
-    For each homework call func:
-        func(assignment, user, location, *args)
-    The behavior is controlled through command line arguments (see
-    below for possible options)
+        For each homework call func:
+            func(assignment, user, location, *args)
+        The behavior is controlled through command line arguments (see
+        below for possible options)
 
-    XXX Maybe having a function independent of cmdline arguments
-    would be better. Maybe later.
+        XXX Maybe having a function independent of cmdline arguments
+        would be better. Maybe later.
 
-    """
-    _check_arguments()
-    _walk_repository(vmcfg, vmcfg.repository_path(), func, args)
+        """
+        self._check_arguments(options)
+        self._walk_repository(self.vmcfg, self.vmcfg.repository_path(), options, func, args)
 
 
 group = optparse.OptionGroup(config.cmdline, 'repo_walker.py')
