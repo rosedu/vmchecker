@@ -60,20 +60,29 @@ public class AssignmentPresenter implements Presenter {
 	}
 	
 	private void fireAssignmentSelected(int assignmentIndex) {
+		GWT.log("Event fired", null); 
 		eventBus.fireEvent(new AssignmentSelectedEvent(assignments.get(assignmentIndex).id, 
 				assignments.get(assignmentIndex))); 		
 	}
 	
 	@Override
 	public void go(HasWidgets container) {
-		container.add((Widget)widget);
 		widget.getMenuPanel().clear(); 
 		menuPresenter.go(widget.getMenuPanel()); 
 		widget.getBoardPanel().clear(); 
 		boardPresenter.go(widget.getBoardPanel()); 
 		/* init */
-		menuPresenter.getWidget().setSelectedIndex(0); 
-		fireAssignmentSelected(0); 
+		menuPresenter.getWidget().setSelectedIndex(0);
+		
+		//fireAssignmentSelected(0); 
+		boardPresenter.assignmentSelected(assignments.get(0)); 
+		container.add((Widget)widget);
+	}
+
+	@Override
+	public void clearEventHandlers() {
+		menuPresenter.clearEventHandlers(); 
+		boardPresenter.clearEventHandlers(); 
 	}
 
 }

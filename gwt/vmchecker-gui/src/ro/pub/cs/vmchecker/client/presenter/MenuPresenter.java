@@ -35,4 +35,9 @@ public class MenuPresenter implements Presenter {
 		container.add((com.google.gwt.user.client.ui.Widget)widget); 
 	}
 
+	@Override
+	public void clearEventHandlers() {
+		/* nothing to clear */
+	}
+
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import ro.pub.cs.vmchecker.client.event.CourseSelectedEvent;
+import ro.pub.cs.vmchecker.client.event.CourseSelectedEventHandler;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
@@ -15,6 +17,7 @@ import ro.pub.cs.vmchecker.client.ui.HeaderWidget;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HasWidgets;
@@ -27,7 +30,7 @@ public class AppController implements ValueChangeHandler<String> {
 	private HasWidgets container;
 	private SimplePanel content = new SimplePanel(); 
 	private Presenter mainPresenter = null; 
-	HeaderPresenter headerPresenter = null; 
+	private HeaderPresenter headerPresenter = null; 
 	
 	private ArrayList<Course> courses = new ArrayList<Course>(); 
 	private HashSet<String> coursesTags = new HashSet<String>();
@@ -36,7 +39,16 @@ public class AppController implements ValueChangeHandler<String> {
 	
 	public AppController(HandlerManager eventBus) {
 		this.eventBus = eventBus; 
-		bindHistory(); 
+		bindHistory();
+		listenCourseChange(); 
+	}
+	
+	private void listenCourseChange() {
+		eventBus.addHandler(CourseSelectedEvent.TYPE, new CourseSelectedEventHandler(){
+			public void onSelect(CourseSelectedEvent event) {
+				History.newItem(event.getCourseId()); 
+			}			
+		}); 
 	}
 	
 	private void selectCourse(String courseId) {
@@ -63,7 +75,6 @@ public class AppController implements ValueChangeHandler<String> {
 		selectCourse(courses.get(0).id); 
 		/* add the content container */
 		container.add(content); 
-		
 		/* initialize history entries */
 		if ("".equals(History.getToken())) {
 			History.newItem(courses.get(0).id);
@@ -83,7 +94,11 @@ public class AppController implements ValueChangeHandler<String> {
 			}
 			
 			if (coursesTags.contains(token)) {
-				mainPresenter = new AssignmentPresenter(eventBus, idToCourse.get(token).id, new AssignmentWidget()); 
+				if (mainPresenter != null) {
+					mainPresenter.clearEventHandlers(); 
+				}
+				mainPresenter = new AssignmentPresenter(eventBus, idToCourse.get(token).id, new AssignmentWidget());
+				headerPresenter.selectCourse(idToCourse.get(token).id); 
 			} else {
 				Window.alert("State " + token + " not implemented");
 			}

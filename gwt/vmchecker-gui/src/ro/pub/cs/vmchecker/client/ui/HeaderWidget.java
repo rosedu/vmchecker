@@ -1,9 +1,11 @@
 package ro.pub.cs.vmchecker.client.ui;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Label;
@@ -18,8 +20,6 @@ public class HeaderWidget extends Composite
 	interface HeaderUiBinder extends UiBinder<Widget, HeaderWidget> {}
 	private static HeaderUiBinder uiBinder = GWT.create(HeaderUiBinder.class);
 
-	private static String[] courses = {"Sisteme de Operare", "Compilatoare", "Sisteme de Operare II"};
-	
 	@UiField 
 	ListBox coursesList; 
 	
@@ -28,9 +28,6 @@ public class HeaderWidget extends Composite
 	
 	public HeaderWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
-		for (String course : courses) {
-			coursesList.addItem(course); 
-		}
 	}
 
 	@Override
@@ -56,6 +53,11 @@ public class HeaderWidget extends Composite
 	@Override
 	public HasChangeHandlers getCoursesList() {
 		return coursesList; 
+	}
+
+	@Override
+	public int getSelectedCourseIndex() {
+		return coursesList.getSelectedIndex(); 
 	}
 	
 }
