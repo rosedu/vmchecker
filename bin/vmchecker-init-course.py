@@ -12,7 +12,7 @@ import string
 import pkg_resources
 from subprocess import check_call, CalledProcessError
 
-from vmchecker import vmcheckerpaths
+from vmchecker import paths
 from vmchecker import config
 
 
@@ -63,21 +63,21 @@ def _create_paths(paths):
         _mkdir_if_not_exist(path)
 
 
-def create_tester_paths():
+def create_tester_paths(vmpaths):
     """Create all paths used by vmchecker on the storer machine"""
-    _create_paths(vmcheckerpaths.tester_paths())
+    _create_paths(vmpaths.tester_paths())
 
 
-def create_storer_paths():
+def create_storer_paths(vmpaths):
     """Create all paths used by vmchecker on the storer machine"""
-    _create_paths(vmcheckerpaths.storer_paths())
+    _create_paths(vmpaths.storer_paths())
 
 
-def create_storer_git_repo():
+def create_storer_git_repo(vmpaths):
     """Creates the repo for the assignments on the storer."""
     # first make teh destination directory
-    rel_repo_path = vmcheckerpaths.repository
-    abs_repo_path = vmcheckerpaths.abspath(rel_repo_path)
+    rel_repo_path = vmpaths.dir_repository()
+    abs_repo_path = vmpaths.abspath(rel_repo_path)
     _mkdir_if_not_exist(abs_repo_path)
 
     # then, if missing, initialize a git repo in it.
@@ -114,29 +114,36 @@ def create_db_tables(db_path):
     db_conn.close()
 
 
-def create_db():
+def create_db(vmpaths):
     """Create the implicit db if it does not exist."""
     # check for DB existance
-    db_file = vmcheckerpaths.db_file()
+    db_file = vmpaths.db_file()
     if not os.path.isfile(db_file):
         create_db_tables(db_file)
     else:
         _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
 
 
-def main_storer():
+def main_storer(default_root_path = ""):
     """Run initialization tasks for the storer machine."""
-    config.config_storer()
-    create_storer_paths()
-    create_storer_git_repo()
-    create_db()
+    if default_root_path == "":
+        vmcfg = config.config_storer()
+        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    else:
+        vmpaths = paths.VmcheckerPaths(default_root_path)
+    create_storer_paths(vmpaths)
+    create_storer_git_repo(vmpaths)
+    create_db(vmpaths)
     _logger.info(' -- storer init done setting up paths and db file.')
 
 
-def main_tester():
+def main_tester(default_root_path = ""):
     """Run initialization tasks for the tester machine."""
-    config.config_tester()
-    create_tester_paths()
+    if default_root_path == "":
+        vmcfg = config.config_tester()
+        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    else:
+        vmpaths = paths.VmcheckerPaths(default_root_path)
     _logger.info(' -- tester init done setting up paths and db file.')
 
 
@@ -161,10 +168,10 @@ def main():
         exit(1)
     if cmp(sys.argv[1], 'storer') == 0:
         _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path)
-        main_storer()
+        main_storer(default_root_path)
     elif cmp(sys.argv[1], 'tester') == 0:
         _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path)
-        main_tester()
+        main_tester(default_root_path)
     elif cmp(sys.argv[1], '--help') == 0:
         usage()
     else:
