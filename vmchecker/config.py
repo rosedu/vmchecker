@@ -39,7 +39,7 @@ class VmcheckerConfig:
     def __init__(self, config_file_):
         self.config_file = config_file_
         self.config = ConfigParser.RawConfigParser()
-        with open(config_file_) as handle:
+        with open(os.path.expanduser(config_file_)) as handle:
             self.config.readfp(handle)
 
     def get(self, section, option):
