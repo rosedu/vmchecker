@@ -57,27 +57,16 @@ def _mkdir_if_not_exist(path):
         _logger.info('Skipping existing directory %s' % path)
 
 
-def _create_paths(paths):
+def create_paths(paths):
     """ Create all paths in the received 'paths' parameter"""
     for path in paths:
         _mkdir_if_not_exist(path)
 
 
-def create_tester_paths(vmpaths):
-    """Create all paths used by vmchecker on the storer machine"""
-    _create_paths(vmpaths.tester_paths())
 
-
-def create_storer_paths(vmpaths):
-    """Create all paths used by vmchecker on the storer machine"""
-    _create_paths(vmpaths.storer_paths())
-
-
-def create_storer_git_repo(vmpaths):
+def create_storer_git_repo(abs_repo_path):
     """Creates the repo for the assignments on the storer."""
     # first make teh destination directory
-    rel_repo_path = vmpaths.dir_repository()
-    abs_repo_path = vmpaths.abspath(rel_repo_path)
     _mkdir_if_not_exist(abs_repo_path)
 
     # then, if missing, initialize a git repo in it.
@@ -92,9 +81,14 @@ def create_storer_git_repo(vmpaths):
             logging.error('cannot create git repo in %s' % repo_path_git)
 
 
-def create_db_tables(db_path):
-    """Create a sqlite db file în db_path for grade management."""
-    db_conn = sqlite3.connect(db_path)
+def create_db(db_file):
+    """Create the implicit db if it does not exist."""
+    # check for DB existance
+    if os.path.isfile(db_file):
+        _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
+        return
+
+    db_conn = sqlite3.connect(db_file)
     db_cursor = db_conn.cursor()
     db_cursor.executescript("""
     CREATE TABLE assignments (
@@ -114,15 +108,6 @@ def create_db_tables(db_path):
     db_conn.close()
 
 
-def create_db(vmpaths):
-    """Create the implicit db if it does not exist."""
-    # check for DB existance
-    db_file = vmpaths.db_file()
-    if not os.path.isfile(db_file):
-        create_db_tables(db_file)
-    else:
-        _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
-
 
 def main_storer(default_root_path = ""):
     """Run initialization tasks for the storer machine."""
@@ -131,9 +116,9 @@ def main_storer(default_root_path = ""):
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     else:
         vmpaths = paths.VmcheckerPaths(default_root_path)
-    create_storer_paths(vmpaths)
-    create_storer_git_repo(vmpaths)
-    create_db(vmpaths)
+    create_paths(vmpaths.storer_paths())
+    create_storer_git_repo(vmpaths.abspath(vmpaths.dir_repository()))
+    create_db(vmpaths.db_file())
     _logger.info(' -- storer init done setting up paths and db file.')
 
 
@@ -144,6 +129,7 @@ def main_tester(default_root_path = ""):
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     else:
         vmpaths = paths.VmcheckerPaths(default_root_path)
+    create_paths(vmpaths.tester_paths())
     _logger.info(' -- tester init done setting up paths and db file.')
 
 
