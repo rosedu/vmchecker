@@ -212,23 +212,7 @@ def send_submission(location, vmpaths):
         os.unlink(fd[1])
         raise
 
-
-def main():
-    """Parse arguments and sends the submission for evaluation"""
-
-    config.cmdline.set_usage('Usage: %prog [options] assignment user archive')
-    config.config_storer()
-
-    if len(config.argv) != 3:
-        config.cmdline.error('Not enough arguments')
-
-    if config.options.course_id == None:
-        config.cmdline.error('You did not supply a course id. Check --help.')
-
-    assignment = config.argv[0]
-    user = config.argv[1]
-    archive_filename = config.argv[2]
-
+def submit(assignment, user, archive_filename):
     if not os.path.isfile(archive_filename):
         config.cmdline.error('%s must be an existing file.' % archive_filename)
     if assignment not in config.assignments:
@@ -263,6 +247,24 @@ def main():
     vmpaths = paths.VmcheckerPaths(root_path)
     location = build_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths)
     send_submission(location, vmpaths)
+
+
+def main():
+    """Parse arguments and sends the submission for evaluation"""
+
+    config.cmdline.set_usage('Usage: %prog [options] assignment user archive')
+    config.config_storer()
+
+    if len(config.argv) != 3:
+        config.cmdline.error('Not enough arguments')
+
+    if config.options.course_id == None:
+        config.cmdline.error('You did not supply a course id. Check --help.')
+
+    assignment = config.argv[0]
+    user = config.argv[1]
+    archive_filename = config.argv[2]
+    submit(assignment, user, archive_filename)
 
 
 group = optparse.OptionGroup(config.cmdline, 'submit.py')
