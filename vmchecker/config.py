@@ -15,7 +15,7 @@ import assignments as assignments_
 from assignments import _SECTION_PREFIX
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
-DEFAULT_CONFIG_FILE = '/root/cucu/config'
+DEFAULT_CONFIG_FILE = '/tmp/tmp/config'
 
 cmdline = optparse.OptionParser()
 options, argv = None, None
@@ -53,6 +53,18 @@ class VmcheckerConfig:
     def root_path(self):
         """Get the root path for this course"""
         return self.config.get('vmchecker', 'root')
+
+    def storer_username(self):
+        return self.config.get('storer', 'username')
+
+    def tester_username(self):
+        return self.config.get('tester', 'username')
+
+    def storer_hostname(self):
+        return self.config.get('storer', 'hostname')
+
+    def tester_hostname(self):
+        return self.config.get('tester', 'hostname')
 
     def assignments(self):
         """Return an Assignment object describing the assignments in

@@ -27,16 +27,19 @@ import datetime
 import optparse
 import zipfile
 
-import config
-import vmcheckerpaths
-
-import submissions
-
-_logger = logging.getLogger('submit')
-
+# needed to get the IP of the sending interface
 import socket
 import fcntl
 import struct
+
+
+from vmchecker import config
+from vmchecker import paths
+from vmchecker import submissions
+from vmchecker.CourseList import CourseList
+
+
+_logger = logging.getLogger('submit')
 
 
 def get_ip_address(ifname):
@@ -58,35 +61,22 @@ def get_ip_address(ifname):
     )[20:24])
 
 
-def _build_temporary_config(assignment, user, archive):
+def _build_temporary_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths):
     """Stores user's submission of assignment in a temporary directory"""
-
-    # if the user forced upload time at some value, grant his wish
-    # if not, the upload time is the system's current time
-    if config.options.forced_upload_time != None:
-        upload_time = config.options.forced_upload_time
-    else:
-        upload_time = time.strftime(config.DATE_FORMAT)
     prefix = '%s_%s_%s_%s_' % (
             config.assignments.course(assignment),
             assignment, user, upload_time)
 
     # first saves the zip archive
-    location = tempfile.mkstemp(
-            prefix=prefix,
-            suffix='.zip',
-            dir=vmcheckerpaths.dir_backup())
-    shutil.copy(archive, location[1])
+    location = tempfile.mkstemp(prefix=prefix, suffix='.zip', dir=vmpaths.dir_backup())
+    shutil.copy(archive_filename, location[1])
     os.close(location[0])
 
     # location is the temporary destination directory
-    location = tempfile.mkdtemp(
-            prefix=prefix,
-            dir=vmcheckerpaths.dir_backup())
+    location = tempfile.mkdtemp(prefix=prefix, dir=vmpaths.dir_backup())
 
     # unzips sources files
-    subprocess.check_call(['unzip', archive,
-            '-d', os.path.join(location, 'archive')])
+    subprocess.check_call(['unzip', archive_filename, '-d', os.path.join(location, 'archive')])
 
     # creates submission's configuration file
     # src = submission resource configuration
@@ -97,10 +87,9 @@ def _build_temporary_config(assignment, user, archive):
     src.set('Assignment', 'UploadTime', upload_time)
 
     # XXX these should go to `callback'
-    src.set('Assignment', 'ResultsDest',
-            vmcheckerpaths.dir_results(assignment, user))
-    src.set('Assignment', 'RemoteUsername', getpass.getuser())
-    src.set('Assignment', 'RemoteHostname', get_ip_address('eth0')) #XXX HARDCODED eth0! change it!
+    src.set('Assignment', 'ResultsDest', vmpaths.dir_results(assignment, user))
+    src.set('Assignment', 'RemoteUsername', vmcfg.storer_username())
+    src.set('Assignment', 'RemoteHostname', vmcfg.storer_hostname())
 
     with open(os.path.join(location, 'config'), 'w') as handler:
         src.write(handler)
@@ -109,7 +98,7 @@ def _build_temporary_config(assignment, user, archive):
     return location
 
 
-def save_submission(assignment, user, location):
+def save_submission(assignment, user, location, vmpaths):
     """Saves user's submission of assignment stored at location."""
     # copies location to a temporary directory
     temp = tempfile.mkdtemp()  # FIXME should be inside vmcheckerpaths.root
@@ -117,7 +106,7 @@ def save_submission(assignment, user, location):
     shutil.copytree(location, src)
 
     with config.assignments.lock(assignment):
-        dest = vmcheckerpaths.dir_user(assignment, user)
+        dest = vmpaths.dir_user(assignment, user)
         _logger.info("Storing user's files at %s", dest)
 
         # removes old files
@@ -148,7 +137,7 @@ def save_submission(assignment, user, location):
     return dest
 
 
-def build_config(assignment, user, archive):
+def build_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths):
     """Builds a configuration file for user's assignment submission.
 
     Returns the absolute path of the submission
@@ -157,18 +146,19 @@ def build_config(assignment, user, archive):
     assert assignment in config.assignments, (
         'No such assignment `%s\'.' % assignment)
 
-    location = save_submission(
-            assignment, user,
-            _build_temporary_config(assignment, user, archive))
+    location = save_submission(assignment,
+             user,
+             _build_temporary_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths),
+             vmpaths)
 
     # copies the zip archive
     # XXX should create a clean zip from the repository
-    shutil.copy(archive, os.path.join(location, 'archive.zip'))
+    shutil.copy(archive_filename, os.path.join(location, 'archive.zip'))
 
     return location
 
 
-def send_submission(location):
+def send_submission(location, vmpaths):
     """Sends the submission at location for evaluation
 
     This function creates a zip archive in the ./unchecked/
@@ -207,7 +197,7 @@ def send_submission(location):
         fd = tempfile.mkstemp(
                 suffix='.zip',
                 prefix='%s_%s_%s_' % (course, assignment, user),
-                dir=vmcheckerpaths.dir_unchecked())  # FIXME not here
+                dir=vmpaths.dir_unchecked())  # FIXME not here
         _logger.info('Creating zip package %s', fd[1])
 
         # populates the archive (see the function's docstring)
@@ -220,7 +210,7 @@ def send_submission(location):
 
                 # includes extra required files
                 for dest, src in config.assignments.files_to_include(assignment):
-                    src = vmcheckerpaths.abspath(src)
+                    src = vmpaths.abspath(src)
 
                     # XXX do not assert, but raise
                     assert os.path.isfile(src), 'File %s is missing' % src
@@ -236,7 +226,7 @@ def send_submission(location):
 
     # package created, sends submission to tester by invoking submission script
     submit = config.assignments.get(assignment, 'Submit')
-    submit = vmcheckerpaths.abspath(submit)
+    submit = vmpaths.abspath(submit)
     _logger.info('Invoking submission script %s', submit)
     try:
         subprocess.check_call((submit, fd[1]))
@@ -255,12 +245,15 @@ def main():
     if len(config.argv) != 3:
         config.cmdline.error('Not enough arguments')
 
+    if config.options.course_id == None:
+        config.cmdline.error('You did not supply a course id. Check --help.')
+
     assignment = config.argv[0]
     user = config.argv[1]
-    archive = config.argv[2]
+    archive_filename = config.argv[2]
 
-    if not os.path.isfile(archive):
-        config.cmdline.error('%s must be an existing file.' % archive)
+    if not os.path.isfile(archive_filename):
+        config.cmdline.error('%s must be an existing file.' % archive_filename)
     if assignment not in config.assignments:
         config.cmdline.error('%s must be a valid assignment.' % assignment)
 
@@ -280,11 +273,24 @@ def main():
                 _logger.fatal('Try again in %s', remaining)
                 exit(1)
 
-    location = build_config(assignment, user, archive)
-    send_submission(location)
+
+    # if the user forced upload time at some value, grant his wish
+    # if not, the upload time is the system's current time
+    if config.options.forced_upload_time != None:
+        upload_time = config.options.forced_upload_time
+    else:
+        upload_time = time.strftime(config.DATE_FORMAT)
+
+    vmcfg = config.VmcheckerConfig(CourseList().courseConfig(config.options.course_id))
+    root_path = vmcfg.root_path()
+    vmpaths = paths.VmcheckerPaths(root_path)
+    location = build_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths)
+    send_submission(location, vmpaths)
 
 
 group = optparse.OptionGroup(config.cmdline, 'submit.py')
+group.add_option('-c', '--course_id', action='store', dest='course_id', default=None,
+                 help='The id of the course for which this homework is submitted')
 group.add_option('-f', '--force', action='store_true', dest='force', default=False,
                  help='Force submitting the homework ignoring the time difference')
 group.add_option('-t', '--forced-upload-time',

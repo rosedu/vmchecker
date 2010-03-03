@@ -12,6 +12,16 @@ HolidayStart = 2009.03.31 23:59:00
 HolidayFinish = 2009.04.02 23:59:00
 
 
+[storer]
+Hostname = cursuri.cs.pub.ro
+Username = cpl
+
+
+[tester]
+Hostname = sanctuary.cs.pub.ro
+Username = cpl
+
+
 [assignment DEFAULT]
 # the name of the course
 # as of now this is only used in the name of some files
@@ -37,8 +47,9 @@ Submit = local/submit_ssh.sh
 
 # which files to send to the tester
 # Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
+# Relative paths are relative to the root repo path.
 # XXX: This is implementation speciffic; it shouldn't be in the config file
-Include storer = examples/.vmcheckerrc
+Include storer = config
 Include callback = local/callback.py
 
 
