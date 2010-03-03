@@ -13,7 +13,6 @@ import pkg_resources
 from subprocess import check_call, CalledProcessError
 
 from vmchecker import paths
-from vmchecker import config
 
 
 _logger = logging.getLogger("vmchecker.initialise_course")
@@ -109,26 +108,18 @@ def create_db(db_file):
 
 
 
-def main_storer(default_root_path = ""):
+def main_storer(root_path):
     """Run initialization tasks for the storer machine."""
-    if default_root_path == "":
-        vmcfg = config.config_storer()
-        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    else:
-        vmpaths = paths.VmcheckerPaths(default_root_path)
+    vmpaths = paths.VmcheckerPaths(root_path)
     create_paths(vmpaths.storer_paths())
     create_storer_git_repo(vmpaths.abspath(vmpaths.dir_repository()))
     create_db(vmpaths.db_file())
     _logger.info(' -- storer init done setting up paths and db file.')
 
 
-def main_tester(default_root_path = ""):
+def main_tester(root_path):
     """Run initialization tasks for the tester machine."""
-    if default_root_path == "":
-        vmcfg = config.config_tester()
-        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    else:
-        vmpaths = paths.VmcheckerPaths(default_root_path)
+    vmpaths = paths.VmcheckerPaths(root_path)
     create_paths(vmpaths.tester_paths())
     _logger.info(' -- tester init done setting up paths and db file.')
 
@@ -144,7 +135,6 @@ def usage():
 def main():
     """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
-    config.parse_arguments()
 
     default_root_path = os.getcwd()
     default_repo_path = os.path.join(default_root_path, 'repo')
