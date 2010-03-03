@@ -27,11 +27,6 @@ import datetime
 import optparse
 import zipfile
 
-# needed to get the IP of the sending interface
-import socket
-import fcntl
-import struct
-
 
 from vmchecker import config
 from vmchecker import paths
@@ -41,24 +36,6 @@ from vmchecker.CourseList import CourseList
 
 _logger = logging.getLogger('submit')
 
-
-def get_ip_address(ifname):
-    """Recipe 439094: get the IP address associated with a network
-    interface (linux only).
-
-    Uses the Linux SIOCGIFADDR ioctl to find the IP address associated
-    with a network interface, given the name of that interface,
-    e.g. "eth0". The address is returned as a string containing a
-    dotted quad.
-
-    XXX: TODO: find a better way to do this.
-    """
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
 
 
 def _build_temporary_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths):
