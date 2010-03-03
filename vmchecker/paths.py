@@ -23,8 +23,6 @@ class VmcheckerPaths:
 
     def abspath(self, *segments):
         """Joins the path segments of path with VMChecker's root path"""
-        assert self.root != None, """vmcheckerpaths.root is not initialized
-            call config.config_storer() or config.config_tester() first!"""
         return os.path.normpath(os.path.join(self.root, *segments))
 
 
