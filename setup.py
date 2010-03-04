@@ -27,7 +27,10 @@ setup(name = 'vmchecker',
       packages = ['vmchecker'],
       package_dir =  {'vmchecker': 'vmchecker'},
       package_data = {'vmchecker': ['examples/config-template']},
-      scripts = ['bin/vmchecker-init-course.py', 'bin/vmchecker-queue-manager.py'],
+      scripts = ['bin/vmchecker-init-course.py',
+                 'bin/vmchecker-queue-manager.py',
+                 'bin/vmchecker-submit',
+                 ],
       data_files = [('/etc/init.d/', ['etc/init.d/vmchecker']),
 	            ('/etc/vmchecker/', ['etc/vmchecker/config.list'])])
 

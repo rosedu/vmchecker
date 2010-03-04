@@ -6,25 +6,19 @@
 import os
 
 class VmcheckerPaths:
+    """A class that encompases all the paths inside a vmchecker
+    instalation"""
+
     def __init__(self, root):
         """Create a vmchecker paths object.
            Accepts only one argument
-                - 'root'   - specify the path to the root directory        
+                - 'root'   - specify the path to the root directory
         """
-        self.root = root
-
-    def _normalize_root(self, path):
-        """Sets vmchecker root path"""
-        path = os.path.expanduser(path)
-        assert os.path.isabs(path)
-        path = os.path.normpath(path)
-        return path
-
+        self.root = _normalize_path(root)
 
     def abspath(self, *segments):
         """Joins the path segments of path with VMChecker's root path"""
         return os.path.normpath(os.path.join(self.root, *segments))
-
 
 
     def tester_paths(self):
@@ -36,6 +30,11 @@ class VmcheckerPaths:
         """A list of all the paths relevant to the storer machine."""
         return [self.dir_unchecked(), self.dir_checked(),
                 self.dir_backup(), self.dir_tests()]
+
+
+    def root_path(self):
+        """Return the path to the course root"""
+        return self.root
 
 
     def dir_repository(self):
@@ -101,33 +100,78 @@ class VmcheckerPaths:
         return os.path.join(self.dir_repository(), assignment)
 
 
-    def dir_user(self, assignment, user):
-        """Returns path to last user's assignment submission"""
+    def dir_submission_root(self, assignment, user):
+        """Returns path to latest user's submission for the given assignment"""
         return os.path.join(self.dir_repository(), assignment, user)
 
 
-    def dir_results(self, assignment, user):
-        """Returns path to user's results on assignment"""
-        return os.path.join(self.dir_repository(), assignment, user, 'results')
+
+def dir_submission_expanded_archive(submission_root):
+    """Returns the path to the users's expanded (unzipped) submission archive"""
+    return os.path.join(submission_root, 'archive')
+
+
+def dir_submission_results(submission_root):
+    """Returns the path to the users's result for his submission of
+    the given assignment"""
+    return os.path.join(submission_root, 'results')
+
+
+def submission_archive_file(submission_root):
+    """Returns the path to the users's unmodified submission
+    archive"""
+    return os.path.join(submission_root, 'archive.zip')
+
+
+def submission_config_file(submission_root):
+    """Returns the path to the users's submission configuration file
+
+    Among others this file contains data about user, assignment,
+    upload time.
+    """
+    return os.path.join(submission_root, 'config')
+
+
+
+def _normalize_path(path):
+    """Runs a series of sanity expansions on the given path"""
+    path = os.path.expanduser(path)
+    assert os.path.isabs(path)
+    path = os.path.normpath(path)
+    return path
+
+
+def _simple_test():
+    """A simple test of each function defined in this file."""
+
+    root_path = '/cucu'
+    assignment = 'assignment-xxx'
+    user = 'some-random-user'
+    vmpaths = VmcheckerPaths(root_path)
+    sbroot = vmpaths.dir_submission_root(assignment, user)
+    results =  { "tester_paths   :" : vmpaths.tester_paths(),
+                 "storer_paths   :" : vmpaths.storer_paths(),
+                 "root_path      :" : vmpaths.root_path(),
+                 "dir_repository :" : vmpaths.dir_repository(),
+                 "dir_unchecked  :" : vmpaths.dir_unchecked(),
+                 "dir_checked    :" : vmpaths.dir_checked(),
+                 "dir_tests      :" : vmpaths.dir_tests(),
+                 "dir_queue      :" : vmpaths.dir_queue(),
+                 "dir_tester_unzip_tmp:" : vmpaths.dir_tester_unzip_tmp(),
+                 "dir_backup     :" : vmpaths.dir_backup(),
+                 "db_file        :" : vmpaths.db_file(),
+                 "dir_bin        :" : vmpaths.dir_bin(),
+                 "dir_assignment :" : vmpaths.dir_assignment(assignment),
+                 "dir_submission_root     :" : sbroot,
+                 "dir_submission_expanded_archive :" : dir_submission_expanded_archive(sbroot),
+                 "dir_submission_results  :" : dir_submission_results(sbroot),
+                 "submission_archive_file :" : submission_archive_file(sbroot),
+                 "submission_config_file  :" : submission_config_file(sbroot),
+                 }
+    for result in results:
+        print result, results[result]
+    assert vmpaths.root_path() == root_path
+
 
 if __name__ == "__main__":
-    v = VmcheckerPaths(root = '/cucu')
-    result =  { "tester_paths   :" : v.tester_paths(),
-            "storer_paths   :" : v.storer_paths(),
-            "dir_repository :" : v.dir_repository(),
-            "dir_unchecked  :" : v.dir_unchecked(),
-            "dir_checked    :" : v.dir_checked(),
-            "dir_tests      :" : v.dir_tests(),
-            "dir_queue      :" : v.dir_queue(),
-            "dir_tester_unzip_tmp:" : v.dir_tester_unzip_tmp(),
-            "dir_backup     :" : v.dir_backup(),
-            "db_file        :" : v.db_file(),
-            "dir_bin        :" : v.dir_bin(),
-            "dir_assignment :" : v.dir_assignment('aaa'),
-            "dir_usee       :" : v.dir_user('aaa', 'uuu'),
-            "dir_results    :" : v.dir_results('aaa', 'uuu'),
-    }
-    for r in result:
-        print r, result[r]
-
-
+    _simple_test()

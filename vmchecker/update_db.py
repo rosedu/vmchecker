@@ -36,7 +36,7 @@ import time
 import submissions
 import penalty
 
-_logger = logging.getLogger('update_db')
+_logger = logging.getLogger('vmchecker.update_db')
 
 class UpdateDb(repo_walker.RepoWalker):
     def __init__(self):

@@ -12,10 +12,9 @@ import ConfigParser
 
 import vmcheckerpaths
 import assignments as assignments_
-from assignments import _SECTION_PREFIX
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
-DEFAULT_CONFIG_FILE = '/tmp/tmp/config'
+DEFAULT_CONFIG_FILE = '/home/gringo/tmp/config'
 
 cmdline = optparse.OptionParser()
 options, argv = None, None
@@ -50,6 +49,12 @@ class VmcheckerConfig:
         """Get the submission (git) repository path for this course."""
         return self.config.get('vmchecker', 'repository')
 
+    def sections(self):
+        """Give access to the underlining config's sections"""
+        # XXX: LAG: I think this is a sign that we should have derived the
+        # RawConfigParser class.
+        return self.config.sections()
+
     def root_path(self):
         """Get the root path for this course"""
         return self.config.get('vmchecker', 'root')
@@ -66,10 +71,13 @@ class VmcheckerConfig:
     def tester_hostname(self):
         return self.config.get('tester', 'hostname')
 
+    def tester_queue_path(self):
+        return self.config.get('tester', 'queuepath')
+
     def assignments(self):
         """Return an Assignment object describing the assignments in
         this course's config file"""
-        return assignments_.Assignments(self.config)
+        return assignments_.Assignments(self)
 
 
 def parse_arguments():

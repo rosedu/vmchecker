@@ -20,7 +20,7 @@ Username = cpl
 [tester]
 Hostname = sanctuary.cs.pub.ro
 Username = cpl
-
+QueuePath = /tmp/
 
 [assignment DEFAULT]
 # the name of the course
@@ -77,7 +77,7 @@ KernelMessages=0
 
 
 
-# tester configuration
+# test virtual machine configuration
 [so-linux]
 VMPath=/home/so/vmware/so-vm-debian-sid/faust.vmx
 GuestUser=so

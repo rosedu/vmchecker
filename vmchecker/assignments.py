@@ -26,7 +26,7 @@ import datetime
 import errno
 import os
 
-import vmcheckerpaths
+from vmchecker import paths
 
 
 # the prefix of the sections' names describing assignments
@@ -43,8 +43,8 @@ class _Lock(object):
     The interface provided is simmilar to threading.Lock
 
     """
-    def __init__(self, assignment):
-        location = vmcheckerpaths.dir_assignment(assignment)
+    def __init__(self, vmpaths, assignment):
+        location = vmpaths.dir_assignment(assignment)
         if not os.path.isdir(location):
             os.makedirs(location)
 
@@ -76,15 +76,16 @@ class Assignments(object):
     def __init__(self, config):
         """Parses the assignments from the RawConfigParser object, `config'"""
         self.__assignments = {}
+        self.vmpaths = paths.VmcheckerPaths(config.root_path())
         default = {}
 
-        for section in config.sections():
+        for section in config.config.sections():
             if section.startswith(_SECTION_PREFIX):
                 assignment = section[len(_SECTION_PREFIX):]
                 if assignment == _DEFAULT_ASSIGNMENT:
-                    default = config.items(section)
+                    default = config.config.items(section)
                 else:
-                    self.__assignments[assignment] = config.items(section)
+                    self.__assignments[assignment] = config.config.items(section)
 
         default = dict(default)
         for assignment, items in self.__assignments.iteritems():
@@ -121,7 +122,7 @@ class Assignments(object):
         for option in self.__assignments[assignment]:
             if option.startswith(_INCLUDE_PREFIX):
                 yield (option[len(_INCLUDE_PREFIX):],
-                       vmcheckerpaths.abspath(self.get(assignment, option)))
+                       self.vmpaths.abspath(self.get(assignment, option)))
 
     def get(self, assignment, option):
         """Returns value of `option' for `assignment'.
@@ -136,7 +137,7 @@ class Assignments(object):
     def lock(self, assignment):
         """Returns a lock over assignment"""
         self._check_valid(assignment)
-        return _Lock(assignment)
+        return _Lock(self.vmpaths, assignment)
 
     def __iter__(self):
         """Returns an iterator over the assignments"""
@@ -153,7 +154,7 @@ class Assignments(object):
     def tests_path(self, assignment):
         """Returns the path to the tests for assignment"""
         self._check_valid(assignment)
-        return os.path.join(vmcheckerpaths.dir_tests(), assignment + '.zip')
+        return os.path.join(self.vmpaths.dir_tests(), assignment + '.zip')
 
     def timedelta(self, assignment):
         """Returns a timedelta object with minimum delay between submissions"""
