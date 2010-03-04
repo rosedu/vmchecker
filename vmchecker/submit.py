@@ -10,10 +10,6 @@ For a better submission scheme see the commit:
 
 from __future__ import with_statement
 
-__author__ = """Ana Savu <ana.savu86@gmail.com>
-                Alexandru Moșoi <brtzsnr@gmail.com>"""
-
-
 import ConfigParser
 import errno
 import getpass
@@ -37,6 +33,21 @@ from vmchecker.CourseList import CourseList
 _logger = logging.getLogger('submit')
 
 
+def submission_config(user, assignment, upload_time, storer_result_dir, storer_username, storer_hostname):
+    # creates submission's configuration file
+    # src = submission resource configuration
+    src = ConfigParser.RawConfigParser()
+    src.add_section('Assignment')
+    src.set('Assignment', 'User', user)
+    src.set('Assignment', 'Assignment', assignment)
+    src.set('Assignment', 'UploadTime', upload_time)
+
+    # XXX these should go to `callback'
+    src.set('Assignment', 'ResultsDest', storer_result_dir)
+    src.set('Assignment', 'RemoteUsername', storer_username)
+    src.set('Assignment', 'RemoteHostname', storer_hostname)
+    return src
+
 
 def _build_temporary_config(assignment, user, archive_filename, upload_time, vmcfg, vmpaths):
     """Stores user's submission of assignment in a temporary directory"""
@@ -55,19 +66,8 @@ def _build_temporary_config(assignment, user, archive_filename, upload_time, vmc
     # unzips sources files
     subprocess.check_call(['unzip', archive_filename, '-d', os.path.join(location, 'archive')])
 
-    # creates submission's configuration file
-    # src = submission resource configuration
-    src = ConfigParser.RawConfigParser()
-    src.add_section('Assignment')
-    src.set('Assignment', 'User', user)
-    src.set('Assignment', 'Assignment', assignment)
-    src.set('Assignment', 'UploadTime', upload_time)
-
-    # XXX these should go to `callback'
-    src.set('Assignment', 'ResultsDest', vmpaths.dir_results(assignment, user))
-    src.set('Assignment', 'RemoteUsername', vmcfg.storer_username())
-    src.set('Assignment', 'RemoteHostname', vmcfg.storer_hostname())
-
+    src = submission_config(user, assignment, upload_time, vmpaths.dir_results(assignment, user),
+                            vmcfg.storer_username(), vmcfg.storer_hostname())
     with open(os.path.join(location, 'config'), 'w') as handler:
         src.write(handler)
 
