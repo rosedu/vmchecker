@@ -23,7 +23,6 @@ options names are not.
 import fcntl
 import logging
 import datetime
-import errno
 import os
 
 from vmchecker import paths
@@ -64,7 +63,7 @@ class _Lock(object):
         """Releases the lock"""
         fcntl.lockf(self.__fd, fcntl.LOCK_UN)
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         self.release()
 
     def __del__(self):
