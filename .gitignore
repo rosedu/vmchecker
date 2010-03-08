@@ -14,3 +14,4 @@ queue/
 nohup.out
 tmpunzip/
 XXX*
+build/
