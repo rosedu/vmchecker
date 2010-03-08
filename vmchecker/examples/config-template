@@ -41,9 +41,6 @@ KernelMessages = 0
 # it this is exceeded, the test is stopped.
 Timeout = 120
 
-# script to use to submit archives to the tester
-# XXX: This is implementation speciffic; it shouldn't be in the config file
-Submit = local/submit_ssh.sh
 
 # which files to send to the tester
 # Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
