@@ -10,6 +10,7 @@
 			background-color: #EEEEEE;
 			height: 50px; 
 			width: 100%;
+			margin-bottom: 40px; 
 		}
 	
 		.logo {
@@ -64,10 +65,10 @@
 		}
 		
 		.statusPanel {
+			top: 0px;
+			left: 50%;  
 			height: 30px; 
-			width: 100%;
-			text-align: center;
-			padding-top: 15px;  
+			position: fixed; 
 		}
 		
 		.statusLabel {
@@ -78,7 +79,7 @@
 		}
 		
 	</ui:style>
-	<g:VerticalPanel styleName="{style.headerPanel}">
+	<g:HTMLPanel>
 	<g:DockLayoutPanel styleName="{style.header}" unit='EM'>
 		<g:west size="40">
 			<g:HorizontalPanel styleName="{style.leftPanel}" verticalAlignment='ALIGN_MIDDLE'>
@@ -99,7 +100,7 @@
 		</g:east>
 	</g:DockLayoutPanel>
 	<g:SimplePanel styleName="{style.statusPanel}">
-		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}">Status message</g:Label>
+		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}"></g:Label>
 	</g:SimplePanel>
-	</g:VerticalPanel>
+	</g:HTMLPanel>
 </ui:UiBinder>

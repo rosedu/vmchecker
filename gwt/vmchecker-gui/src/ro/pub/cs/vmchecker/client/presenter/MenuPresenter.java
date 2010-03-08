@@ -11,14 +11,11 @@ public class MenuPresenter implements Presenter {
 		public int getSelectedIndex(); 
 	}
 
-	private String[] items; 
-	
 	private HandlerManager eventBus; 
 	private MenuPresenter.Widget widget; 
 	
-	public MenuPresenter(HandlerManager eventBus, MenuPresenter.Widget widget, String[] items) {
+	public MenuPresenter(HandlerManager eventBus, MenuPresenter.Widget widget) {
 		this.eventBus = eventBus;
-		this.items = items; 
 		bindWidget(widget); 
 	}
 	

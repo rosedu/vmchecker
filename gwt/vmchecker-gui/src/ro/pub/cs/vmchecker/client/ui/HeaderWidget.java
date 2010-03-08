@@ -59,5 +59,10 @@ public class HeaderWidget extends Composite
 	public int getSelectedCourseIndex() {
 		return coursesList.getSelectedIndex(); 
 	}
-	
+
+	@Override
+	public void setStatusLabelVisible(boolean visible) {
+		statusLabel.setVisible(visible); 
+	}
+
 }

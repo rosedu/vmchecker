@@ -4,7 +4,8 @@ import com.google.gwt.event.shared.GwtEvent;
 
 public class CourseSelectedEvent extends GwtEvent<CourseSelectedEventHandler> {
 
-	public static final GwtEvent.Type<CourseSelectedEventHandler> TYPE = new GwtEvent.Type<CourseSelectedEventHandler>(); 
+	public static final GwtEvent.Type<CourseSelectedEventHandler> TYPE = 
+		new GwtEvent.Type<CourseSelectedEventHandler>(); 
 	
 	private String courseId; 
 	
