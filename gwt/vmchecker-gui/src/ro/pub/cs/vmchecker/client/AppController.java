@@ -6,6 +6,7 @@ import java.util.HashSet;
 
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEventHandler;
+import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
@@ -92,7 +93,7 @@ public class AppController implements ValueChangeHandler<String> {
 					//History.newItem("assignments");
 				} else {
 					History.fireCurrentHistoryState(); 
-				}				
+				}
 			}
 			
 		}); 		
@@ -112,7 +113,7 @@ public class AppController implements ValueChangeHandler<String> {
 				if (mainPresenter != null) {
 					mainPresenter.clearEventHandlers(); 
 				}
-				mainPresenter = new AssignmentPresenter(eventBus, idToCourse.get(token).id, new AssignmentWidget());
+				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, new AssignmentWidget());
 				headerPresenter.selectCourse(idToCourse.get(token).id); 
 			} else {
 				Window.alert("State " + token + " not implemented");

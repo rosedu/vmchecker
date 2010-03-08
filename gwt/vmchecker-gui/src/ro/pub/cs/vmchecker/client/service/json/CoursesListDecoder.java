@@ -16,8 +16,6 @@ public class CoursesListDecoder implements JSONDecoder<Course[]> {
 	
 	@Override
 	public Course[] decode(String text) {
-		// TODO Auto-generated method stub
-		GWT.log("Decoding: " + text, null); 
 		try {
 			JSONValue jsonValue = JSONParser.parse(text);
 		    JSONArray jsonArray;
@@ -25,8 +23,7 @@ public class CoursesListDecoder implements JSONDecoder<Course[]> {
 		    if ((jsonArray = jsonValue.isArray()) != null) {
 		    	Course[] courses = new Course[jsonArray.size()]; 
 		    	for (int i = 0; i < jsonArray.size(); i++) {
-		    		Course course = parseCourse(jsonArray.get(i).isObject());
-		    		courses[i] = course; 
+		    		courses[i] = parseCourse(jsonArray.get(i).isObject());
 		    	}
 		    	return courses; 
 		    } 
