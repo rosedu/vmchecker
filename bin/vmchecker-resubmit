@@ -1,26 +1,41 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """An useful script for mass homeworks resubmition"""
 
+import optparse
 
-import config
-import submit
-import repo_walker
+from vmchecker.config import VmcheckerConfig
+from vmchecker import submit
+from vmchecker import repo_walker
+from vmchecker.CourseList import CourseList
 
 
 class Resubmit(repo_walker.RepoWalker):
     def __init__(self, vmcfg):
-        RepoWalker(self)
-        self.vmcfg = vmcfg
+        repo_walker.RepoWalker.__init__(self, vmcfg)
 
-    def resubmit(self, options):
+    def resubmit(self, options, course_id):
         def _submit(assignment, user, location):
             """Submits assignment from `location'"""
-            submit.send_submission(location)
-        self.walk(vmcfg, options, _submit)
+            submit.queue_for_testing(assignment, user, course_id)
+        self.walk(options, _submit)
 
+
+def resubmit(vmcfg, options, course_id):
+    r = Resubmit(vmcfg)
+    r.resubmit(options, course_id)
+
+def main():
+    cmdline = optparse.OptionParser()
+    cmdline.add_option('-c', '--course_id', help='The ID of the course for'
+                       'which you resubmit the homework.')
+    repo_walker.add_optparse_group(cmdline)
+    (options, argv) = cmdline.parse_args()
+    if options.course_id == None:
+        cmdline.error("--course_id is mandatory.")
+    vmcfg = VmcheckerConfig(CourseList().courseConfig(options.course_id))
+    resubmit(vmcfg, options, options.course_id)
 
 if __name__ == '__main__':
-    vmcfg = config.config_storer()
-    r = Resubmit(vmcfg)
-    r.resubmit(config.options)
+    main()

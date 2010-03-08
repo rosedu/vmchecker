@@ -16,8 +16,8 @@ import optparse
 import os
 import logging
 
-import vmcheckerpaths
-import config
+from vmchecker import paths
+from vmchecker import config
 
 
 _logger = logging.getLogger('repo_walker')
@@ -25,28 +25,7 @@ _logger = logging.getLogger('repo_walker')
 class RepoWalker:
     def __init__(self, vmcfg):
         self.vmcfg = vmcfg
-
-    def _check_arguments(self, options):
-        """Checks that arguments don't conflict"""
-
-        if (options.user is None
-                and options.assignment is None
-                and options.recursive == False
-                and options.all == False):
-            config.cmdline.error(
-                    'At least one of --user, --assignment, '
-                    '--recursive or --all should be specified')
-
-        if ((options.recursive or options.all)
-                and (options.user is not None
-                    or options.assignment is not None)):
-            config.cmdline.error(
-                    'Options --recursive and --all '
-                    'are incompatible with --user and --assignment')
-
-        if options.recursive and options.all:
-            config.cmdline.error(
-                    "You can't specify both --recursive and --all")
+        self.vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
 
     def _simulate(self, assignment, user, location, func_name, args):
@@ -58,8 +37,8 @@ class RepoWalker:
     def _walk_assignment(self, assignment, options, func, args):
         """Walks all user's sources for assignment"""
 
-        for user in os.listdir(vmcheckerpaths.dir_assignment(assignment)):
-            path = vmcheckerpaths.dir_user(assignment, user)
+        for user in os.listdir(self.vmpaths.dir_assignment(assignment)):
+            path = self.vmpaths.dir_submission_root(assignment, user)
 
             if not os.path.isdir(path):
                 _logger.debug('Ignoring %s (not a directory)', path)
@@ -95,7 +74,7 @@ class RepoWalker:
         """Walks the repository."""
 
         for assignment in os.listdir(repository):
-            path = vmcheckerpaths.dir_assignment(assignment)
+            path = self.vmpaths.dir_assignment(assignment)
 
             if not os.path.isdir(path):
                 _logger.debug('Ignoring %s (not a directory)', path)
@@ -128,24 +107,42 @@ class RepoWalker:
         would be better. Maybe later.
 
         """
-        self._check_arguments(options)
-        self._walk_repository(self.vmcfg, self.vmcfg.repository_path(), options, func, args)
+        check_arguments(options)
+        self._walk_repository(self.vmcfg.repository_path(), options, func, args)
 
 
-group = optparse.OptionGroup(config.cmdline, 'repo_walker.py')
-group.add_option('-u', '--user', dest='user',
-                 help="Specifies whose user's homeworks to walk")
-group.add_option('-a', '--assignment', dest='assignment',
-                 help="Specifies which assignment to walk")
-group.add_option('-r', '--recursive', action='store_true', dest='recursive',
-                 default=False, help='Walks everything starting from '
-                                     'current working directory')
-group.add_option('--simulate', action='store_true', dest='simulate',
-                 default=False, help='Only prints homeworks to walk')
-group.add_option('--all', action='store_true', dest='all',
-                 default=False, help='Walks all submitted homeworks')
-group.add_option('--ignore-errors', action='store_true', dest='ignore_errors',
-                 default=False, help='Ignore errors')
-config.cmdline.add_option_group(group)
-del group
+def check_arguments(options):
+    """Checks that arguments don't conflict"""
 
+    if (options.user is None
+        and options.assignment is None
+        and options.recursive == False
+        and options.all == False):
+        config.cmdline.error('At least one of --user, --assignment, '
+                             '--recursive or --all should be specified')
+
+    if ((options.recursive or options.all)
+        and (options.user is not None
+             or options.assignment is not None)):
+        config.cmdline.error('Options --recursive and --all are '
+                             'incompatible with --user and --assignment')
+
+    if options.recursive and options.all:
+        config.cmdline.error("You can't specify both --recursive and --all")
+
+def add_optparse_group(cmdline):
+    group = optparse.OptionGroup(cmdline, 'repo_walker.py')
+    group.add_option('-u', '--user', dest='user',
+                     help="Specifies whose user's homeworks to walk")
+    group.add_option('-a', '--assignment', dest='assignment',
+                     help="Specifies which assignment to walk")
+    group.add_option('-r', '--recursive', action='store_true', dest='recursive',
+                     default=False, help='Walks everything starting from '
+                     'current working directory')
+    group.add_option('--simulate', action='store_true', dest='simulate',
+                     default=False, help='Only prints homeworks to walk')
+    group.add_option('--all', action='store_true', dest='all',
+                     default=False, help='Walks all submitted homeworks')
+    group.add_option('--ignore-errors', action='store_true', dest='ignore_errors',
+                     default=False, help='Ignore errors')
+    cmdline.add_option_group(group)
