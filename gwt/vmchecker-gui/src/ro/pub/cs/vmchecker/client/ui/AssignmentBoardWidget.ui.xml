@@ -10,7 +10,7 @@
 		}
 		
 		.menuPanel {
-			float: right; 
+			float: right;
 		}
 		
 		.titlePanel {
@@ -21,15 +21,20 @@
 			clear: both; 
 		}
 		
+		.title, .deadline, .menuPanel {
+			font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
+		}
+		
 		.title {
 			font-size: 18px; 
 			font-weight: bold; 
-			font-family: Lucida Sans; 
 			line-height: 24px; 
 		}
 		
 		.deadline {
-			color: red; 
+			color: red;
+			font-size: 12px; 
+			font-weight: normal;  
 		}
 		
 		.deadlineDate {

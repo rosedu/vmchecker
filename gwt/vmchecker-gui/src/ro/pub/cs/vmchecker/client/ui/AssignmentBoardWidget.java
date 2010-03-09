@@ -19,13 +19,13 @@ import com.google.gwt.user.client.ui.Widget;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentBoardPresenter;
 import com.google.gwt.user.client.Element; 
 
-public class AssignmentBoard extends Composite 
+public class AssignmentBoardWidget extends Composite 
 	implements AssignmentBoardPresenter.Widget {
 
 	private static AssignmentBoardUiBinder uiBinder = GWT
 			.create(AssignmentBoardUiBinder.class);
 
-	interface AssignmentBoardUiBinder extends UiBinder<Widget, AssignmentBoard> {
+	interface AssignmentBoardUiBinder extends UiBinder<Widget, AssignmentBoardWidget> {
 	}
 	
 	@UiField
@@ -40,7 +40,7 @@ public class AssignmentBoard extends Composite
 	@UiField
 	Label deadlineDate; 
 	
-	public AssignmentBoard() {
+	public AssignmentBoardWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
 		for (String entry : viewTitles) {
 			menu.addTab(entry); 
