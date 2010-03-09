@@ -9,8 +9,10 @@
 	<g:HTMLPanel>
 		<g:FormPanel ui:field="form" styleName="{style.form}">
 			<g:HorizontalPanel>
-				<g:FileUpload></g:FileUpload>
-				<g:Button ui:field="uploadButton">Upload</g:Button>
+				<g:FileUpload ui:field="fileUpload" name="archiveFile"></g:FileUpload>
+				<g:Button ui:field="uploadButton" enabled="false">Upload</g:Button>
+				<g:Hidden ui:field="courseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="assignmentIdField" name="assignmentId"></g:Hidden>
 			</g:HorizontalPanel>
 		</g:FormPanel>
 		<g:HTML>

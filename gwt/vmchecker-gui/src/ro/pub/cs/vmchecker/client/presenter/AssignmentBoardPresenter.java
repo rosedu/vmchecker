@@ -2,22 +2,35 @@ package ro.pub.cs.vmchecker.client.presenter;
 
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEventHandler;
+import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.UploadStatus;
+import ro.pub.cs.vmchecker.client.service.HTTPService;
+import ro.pub.cs.vmchecker.client.service.json.UploadResponseDecoder;
 import ro.pub.cs.vmchecker.client.ui.ResultsWidget;
 import ro.pub.cs.vmchecker.client.ui.StatementWidget;
 import ro.pub.cs.vmchecker.client.ui.UploadWidget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.logical.shared.HasSelectionHandlers;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.GwtEvent.Type;
+import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.Hidden;
+import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
+import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteHandler;
+import com.google.gwt.user.client.ui.FormPanel.SubmitEvent;
+import com.google.gwt.user.client.ui.FormPanel.SubmitHandler;
 
-public class AssignmentBoardPresenter implements Presenter {
+public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandler {
 
 	public interface Widget {
 		public static enum View {
@@ -37,15 +50,33 @@ public class AssignmentBoardPresenter implements Presenter {
 		void displayView(com.google.gwt.user.client.ui.Widget view); 
 	}
 	
+	public interface UploadWidget {
+		HasClickHandlers getSubmitButton(); 
+		FormPanel getUploadForm();
+		Hidden getCourseField(); 
+		Hidden getAssignmentField();
+	}
+	
 	private HandlerManager eventBus;
-	private AssignmentBoardPresenter.Widget widget; 
+	private HTTPService service; 
+	private AssignmentBoardPresenter.Widget widget;
 	private HasWidgets container; 
 	private HandlerRegistration assignmentSelectReg = null;
+	private String courseId;
+	private String assignmentId; 
 	
-	public AssignmentBoardPresenter(HandlerManager eventBus, AssignmentBoardPresenter.Widget widget) {
+	private UploadWidget uploadWidget = new ro.pub.cs.vmchecker.client.ui.UploadWidget();
+	private StatementWidget statementWidget = new StatementWidget();
+	private ResultsWidget resultsWidget = new ResultsWidget(); 
+	
+	public AssignmentBoardPresenter(HandlerManager eventBus, HTTPService service, String courseId, AssignmentBoardPresenter.Widget widget) {
 		this.eventBus = eventBus;
+		this.service = service; 
+		this.courseId = courseId; 
 		bindWidget(widget);
-		listenAssignmentSelect(); 
+		listenAssignmentSelect();
+		uploadWidget.getUploadForm().setAction(service.UPLOAD_URL); 
+		uploadWidget.getUploadForm().addSubmitCompleteHandler(this); 
 	}
 	
 	public void listenAssignmentSelect() {
@@ -58,7 +89,8 @@ public class AssignmentBoardPresenter implements Presenter {
 	}
 	
 	public void assignmentSelected(Assignment data) {
-		widget.getTitleLabel().setText(data.title); 
+		widget.getTitleLabel().setText(data.title);
+		this.assignmentId = data.id; 
 		widget.getDeadlineLabel().setText(data.deadline);
 		setVisibleView(Widget.defaultView);
 		widget.setSelectedTab(Widget.defaultView); 
@@ -69,15 +101,12 @@ public class AssignmentBoardPresenter implements Presenter {
 		Widget.View view = Widget.View.values()[viewIndex];
 		switch (view) {
 		case UPLOAD: 
-			UploadWidget uploadWidget = new UploadWidget();
-			widget.displayView(uploadWidget); 
+			widget.displayView((com.google.gwt.user.client.ui.Widget)uploadWidget); 
 			break; 
 		case STATEMENT: 
-			StatementWidget statementWidget = new StatementWidget(); 
 			widget.displayView(statementWidget); 
 			break; 			
 		case RESULTS:
-			ResultsWidget resultsWidget = new ResultsWidget(); 
 			widget.displayView(resultsWidget); 
 			break; 
 		}
@@ -85,7 +114,21 @@ public class AssignmentBoardPresenter implements Presenter {
 	
 	private void bindWidget(AssignmentBoardPresenter.Widget widget) {
 		this.widget = widget;
-		listenMenuSelection(); 
+		listenMenuSelection();
+		listenSubmitUpload(); 
+	}
+	
+	private void listenSubmitUpload() {
+		uploadWidget.getSubmitButton().addClickHandler(new ClickHandler() {
+
+			public void onClick(ClickEvent event) {
+				uploadWidget.getCourseField().setValue(courseId); 
+				uploadWidget.getAssignmentField().setValue(assignmentId);
+				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, "Sending file...")); 
+				uploadWidget.getUploadForm().submit(); 
+			}
+		}); 
+
 	}
 	
 	private void listenMenuSelection() {
@@ -108,6 +151,21 @@ public class AssignmentBoardPresenter implements Presenter {
 	@Override
 	public void clearEventHandlers() {
 		assignmentSelectReg.removeHandler();
+	}
+
+	@Override
+	public void onSubmitComplete(SubmitCompleteEvent event) {
+		UploadResponseDecoder responseDecoder = new UploadResponseDecoder(); 
+		UploadStatus response = responseDecoder.decode(event.getResults());
+		StatusChangedEvent statusChangeEvent = null; 
+		if (response.status) {
+			statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.SUCCESS, 
+					"File uploaded successfully");
+		} else {
+			statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.ERROR,
+					"Error uploading file"); 
+		}
+		eventBus.fireEvent(statusChangeEvent); 
 	}
 
 }

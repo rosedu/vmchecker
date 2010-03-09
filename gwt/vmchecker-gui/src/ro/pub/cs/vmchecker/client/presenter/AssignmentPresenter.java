@@ -4,7 +4,7 @@ import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
-import ro.pub.cs.vmchecker.client.ui.AssignmentBoard;
+import ro.pub.cs.vmchecker.client.ui.AssignmentBoardWidget;
 import ro.pub.cs.vmchecker.client.ui.NumberedMenu;
 
 import com.google.gwt.core.client.GWT;
@@ -60,7 +60,7 @@ public class AssignmentPresenter implements Presenter {
 	
 	@Override
 	public void go(final HasWidgets container) {
-		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.INFO, "Incarca teme...")); 
+		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, "Incarca teme...")); 
 		service.getAssignments(courseId, new AsyncCallback<Assignment[]>(){
 
 			public void onFailure(Throwable caught) {
@@ -75,7 +75,7 @@ public class AssignmentPresenter implements Presenter {
 					titles[i] = assignments[i].title; 
 				}
 				menuPresenter = new MenuPresenter(eventBus, new NumberedMenu(titles)); 
-				boardPresenter = new AssignmentBoardPresenter(eventBus, new AssignmentBoard());
+				boardPresenter = new AssignmentBoardPresenter(eventBus, service, courseId, new AssignmentBoardWidget());
 				bindWidget(widget);
 				
 				widget.getMenuPanel().clear(); 

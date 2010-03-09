@@ -20,6 +20,7 @@ import ro.pub.cs.vmchecker.client.service.json.CoursesListDecoder;
 public class HTTPService {
 	
 	public static final String VMCHECKER_SERVICES_URL = GWT.getHostPageBaseURL() + "services/"; 
+	public static final String UPLOAD_URL = VMCHECKER_SERVICES_URL + "upload.php"; 
 	
 	public static String packParameters(HashMap<String, String> params) {
 		StringBuffer result = new StringBuffer();  
