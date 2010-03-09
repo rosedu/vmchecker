@@ -8,9 +8,9 @@
 		}
 		
 		.menuItem, .menuItem a, .menuItem .itemNo {
-			font-family: Lucida Sans; 
-			font-size: 14px; 
-			line-height: 20px;			
+			font-family: Helvetica, Verdana; 
+			font-size:13px;
+			line-height:110%; 
 		}
 		
 		.menuItem a{
@@ -30,7 +30,6 @@
 		}
 			
 		.selected a, .selected a:visited, .selected a:hover {
-			text-decoration: underline;   
 		}
 		
 		.unselected a, .unselected a:visited {
@@ -40,7 +39,8 @@
 		}
 		
 		.unselected a:hover {
-			color: green;  
+			/* color: green; */  
+			text-decoration: underline;   
 		}
 		
 	</ui:style>

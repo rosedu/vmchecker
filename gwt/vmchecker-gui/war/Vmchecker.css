@@ -39,10 +39,16 @@ h1 {
 	margin-top: 20px;   
 }
 
+.assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem, .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem-selected {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
+	color: #006633;  
+	font-size: 13px; 
+}
+
 .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem {
 	background-color: #FFF; 
 }
-		
+
 .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem-selected {
 	background-color: #EEEEEE; 
 }
