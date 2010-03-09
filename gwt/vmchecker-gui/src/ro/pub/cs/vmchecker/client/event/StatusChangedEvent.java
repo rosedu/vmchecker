@@ -6,7 +6,7 @@ public class StatusChangedEvent extends GwtEvent<StatusChangedEventHandler> {
 	public static final GwtEvent.Type<StatusChangedEventHandler> TYPE = new GwtEvent.Type<StatusChangedEventHandler>();
 
 	public enum StatusType {
-		INFO, ERROR, RESET
+		INFO, SUCCESS, ACTION, ERROR, RESET
 	}
 	
 	private StatusType type; 

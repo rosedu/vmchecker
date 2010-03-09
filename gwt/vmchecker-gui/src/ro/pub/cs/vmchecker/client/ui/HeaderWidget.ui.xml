@@ -1,7 +1,7 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
 			 xmlns:g='urn:import:com.google.gwt.user.client.ui'>
-	<ui:style>
+	<ui:style type='ro.pub.cs.vmchecker.client.ui.HeaderWidget.HeaderStyle'>
 		.headerPanel {
 			width: 100%;
 		}
@@ -68,13 +68,34 @@
 			top: 0px;
 			left: 50%;  
 			height: 30px; 
+			margin-top: 3px;  
 			position: fixed; 
 		}
 		
 		.statusLabel {
 			display: inline;
-			padding: 3px; 
+			font-family: Verdana, Arial, sans serif; 
+			font-size: 12px; 
+			padding: 5px;
 			font-weight: bold;
+		}
+		
+		.info {
+			background-color: #E2E2E2;
+			color: #000;   
+		}
+		
+		.error {
+			background-color: #9B0000;
+			color: #FFF;  
+		}
+		
+		.success {
+			background-color: #7CBB6C;
+			color: #FFF; 
+		}
+		
+		.action {
 			background-color: #FFCC66;  
 		}
 		

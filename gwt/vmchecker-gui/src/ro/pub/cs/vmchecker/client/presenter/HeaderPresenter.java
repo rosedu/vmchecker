@@ -13,6 +13,7 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
@@ -35,28 +36,14 @@ public class HeaderPresenter implements Presenter {
 		void addCourse(String name, String id);
 		void clearCourses();
 		void selectCourse(int courseIndex);
-		int getSelectedCourseIndex(); 
+		int getSelectedCourseIndex();
+		void setStatusType(StatusChangedEvent.StatusType type); 
 	}
 	
 	public HeaderPresenter(HandlerManager eventBus, HeaderWidget widget) {
 		this.eventBus = eventBus; 
 		bindWidget(widget);
 		listenStatusChange(); 
-	}
-	
-	private void listenStatusChange() {
-		this.eventBus.addHandler(StatusChangedEvent.TYPE, new StatusChangedEventHandler() {
-
-			public void onChange(StatusChangedEvent event) {
-				if (event.getType() == StatusChangedEvent.StatusType.RESET) {
-					widget.setStatusLabelVisible(false); 
-				} else {
-					widget.getStatusLabel().setText(event.getText());
-					widget.setStatusLabelVisible(true); 
-				}
-			}
-			
-		}); 
 	}
 	
 	public void setCourses(ArrayList<Course> courses) {
@@ -74,6 +61,20 @@ public class HeaderPresenter implements Presenter {
 		this.widget = widget; 
 		/* listen to events from display */
 		listenCourseChange(); 
+	}
+	
+	private void listenStatusChange() {
+		this.eventBus.addHandler(StatusChangedEvent.TYPE, new StatusChangedEventHandler() {
+			public void onChange(StatusChangedEvent event) {
+				if (event.getType() == StatusChangedEvent.StatusType.RESET) {
+					widget.setStatusLabelVisible(false); 
+				} else {
+					widget.getStatusLabel().setText(event.getText());
+					widget.setStatusType(event.getType()); 
+					widget.setStatusLabelVisible(true); 
+				}
+			}
+		}); 
 	}
 	
 	private void listenCourseChange() {

@@ -3,6 +3,7 @@ package ro.pub.cs.vmchecker.client.ui;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
+import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -12,6 +13,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import ro.pub.cs.vmchecker.client.event.StatusChangedEvent.StatusType;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter; 
 
 public class HeaderWidget extends Composite 
@@ -20,14 +22,30 @@ public class HeaderWidget extends Composite
 	interface HeaderUiBinder extends UiBinder<Widget, HeaderWidget> {}
 	private static HeaderUiBinder uiBinder = GWT.create(HeaderUiBinder.class);
 
+	interface HeaderStyle extends CssResource {
+		String info(); 
+		String error(); 
+		String success(); 
+		String action(); 
+	}
+	
 	@UiField 
 	ListBox coursesList; 
 	
 	@UiField 
 	Label statusLabel; 
 	
+	@UiField 
+	HeaderStyle style; 
+	
+	private String[] statusStyles = new String[4]; 
+	
 	public HeaderWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
+		statusStyles[0] = style.action();  
+		statusStyles[1] = style.error();  
+		statusStyles[2] = style.success();   
+		statusStyles[3] = style.info();   
 	}
 
 	@Override
@@ -63,6 +81,27 @@ public class HeaderWidget extends Composite
 	@Override
 	public void setStatusLabelVisible(boolean visible) {
 		statusLabel.setVisible(visible); 
+	}
+
+	@Override
+	public void setStatusType(StatusType type) {
+		for (int i = 0; i < statusStyles.length; i++) {
+			statusLabel.removeStyleName(statusStyles[i]); 
+		}
+		switch (type) {
+		case ACTION:
+			statusLabel.addStyleName(style.action()); 
+			break; 
+		case ERROR:
+			statusLabel.addStyleName(style.error()); 
+			break; 
+		case SUCCESS:
+			statusLabel.addStyleName(style.success()); 
+			break; 
+		case INFO:
+			statusLabel.addStyleName(style.info()); 
+			break; 
+		}
 	}
 
 }
