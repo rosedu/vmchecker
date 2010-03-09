@@ -26,21 +26,22 @@ import sqlite3
 import os
 import optparse
 import logging
-
-import config
-import vmcheckerpaths
-import repo_walker
-
 import time
 
-import submissions
-import penalty
+from vmchecker import config
+from vmchecker import paths
+from vmchecker import vmcheckerpaths
+from vmchecker import repo_walker
+from vmchecker import submissions
+from vmchecker import penalty
+from vmchecker.null_handler import NullHandler
 
 _logger = logging.getLogger('vmchecker.update_db')
+_logger.addHandler(NullHandler())
 
 class UpdateDb(repo_walker.RepoWalker):
-    def __init__(self):
-        repo_walker.RepoWalker(self)
+    def __init__(self, vmcfg):
+        repo_walker.RepoWalker.__init__(self, vmcfg)
 
     def _db_save_assignment(self, db_cursor, assignment):
         """Creates an id of the homework and returns it."""
@@ -184,10 +185,11 @@ class UpdateDb(repo_walker.RepoWalker):
             # updates information from DB
             self._db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
 
-    def walk(self, options, db_cursor):
+    def update_db(self, options, db_cursor):
         def _update_grades_wrapper(assignment, user, location, db_cursor, options):
             """A wrapper over _update_grades to use with repo_walker"""
-            grade_filename = os.path.join(location, vmcheckerpaths.GRADE_FILENAME)
+            sbroot = self.vmpaths.dir_submission_root(assignment, user)
+            grade_filename = paths.submission_results_grade(sbroot)
             if os.path.exists(grade_filename):
                 _update_grades(vmcfg, options, assignment, user, grade_filename, db_cursor)
                 _logger.info('Updated %s, %s (%s)', assignment, user, location)
@@ -196,32 +198,5 @@ class UpdateDb(repo_walker.RepoWalker):
                               assignment, user, grade_filename)
 
         # call the base implemnetation in RepoWalker.
-        self.walk(_update_grades_wrapper, options, args=(db_cursor, options))
-
-def main():
-    """Checks for modified grades and updates the database"""
-    vmcfg = config.config_storer()
-
-    db_conn = sqlite3.connect(vmcheckerpaths.db_file(),
-                              isolation_level="EXCLUSIVE")
-    db_cursor = db_conn.cursor()
-
-    r = UpdateDb(vmcfg)
-    r.walk(config.options, db_cursor)
-
-    db_cursor.close()
-    db_conn.commit()
-    db_conn.close()
-
-
-group = optparse.OptionGroup(config.cmdline, 'update_db.py')
-group.add_option(
-        '-f', '--force', action='store_true', dest='force', default=False,
-        help='Force updating all marks ignoring modification times')
-config.cmdline.add_option_group(group)
-del group
-
-
-if __name__ == '__main__':
-    main()
+        self.walk(options, _update_grades_wrapper, args=(db_cursor, options))
 

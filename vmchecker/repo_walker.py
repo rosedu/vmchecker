@@ -84,7 +84,7 @@ class RepoWalker:
                 _logger.debug('Ignoring %s (not an assignment)', path)
                 continue
 
-            if options.assignment is not None and options.assignment != assignment:
+            if options.assignment and options.assignment != assignment:
                 _logger.debug('Ignoring %s (as requested by --assignment)',
                               path)
                 continue
@@ -107,31 +107,34 @@ class RepoWalker:
         would be better. Maybe later.
 
         """
-        check_arguments(options)
         self._walk_repository(self.vmcfg.repository_path(), options, func, args)
 
 
-def check_arguments(options):
+def check_arguments(cmdline, options):
     """Checks that arguments don't conflict"""
+
+    if options.course_id == None:
+        cmdline.error("--course_id is mandatory.")
 
     if (options.user is None
         and options.assignment is None
         and options.recursive == False
         and options.all == False):
-        config.cmdline.error('At least one of --user, --assignment, '
+        cmdline.error('At least one of --user, --assignment, '
                              '--recursive or --all should be specified')
 
     if ((options.recursive or options.all)
-        and (options.user is not None
-             or options.assignment is not None)):
-        config.cmdline.error('Options --recursive and --all are '
+        and (options.user or options.assignment)):
+        cmdline.error('Options --recursive and --all are '
                              'incompatible with --user and --assignment')
 
     if options.recursive and options.all:
-        config.cmdline.error("You can't specify both --recursive and --all")
+        cmdline.error("You can't specify both --recursive and --all")
 
 def add_optparse_group(cmdline):
     group = optparse.OptionGroup(cmdline, 'repo_walker.py')
+    group.add_option('-c', '--course_id', help='The ID of the course for'
+                       'which you resubmit the homework.')
     group.add_option('-u', '--user', dest='user',
                      help="Specifies whose user's homeworks to walk")
     group.add_option('-a', '--assignment', dest='assignment',

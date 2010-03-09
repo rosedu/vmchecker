@@ -28,12 +28,9 @@ def resubmit(vmcfg, options, course_id):
 
 def main():
     cmdline = optparse.OptionParser()
-    cmdline.add_option('-c', '--course_id', help='The ID of the course for'
-                       'which you resubmit the homework.')
     repo_walker.add_optparse_group(cmdline)
     (options, argv) = cmdline.parse_args()
-    if options.course_id == None:
-        cmdline.error("--course_id is mandatory.")
+    repo_walker.check_arguments(cmdline, options)
     vmcfg = VmcheckerConfig(CourseList().courseConfig(options.course_id))
     resubmit(vmcfg, options, options.course_id)
 
