@@ -14,8 +14,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.model.Course;
+import ro.pub.cs.vmchecker.client.model.Result;
 import ro.pub.cs.vmchecker.client.service.json.AssignmentsListDecoder;
 import ro.pub.cs.vmchecker.client.service.json.CoursesListDecoder;
+import ro.pub.cs.vmchecker.client.service.json.ResultDecoder;
 
 public class HTTPService {
 	
@@ -55,7 +57,7 @@ public class HTTPService {
 		try {
 			rb.send(); 
 		} catch (RequestException e) {
-			GWT.log("HTTPService: ", e); 
+			callback.onFailure(e);  
 		}
 	}
 	
@@ -78,12 +80,40 @@ public class HTTPService {
 					callback.onFailure(e); 
 				}
 			}
-		}); 
-		GWT.log("Debug: " + packParameters(params), null); 
+		});  
 		try {
 			rb.send(); 
 		} catch (RequestException e) {
-			GWT.log("HTTPService: ", e);
+			callback.onFailure(e); 
 		}
+	}
+	
+	public void getResults(String courseId, String assignmentId, final AsyncCallback<Result> callback) {
+		HashMap<String, String> params = new HashMap<String, String>(); 
+		params.put("courseId", courseId);  
+		params.put("assignmentId", assignmentId); 
+		RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, VMCHECKER_SERVICES_URL + "getResults.php?" + packParameters(params));
+		rb.setCallback(new RequestCallback() {
+
+			public void onError(Request request, Throwable exception) {
+				callback.onFailure(exception);
+			}
+
+			public void onResponseReceived(Request request, Response response) {
+				ResultDecoder decoder = new ResultDecoder();
+				try {
+					Result result = decoder.decode(response.getText());
+					callback.onSuccess(result); 
+				} catch (JSONException e) {
+					callback.onFailure(e); 
+				}
+			}
+		});
+		try {
+			rb.send(); 
+		} catch (RequestException e) {
+			callback.onFailure(e); 
+		}
+		
 	}
 }

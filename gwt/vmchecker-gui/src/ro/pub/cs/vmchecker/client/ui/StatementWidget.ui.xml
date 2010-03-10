@@ -2,8 +2,15 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
+		.container {
+			font-family: 'Courier New', monospace; 
+			font-size: 14px;
+			background-color: #FFF;
+			margin-right: 15px; 
+			padding: 10px;   
+		}
 	</ui:style>
 	<g:HTMLPanel>
-		<g:Label>Statement</g:Label>
+		<g:Label styleName="{style.container}" ui:field="container">No statement available</g:Label>	
 	</g:HTMLPanel>
 </ui:UiBinder> 

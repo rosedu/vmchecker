@@ -8,9 +8,14 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HasText;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-public class StatementWidget extends Composite {
+import ro.pub.cs.vmchecker.client.presenter.AssignmentBoardPresenter;
+
+public class StatementWidget extends Composite 
+	implements AssignmentBoardPresenter.StatementWidget {
 
 	private static StatementWidgetUiBinder uiBinder = GWT
 			.create(StatementWidgetUiBinder.class);
@@ -18,8 +23,16 @@ public class StatementWidget extends Composite {
 	interface StatementWidgetUiBinder extends UiBinder<Widget, StatementWidget> {
 	}
 
+	@UiField
+	Label container; 
+	
 	public StatementWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
+	}
+
+	@Override
+	public HasText getStatementContainer() {
+		return container; 
 	}
 
 }

@@ -4,6 +4,7 @@ import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEventHandler;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.Result;
 import ro.pub.cs.vmchecker.client.model.UploadStatus;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.service.json.UploadResponseDecoder;
@@ -21,6 +22,8 @@ import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.GwtEvent.Type;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
@@ -57,6 +60,14 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 		Hidden getAssignmentField();
 	}
 	
+	public interface StatementWidget {
+		HasText getStatementContainer(); 
+	}
+	
+	public interface ResultsWidget {
+		HasText getResultContainer(); 
+	}
+	
 	private HandlerManager eventBus;
 	private HTTPService service; 
 	private AssignmentBoardPresenter.Widget widget;
@@ -66,8 +77,8 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	private String assignmentId; 
 	
 	private UploadWidget uploadWidget = new ro.pub.cs.vmchecker.client.ui.UploadWidget();
-	private StatementWidget statementWidget = new StatementWidget();
-	private ResultsWidget resultsWidget = new ResultsWidget(); 
+	private StatementWidget statementWidget = new ro.pub.cs.vmchecker.client.ui.StatementWidget();
+	private ResultsWidget resultsWidget = new ro.pub.cs.vmchecker.client.ui.ResultsWidget(); 
 	
 	public AssignmentBoardPresenter(HandlerManager eventBus, HTTPService service, String courseId, AssignmentBoardPresenter.Widget widget) {
 		this.eventBus = eventBus;
@@ -104,12 +115,37 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 			widget.displayView((com.google.gwt.user.client.ui.Widget)uploadWidget); 
 			break; 
 		case STATEMENT: 
-			widget.displayView(statementWidget); 
+			loadAndDisplayStatement(); 
 			break; 			
 		case RESULTS:
-			widget.displayView(resultsWidget); 
+			loadAndDisplayResults(); 
 			break; 
 		}
+	}
+	
+	private void loadAndDisplayResults() {
+		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, 
+		"încarca rezultatele...")); 
+
+		service.getResults(courseId, assignmentId, new AsyncCallback<Result>() {
+
+			public void onFailure(Throwable caught) {
+				Window.alert(caught.getMessage());
+			}
+
+			public void onSuccess(Result result) {
+				resultsWidget.getResultContainer().setText(result.log);
+				widget.displayView((com.google.gwt.user.client.ui.Widget) resultsWidget);
+				eventBus.fireEvent(new StatusChangedEvent(
+						StatusChangedEvent.StatusType.RESET, ""));
+			}
+
+		});
+		
+	}
+	
+	private void loadAndDisplayStatement() {
+		widget.displayView((com.google.gwt.user.client.ui.Widget) statementWidget);
 	}
 	
 	private void bindWidget(AssignmentBoardPresenter.Widget widget) {
