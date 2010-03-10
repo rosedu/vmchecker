@@ -37,14 +37,14 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 
 	public interface Widget {
 		public static enum View {
-			UPLOAD, STATEMENT, RESULTS
+			STATEMENT, UPLOAD, RESULTS
 		}; 
 		
 		public static final String[] viewTitles = {
-			"Trimitere solutii", "Enunt", "Rezultate"
+			"Enunt", "Trimitere solutii", "Rezultate"
 		}; 
 		
-		public static final int defaultView = 0; /* UPLOAD */
+		public static final int defaultView = 0; /* STATEMENT */
 		
 		HasText getTitleLabel();
 		HasText getDeadlineLabel();
@@ -125,7 +125,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	
 	private void loadAndDisplayResults() {
 		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, 
-		"încarca rezultatele...")); 
+		"incarca rezultatele...")); 
 
 		service.getResults(courseId, assignmentId, new AsyncCallback<Result>() {
 

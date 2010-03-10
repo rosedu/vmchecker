@@ -46,11 +46,11 @@ h1 {
 }
 
 .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem {
-	background-color: #FFF; 
+	background-color: #DDDDDD;
 }
 
 .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem-selected {
-	background-color: #EEEEEE; 
+	background-color: #FFFFFF;
 }
 
 .logo {

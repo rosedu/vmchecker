@@ -3,10 +3,16 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
 		.form {
-			margin-bottom: 50px; 
-	}
+			margin: 10px 0 10px 0; 
+		}
+		
+		.container {
+			background-color: #FFF; 
+			padding: 20px 10px 10px 10px;
+		}
 	</ui:style>
-	<g:HTMLPanel>
+	<g:HTMLPanel styleName="{style.container}">
+		<g:Label>Creeaza o arhiva cu toate fisierele necesare si trimite-o folosind formularul de mai jos</g:Label>
 		<g:FormPanel ui:field="form" styleName="{style.form}">
 			<g:HorizontalPanel>
 				<g:FileUpload ui:field="fileUpload" name="archiveFile"></g:FileUpload>

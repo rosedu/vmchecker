@@ -6,7 +6,6 @@
 			font-family: 'Courier New', monospace; 
 			font-size: 14px;
 			background-color: #FFF;
-			margin-right: 15px; 
 			padding: 10px;   
 		}
 	</ui:style>

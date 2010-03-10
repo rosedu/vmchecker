@@ -5,16 +5,17 @@
 	<ui:style>
 		.assignmentBoardPanel {
 			width: 100%; 
-			padding: 10px 5px 10px 20px;
+			padding: 10px 15px 10px 20px;
 			background-color: #EEEEEE;  
 		}
 		
 		.menuPanel {
-			float: right;
+			margin-top: 20px; 			
 		}
 		
 		.titlePanel {
-			float: left; 
+			text-align: center; 
+			padding: 20px 0 10px 0; 
 		}
 		
 		.clear {
@@ -30,29 +31,35 @@
 			font-weight: bold; 
 			line-height: 24px; 
 		}
+
+		.deadlineWrapper {
+			text-align: center; 
+		}
 		
 		.deadline {
 			color: red;
 			font-size: 12px; 
-			font-weight: normal;  
+			font-weight: bold;
+			margin: auto; 
 		}
 		
 		.deadlineDate {
-			padding-left: 5px; 
 		}
 		
 		.viewStack {
-			margin-top: 30px; 
+			margin-top: 0px; 
 		}
 		
 	</ui:style>
 	<g:HTMLPanel styleName="{style.assignmentBoardPanel}">
 		<g:HTMLPanel styleName="{style.titlePanel}">
 			<g:Label ui:field="title" styleName="{style.title}">Nume tema</g:Label>
-			<g:HorizontalPanel styleName="{style.deadline}">
-				<g:Label>Deadline: </g:Label>
-				<g:Label ui:field="deadlineDate" styleName="{style.deadlineDate}">15 martie</g:Label>
-			</g:HorizontalPanel>
+			<g:SimplePanel styleName="{style.deadlineWrapper}">
+				<g:HorizontalPanel styleName="{style.deadline}">
+					<g:Label>Deadline: </g:Label>
+					<g:Label ui:field="deadlineDate" styleName="{style.deadlineDate}">15 martie</g:Label>
+				</g:HorizontalPanel>
+			</g:SimplePanel>
 		</g:HTMLPanel>
 		<g:SimplePanel styleName="{style.menuPanel} assignmentContentMenuPanel">
 			<g:TabBar ui:field="menu">
