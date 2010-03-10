@@ -6,11 +6,21 @@
 		.content {
 			width: 700px;
 		}
-	</ui:style> 
-	<g:HorizontalPanel>
-		<g:SimplePanel ui:field="menuPanel">
-		</g:SimplePanel>
-		<g:SimplePanel ui:field="boardPanel" styleName="{style.content}">
-		</g:SimplePanel>
-	</g:HorizontalPanel>
+		
+		.contentWrapper {
+			width: 100%; 
+			text-align: center; 
+		}
+		
+		.contentPanel {
+		}
+	</ui:style>
+	<g:SimplePanel styleName="{style.contentWrapper}"> 
+		<g:HorizontalPanel styleName="{style.contentPanel}">
+			<g:SimplePanel ui:field="menuPanel">
+			</g:SimplePanel>
+			<g:SimplePanel ui:field="boardPanel" styleName="{style.content}">
+			</g:SimplePanel>
+		</g:HorizontalPanel>
+	</g:SimplePanel>
 </ui:UiBinder> 

@@ -4,9 +4,8 @@
 	xmlns:vm="urn:import:ro.pub.cs.vmchecker.client.ui">
 	<ui:style>
 		.assignmentBoardPanel {
-			width: 100%; 
 			padding: 10px 15px 10px 20px;
-			background-color: #EEEEEE;  
+			background-color: #EEEEEE;
 		}
 		
 		.menuPanel {
