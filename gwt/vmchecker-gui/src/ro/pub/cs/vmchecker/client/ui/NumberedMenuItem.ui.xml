@@ -30,6 +30,7 @@
 		}
 			
 		.selected a, .selected a:visited, .selected a:hover {
+			text-decoration: none; 
 		}
 		
 		.unselected a, .unselected a:visited {

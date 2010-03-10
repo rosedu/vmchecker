@@ -51,6 +51,8 @@ public class NumberedMenu extends Composite
 		int i = items.indexOf(event.getSource());
 		if ((i >= 0) && (i != selectedIndex)) {
 			setSelectedIndex(i); 
+		} else if (i == selectedIndex) {
+			event.stopPropagation(); 
 		}
 	}
 	
