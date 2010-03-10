@@ -13,9 +13,11 @@ import com.google.gwt.json.client.JSONException;
 import com.google.gwt.user.client.rpc.AsyncCallback; 
 
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.model.Result;
 import ro.pub.cs.vmchecker.client.service.json.AssignmentsListDecoder;
+import ro.pub.cs.vmchecker.client.service.json.AuthenticationResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.CoursesListDecoder;
 import ro.pub.cs.vmchecker.client.service.json.ResultDecoder;
 
@@ -116,4 +118,85 @@ public class HTTPService {
 		}
 		
 	}
+	
+	public void checkAuthentication(final AsyncCallback<AuthenticationResponse> callback) {
+		RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, VMCHECKER_SERVICES_URL + "checkAuth.php");
+		rb.setCallback(new RequestCallback() {
+
+			@Override
+			public void onError(Request request, Throwable exception) {
+				callback.onFailure(exception); 
+			}
+
+			@Override
+			public void onResponseReceived(Request request, Response response) {
+				AuthenticationResponseDecoder decoder = new AuthenticationResponseDecoder(); 
+				try {
+					AuthenticationResponse authResponse = decoder.decode(response.getText());
+					callback.onSuccess(authResponse); 
+				} catch (JSONException e) {
+					callback.onFailure(e); 
+				}
+			}
+		}); 
+		try {
+			rb.send(); 
+		} catch (RequestException e) {
+			callback.onFailure(e); 
+		}		
+	}
+	
+	public void performAuthentication(String username, String password, final AsyncCallback<AuthenticationResponse> callback) {
+		RequestBuilder rb = new RequestBuilder(RequestBuilder.POST, VMCHECKER_SERVICES_URL + "auth.php"); 
+		HashMap<String, String> params = new HashMap<String, String>(); 
+		params.put("username", username);  
+		params.put("password", password); 
+		rb.setRequestData(packParameters(params));
+		rb.setHeader("Content-Type", "application/x-www-form-urlencoded"); 
+		rb.setCallback(new RequestCallback() {
+
+			@Override
+			public void onError(Request request, Throwable exception) {
+				callback.onFailure(exception); 
+			}
+
+			@Override
+			public void onResponseReceived(Request request, Response response) {
+				AuthenticationResponseDecoder decoder = new AuthenticationResponseDecoder(); 
+				try {
+					AuthenticationResponse authResponse = decoder.decode(response.getText());
+					callback.onSuccess(authResponse); 
+				} catch (JSONException e) {
+					callback.onFailure(e); 
+				}				
+			}	
+		}); 
+		try {
+			rb.send(); 
+		} catch (RequestException e) {
+			callback.onFailure(e); 
+		}			
+	}
+
+	public void sendLogoutRequest(final AsyncCallback<Boolean> callback) {
+		RequestBuilder rb = new RequestBuilder(RequestBuilder.POST, VMCHECKER_SERVICES_URL + "logout.php"); 
+		rb.setCallback(new RequestCallback() {
+
+			@Override
+			public void onError(Request request, Throwable exception) {
+				callback.onFailure(exception); 
+			}
+
+			@Override
+			public void onResponseReceived(Request request, Response response) {
+				callback.onSuccess(new Boolean(true)); 
+			}	
+		}); 
+		try {
+			rb.send(); 
+		} catch (RequestException e) {
+			callback.onFailure(e); 
+		}			
+	}
+	
 }

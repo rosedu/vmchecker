@@ -3,17 +3,24 @@ package ro.pub.cs.vmchecker.client.presenter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEventHandler;
 import ro.pub.cs.vmchecker.client.model.Course;
+import ro.pub.cs.vmchecker.client.service.HTTPService;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
@@ -21,6 +28,7 @@ import com.google.gwt.user.client.ui.Widget;
 public class HeaderPresenter implements Presenter {
 
 	private HandlerManager eventBus;
+	private HTTPService service; 
 	private HeaderWidget widget; 
 	private HasWidgets container; 
 	
@@ -31,17 +39,20 @@ public class HeaderPresenter implements Presenter {
 	
 	public interface HeaderWidget {
 		HasText getStatusLabel();
-		void setStatusLabelVisible(boolean visible); 
+		HasText getUsernameLabel(); 
+		void setStatusLabelVisible(boolean visible);
+		HasClickHandlers getLogoutButton(); 
 		HasChangeHandlers getCoursesList(); 
 		void addCourse(String name, String id);
 		void clearCourses();
 		void selectCourse(int courseIndex);
 		int getSelectedCourseIndex();
-		void setStatusType(StatusChangedEvent.StatusType type); 
+		void setStatusType(StatusChangedEvent.StatusType type);
 	}
 	
-	public HeaderPresenter(HandlerManager eventBus, HeaderWidget widget) {
+	public HeaderPresenter(HandlerManager eventBus, HTTPService service, HeaderWidget widget) {
 		this.eventBus = eventBus; 
+		this.service = service; 
 		bindWidget(widget);
 		listenStatusChange(); 
 	}
@@ -61,6 +72,35 @@ public class HeaderPresenter implements Presenter {
 		this.widget = widget; 
 		/* listen to events from display */
 		listenCourseChange(); 
+		listenLogoutRequest(); 
+	}
+	
+	private void performLogout() {
+		service.sendLogoutRequest(new AsyncCallback<Boolean>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				Window.alert(caught.getMessage()); 
+			}
+
+			@Override
+			public void onSuccess(Boolean result) {
+				/* force a check that will eventually fail and will display the login screen */
+				eventBus.fireEvent(new AuthenticationEvent(AuthenticationEvent.EventType.FORCE_CHECK)); 
+			}
+			
+		}); 
+	}
+	
+	private void listenLogoutRequest() {
+		widget.getLogoutButton().addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				performLogout(); 
+			}
+			
+		}); 
 	}
 	
 	private void listenStatusChange() {

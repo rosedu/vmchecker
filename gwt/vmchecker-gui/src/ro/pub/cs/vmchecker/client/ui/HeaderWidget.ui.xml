@@ -37,11 +37,13 @@
 		
 		.rightPanel{
 			margin: 15px;
-			vertical-align: middle;  
+			vertical-align: middle;
+			float: right;   
 		}
 		
 		.leftPanel {
-			margin: 3px; 
+			margin: 3px;
+			float: left;  
 		}
 			
 		.anchor {
@@ -49,7 +51,7 @@
 			margin: 3px;
 			padding-right: 5px;
 			font-size: 14px;
-			border-right: 1px solid green;    
+			cursor: pointer; 
 		}
 		
 		.last {
@@ -99,10 +101,12 @@
 			background-color: #FFCC66;  
 		}
 		
+		.clear {
+			clear: both; 
+		}
 	</ui:style>
 	<g:HTMLPanel>
-	<g:DockLayoutPanel styleName="{style.header}" unit='EM'>
-		<g:west size="40">
+		<g:FlowPanel styleName="{style.header}">
 			<g:HorizontalPanel styleName="{style.leftPanel}" verticalAlignment='ALIGN_MIDDLE'>
 				<g:HTML>
 					<div class="logo"></div>
@@ -110,16 +114,13 @@
 				<g:ListBox ui:field="coursesList" visibleItemCount='1'
 					styleName="{style.list}" />
 			</g:HorizontalPanel>
-		</g:west>
-		<g:east size="21">
 			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
 				verticalAlignment='ALIGN_MIDDLE'>
-				<g:Label styleName="{style.username}">nume.prenume</g:Label>
-				<g:Hyperlink targetHistoryToken="settings" styleName="{style.anchor}">Settings</g:Hyperlink>
-				<g:Hyperlink styleName="{style.anchor} {style.last}">Logout</g:Hyperlink>
+				<g:Label ui:field="usernameLabel" styleName="{style.username}">nume.prenume</g:Label>
+				<g:Anchor ui:field="logoutButton" styleName="{style.anchor}">logout</g:Anchor>
 			</g:HorizontalPanel>
-		</g:east>
-	</g:DockLayoutPanel>
+			<g:SimplePanel styleName="{style.clear}"></g:SimplePanel>
+		</g:FlowPanel>
 	<g:SimplePanel styleName="{style.statusPanel}">
 		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}"></g:Label>
 	</g:SimplePanel>

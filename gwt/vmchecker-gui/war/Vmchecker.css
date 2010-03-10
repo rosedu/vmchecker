@@ -1,6 +1,8 @@
 /** Add css rules here for your application. */
 
-
+body {
+	margin: 0px; 
+}
 /** Example rules used by the template application (remove for your app) */
 h1 {
   font-size: 2em;
@@ -57,4 +59,13 @@ h1 {
 	background: url('images/vmchecker_logo_ui.png') left top no-repeat; 
 	width: 200px;
 	height: 40px; 
+}
+
+.loginDescription h2 {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+	font-size: 16px; 
+}
+
+.loginDescription a, .loginDescription a:visited, .loginDescription a:hover {
+	color: #007F00; 
 }

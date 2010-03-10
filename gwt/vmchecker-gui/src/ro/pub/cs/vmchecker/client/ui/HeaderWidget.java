@@ -3,10 +3,12 @@ package ro.pub.cs.vmchecker.client.ui;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Label;
@@ -35,13 +37,20 @@ public class HeaderWidget extends Composite
 	@UiField 
 	Label statusLabel; 
 	
+	@UiField
+	Label usernameLabel; 
+	
 	@UiField 
 	HeaderStyle style; 
 	
+	@UiField
+	Anchor logoutButton; 
+	
 	private String[] statusStyles = new String[4]; 
 	
-	public HeaderWidget() {
+	public HeaderWidget(String username) {
 		initWidget(uiBinder.createAndBindUi(this));
+		usernameLabel.setText(username); 
 		statusStyles[0] = style.action();  
 		statusStyles[1] = style.error();  
 		statusStyles[2] = style.success();   
@@ -102,6 +111,16 @@ public class HeaderWidget extends Composite
 			statusLabel.addStyleName(style.info()); 
 			break; 
 		}
+	}
+
+	@Override
+	public HasText getUsernameLabel() {
+		return usernameLabel; 
+	}
+
+	@Override
+	public HasClickHandlers getLogoutButton() {
+		return logoutButton; 
 	}
 
 }
