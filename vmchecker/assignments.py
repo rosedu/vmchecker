@@ -21,7 +21,6 @@ options names are not.
 """
 
 import fcntl
-import logging
 import datetime
 import os
 
@@ -33,7 +32,6 @@ _SECTION_PREFIX = 'assignment '
 _INCLUDE_PREFIX = 'include '
 _DEFAULT_ASSIGNMENT = 'DEFAULT'
 
-_logger = logging.getLogger('assignments')
 
 
 class _Lock(object):
