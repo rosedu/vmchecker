@@ -152,7 +152,7 @@ def save_submission_in_storer(archive_filename, user, assignment,
         - copy the archive near the data committed in the repo to be
           easily accessible.
     """
-    vmcfg = config.VmcheckerConfig(CourseList().courseConfig(course_id))
+    vmcfg = config.VmcheckerConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_submission_root(assignment, user)
     sbcfg = submission_config(user, assignment, course_id, upload_time,
@@ -196,7 +196,7 @@ def create_testing_bundle(user, assignment, course_id):
         ???         - assignment's extra files (see Assignments.include())
 
     """
-    vmcfg = config.VmcheckerConfig(CourseList().courseConfig(course_id))
+    vmcfg = config.VmcheckerConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_submission_root(assignment, user)
 
@@ -277,7 +277,7 @@ def submitted_too_soon(assignment, user, vmcfg):
 def queue_for_testing(assignment, user, course_id):
     """Queue for testing the last submittion for the given assignment,
     course and user."""
-    vmcfg = config.VmcheckerConfig(CourseList().courseConfig(course_id))
+    vmcfg = config.VmcheckerConfig(CourseList().course_config(course_id))
     bundle_path = create_testing_bundle(user, assignment, course_id)
     ssh_bundle(bundle_path, vmcfg)
 
@@ -295,7 +295,7 @@ def submit(archive_filename, assignment, user, course_id,
     If forced_upload_time is not specified, the current system time is
     used.
     """
-    vmcfg = config.VmcheckerConfig(CourseList().courseConfig(course_id))
+    vmcfg = config.VmcheckerConfig(CourseList().course_config(course_id))
 
     if forced_upload_time != None:
         skip_time_check = True

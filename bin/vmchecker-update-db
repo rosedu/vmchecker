@@ -42,7 +42,7 @@ def main():
     add_update_db_optparse(cmdline)
     (options, _) = cmdline.parse_args()
     repo_walker.check_arguments(cmdline, options)
-    vmcfg = VmcheckerConfig(CourseList().courseConfig(options.course_id))
+    vmcfg = VmcheckerConfig(CourseList().course_config(options.course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     # open Db

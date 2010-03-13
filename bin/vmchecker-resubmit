@@ -34,7 +34,7 @@ def main():
     repo_walker.add_optparse_group(cmdline)
     (options, argv) = cmdline.parse_args()
     repo_walker.check_arguments(cmdline, options)
-    vmcfg = VmcheckerConfig(CourseList().courseConfig(options.course_id))
+    vmcfg = VmcheckerConfig(CourseList().course_config(options.course_id))
     resubmit(vmcfg, options, options.course_id)
 
 if __name__ == '__main__':
