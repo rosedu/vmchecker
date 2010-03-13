@@ -30,10 +30,9 @@ from vmchecker import paths
 from vmchecker import repo_walker
 from vmchecker import submissions
 from vmchecker import penalty
-from vmchecker.null_handler import NullHandler
+from vmchecker import vmlogging
 
-_logger = logging.getLogger('vmchecker.update_db')
-_logger.addHandler(NullHandler())
+logger = vmlogging.create_module_logger('update_db')
 
 class UpdateDb(repo_walker.RepoWalker):
     def __init__(self, vmcfg):
@@ -188,10 +187,10 @@ class UpdateDb(repo_walker.RepoWalker):
             grade_filename = paths.submission_results_grade(sbroot)
             if os.path.exists(grade_filename):
                 _update_grades(vmcfg, options, assignment, user, grade_filename, db_cursor)
-                _logger.info('Updated %s, %s (%s)', assignment, user, location)
+                logger.info('Updated %s, %s (%s)', assignment, user, location)
             else:
-                _logger.error('No results found for %s, %s (check %s)',
-                              assignment, user, grade_filename)
+                logger.error('No results found for %s, %s (check %s)',
+                             assignment, user, grade_filename)
 
         # call the base implemnetation in RepoWalker.
         self.walk(options, _update_grades_wrapper, args=(db_cursor, options))

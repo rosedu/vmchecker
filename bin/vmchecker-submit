@@ -2,18 +2,12 @@
 
 """A tool used to submit homework from the command line."""
 
-import sys
 import optparse
-import logging
-import logging.handlers
 
 from vmchecker import submit
+from vmchecker import vmlogging
 
-
-logger = logging.getLogger('vmchecker')
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(handler)
+logger = vmlogging.create_script_sdtout_logger()
 
 def main():
     """Parse arguments and sends the submission for evaluation"""

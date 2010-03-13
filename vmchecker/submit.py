@@ -11,7 +11,6 @@ For a better submission scheme see the commit:
 from __future__ import with_statement
 
 import ConfigParser
-import logging
 import os
 import shutil
 import subprocess
@@ -25,13 +24,13 @@ from vmchecker import config
 from vmchecker import paths
 from vmchecker import submissions
 from vmchecker.CourseList import CourseList
-from vmchecker.null_handler import NullHandler
+from vmchecker import vmlogging
 
-_logger = logging.getLogger('vmchecker.submit')
-_logger.addHandler(NullHandler())
+logger = vmlogging.create_module_logger('submit')
 
 
-def submission_config(user, assignment, course_id, upload_time, storer_result_dir, storer_username, storer_hostname):
+def submission_config(user, assignment, course_id, upload_time,
+                      storer_result_dir, storer_username, storer_hostname):
     """Creates a configuration file describing the current submission:
        - who uploaded it
        - which assignment does it solve
@@ -101,7 +100,8 @@ def submission_backup(back_dir, archive_filename, sbcfg):
     |  +--archive/
     |  |  +-- X         (all the files from the archive)
     |  |  +-- Y         (all the files from the archive)
-    |  +--config        config describing the submission (user, uploadtime, assignment)
+    |  +--config        config describing the submission
+    |  |                (user, uploadtime, assignment)
     |  +--archive.zip   the original (unmodified) archive
     """
     back_arc = paths.dir_submission_expanded_archive(back_dir)
@@ -125,7 +125,7 @@ def submission_backup(back_dir, archive_filename, sbcfg):
     # unzip the archive, but check if it has absolute paths or '..'
     unzip_safely(archive_filename, back_arc)
 
-    _logger.info('Stored submission in temporary directory %s', back_dir)
+    logger.info('Stored submission in temporary directory %s', back_dir)
 
 
 
@@ -134,13 +134,15 @@ def submission_git_commit(dest, user, assignment):
     repository.
     """
     subprocess.Popen(['git', 'add', '--force', '.'], cwd=dest).wait()
-    subprocess.Popen(['git', 'commit', '--allow-empty', '.', '-m "Updated ' + user +
-                      '\' submission for ' + assignment + '"'], cwd=dest).wait()
+    subprocess.Popen(['git', 'commit', '--allow-empty', '.',
+                      '-m "Updated ' + user + '\' submission for ' +
+                      assignment + '"'], cwd=dest).wait()
 
 
 
 
-def save_submission_in_storer(archive_filename, user, assignment, course_id, upload_time):
+def save_submission_in_storer(archive_filename, user, assignment,
+                              course_id, upload_time):
     """ Save the submission on the storer machine:
 
         - create a config for the submission to hold identifying info
@@ -173,8 +175,10 @@ def save_submission_in_storer(archive_filename, user, assignment, course_id, upl
         if os.path.exists(git_dest):
             shutil.rmtree(git_dest)
         submission_backup(git_dest, archive_filename, sbcfg)
-        # we only commit the archive's data. the config file and the archive.zip is not commited.
-        submission_git_commit(paths.dir_submission_expanded_archive(git_dest), user, assignment)
+        # we only commit the archive's data. the config file and the
+        # archive.zip is not commited.
+        submission_git_commit(paths.dir_submission_expanded_archive(git_dest),
+                              user, assignment)
 
 
 
@@ -189,7 +193,7 @@ def create_testing_bundle(user, assignment, course_id):
         archive.zip - a zip containing the sources
         tests.zip   - a zip containing the tests
         callback    - a script executed by the tester to send results back
-        ???         - assignment's extra files (see assignments.Assignments.include())
+        ???         - assignment's extra files (see Assignments.include())
 
     """
     vmcfg = config.VmcheckerConfig(CourseList().courseConfig(course_id))
@@ -209,7 +213,7 @@ def create_testing_bundle(user, assignment, course_id):
             suffix='.zip',
             prefix='%s_%s_%s_' % (course_id, assignment, user),
             dir=vmpaths.dir_unchecked())  # FIXME not here
-        _logger.info('Creating bundle package %s', bundle_path)
+        logger.info('Creating bundle package %s', bundle_path)
 
         try:
             with os.fdopen(bundle_fd, 'w+b') as handler:
@@ -218,12 +222,13 @@ def create_testing_bundle(user, assignment, course_id):
                     src = vmpaths.abspath(src)
                     assert os.path.isfile(src), 'File %s is missing' % src
                     zip_.write(src, dest)
-                    _logger.debug('Included %s as %s', src, dest)
+                    logger.debug('Included %s as %s', src, dest)
                 zip_.close()
         except:
-            _logger.error('Failed to create zip archive %s', bundle_path)
+            logger.error('Failed to create zip archive %s', bundle_path)
             os.unlink(bundle_path)
-            raise # just cleaned up the bundle. the error still needs to be reported.
+            raise # just cleaned up the bundle. the error still needs
+                  # to be reported.
 
     return bundle_path
 
@@ -235,11 +240,11 @@ def ssh_bundle(bundle_path, vmcfg):
     tester_queuepath = vmcfg.tester_queue_path()
     cmd = [ 'scp', bundle_path,
             '%s@%s:%s' % (tester_username, tester_hostname, tester_queuepath)]
-    _logger.info('Invoking submission script %s', cmd)
+    logger.info('Invoking submission script %s', cmd)
     try:
         subprocess.check_call(cmd)
     except:
-        _logger.fatal('Cannot evaluate submission %s', bundle_path)
+        logger.fatal('Cannot evaluate submission %s', bundle_path)
         os.unlink(bundle_path)
         raise
 
@@ -277,7 +282,8 @@ def queue_for_testing(assignment, user, course_id):
     ssh_bundle(bundle_path, vmcfg)
 
 
-def submit(archive_filename, assignment, user, course_id, skip_time_check=False, forced_upload_time=None):
+def submit(archive_filename, assignment, user, course_id,
+           skip_time_check=False, forced_upload_time=None):
     """Commit in the git repo and queue for testing a new submission.
 
     The submission is identified by archive_filename.
@@ -286,10 +292,10 @@ def submit(archive_filename, assignment, user, course_id, skip_time_check=False,
     queued for checking. This check can be skipped by setting
     skip_time_check=True.
 
-    If forced_upload_time is not specified, the current system time is used.
+    If forced_upload_time is not specified, the current system time is
+    used.
     """
     vmcfg = config.VmcheckerConfig(CourseList().courseConfig(course_id))
-    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     if forced_upload_time != None:
         skip_time_check = True
@@ -299,11 +305,12 @@ def submit(archive_filename, assignment, user, course_id, skip_time_check=False,
 
     # checks time difference
     if not skip_time_check and submitted_too_soon(assignment, user, vmcfg):
-        _logger.fatal('You are submitting too fast')
-        _logger.fatal('Please allow %s between submissions',
+        logger.fatal('You are submitting too fast')
+        logger.fatal('Please allow %s between submissions',
                       str(vmcfg.assignments().timedelta(assignment)))
         exit(1)
 
-    save_submission_in_storer(archive_filename, user, assignment, course_id, upload_time)
+    save_submission_in_storer(archive_filename, user, assignment,
+                              course_id, upload_time)
     queue_for_testing(assignment, user, course_id)
 
