@@ -8,13 +8,12 @@ import os
 import socket
 import paramiko
 import sys
-import logging
-import subprocess
 import ConfigParser
 
-_DEFAULT_SSH_PORT = 22
+from vmchecker import vmlogging
 
-_logger = logging.getLogger('vmchecker.callback')
+_DEFAULT_SSH_PORT = 22
+_logger = vmlogging.create_module_logger('callback')
 
 
 def _setup_logging():
@@ -221,14 +220,13 @@ def print_usage():
 
 
 
-def run_callback(config, files):
-    logging.basicConfig(level=logging.DEBUG)
+def run_callback(config_file, files):
     _setup_logging()
     conf_vars = _config_variables(config_file, 'Assignment')
     send_results_and_notify(files, conf_vars)
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) < 2:
         print 'No config file given'
         print_usage()
@@ -238,3 +236,6 @@ if __name__ == "__main__":
     # skip first two: the script name and the config file :)
     files = sys.argv[2:]
     run_callback(config_file, files)
+
+if __name__ == "__main__":
+    main()
