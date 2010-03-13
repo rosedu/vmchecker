@@ -21,7 +21,13 @@ import time
 import math
 import datetime
 
-DATE_FORMAT = '%Y.%m.%d %H:%M:%S'  # XXX must be the same as in bin/misc.py
+from vmchecker.config import DATE_FORMAT
+
+
+def str_to_time(time_str, format_str=DATE_FORMAT):
+    """Interprets time_str as a time value specified by format_str and
+    returns that time object"""
+    return time.mktime(time.strptime(time_str, format_str))
 
 
 def compute_penalty(upload_time, deadline, penalty, weights, limit,
@@ -62,12 +68,8 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit,
 
         if holiday_start != []:
             for i in range(len(holiday_start)):
-
-                sec_start = time.mktime(time.strptime(
-                                                holiday_start[i],DATE_FORMAT))
-                sec_finish = time.mktime(time.strptime(
-                                                holiday_finish[i],DATE_FORMAT))
-
+                sec_start = str_to_time(holiday_start[i])
+                sec_finish = str_to_time(holiday_finish[i])
                 maxim = max(sec_start, sec_deadline)
                 minim = min(sec_finish, sec_upload_time)
                 if minim > maxim:
@@ -94,46 +96,49 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit,
 
 # common examples of `compute_penalty'. use any of your choice
 def compute_penalty_fixed_penalty(upload_time, deadline):
-    # if the number of days past the deadline exceeds 'x' the homework is
-    # not graded (x = len(weights) - 1)
+    """if the number of days past the deadline exceeds 'x' the homework is
+    not graded (x = len(weights) - 1)"""
     return compute_penalty(upload_time, deadline, 1,
                                 [2, 0, 0, 0, 0, 0, 0, 9], 10)
 
 
 def compute_penalty_linear(upload_time, deadline):
-    # for every day past the deadline the penalty value is added
-    # to the penalty_points
+    """for every day past the deadline the penalty value is added
+    to the penalty_points"""
     return compute_penalty(upload_time, deadline, 0.25, [1], 3)
 
 
 def compute_penalty_fixed_deadline(upload_time, deadline):
-    # if the number of days past the deadline exceeds 'x' the homework is
-    # not graded (x = len(weights) - 1)
+    """if the number of days past the deadline exceeds 'x' the homework is
+    not graded (x = len(weights) - 1)"""
     return compute_penalty(upload_time, deadline, 1, [1, 1, 1, 7], 10)
 
 
 def compute_penalty_weighted(upload_time, deadline):
-    # the weight for penalty is diferent depending on the day
+    """the weight for penalty is diferent depending on the day"""
     return compute_penalty(upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
 
 
 def verbose_time_difference(upload_time, deadline):
+    """returns an intuitive human-readable representation of the
+    difference between two dates"""
     interval = time.mktime(upload_time) - time.mktime(deadline)
-    penalty_points = 0
 
     if interval < 0:
-        str = 'tema trimisă inainte de termenul limită cu'
+        msg = 'tema trimisă inainte de termenul limită cu'
         interval = - interval
     else:
-        str = 'tema trimisă după termenul limită cu'
+        msg = 'tema trimisă după termenul limită cu'
 
-    d = datetime.timedelta(seconds = interval)
-    return str + ' %d zile %d ore %d minute %d secunde.\n Tema a fost \
-            corectată la data %s ' % (d.days, d.seconds / 3600,
-            d.seconds % 3600 / 60, d.seconds % 60, datetime.datetime.now())
+    diff = datetime.timedelta(seconds = interval)
+    return msg + ' %d zile %d ore %d minute %d secunde.\n Tema a fost  \
+                  corectată la data %s ' % (diff.days, diff.seconds / 3600,
+                  diff.seconds % 3600 / 60, diff.seconds % 60,
+                  datetime.datetime.now())
 
 
-def main():
+def _test():
+    """Test this script with dates taken from the command line"""
     if len(sys.argv) != 3:
         print >> sys.stderr, 'Usage:\n\t%s upload_time deadline' % sys.argv[0]
         sys.exit(1)
@@ -142,11 +147,12 @@ def main():
     deadline = time.strptime(sys.argv[2], DATE_FORMAT)
 
     # ++++ MODIFY NEXT LINE + MODIFY NEXT LINE + MODIFY NEXT LINE ++++
-    penalty_points, days_late = compute_penalty_linear(upload_time, deadline)
+    (penalty_points, _) = compute_penalty_linear(upload_time, deadline)
 
     # prints penalty and number of days late
-    print '-%.2f: %s' % (penalty_points, verbose_time_difference(upload_time, deadline))
+    print '-%.2f: %s' % (penalty_points,
+                         verbose_time_difference(upload_time, deadline))
 
 
 if __name__ == '__main__':
-    main()
+    _test()
