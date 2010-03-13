@@ -14,11 +14,13 @@ table#hw-results-table td.grade {}  /* the grade cell */
 
 """
 
+import sys
 import sqlite3
 import urllib
 
-import config
-import vmcheckerpaths
+from vmchecker.CourseList import CourseList
+from vmchecker.config import VmcheckerConfig
+from vmchecker.paths  import VmcheckerPaths
 
 
 def _db_retrieve_grades(db_cursor):
@@ -113,13 +115,20 @@ def _powered_by_vmchecker():
 
 def main():
     """Reads grades and generates the HTML table"""
-    config.config_storer()
+    if len(sys.argv) <= 1:
+        print "Expencting course_id argument"
+        exit(1)
 
-    db_conn = sqlite3.connect(vmcheckerpaths.db_file())
+    course_id = sys.argv[1]
+    vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
+    vmpaths = VmcheckerPaths(vmcfg.root_path())
+
+
+    db_conn = sqlite3.connect(vmpaths.db_file())
     db_cursor = db_conn.cursor()
 
     results = _db_retrieve_grades(db_cursor)
-    assignments = sorted(config.assignments)
+    assignments = sorted(vmcfg.assignments())
 
     # sends to the stdout all the HTML content
     print _generate_html(results, assignments)

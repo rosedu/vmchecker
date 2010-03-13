@@ -32,6 +32,7 @@ setup(name = 'vmchecker',
                  'bin/vmchecker-submit',
                  'bin/vmchecker-resubmit',
                  'bin/vmchecker-update-db',
+                 'bin/vmchecker-view-grades',
                  ],
       data_files = [('/etc/init.d/', ['etc/init.d/vmchecker']),
 	            ('/etc/vmchecker/', ['etc/vmchecker/config.list'])])
