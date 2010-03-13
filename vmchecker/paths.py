@@ -169,7 +169,8 @@ def _simple_test():
                  "dir_bin        :" : vmpaths.dir_bin(),
                  "dir_assignment :" : vmpaths.dir_assignment(assignment),
                  "dir_submission_root     :" : sbroot,
-                 "dir_submission_expanded_archive :" : dir_submission_expanded_archive(sbroot),
+                 "dir_submission_expanded_archive :" :
+                     dir_submission_expanded_archive(sbroot),
                  "dir_submission_results  :" : dir_submission_results(sbroot),
                  "submission_archive_file :" : submission_archive_file(sbroot),
                  "submission_config_file  :" : submission_config_file(sbroot),
