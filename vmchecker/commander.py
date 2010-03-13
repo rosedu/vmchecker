@@ -53,22 +53,6 @@ _EXECUTOR_OVERHEAD = 300
 _logger = logging.getLogger('vmchecker.commander')
 
 
-def _env_with_python_module_search_path():
-    """ Setup python module search path to include `./bin'
-    so that the callback python script can access misc, vmcheckerpaths, etc.
-
-    XXX alexandru says: why is this needed?
-
-    """
-    e = os.environ
-    module_search_path = os.path.join(vmcheckerpaths.root, 'bin')
-    if 'PYTHONPATH' in e.keys():
-        module_search_path = os.pathsep.join(
-                e['PYTHONPATH'], module_search_path)
-    e['PYTHONPATH'] = module_search_path
-    return e
-
-
 def _run_callback(dir, ejobs):
     """Runs callback script to upload results"""
 
