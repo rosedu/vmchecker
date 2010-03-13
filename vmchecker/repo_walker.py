@@ -17,21 +17,21 @@ import os
 import logging
 
 from vmchecker import paths
-from vmchecker import config
+from vmchecker import vmlogging
 
+_logger = vmlogging.create_module_logger('repo_walker')
 
-_logger = logging.getLogger('repo_walker')
 
 class RepoWalker:
+    """Walks through all submissions in a repository and applies a
+    user supplied function"""
+
     def __init__(self, vmcfg):
+        """Create a repo walker for the course with the config file at vmcfg"""
         self.vmcfg = vmcfg
         self.vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
 
-    def _simulate(self, assignment, user, location, func_name, args):
-        """Just prints the function the function call"""
-        print 'calling %s(%s, %s, %s, *%s)' % (
-                func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 
     def _walk_assignment(self, assignment, options, func, args):
@@ -58,16 +58,13 @@ class RepoWalker:
                     continue
 
             _logger.info('Walking on %s, %s (%s)', assignment, user, path)
-            if options.simulate:
-                self._simulate(assignment, user, path, func.func_name, args)
-            else:
-                try:
-                    func(assignment, user, path, *args)
-                except:
-                    _logger.exception('%s failed for %s, %s (%s)',
-                                      func.func_name, assignment, user, path)
-                    if not options.ignore_errors:
-                        raise
+            try:
+                func(assignment, user, path, *args)
+            except:
+                _logger.exception('%s failed for %s, %s (%s)',
+                                  func.func_name, assignment, user, path)
+                if not options.ignore_errors:
+                    raise
 
 
     def _walk_repository(self, repository, options, func, args):
@@ -107,6 +104,8 @@ class RepoWalker:
         would be better. Maybe later.
 
         """
+        if options.simulate:
+            func = simulate
         self._walk_repository(self.vmcfg.repository_path(), options, func, args)
 
 
@@ -130,6 +129,11 @@ def check_arguments(cmdline, options):
 
     if options.recursive and options.all:
         cmdline.error("You can't specify both --recursive and --all")
+
+def simulate(assignment, user, location, func_name, args):
+    """Just prints the function the function call"""
+    print 'calling %s(%s, %s, %s, *%s)' % (
+        func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 def add_optparse_group(cmdline):
     group = optparse.OptionGroup(cmdline, 'repo_walker.py')
