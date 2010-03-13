@@ -47,7 +47,6 @@ Timeout = 120
 # Relative paths are relative to the root repo path.
 # XXX: This is implementation speciffic; it shouldn't be in the config file
 Include storer = config
-Include callback = local/callback.py
 
 
 # assignment configuration

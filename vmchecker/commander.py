@@ -40,7 +40,7 @@ from os.path import join, isdir
 import config
 import vmcheckerpaths
 import assignments
-
+import callback
 
 _FILES_TO_SEND = (
     'job_build',
@@ -72,18 +72,7 @@ def _env_with_python_module_search_path():
 def _run_callback(dir, ejobs):
     """Runs callback script to upload results"""
 
-    args = (join(dir, 'callback'), join(dir, 'config'))
-    args += tuple(join(ejobs, f) for f in _FILES_TO_SEND)
-
-    _logger.info('Homework evaluated; sending results')
-    _logger.debug('calling %s', args)
-
-    try:
-        env = _env_with_python_module_search_path()
-        check_call(args=args, env=env)
-    except:
-        _logger.error('Sending results failed')
-        raise
+    callback.run_callback(join(dir, 'config'), (join(ejobs, f) for f in _FILES_TO_SEND))
 
 
 def _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file):

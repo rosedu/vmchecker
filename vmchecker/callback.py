@@ -220,17 +220,21 @@ def print_usage():
     print 'Usage: %s config_file [files to send to storer]' % sys.argv[0]
 
 
-if __name__ == "__main__":
+
+def run_callback(config, files):
     logging.basicConfig(level=logging.DEBUG)
     _setup_logging()
+    conf_vars = _config_variables(config_file, 'Assignment')
+    send_results_and_notify(files, conf_vars)
+
+
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print 'No config file given'
         print_usage()
         exit(1)
 
     config_file = sys.argv[1]
-    conf_vars = _config_variables(config_file, 'Assignment')
-
     # skip first two: the script name and the config file :)
     files = sys.argv[2:]
-    send_results_and_notify(files, conf_vars)
+    run_callback(config_file, files)
