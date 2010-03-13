@@ -4,9 +4,9 @@
 """Queue manager - wait for assignments and invoke the commander for each
 
 This module depends on pyinotify: http://pyinotify.sourceforge.net/
-For each submission:
+For each bundle:
   * listen for new files on a directory,
-  * decompress the archives to a temporary directory,
+  * decompress the bundle to a temporary directory,
   * pass path of the directory to commander,
   * waits for the commander to finish.
 
@@ -18,24 +18,24 @@ all as described above.
 import sys
 import tempfile
 import shutil
-import logging
 import os
-import subprocess
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
+from vmchecker import ziputil
+from vmchecker import commander
 from vmchecker.CourseList import CourseList
 from vmchecker.config import VmcheckerConfig
 from vmchecker.paths  import VmcheckerPaths
-#from vmchecker import vmlogging
+from vmchecker import vmlogging
 
 
 
-
-_logger = logging.getLogger("vmchecker.queue_manager")
+_logger = vmlogging.create_script_sdtout_logger()
 
 
 class _InotifyHandler(ProcessEvent):
     """Dummy class needed to start processing events"""
+
     def process_IN_CLOSE_WRITE(self, event):
         """Called when a write ends (this means a new
         bundle has arrived). Imediatly start the new job.
@@ -44,20 +44,15 @@ class _InotifyHandler(ProcessEvent):
         process_job(event.path, event.name)
 
 
-def process_job(path, name, vmpaths):
+def process_job(path, name, vmcfg, vmpaths):
     """Unzip a bundle archive and call the commander."""
     location = tempfile.mkdtemp(prefix='vmchecker-',
                                 dir=vmpaths.dir_tester_unzip_tmp())
     archive = os.path.join(path, name)
     try:
-        _logger.info('Expanding archive "%s" at "%s".' % (archive, location))
-        subprocess.check_call(['unzip', '-d', location, archive])
-
-        _logger.info('Calling commander for "%s"' % location)
-        commander_path = os.path.join(vmpaths.dir_bin(), 'commander.py')
-
-        subprocess.check_call([commander_path, location])
-    except subprocess.CalledProcessError:
+        ziputil.unzip_safely(archive, location)
+        commander.main(vmcfg, location)
+    except:
         _logger.exception('Failed to process "%s".' % location)
 
     _logger.info('Cleaning "%s"' % location)
@@ -67,7 +62,7 @@ def process_job(path, name, vmpaths):
     os.unlink(archive)
 
 
-def process_stale_jobs(dir_queue, vmpaths):
+def process_stale_jobs(dir_queue, vmcfg, vmpaths):
     """The queue_manager may die leaving jobs unchecked.
     This function runs the commander for each job found
     in the queue directory at startup.
@@ -79,7 +74,7 @@ def process_stale_jobs(dir_queue, vmpaths):
     for stale_job in stale_jobs:
         _logger.info('Processing stale job "%s" in queue dir "%s"' % (
                 stale_job, dir_queue))
-        process_job(dir_queue, stale_job, vmpaths)
+        process_job(dir_queue, stale_job, vmcfg, vmpaths)
 
 
 def _callback(watch_manager):
@@ -92,7 +87,7 @@ def _callback(watch_manager):
     _logger.info('Waiting for the next job to arrive')
 
 
-def start_queue(vmpaths):
+def start_queue(vmcfg, vmpaths):
     """ Process any stale jobs and register with inotify to wait
     for new jobs to arrive.
 
@@ -103,7 +98,7 @@ def start_queue(vmpaths):
     watch_manager = WatchManager()
     watch_manager.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
     notifier = Notifier(watch_manager, _InotifyHandler())
-    process_stale_jobs(dir_queue, vmpaths)
+    process_stale_jobs(dir_queue, vmcfg, vmpaths)
 
     # set callback to receive notifications (includes queued jobs after
     # setting up inotify but before we finished processing stale jobs)
@@ -129,7 +124,7 @@ def main():
     vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
     vmpaths = VmcheckerPaths(vmcfg.root_path())
     check_tester_setup_correctly(vmpaths)
-    start_queue(vmpaths)
+    start_queue(vmcfg, vmpaths)
 
 if __name__ == '__main__':
     main()

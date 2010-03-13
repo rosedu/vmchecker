@@ -176,6 +176,8 @@ If the problem persists please contact administrators."""
 def main(vmcfg, dir):
     """Unpacks archive and invokes executor"""
     # reads assignment config
+    _check_required_files(dir)
+
     with open(join(dir, 'config')) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
@@ -241,8 +243,6 @@ def _check_required_files(path):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    vmcfg = config.config_tester()
     if len(sys.argv) != 2:
         print >> sys.stderr, 'Invalid number of arguments.'
         _print_help()
@@ -253,5 +253,4 @@ if __name__ == '__main__':
         print >> sys.stderr, 'Not a directory', start_dir
         _print_help()
         exit(1)
-    _check_required_files(start_dir)
     main(vmcfg, start_dir)
