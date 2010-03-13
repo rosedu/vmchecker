@@ -2,6 +2,8 @@
 
 """A module to interact with the course list"""
 
+from __future__ import with_statement
+
 
 DEFAULT_CONFIG_FILE_LIST = '/etc/vmchecker/config.list'
 
