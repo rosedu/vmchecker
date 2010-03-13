@@ -25,8 +25,6 @@ TODO: Split VMExecutor, one for each machine.
 
 from __future__ import with_statement
 
-__author__ = 'Alexandru Moșoi <brtzsnr@gmail.com>'
-
 
 import ConfigParser
 import logging
