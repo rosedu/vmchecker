@@ -7,7 +7,6 @@ cd $DIR
 
 
 vmchecker-init-course storer
-vmchecker-init-course tester
 
 
 # create fake zip files for the test and user submission.

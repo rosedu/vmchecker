@@ -17,8 +17,13 @@ import subprocess
 import tempfile
 import time
 import datetime
-import zipfile
 
+# HACK: XXX: TODO: determine when python2.5 is old enough to ignore 
+# python2.5 has a limited zipfile implementation (for example there's no extractall() method
+# instead on changing & bloating this code I'll just copy and use the zipfile from upstream
+#import zipfile
+
+from . import zipfile
 
 from . import config
 from . import paths
