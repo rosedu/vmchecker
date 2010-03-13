@@ -17,16 +17,11 @@ import subprocess
 import tempfile
 import time
 import datetime
-
-# HACK: XXX: TODO: determine when python2.5 is old enough to ignore 
-# python2.5 has a limited zipfile implementation (for example there's no extractall() method
-# instead on changing & bloating this code I'll just copy and use the zipfile from upstream
-#import zipfile
-
-from . import zipfile
+from contextlib import closing
 
 from . import config
 from . import paths
+from . import ziputil
 from . import submissions
 from . import vmlogging
 from .CourseList import CourseList
@@ -64,27 +59,6 @@ def submission_config(user, assignment, course_id, upload_time,
     sbcfg.set('Assignment', 'RemoteHostname', storer_hostname)
     return sbcfg
 
-
-def unzip_safely(archive_filename, destination):
-    """Sanity checks before unzipping a file.
-
-    Paths stored in a zip file may be absolute or use '..'.
-
-    In both cases, unzipping those files may create files outside the
-    specified destination. This may lead to overwritting of other
-    submissions or security problems leading to overwritting of system
-    files or vmchecker configuration files.
-
-    If any such file is found, the unzippig is aborted.
-    """
-    z = zipfile.ZipFile(archive_filename)
-    try:
-        for name in z.namelist():
-            if os.path.isabs(name) or name.find('..') != -1:
-                raise zipfile.BadZipfile
-            z.extractall(destination)
-    finally:
-        z.close()
 
 
 def submission_backup_prefix(course_id, assignment, user, upload_time):
@@ -128,7 +102,7 @@ def submission_backup(back_dir, archive_filename, sbcfg):
         sbcfg.write(handle)
 
     # unzip the archive, but check if it has absolute paths or '..'
-    unzip_safely(archive_filename, back_arc)
+    ziputil.unzip_safely(archive_filename, back_arc)
 
     logger.info('Stored submission in temporary directory %s', back_dir)
 
@@ -205,11 +179,12 @@ def create_testing_bundle(user, assignment, course_id):
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_submission_root(assignment, user)
 
-    file_list = list(vmcfg.assignments().files_to_include(assignment))
-    file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
-                   ('tests.zip', vmcfg.assignments().tests_path(assignment)),
-                   ('config', paths.submission_config_file(sbroot)) ]
+    rel_file_list = list(vmcfg.assignments().files_to_include(assignment))
+    rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
+                       ('tests.zip', vmcfg.assignments().tests_path(assignment)),
+                       ('config', paths.submission_config_file(sbroot)) ]
 
+    file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list ]
 
     # builds archive with configuration
     with vmcfg.assignments().lock(assignment):
@@ -221,14 +196,8 @@ def create_testing_bundle(user, assignment, course_id):
         logger.info('Creating bundle package %s', bundle_path)
 
         try:
-            with os.fdopen(bundle_fd, 'w+b') as handler:
-                zip_ = zipfile.ZipFile(handler, 'w')
-                for (dest, src) in file_list:
-                    src = vmpaths.abspath(src)
-                    assert os.path.isfile(src), 'File %s is missing' % src
-                    zip_.write(src, dest)
-                    logger.debug('Included %s as %s', src, dest)
-                zip_.close()
+            with closing(os.fdopen(bundle_fd, 'w+b')) as handler:
+                ziputil.create_zip(handler, file_list)
         except:
             logger.error('Failed to create zip archive %s', bundle_path)
             os.unlink(bundle_path)
