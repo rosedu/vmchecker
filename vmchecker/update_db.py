@@ -22,15 +22,11 @@ For the latest version check bin/initialise_course.py.
 
 from __future__ import with_statement
 
-import sqlite3
 import os
-import optparse
 import logging
 import time
 
-from vmchecker import config
 from vmchecker import paths
-from vmchecker import vmcheckerpaths
 from vmchecker import repo_walker
 from vmchecker import submissions
 from vmchecker import penalty
