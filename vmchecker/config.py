@@ -14,23 +14,6 @@ import vmcheckerpaths
 import assignments as assignments_
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
-DEFAULT_CONFIG_FILE = '/home/gringo/tmp/config'
-
-cmdline = optparse.OptionParser()
-options, argv = None, None
-
-# Use OptionGroup to add commandline options. Here is an example:
-#
-# import config
-#
-# ... (at the end of the file)
-#
-# group = optparse.OptionGroup(config.cmdline, 'update_db.py')
-# group.add_option(
-#         '-f', '--force', action='store_true', dest='force', default=False,
-#         help='Force updating all marks ignoring modification times')
-# config.cmdline.add_option_group(group)
-# del group
 
 assignments = None
 
@@ -125,13 +108,3 @@ def _set_logging_level(option, opt_str, value, parser):
     if option.dest == 'quiet':
         logging.getLogger().setLevel(logging.WARN)
 
-
-cmdline.add_option('-v', '--verbose', action='callback', nargs=0,
-                   dest='verbose', default=False, callback=_set_logging_level,
-                   help='Prints more stuff')
-cmdline.add_option('-q', '--quiet', action='callback', nargs=0,
-                   dest='quiet', default=False, callback=_set_logging_level,
-                   help='Prints less stuff')
-cmdline.add_option('--config', dest='config', default=DEFAULT_CONFIG_FILE,
-                   metavar='FILE', help='Reads configuration from FILE ('
-                                        'defaults to %s)' % DEFAULT_CONFIG_FILE)
