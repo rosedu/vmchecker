@@ -25,7 +25,7 @@ DATE_FORMAT = '%Y.%m.%d %H:%M:%S'  # XXX must be the same as in bin/misc.py
 
 
 def compute_penalty(upload_time, deadline, penalty, weights, limit,
-                        holiday_start = [], holiday_finish = []):
+                        holiday_start = None, holiday_finish = None):
     """A generic function to compute penalty
 
     Args:
@@ -42,6 +42,11 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit,
     is time.mktime(upload_time) - time.mktime(deadline)
 
     """
+    if holiday_start is None:
+        holiday_start = []
+
+    if holiday_finish is None:
+        holiday_finish = []
 
     # XXX refactor such that instead of holiday_start and holiday_finish
     # only one list (of intervals) is used
