@@ -16,8 +16,8 @@ import optparse
 import os
 import logging
 
-from vmchecker import paths
-from vmchecker import vmlogging
+from . import paths
+from . import vmlogging
 
 _logger = vmlogging.create_module_logger('repo_walker')
 

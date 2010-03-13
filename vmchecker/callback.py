@@ -10,7 +10,7 @@ import paramiko
 import sys
 import ConfigParser
 
-from vmchecker import vmlogging
+from . import vmlogging
 
 _DEFAULT_SSH_PORT = 22
 _logger = vmlogging.create_module_logger('callback')

@@ -20,11 +20,11 @@ import datetime
 import zipfile
 
 
-from vmchecker import config
-from vmchecker import paths
-from vmchecker import submissions
-from vmchecker.CourseList import CourseList
-from vmchecker import vmlogging
+from . import config
+from . import paths
+from . import submissions
+from . import vmlogging
+from .CourseList import CourseList
 
 logger = vmlogging.create_module_logger('submit')
 

@@ -9,8 +9,8 @@ import os
 import optparse
 import ConfigParser
 
-import vmcheckerpaths
-import assignments as assignments_
+from . import vmcheckerpaths
+from . import assignments as assignments_
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 

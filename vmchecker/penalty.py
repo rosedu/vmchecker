@@ -21,7 +21,7 @@ import time
 import math
 import datetime
 
-from vmchecker.config import DATE_FORMAT
+from .config import DATE_FORMAT
 
 
 def str_to_time(time_str, format_str=DATE_FORMAT):

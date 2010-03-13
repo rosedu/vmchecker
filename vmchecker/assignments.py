@@ -24,7 +24,7 @@ import fcntl
 import datetime
 import os
 
-from vmchecker import paths
+from . import paths
 
 
 # the prefix of the sections' names describing assignments

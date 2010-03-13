@@ -26,11 +26,11 @@ import os
 import logging
 import time
 
-from vmchecker import paths
-from vmchecker import repo_walker
-from vmchecker import submissions
-from vmchecker import penalty
-from vmchecker import vmlogging
+from . import paths
+from . import repo_walker
+from . import submissions
+from . import penalty
+from . import vmlogging
 
 logger = vmlogging.create_module_logger('update_db')
 
