@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import with_statement
+
 from pyvix.vix import *
 import optparse
 import os
+import json
 import logging
 from threading import Thread
 import sys
@@ -219,13 +222,13 @@ if __name__ == "__main__":
     # if no args specified run a default test
     test = _default_test
     if len(sys.argv) != 1:
-        modname = sys.argv[1]
+        testcfg_file = sys.argv[1]
         try:
             # the first arg should be a python file which defines a
             # dictioary named test. The format of the dictionary is
             # the same as the one above.
-            m = __import__(modname, globals(), locals(), ['test'], -1)
-            test = m.test
+            with open(testcfg_file, 'r') as handler:
+                test = json.load(handler)
         except:
             _logger.error('could not load %s ' % modname)
 

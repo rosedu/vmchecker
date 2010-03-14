@@ -32,6 +32,7 @@ import shutil
 import time
 import sys
 import os
+import json
 from subprocess import Popen
 from os.path import join, isdir
 
@@ -39,6 +40,9 @@ from . import assignments
 from . import callback
 from .paths import VmcheckerPaths
 from .config import VmcheckerConfig
+from . import vmlogging
+
+_logger = vmlogging.create_module_logger('commander')
 
 _FILES_TO_SEND = (
     'job_build',
@@ -48,16 +52,15 @@ _FILES_TO_SEND = (
     'job_km', )
 _EXECUTOR_OVERHEAD = 300
 
-_logger = logging.getLogger('vmchecker.commander')
 
 
-def _run_callback(dir, ejobs):
+def _run_callback(dir, executor_job_dir):
     """Runs callback script to upload results"""
 
-    callback.run_callback(join(dir, 'config'), (join(ejobs, f) for f in _FILES_TO_SEND))
+    callback.run_callback(join(dir, 'config'), (join(executor_job_dir, f) for f in _FILES_TO_SEND))
 
 
-def _make_test_config(vmcfg, machine, timeout, kernel_messages, dst_file):
+def _make_test_config(vmcfg, machine, timeout, kernel_messages):
     km = True if int(kernel_messages) != 0 else False
     test = {
         'km_enable' : km,
@@ -91,20 +94,20 @@ def _make_test_config(vmcfg, machine, timeout, kernel_messages, dst_file):
                 }
             }
         }
-    with open(dst_file, 'w') as f:
-        f.write ('test='+str(test))
 
 
 
-def _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_messages):
+def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout, kernel_messages):
     """Starts a job.
 
     XXX lots of wtf per minute
     XXX parsing config should be executors' job
 
     """
-    dst_file = 'input_config.py'
-    _make_test_config(vmcfg, machine, timeout, kernel_messages, dst_file)
+    dst_file = 'vm_executor_config.json'
+    with open(dst_file, 'w') as handler:
+        testcfg = _make_test_config(vmcfg, machine, timeout, kernel_messages)
+        json.dump(testcfg, handler)
     args = [vmpaths.abspath('bin/vm_executor.py'), dst_file]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
@@ -116,13 +119,13 @@ def _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_me
         popen = Popen(args)
     except Exception:
         _logger.exception('Cannot invoke VMExecutor.')
-        with open(join(ejobs, 'job_errors'), 'a') as handler:
+        with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
             print >> handler, 'Cannot run VMExecutor.'
             print >> handler, 'Please contact the administrators.'
         # if we cannot open the process, there is nothing more to be done
         return
 
-    with open(join(ejobs, 'job_results'), 'w') as handler:
+    with open(join(executor_job_dir, 'job_results'), 'w') as handler:
         print >> handler, 'ok'
 
     # waits for the the process to finish
@@ -141,7 +144,7 @@ def _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_me
                 # polls every 5 seconds
                 time.sleep(5)
             else:
-                with open(join(ejobs, 'job_errors'), 'a') as handler:
+                with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
                     print >> handler, 'VMExecutor returned %d (%s)' % (
                         exit_code, ['success', 'error'][exit_code < 0])
 
@@ -152,18 +155,18 @@ def _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_me
             _logger.error("VMChecker timeouted on assignment `%s' "
                           "running on machine `%s'.", assignment, machine)
 
-            with open(join(ejobs, 'job_errors'), 'a') as handler:
-                print >> handler, """\
-VMExecutor successfuly started, but it's taking too long.
-Check your sources, makefiles, etc and resubmit.
-If the problem persists please contact administrators."""
+            with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
+                print >> handler, """\ VMExecutor successfuly started,
+                      but it's taking too long. Check your sources,
+                      makefiles, etc and resubmit.  If the problem
+                      persists please contact administrators."""
     except:
         _logger.exception('Exception after starting VMExecutor.')
 
-        with open(join(ejobs, 'job_errors'), 'a') as handler:
-            print >> handler, """\
-Error after starting VMExecutor.
-If the problem persists please contact administrators."""
+        with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
+            print >> handler, """\ Error after starting VMExecutor.
+                  If the problem persists please contact
+                  administrators."""
     finally:
         # release any leftover resources
         try:
@@ -190,11 +193,11 @@ def main(vmcfg, vmpaths, dir):
     # copies files to where vmchecker expects them (wtf
     # XXX 'executor_jobs' path is hardcoded in executor
 
-    ejobs = vmpaths.abspath('executor_jobs')
+    executor_job_dir = vmpaths.abspath('executor_jobs')
     # cleans up executor_jobs, if not already clean
-    if isdir(ejobs):
-        shutil.rmtree(ejobs)
-    os.mkdir(ejobs)
+    if isdir(executor_job_dir):
+        shutil.rmtree(executor_job_dir)
+    os.mkdir(executor_job_dir)
 
     shutil.copy(        # copies assignment
         join(dir, 'archive.zip'),
@@ -210,15 +213,15 @@ def main(vmcfg, vmpaths, dir):
     timeout = storer.get(section, 'Timeout')
     kernel_messages = storer.get(section, 'KernelMessages')
 
-    _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_messages)
+    _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout, kernel_messages)
 
     try:
-        _run_callback(dir, ejobs)
+        _run_callback(dir, executor_job_dir)
     except:
         _logger.exception('cannot run callback')
 
     # clears files
-    shutil.rmtree(ejobs)
+    shutil.rmtree(executor_job_dir)
 
     _logger.info('all done')
 
