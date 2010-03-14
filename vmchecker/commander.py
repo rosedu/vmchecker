@@ -108,7 +108,7 @@ def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout
     with open(dst_file, 'w') as handler:
         testcfg = _make_test_config(vmcfg, machine, timeout, kernel_messages)
         json.dump(testcfg, handler)
-    args = [vmpaths.abspath('bin/vm_executor.py'), dst_file]
+    args = ['vmchecker-vm-executor', dst_file]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
 
