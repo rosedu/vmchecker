@@ -35,10 +35,10 @@ import os
 from subprocess import check_call, Popen
 from os.path import join, isdir
 
-import config
-import vmcheckerpaths
-import assignments
-import callback
+from . import config
+from . import assignments
+from . import callback
+from .paths import VmcheckerPaths
 
 _FILES_TO_SEND = (
     'job_build',
@@ -96,7 +96,7 @@ def _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file)
 
 
 
-def _run_executor(vmcfg, ejobs, machine, assignment, timeout, kernel_messages):
+def _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_messages):
     """Starts a job.
 
     XXX lots of wtf per minute
@@ -105,7 +105,7 @@ def _run_executor(vmcfg, ejobs, machine, assignment, timeout, kernel_messages):
     """
     dst_file = 'input_config.py'
     _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file)
-    args = [vmcheckerpaths.abspath('bin/vm_executor.py'), dst_file]
+    args = [vmpaths.abspath('bin/vm_executor.py'), dst_file]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
 
@@ -173,7 +173,7 @@ If the problem persists please contact administrators."""
             pass
 
 
-def main(vmcfg, dir):
+def main(vmcfg, vmpaths, dir):
     """Unpacks archive and invokes executor"""
     # reads assignment config
     _check_required_files(dir)
@@ -190,7 +190,7 @@ def main(vmcfg, dir):
     # copies files to where vmchecker expects them (wtf
     # XXX 'executor_jobs' path is hardcoded in executor
 
-    ejobs = vmcheckerpaths.abspath('executor_jobs')
+    ejobs = vmpaths.abspath('executor_jobs')
     # cleans up executor_jobs, if not already clean
     if isdir(ejobs):
         shutil.rmtree(ejobs)
@@ -198,10 +198,10 @@ def main(vmcfg, dir):
 
     shutil.copy(        # copies assignment
         join(dir, 'archive.zip'),
-        vmcheckerpaths.abspath('executor_jobs', 'file.zip'))
+        vmpaths.abspath('executor_jobs', 'file.zip'))
     shutil.copy(        # copies tests
         join(dir, 'tests.zip'),
-        vmcheckerpaths.abspath('executor_jobs', 'tests.zip'))
+        vmpaths.abspath('executor_jobs', 'tests.zip'))
 
     assignment = config.get('Assignment', 'Assignment')  # yet another hack
     section = assignments._SECTION_PREFIX + assignment
@@ -210,7 +210,7 @@ def main(vmcfg, dir):
     timeout = storer.get(section, 'Timeout')
     kernel_messages = storer.get(section, 'KernelMessages')
 
-    _run_executor(vmcfg, ejobs, machine, assignment, timeout, kernel_messages)
+    _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_messages)
 
     try:
         _run_callback(dir, ejobs)
@@ -225,7 +225,7 @@ def main(vmcfg, dir):
 
 def _print_help():
     print >> sys.stderr, """Usage:
-    ./commander.py directory - where directory contains (see submit.py)
+    ./commander.py course_id directory - where directory contains (see submit.py)
         `archive.zip' `tests.zip' `config' `storer' `callback'"""
 
 
@@ -243,14 +243,18 @@ def _check_required_files(path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print >> sys.stderr, 'Invalid number of arguments.'
         _print_help()
         exit(1)
 
-    start_dir = sys.argv[1]
+    course_id = sys.argv[1]
+    start_dir = sys.argv[2]
     if not os.path.isdir(start_dir):
         print >> sys.stderr, 'Not a directory', start_dir
         _print_help()
         exit(1)
-    main(vmcfg, start_dir)
+
+    vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    main(vmcfg, vmpaths, start_dir)
