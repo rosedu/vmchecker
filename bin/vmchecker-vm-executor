@@ -1,35 +1,41 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""A script that starts a vm, reverts it to a known snapshot, tests a
+submission bundle (submission + tests), and closes the vm"""
+
 from __future__ import with_statement
 
-from pyvix.vix import *
-import optparse
+import pyvix.vix
 import os
 import json
 import logging
 from threading import Thread
 import sys
 
-import vmcheckerpaths
-import config
 
 _logger = logging.getLogger('vm_executor')
 
 
 def start_kernel_listener(args):
+    """Starts the listener for kernel messages (e.g. netconsole)"""
+    # TODO: dummy start kernel listener implementation
     _logger.info('started kernel listener')
 
 
-def start_kernel_listener(args):
+def stop_kernel_listener(args):
+    """Stops the listener for kernel messages (e.g. netconsole)"""
+    # TODO: dummy stop kernel listener implementation
     _logger.info('stopped kernel listener')
 
 
 def connectToVM(vmx_path):
-    """Connect to the VmWare virtual machine specified by the vmx_path.
+    """Connect to the VmWare virtual machine specified by the
+    vmx_path.
 
-    Returns a pair: (a handle for the connection to the host, a virtual machine handle)"""
-    h = Host()
+    Returns a pair: (a handle for the connection to the host, a
+    virtual machine handle)"""
+    h = pyvix.vix.Host()
     vm = h.openVM(vmx_path)
     return (h, vm)
 
@@ -40,7 +46,8 @@ def revertToSnapshot(vm, snapNr):
     Note: snapshots are counted from 0.
     """
     if vm.nRootSnapshots <= snapNr:
-        err_str = ('Cannot revert to snapshot %d. Too few snapshots (nr = %d) found on %s.' %
+        err_str = ('''Cannot revert to snapshot %d. Too few
+                    snapshots (nr = %d) found on %s.''' %
                    (snapNr, vm.nRootSnapshots, vm.vmxPath))
         raise Exception(err_str)
     snaps = vm.rootSnapshots
@@ -50,15 +57,17 @@ def revertToSnapshot(vm, snapNr):
 def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files):
     """Copy files from the host to the guest.
     vm        - an open virtual machine.
+
     host_dir  - the directory on the host
+
     guest_dir - an ABSOLUTE path to the guest directory
-                This must be expressed in the native system's path style.
-                For example if the system is Windows and you have installed
-                cygwin, you cannot use cygwin-like paths.
-                This myst end with a GUEST speciffic path separator
-                (e.g.: bad: 'C:\dir'
-                      good: 'C:\dir\')
-    files     - the list of files (relative to host_dir) to copy to the vm.
+                This must be expressed in the native system's path
+                style. For example if the system is Windows and you
+                have installed cygwin, you cannot use cygwin-like
+                paths. This myst end with a GUEST speciffic path
+                separator (e.g.: bad: 'C:\dir'; good: 'C:\dir\')
+
+    files     - list of files (relative to host_dir) to copy to the vm.
     """
 
     for f in files:
@@ -69,10 +78,12 @@ def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files
         #  with the guest-speciffic path separator!
         guest_path = guest_dir + f
         if fromHostToGuest:
-            _logger.info('copy file %s from host to guest at %s' % (host_path, guest_path))
+            _logger.info('copy file %s from host to guest at %s' %
+                         (host_path, guest_path))
             vm.copyFileFromHostToGuest(host_path, guest_path)
         else:
-            _logger.info('copy file %s from guest to host at %s' % (guest_path, host_path))
+            _logger.info('copy file %s from guest to host at %s' %
+                         (guest_path, host_path))
             vm.copyFileFromGuestToHost(guest_path, host_path)
 
 
@@ -116,19 +127,10 @@ def runWithTimeout(vm, prog, args, timeout):
     'timeout' seconds (or fractions thereof) and False otherwise.
 
     """
-    class RunInThread(Thread):
-        def __init__(self, vm, prog, args):
-            Thread.__init__(self)
-            self.vm = vm
-            self.prog = prog
-            self.args = args
-        def run(self):
-            self.vm.runProgramInGuest(self.prog, self.args)
-
     try:
         _logger.info('executing on the remote: prog=%s args=[%s] timeout=%d' %
                      (prog, args, timeout))
-        thd = RunInThread(vm, prog, args)
+        thd = Thread(target = vm.runProgramInGuest, args = (prog, args))
         thd.start()
         thd.join(timeout)
         return thd.isAlive()
@@ -136,7 +138,7 @@ def runWithTimeout(vm, prog, args, timeout):
         return False
 
 
-def _run_a_test(vm, jobs_path, scripts_path, guest, test):
+def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
     """Run a test:
        * copy input files to guest
        * copy script files to guest
@@ -146,12 +148,21 @@ def _run_a_test(vm, jobs_path, scripts_path, guest, test):
 
        If at any errors occur, return False.
        On success, return True.
+
+       Parameters:
+         vm           - a valid python.vix.VixVM object
+         jobs_path    - path to the unzipped bundle, where the tests and
+                        submission lie
+         scripts_path - paths to the scripts to be executed on the vm
+         guest        - an object describing guest configs
+         test         - an object describing test  configs
     """
     try:
         copyFilesFromHostToGuest(vm, jobs_path,    guest['root_path']['native_style'], test['input'])
         copyFilesFromHostToGuest(vm, scripts_path, guest['root_path']['native_style'], test['script'])
         for script in test['script']:
-            timedout = makeExecutableAndRun(vm, guest['shell'], guest['root_path']['shell_style'] + guest['root_path']['separator'] + script, test['timeout'])
+            timedout = makeExecutableAndRun(vm, guest['shell'], guest['root_path']['shell_style'] +
+                                            guest['root_path']['separator'] + script, test['timeout'])
             if timedout:
                 return False
         copyFilesFromGuestToHost(vm, jobs_path,    guest['root_path']['native_style'], test['output'])
@@ -159,7 +170,12 @@ def _run_a_test(vm, jobs_path, scripts_path, guest, test):
         return True
 
 
-def main(args):
+def test_submission(args):
+    """THE function that tests a submission bundle:
+        * opens the vm and reverts to a known snapshot
+        * prepares environments and executes all tests
+        * manages kernel messages
+    """
     _logger.info(args)
     host  = args['host']
     guest = args['guest']
@@ -175,7 +191,7 @@ def main(args):
 
     tests = args['test']
     for i in tests:
-        success = _run_a_test(vm, jobs_path, scripts_path, guest, tests[i])
+        success = copy_files_and_run_script(vm, jobs_path, scripts_path, guest, tests[i])
         if not success:
             break # stop running tests if an error occured.
 
@@ -183,60 +199,67 @@ def main(args):
         stop_kernel_listener(args)
 
 
-_default_test = {
-    'km_enable' : False,
-    'host' : {
-        'vmx_path'       : '/home/so/vmware/so-vm-debian-sid/faust.vmx',
-        'vmchecker_root' : '/home/lucian/vmchecker/vmchecker/',
-        'jobs_path'      : 'executor_jobs/',
-        'scripts_path'   : 'executor_scripts/'},
-    'guest' : {
-        'username'  : 'so',
-        'password'  : 'so',
-        'shell'     : '/bin/bash',
-        'root_path' : {
-            'native_style' : '/home/so/',
-            'shell_style'  : '/home/so/',
-            'separator'    : '/',
+def make_testing_configuration():
+    """Returns a configuration object for vm-executor testing without
+    depending on other scripts"""
+    return {
+        'km_enable' : False,
+        'host' : {
+            'vmx_path'       : '/home/so/vmware/so-vm-debian-sid/faust.vmx',
+            'vmchecker_root' : '/home/lucian/vmchecker/vmchecker/',
+            'jobs_path'      : 'executor_jobs/',
+            'scripts_path'   : 'executor_scripts/'},
+        'guest' : {
+            'username'  : 'so',
+            'password'  : 'so',
+            'shell'     : '/bin/bash',
+            'root_path' : {
+                'native_style' : '/home/so/',
+                'shell_style'  : '/home/so/',
+                'separator'    : '/',
+                },
             },
-        },
-    'test'  : {
-        0 : {
-            'input'  : ['file.zip', 'tests.zip'],
-            'script' : ['vmchecker_build.sh'],
-            'output' : ['job_build'],
-            'timeout': 120
-            },
-        1  : {
-            'input'  : [],
-            'script' : ['vmchecker_run.sh'],
-            'output' : ['job_run', 'job_errors'],
-            'timeout': 120
+        'test'  : {
+            0 : {
+                'input'  : ['file.zip', 'tests.zip'],
+                'script' : ['vmchecker_build.sh'],
+                'output' : ['job_build'],
+                'timeout': 120
+                },
+            1  : {
+                'input'  : [],
+                'script' : ['vmchecker_run.sh'],
+                'output' : ['job_run', 'job_errors'],
+                'timeout': 120
+                }
             }
         }
-    }
 
-if __name__ == "__main__":
+
+def main():
+    """Main entry point when run as a script; prepares environment for
+    test_submission()"""
     logging.basicConfig(level=logging.INFO)
 
     # if no args specified run a default test
-    test = _default_test
-    if len(sys.argv) != 1:
+    if len(sys.argv) != 2:
+        print 'Usage: %s [--test | config.json]' % sys.argv[0]
+        exit(1)
+    if sys.argv[1] == '--test':
+        test = make_testing_configuration()
+    else:
         testcfg_file = sys.argv[1]
-        try:
-            # the first arg should be a python file which defines a
-            # dictioary named test. The format of the dictionary is
-            # the same as the one above.
-            with open(testcfg_file, 'r') as handler:
-                test = json.load(handler)
-        except:
-            _logger.error('could not load %s ' % modname)
+        with open(testcfg_file, 'r') as handler:
+            test = json.read(handler.read())
 
     # run the test :)
-    main(test)
+    test_submission(test)
 
     # some vmware calls may block indefinetly.  if we don't exit
     # explicitly, we may never return (this is due to python waiting
     # for all threads to exit, but some threads may be stuck in a
     # blocking vmware vix call.
     sys.exit(0)
+
+if __name__ == "__main__":
+    main()
