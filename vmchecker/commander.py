@@ -32,13 +32,13 @@ import shutil
 import time
 import sys
 import os
-from subprocess import check_call, Popen
+from subprocess import Popen
 from os.path import join, isdir
 
-from . import config
 from . import assignments
 from . import callback
 from .paths import VmcheckerPaths
+from .config import VmcheckerConfig
 
 _FILES_TO_SEND = (
     'job_build',
@@ -57,7 +57,7 @@ def _run_callback(dir, ejobs):
     callback.run_callback(join(dir, 'config'), (join(ejobs, f) for f in _FILES_TO_SEND))
 
 
-def _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file):
+def _make_test_config(vmcfg, machine, timeout, kernel_messages, dst_file):
     km = True if int(kernel_messages) != 0 else False
     test = {
         'km_enable' : km,
@@ -104,7 +104,7 @@ def _run_executor(vmcfg, vmpaths, ejobs, machine, assignment, timeout, kernel_me
 
     """
     dst_file = 'input_config.py'
-    _make_test_config(vmcfg, ejobs, machine, timeout, kernel_messages, dst_file)
+    _make_test_config(vmcfg, machine, timeout, kernel_messages, dst_file)
     args = [vmpaths.abspath('bin/vm_executor.py'), dst_file]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
@@ -256,5 +256,5 @@ if __name__ == '__main__':
         exit(1)
 
     vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
-    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    vmpaths = VmcheckerPaths(vmcfg.root_path())
     main(vmcfg, vmpaths, start_dir)
