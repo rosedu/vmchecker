@@ -10,10 +10,12 @@ import ConfigParser
 
 from . import assignments
 
+
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 
 
 class VmcheckerConfig:
+    """An object that encapsulates parsing of the config file of a course"""
     def __init__(self, config_file_):
         self.config_file = config_file_
         self.config = ConfigParser.RawConfigParser()
@@ -39,18 +41,23 @@ class VmcheckerConfig:
         return self.config.get('vmchecker', 'root')
 
     def storer_username(self):
+        """The username to use when logging in with ssh to the storer machine"""
         return self.config.get('storer', 'username')
 
     def tester_username(self):
+        """The username to use when logging in with ssh to the tester machine"""
         return self.config.get('tester', 'username')
 
     def storer_hostname(self):
+        """The hostname to use when logging in with ssh to the storer machine"""
         return self.config.get('storer', 'hostname')
 
     def tester_hostname(self):
+        """The hostname to use when logging in with ssh to the tester machine"""
         return self.config.get('tester', 'hostname')
 
     def tester_queue_path(self):
+        """The path on the tester machine where the queued files are put"""
         return self.config.get('tester', 'queuepath')
 
     def assignments(self):
