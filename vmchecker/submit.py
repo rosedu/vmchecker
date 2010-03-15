@@ -149,7 +149,7 @@ def save_submission_in_storer(archive_filename, user, assignment,
 
     # commit in git this submission
     git_dest = vmpaths.dir_submission_root(assignment, user)
-    with vmcfg.assignments().lock(assignment):
+    with vmcfg.assignments().lock(vmpaths, assignment):
         # cleanup any previously commited data
         if os.path.exists(git_dest):
             shutil.rmtree(git_dest)
@@ -181,13 +181,13 @@ def create_testing_bundle(user, assignment, course_id):
 
     rel_file_list = list(vmcfg.assignments().files_to_include(assignment))
     rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
-                       ('tests.zip', vmcfg.assignments().tests_path(assignment)),
+                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
                        ('config', paths.submission_config_file(sbroot)) ]
 
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list ]
 
     # builds archive with configuration
-    with vmcfg.assignments().lock(assignment):
+    with vmcfg.assignments().lock(vmpaths, assignment):
         # creates the zip archive with an unique name
         (bundle_fd, bundle_path) = tempfile.mkstemp(
             suffix='.zip',

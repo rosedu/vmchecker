@@ -24,8 +24,6 @@ import fcntl
 import datetime
 import os
 
-from . import paths
-
 
 # the prefix of the sections' names describing assignments
 _SECTION_PREFIX = 'assignment '
@@ -73,7 +71,6 @@ class Assignments(object):
     def __init__(self, config):
         """Parses the assignments from the RawConfigParser object, `config'"""
         self.__assignments = {}
-        self.vmpaths = paths.VmcheckerPaths(config.root_path())
         default = {}
 
         for section in config.config.sections():
@@ -119,7 +116,7 @@ class Assignments(object):
         for option in self.__assignments[assignment]:
             if option.startswith(_INCLUDE_PREFIX):
                 yield (option[len(_INCLUDE_PREFIX):],
-                       self.vmpaths.abspath(self.get(assignment, option)))
+                       self.get(assignment, option))
 
     def get(self, assignment, option):
         """Returns value of `option' for `assignment'.
@@ -131,10 +128,10 @@ class Assignments(object):
         self._check_valid(assignment)
         return self.__assignments[assignment][option.lower()]
 
-    def lock(self, assignment):
+    def lock(self, vmpaths, assignment):
         """Returns a lock over assignment"""
         self._check_valid(assignment)
-        return _Lock(self.vmpaths, assignment)
+        return _Lock(vmpaths, assignment)
 
     def __iter__(self):
         """Returns an iterator over the assignments"""
@@ -148,10 +145,10 @@ class Assignments(object):
         """Returns a string representing course name of assignment"""
         return self.get(assignment, 'course')
 
-    def tests_path(self, assignment):
+    def tests_path(self, vmpaths, assignment):
         """Returns the path to the tests for assignment"""
         self._check_valid(assignment)
-        return os.path.join(self.vmpaths.dir_tests(), assignment + '.zip')
+        return os.path.join(vmpaths.dir_tests(), assignment + '.zip')
 
     def timedelta(self, assignment):
         """Returns a timedelta object with minimum delay between submissions"""
