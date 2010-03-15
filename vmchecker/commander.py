@@ -16,9 +16,6 @@ to run two instances of commander simultaneously.
 
 When done the vmchecker.callback module passing in files retrieved
 from the vm or constructed on the commander.
-
-NOTE: This commander is a major HACK (ie lots of wtf)
-TODO: Split VMExecutor, one for each machine.
 """
 
 from __future__ import with_statement
@@ -50,15 +47,20 @@ _EXECUTOR_OVERHEAD = 300
 
 
 
-def _run_callback(bundle_dir, executor_job_dir):
+def _run_callback(bundle_dir):
     """Runs callback script to upload results"""
-    abs_files = (os.path.join(executor_job_dir, f) for f in _FILES_TO_SEND)
+    abs_files = (os.path.join(bundle_dir, f) for f in _FILES_TO_SEND)
     callback.run_callback(os.path.join(bundle_dir, 'config'), abs_files)
 
 
-def _make_test_config(vmcfg, bundle_dir, machine, timeout, kernel_messages):
+def _make_test_config(vmcfg, assignment, bundle_dir):
     """Returns an object with a configuration suitable for
     vm-executor"""
+    asscfg  = vmcfg.assignments()
+    machine = asscfg.get(assignment, 'Machine')
+    timeout = asscfg.get(assignment, 'Timeout')
+    kernel_messages = asscfg.get(assignment, 'KernelMessages')
+
     km = True if int(kernel_messages) != 0 else False
     return {
         'km_enable' : km,
@@ -95,7 +97,7 @@ def _make_test_config(vmcfg, bundle_dir, machine, timeout, kernel_messages):
 
 
 
-def _run_executor(json_cfg_fname, executor_job_dir, machine, assignment, timeout, kernel_messages):
+def _run_executor(json_cfg_fname, executor_job_dir, assignment, timeout):
     """Starts a job.
 
     XXX lots of wtf per minute
@@ -146,8 +148,7 @@ def _run_executor(json_cfg_fname, executor_job_dir, machine, assignment, timeout
                 popen = None
                 return
         else:
-            _logger.error("VMChecker timeouted on assignment `%s' "
-                          "running on machine `%s'.", assignment, machine)
+            _logger.error("VMChecker timeouted on assignment `%s'" % assignment)
 
             with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
                 print >> handler, """\ VMExecutor successfuly started,
@@ -188,44 +189,37 @@ def _check_required_files(path):
         exit(-1)
 
 
-def _write_test_config(dst_file, bundle_dir, vmcfg, machine, timeout, kernel_messages):
+def _write_test_config(dst_file, vmcfg, assignment, bundle_dir):
     """Write the test configuration to a json file to be passed in to
     the vm-executor"""
     with open(dst_file, 'w') as handler:
-        testcfg = _make_test_config(bundle_dir, vmcfg, machine, timeout, kernel_messages)
+        testcfg = _make_test_config(vmcfg, assignment, bundle_dir)
         testcfg_str = json.write(testcfg)
         handler.write(testcfg_str)
 
 
-def prepare_env_and_test(vmcfg, bundle_dir):
-    """Prepare testing environment for vm-executor, create a config
-    file and run vm-executor"""
-    _check_required_files(bundle_dir)
-
-
+def _get_assignment_id(bundle_dir):
+    """Reads the assignment identifier from the config file of the
+    submission from bundle_dir"""
     with open(os.path.join(bundle_dir, 'config')) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
     assignment = config.get('Assignment', 'Assignment')  # yet another hack
+    return assignment
 
-    asscfg = vmcfg.assignments()
+def prepare_env_and_test(vmcfg, bundle_dir):
+    """Prepare testing environment for vm-executor, create a config
+    file and run vm-executor"""
 
+    _check_required_files(bundle_dir)
+    assignment = _get_assignment_id(bundle_dir)
 
-    machine = asscfg.get(assignment, 'Machine')
-    timeout = asscfg.get(assignment, 'Timeout')
-    kernel_messages = asscfg.get(assignment, 'KernelMessages')
-
-    json_cfg_fname = 'vm_executor_config.json'
-    _write_test_config(json_cfg_fname, bundle_dir, vmcfg, machine, timeout, kernel_messages)
-
-
-
-
-
-    _run_executor(json_cfg_fname, bundle_dir, machine, assignment, timeout, kernel_messages)
+    json_cfg_fname = os.path.join(bundle_dir, 'vm_executor_config.json')
+    _write_test_config(json_cfg_fname, assignment, bundle_dir, vmcfg)
 
     try:
-        _run_callback(bundle_dir, bundle_dir)
+        _run_executor(json_cfg_fname, bundle_dir, assignment, timeout)
+        _run_callback(bundle_dir)
     except:
         _logger.exception('cannot run callback')
 
@@ -238,8 +232,8 @@ def prepare_env_and_test(vmcfg, bundle_dir):
 def _print_usage():
     """Prints a help string"""
     print >> sys.stderr, """Usage:
-    ./commander.py course_id directory - where directory contains (see submit.py)
-     `archive.zip' `tests.zip' `config'"""
+    ./commander.py course_id directory - where directory contains:
+        `archive.zip' `tests.zip' `config'"""
 
 
 def main():
