@@ -5,7 +5,7 @@
 
 Usage:
     ./commander.py directory - where directory contains (see submit.py)
-        `archive.zip' `tests.zip' `config' `callback'
+        `archive.zip' `tests.zip' `config'
 
 
 The script parses config and invokes vm_executor with
@@ -14,10 +14,8 @@ the requiered arguments.
 VMExecutor excepts files in `executor_jobs' so it's not safe
 to run two instances of commander simultaneously.
 
-When done `callback' is invoked with arguments
-    ./callback config file1 file2 file3 ...
-Missing files should be ignored (except config).
-
+When done the vmchecker.callback module passing in files retrieved
+from the vm or constructed on the commander.
 
 NOTE: This commander is a major HACK (ie lots of wtf)
 TODO: Split VMExecutor, one for each machine.
@@ -180,7 +178,7 @@ def _check_required_files(path):
     """Checks that a set of files required by commander is present in
     the given path."""
     found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'config', 'callback']
+    needed_files = ['archive.zip', 'tests.zip', 'config']
     found_files = os.listdir(path)
     for need in needed_files:
         if not need in found_files:
@@ -245,7 +243,7 @@ def _print_usage():
     """Prints a help string"""
     print >> sys.stderr, """Usage:
     ./commander.py course_id directory - where directory contains (see submit.py)
-     `archive.zip' `tests.zip' `config' `callback'"""
+     `archive.zip' `tests.zip' `config'"""
 
 
 def main():

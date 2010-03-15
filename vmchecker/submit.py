@@ -171,7 +171,6 @@ def create_testing_bundle(user, assignment, course_id):
         config      - assignment config (eg. name, time of submission etc)
         archive.zip - a zip containing the sources
         tests.zip   - a zip containing the tests
-        callback    - a script executed by the tester to send results back
         ???         - assignment's extra files (see Assignments.include())
 
     """
