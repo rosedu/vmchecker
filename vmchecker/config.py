@@ -6,15 +6,12 @@
 from __future__ import with_statement
 
 import os
-import optparse
 import ConfigParser
 
-from . import vmcheckerpaths
-from . import assignments as assignments_
+from . import assignments
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 
-assignments = None
 
 class VmcheckerConfig:
     def __init__(self, config_file_):
@@ -59,37 +56,5 @@ class VmcheckerConfig:
     def assignments(self):
         """Return an Assignment object describing the assignments in
         this course's config file"""
-        return assignments_.Assignments(self)
+        return assignments.Assignments(self)
 
-
-def parse_arguments():
-    """Parses command-line arguments"""
-    global options, argv
-    options, argv = cmdline.parse_args()
-
-
-def _basic_config():
-    """Common configuration"""
-    parse_arguments()
-
-    # reads configuration
-    assert os.path.isabs(options.config)
-    vmcfg = VmcheckerConfig(options.config)
-    vmcheckerpaths.set_root(vmcfg.root_path())
-    return vmcfg
-
-
-def config_storer():
-    """Configures storer"""
-    vmcfg = _basic_config()
-
-    global assignments
-    vmcheckerpaths.set_repository(vmcfg.repository_path())
-    assignments = vmcfg.assignments()
-    return vmcfg
-
-
-def config_tester():
-    """Configures tester"""
-    vmcfg = _basic_config()
-    return vmcfg
