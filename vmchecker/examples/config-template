@@ -41,12 +41,11 @@ KernelMessages = 0
 # it this is exceeded, the test is stopped.
 Timeout = 120
 
-
 # which files to send to the tester
 # Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
 # Relative paths are relative to the root repo path.
-# XXX: This is implementation speciffic; it shouldn't be in the config file
-Include storer = config
+
+# TODO: include the .sh scripts used to build/run tests on the vm
 
 
 # assignment configuration
