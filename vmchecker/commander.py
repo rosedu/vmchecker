@@ -82,7 +82,7 @@ def _make_test_config(vmcfg, machine, timeout, kernel_messages):
             },
         'test'  : {
             0 : {
-                'input'  : ['file.zip', 'tests.zip'],
+                'input'  : ['archive.zip', 'tests.zip'],
                 'script' : ['vmchecker_build.sh'],
                 'output' : ['job_build'],
                 'timeout': int(timeout),
