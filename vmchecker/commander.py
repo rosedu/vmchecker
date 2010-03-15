@@ -5,10 +5,10 @@
 
 Usage:
     ./commander.py directory - where directory contains (see submit.py)
-        `archive.zip' `tests.zip' `config' `storer' `callback'
+        `archive.zip' `tests.zip' `config' `callback'
 
 
-The script parses config and storer and invokes vm_executor with
+The script parses config and invokes vm_executor with
 the requiered arguments.
 
 VMExecutor excepts files in `executor_jobs' so it's not safe
@@ -180,7 +180,7 @@ def _check_required_files(path):
     """Checks that a set of files required by commander is present in
     the given path."""
     found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'config', 'storer', 'callback']
+    needed_files = ['archive.zip', 'tests.zip', 'config', 'callback']
     found_files = os.listdir(path)
     for need in needed_files:
         if not need in found_files:
@@ -245,11 +245,11 @@ def _print_usage():
     """Prints a help string"""
     print >> sys.stderr, """Usage:
     ./commander.py course_id directory - where directory contains (see submit.py)
-     `archive.zip' `tests.zip' `config' `storer' `callback'"""
+     `archive.zip' `tests.zip' `config' `callback'"""
 
 
 def main():
-    """Unpacks bundle and invokes executor"""
+    """Invokes executor with parameters from the command line"""
     if len(sys.argv) != 3:
         print >> sys.stderr, 'Invalid number of arguments.'
         _print_usage()
