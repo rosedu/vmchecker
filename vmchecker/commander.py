@@ -33,10 +33,9 @@ import json
 from subprocess import Popen
 
 from . import callback
-from .paths import VmcheckerPaths
+from . import vmlogging
 from .config import VmcheckerConfig
 from .CourseList import CourseList
-from . import vmlogging
 
 
 _logger = vmlogging.create_module_logger('commander')
@@ -57,7 +56,7 @@ def _run_callback(bundle_dir, executor_job_dir):
     callback.run_callback(os.path.join(bundle_dir, 'config'), abs_files)
 
 
-def _make_test_config(vmcfg, machine, timeout, kernel_messages):
+def _make_test_config(vmcfg, bundle_dir, machine, timeout, kernel_messages):
     """Returns an object with a configuration suitable for
     vm-executor"""
     km = True if int(kernel_messages) != 0 else False
@@ -66,7 +65,7 @@ def _make_test_config(vmcfg, machine, timeout, kernel_messages):
         'host' : {
             'vmx_path'       : vmcfg.get(machine, 'VMPath'),
             'vmchecker_root' : vmcfg.root_path(),
-            'jobs_path'      : 'executor_jobs/',
+            'jobs_path'      : bundle_dir,
             'scripts_path'   : 'executor_scripts/'},
         'guest' : {
             'username'  : vmcfg.get(machine, 'GuestUser'),
@@ -189,11 +188,11 @@ def _check_required_files(path):
         exit(-1)
 
 
-def _write_test_config(dst_file, vmcfg, machine, timeout, kernel_messages):
+def _write_test_config(dst_file, bundle_dir, vmcfg, machine, timeout, kernel_messages):
     """Write the test configuration to a json file to be passed in to
     the vm-executor"""
     with open(dst_file, 'w') as handler:
-        testcfg = _make_test_config(vmcfg, machine, timeout, kernel_messages)
+        testcfg = _make_test_config(bundle_dir, vmcfg, machine, timeout, kernel_messages)
         testcfg_str = json.write(testcfg)
         handler.write(testcfg_str)
 
@@ -201,7 +200,6 @@ def _write_test_config(dst_file, vmcfg, machine, timeout, kernel_messages):
 def prepare_env_and_test(vmcfg, bundle_dir):
     """Prepare testing environment for vm-executor, create a config
     file and run vm-executor"""
-    vmpaths = VmcheckerPaths(vmcfg.root_path())
     _check_required_files(bundle_dir)
 
 
@@ -218,23 +216,21 @@ def prepare_env_and_test(vmcfg, bundle_dir):
     kernel_messages = asscfg.get(assignment, 'KernelMessages')
 
     json_cfg_fname = 'vm_executor_config.json'
-    _write_test_config(json_cfg_fname, vmcfg, machine, timeout, kernel_messages)
+    _write_test_config(json_cfg_fname, bundle_dir, vmcfg, machine, timeout, kernel_messages)
 
 
 
-    # XXX 'executor_jobs' path is hardcoded in executor
-    executor_job_dir = vmpaths.abspath('executor_jobs')
 
 
-    _run_executor(json_cfg_fname, executor_job_dir, machine, assignment, timeout, kernel_messages)
+    _run_executor(json_cfg_fname, bundle_dir, machine, assignment, timeout, kernel_messages)
 
     try:
-        _run_callback(bundle_dir, executor_job_dir)
+        _run_callback(bundle_dir, bundle_dir)
     except:
         _logger.exception('cannot run callback')
 
     # clears files
-    shutil.rmtree(executor_job_dir)
+    shutil.rmtree(bundle_dir)
 
     _logger.info('all done')
 
