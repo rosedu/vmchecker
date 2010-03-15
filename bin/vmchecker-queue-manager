@@ -10,7 +10,7 @@ For each bundle:
   * pass path of the directory to commander,
   * waits for the commander to finish.
 
-At startup it checks whether there are any stale jobs and executes them 
+At startup it checks whether there are any stale jobs and executes them
 all as described above.
 
 """
@@ -51,7 +51,7 @@ def process_job(path, name, vmcfg, vmpaths):
     archive = os.path.join(path, name)
     try:
         ziputil.unzip_safely(archive, location)
-        commander.main(vmcfg, location)
+        commander.prepare_env_and_test(vmcfg, location)
     except:
         _logger.exception('Failed to process "%s".' % location)
 

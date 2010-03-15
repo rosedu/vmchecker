@@ -27,20 +27,19 @@ from __future__ import with_statement
 
 
 import ConfigParser
-import logging
 import shutil
 import time
 import sys
 import os
 import json
 from subprocess import Popen
-from os.path import join, isdir
 
-from . import assignments
 from . import callback
 from .paths import VmcheckerPaths
 from .config import VmcheckerConfig
+from .CourseList import CourseList
 from . import vmlogging
+
 
 _logger = vmlogging.create_module_logger('commander')
 
@@ -54,15 +53,17 @@ _EXECUTOR_OVERHEAD = 300
 
 
 
-def _run_callback(dir, executor_job_dir):
+def _run_callback(bundle_dir, executor_job_dir):
     """Runs callback script to upload results"""
-
-    callback.run_callback(join(dir, 'config'), (join(executor_job_dir, f) for f in _FILES_TO_SEND))
+    abs_files = (os.path.join(executor_job_dir, f) for f in _FILES_TO_SEND)
+    callback.run_callback(os.path.join(bundle_dir, 'config'), abs_files)
 
 
 def _make_test_config(vmcfg, machine, timeout, kernel_messages):
+    """Returns an object with a configuration suitable for
+    vm-executor"""
     km = True if int(kernel_messages) != 0 else False
-    test = {
+    return {
         'km_enable' : km,
         'host' : {
             'vmx_path'       : vmcfg.get(machine, 'VMPath'),
@@ -97,18 +98,14 @@ def _make_test_config(vmcfg, machine, timeout, kernel_messages):
 
 
 
-def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout, kernel_messages):
+def _run_executor(json_cfg_fname, executor_job_dir, machine, assignment, timeout, kernel_messages):
     """Starts a job.
 
     XXX lots of wtf per minute
     XXX parsing config should be executors' job
 
     """
-    dst_file = 'vm_executor_config.json'
-    with open(dst_file, 'w') as handler:
-        testcfg = _make_test_config(vmcfg, machine, timeout, kernel_messages)
-        json.dump(testcfg, handler)
-    args = ['vmchecker-vm-executor', dst_file]
+    args = ['vmchecker-vm-executor', json_cfg_fname]
     _logger.info('Begin homework evaluation')
     _logger.debug('calling %s', args)
 
@@ -117,15 +114,15 @@ def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout
     # first just try to open the process
     try:
         popen = Popen(args)
-    except Exception:
+    except OSError:
         _logger.exception('Cannot invoke VMExecutor.')
-        with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
+        with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
             print >> handler, 'Cannot run VMExecutor.'
             print >> handler, 'Please contact the administrators.'
         # if we cannot open the process, there is nothing more to be done
         return
 
-    with open(join(executor_job_dir, 'job_results'), 'w') as handler:
+    with open(os.path.join(executor_job_dir, 'job_results'), 'w') as handler:
         print >> handler, 'ok'
 
     # waits for the the process to finish
@@ -144,7 +141,7 @@ def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout
                 # polls every 5 seconds
                 time.sleep(5)
             else:
-                with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
+                with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
                     print >> handler, 'VMExecutor returned %d (%s)' % (
                         exit_code, ['success', 'error'][exit_code < 0])
 
@@ -155,7 +152,7 @@ def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout
             _logger.error("VMChecker timeouted on assignment `%s' "
                           "running on machine `%s'.", assignment, machine)
 
-            with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
+            with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
                 print >> handler, """\ VMExecutor successfuly started,
                       but it's taking too long. Check your sources,
                       makefiles, etc and resubmit.  If the problem
@@ -163,76 +160,25 @@ def _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout
     except:
         _logger.exception('Exception after starting VMExecutor.')
 
-        with open(join(executor_job_dir, 'job_errors'), 'a') as handler:
+        with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
             print >> handler, """\ Error after starting VMExecutor.
                   If the problem persists please contact
                   administrators."""
     finally:
         # release any leftover resources
         try:
-            if popen:
-                popen.kill()
+            if not popen is None:
+                import signal
+                os.kill(popen.pid, signal.SIGTERM)
+                # can't do "popen.kill()" here because that's
+                # python2.6 speciffic :(
         except:
             pass
 
 
-def main(vmcfg, vmpaths, dir):
-    """Unpacks archive and invokes executor"""
-    # reads assignment config
-    _check_required_files(dir)
-
-    with open(join(dir, 'config')) as handle:
-        config = ConfigParser.RawConfigParser()
-        config.readfp(handle)
-
-    # reads vmchecker_storer.ini
-    with open(join(dir, 'storer')) as handle:
-        storer = ConfigParser.RawConfigParser()
-        storer.readfp(handle)
-
-    # copies files to where vmchecker expects them (wtf
-    # XXX 'executor_jobs' path is hardcoded in executor
-
-    executor_job_dir = vmpaths.abspath('executor_jobs')
-    # cleans up executor_jobs, if not already clean
-    if isdir(executor_job_dir):
-        shutil.rmtree(executor_job_dir)
-    os.mkdir(executor_job_dir)
-
-    shutil.copy(        # copies assignment
-        join(dir, 'archive.zip'),
-        vmpaths.abspath('executor_jobs', 'file.zip'))
-    shutil.copy(        # copies tests
-        join(dir, 'tests.zip'),
-        vmpaths.abspath('executor_jobs', 'tests.zip'))
-
-    assignment = config.get('Assignment', 'Assignment')  # yet another hack
-    section = assignments._SECTION_PREFIX + assignment
-
-    machine = storer.get(section, 'Machine')
-    timeout = storer.get(section, 'Timeout')
-    kernel_messages = storer.get(section, 'KernelMessages')
-
-    _run_executor(vmcfg, vmpaths, executor_job_dir, machine, assignment, timeout, kernel_messages)
-
-    try:
-        _run_callback(dir, executor_job_dir)
-    except:
-        _logger.exception('cannot run callback')
-
-    # clears files
-    shutil.rmtree(executor_job_dir)
-
-    _logger.info('all done')
-
-
-def _print_help():
-    print >> sys.stderr, """Usage:
-    ./commander.py course_id directory - where directory contains (see submit.py)
-        `archive.zip' `tests.zip' `config' `storer' `callback'"""
-
-
 def _check_required_files(path):
+    """Checks that a set of files required by commander is present in
+    the given path."""
     found_all = True
     needed_files = ['archive.zip', 'tests.zip', 'config', 'storer', 'callback']
     found_files = os.listdir(path)
@@ -245,19 +191,80 @@ def _check_required_files(path):
         exit(-1)
 
 
-if __name__ == '__main__':
+def _write_test_config(dst_file, vmcfg, machine, timeout, kernel_messages):
+    """Write the test configuration to a json file to be passed in to
+    the vm-executor"""
+    with open(dst_file, 'w') as handler:
+        testcfg = _make_test_config(vmcfg, machine, timeout, kernel_messages)
+        testcfg_str = json.write(testcfg)
+        handler.write(testcfg_str)
+
+
+def prepare_env_and_test(vmcfg, bundle_dir):
+    """Prepare testing environment for vm-executor, create a config
+    file and run vm-executor"""
+    vmpaths = VmcheckerPaths(vmcfg.root_path())
+    _check_required_files(bundle_dir)
+
+
+    with open(os.path.join(bundle_dir, 'config')) as handle:
+        config = ConfigParser.RawConfigParser()
+        config.readfp(handle)
+    assignment = config.get('Assignment', 'Assignment')  # yet another hack
+
+    asscfg = vmcfg.assignments()
+
+
+    machine = asscfg.get(assignment, 'Machine')
+    timeout = asscfg.get(assignment, 'Timeout')
+    kernel_messages = asscfg.get(assignment, 'KernelMessages')
+
+    json_cfg_fname = 'vm_executor_config.json'
+    _write_test_config(json_cfg_fname, vmcfg, machine, timeout, kernel_messages)
+
+
+
+    # XXX 'executor_jobs' path is hardcoded in executor
+    executor_job_dir = vmpaths.abspath('executor_jobs')
+
+
+    _run_executor(json_cfg_fname, executor_job_dir, machine, assignment, timeout, kernel_messages)
+
+    try:
+        _run_callback(bundle_dir, executor_job_dir)
+    except:
+        _logger.exception('cannot run callback')
+
+    # clears files
+    shutil.rmtree(executor_job_dir)
+
+    _logger.info('all done')
+
+
+def _print_usage():
+    """Prints a help string"""
+    print >> sys.stderr, """Usage:
+    ./commander.py course_id directory - where directory contains (see submit.py)
+     `archive.zip' `tests.zip' `config' `storer' `callback'"""
+
+
+def main():
+    """Unpacks bundle and invokes executor"""
     if len(sys.argv) != 3:
         print >> sys.stderr, 'Invalid number of arguments.'
-        _print_help()
+        _print_usage()
         exit(1)
 
     course_id = sys.argv[1]
-    start_dir = sys.argv[2]
-    if not os.path.isdir(start_dir):
-        print >> sys.stderr, 'Not a directory', start_dir
-        _print_help()
+    bundle_dir = sys.argv[2]
+    if not os.path.isdir(bundle_dir):
+        print >> sys.stderr, 'Not a directory', bundle_dir
+        _print_usage()
         exit(1)
 
     vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
-    vmpaths = VmcheckerPaths(vmcfg.root_path())
-    main(vmcfg, vmpaths, start_dir)
+    prepare_env_and_test(vmcfg, bundle_dir)
+
+
+if __name__ == '__main__':
+    main()
