@@ -3,6 +3,13 @@ This script implements the VMChecker's Web Services.
 It's based on apache2 and mod_python.
 """
 
+
+# Use simplejson or Python 2.6 json, prefer simplejson.
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 import os
 import sys
 import tempfile
@@ -10,7 +17,6 @@ import subprocess
 import time
 
 import ConfigParser
-import json
 from mod_python import Cookie, apache, Session
 
 #import config
