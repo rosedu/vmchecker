@@ -80,5 +80,5 @@ GuestPassword=so
 GuestBasePath=/home/so/
 GuestShellPath=/bin/bash
 GuestHomeInBash=/home/so/
-BuildScript=executor_scripts/build.sh
-RunScript=executor_scripts/run.sh
+BuildScript=so-linux_vmchecker_build.sh
+RunScript=so-linux_vmchecker_run.sh
