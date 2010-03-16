@@ -18,7 +18,7 @@ import sys
 import sqlite3
 import urllib
 
-from vmchecker.CourseList import CourseList
+from vmchecker.courselist import CourseList
 from vmchecker.config import VmcheckerConfig
 from vmchecker.paths  import VmcheckerPaths
 

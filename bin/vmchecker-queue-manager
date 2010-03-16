@@ -23,7 +23,7 @@ from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 from vmchecker import ziputil
 from vmchecker import commander
-from vmchecker.CourseList import CourseList
+from vmchecker.courselist import CourseList
 from vmchecker.config import VmcheckerConfig
 from vmchecker.paths  import VmcheckerPaths
 from vmchecker import vmlogging

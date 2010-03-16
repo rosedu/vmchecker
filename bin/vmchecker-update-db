@@ -8,7 +8,7 @@ import sqlite3
 from vmchecker import update_db
 from vmchecker import repo_walker
 from vmchecker import paths
-from vmchecker.CourseList import CourseList
+from vmchecker.courselist import CourseList
 from vmchecker.config import VmcheckerConfig
 from vmchecker import vmlogging
 

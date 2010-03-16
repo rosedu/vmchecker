@@ -24,7 +24,7 @@ from . import paths
 from . import ziputil
 from . import submissions
 from . import vmlogging
-from .CourseList import CourseList
+from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('submit')
 

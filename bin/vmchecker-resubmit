@@ -8,7 +8,7 @@ import optparse
 from vmchecker.config import VmcheckerConfig
 from vmchecker import submit
 from vmchecker import repo_walker
-from vmchecker.CourseList import CourseList
+from vmchecker.courselist import CourseList
 from vmchecker import vmlogging
 
 logger = vmlogging.create_script_sdtout_logger()

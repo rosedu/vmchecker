@@ -32,7 +32,7 @@ from subprocess import Popen
 from . import callback
 from . import vmlogging
 from .config import VmcheckerConfig
-from .CourseList import CourseList
+from .courselist import CourseList
 
 
 _logger = vmlogging.create_module_logger('commander')
