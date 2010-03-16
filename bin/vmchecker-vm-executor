@@ -6,9 +6,16 @@ submission bundle (submission + tests), and closes the vm"""
 
 from __future__ import with_statement
 
+
+# Use simplejson or Python 2.6 json, prefer simplejson.
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
 import pyvix.vix
 import os
-import json
 import logging
 from threading import Thread
 import sys
@@ -256,7 +263,7 @@ def main():
     else:
         testcfg_file = sys.argv[1]
         with open(testcfg_file, 'r') as handler:
-            test = json.read(handler.read())
+            test = json.loads(handler.read())
 
     # run the test :)
     test_submission(test)

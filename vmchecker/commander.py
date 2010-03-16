@@ -20,13 +20,18 @@ from the vm or constructed on the commander.
 
 from __future__ import with_statement
 
+# Use simplejson or Python 2.6 json, prefer simplejson.
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 
 import ConfigParser
 import shutil
 import time
 import sys
 import os
-import json
 from subprocess import Popen
 
 from . import callback
@@ -204,7 +209,7 @@ def _write_test_config(dst_file, bundle_dir, assignment, vmcfg, asscfg):
     the vm-executor"""
     with open(dst_file, 'w') as handler:
         testcfg = _make_test_config(bundle_dir, assignment, vmcfg, asscfg)
-        testcfg_str = json.write(testcfg)
+        testcfg_str = json.dumps(testcfg)
         handler.write(testcfg_str)
 
 
