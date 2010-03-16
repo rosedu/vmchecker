@@ -171,7 +171,7 @@ def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
             'vmx_path'       : vmcfg.get(machine, 'VMPath'),
             'vmchecker_root' : vmcfg.root_path(),
             'jobs_path'      : bundle_dir,
-            'scripts_path'   : 'executor_scripts/'},
+            'scripts_path'   : bundle_dir},
         'guest' : {
             'username'  : vmcfg.get(machine, 'GuestUser'),
             'password'  : vmcfg.get(machine, 'GuestPassword'),
@@ -185,13 +185,13 @@ def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
         'test'  : {
             0 : {
                 'input'  : ['archive.zip', 'tests.zip'],
-                'script' : ['vmchecker_build.sh'],
+                'script' : ['build.sh'],
                 'output' : ['job_build'],
                 'timeout': int(timeout),
                 },
             1  : {
                 'input'  : [],
-                'script' : ['vmchecker_run.sh'],
+                'script' : ['run.sh'],
                 'output' : ['job_run', 'job_errors'],
                 'timeout': int(timeout)
                 }

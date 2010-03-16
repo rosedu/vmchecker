@@ -27,7 +27,6 @@ import os
 
 # the prefix of the sections' names describing assignments
 _SECTION_PREFIX = 'assignment '
-_INCLUDE_PREFIX = 'include '
 _DEFAULT_ASSIGNMENT = 'DEFAULT'
 
 

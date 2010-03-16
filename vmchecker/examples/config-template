@@ -80,4 +80,5 @@ GuestPassword=so
 GuestBasePath=/home/so/
 GuestShellPath=/bin/bash
 GuestHomeInBash=/home/so/
-
+BuildScript=executor_scripts/build.sh
+RunScript=executor_scripts/run.sh

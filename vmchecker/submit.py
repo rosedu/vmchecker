@@ -178,7 +178,12 @@ def create_testing_bundle(user, assignment, course_id):
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_submission_root(assignment, user)
 
+    asscfg  = vmcfg.assignments()
+    machine = asscfg.get(assignment, 'Machine')
+
     rel_file_list = list(vmcfg.assignments().files_to_include(assignment))
+    rel_file_list += [ ('build.sh', vmcfg.get(machine, 'BuildScript')),
+                       ('run.sh',   vmcfg.get(machine, 'RunScript')) ]
     rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
                        ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
                        ('config', paths.submission_config_file(sbroot)) ]

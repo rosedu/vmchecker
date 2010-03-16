@@ -64,4 +64,3 @@ class VmcheckerConfig:
         """Return an Assignment object describing the assignments in
         this course's config file"""
         return assignments.Assignments(self)
-
