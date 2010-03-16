@@ -17,9 +17,10 @@ def main():
                        help='Force submitting ignoring the time difference.')
     cmdline.add_option('-t', '--forced-upload-time',
                        help='Force the time of upload to be the argument. ' +
-                       'If not given, the supplied the current system time is used.')
+                       'If not given, the current system time is used.')
 
-    cmdline.set_usage('Usage: %prog [options] course_id assignment user archive_filename')
+    cmdline.set_usage('Usage: %prog [options] course_id assignment' +
+                      ' user archive_filename')
     (options, argv) = cmdline.parse_args()
 
     if len(argv) != 4:
