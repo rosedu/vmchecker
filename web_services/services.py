@@ -1,9 +1,6 @@
 """
-   File: services.py
-   Date: February 2010
-  
-   This script implements the VMChecker's Web Services.
-   It is based on apache2 and mod_python.
+This script implements the VMChecker's Web Services.
+It's based on apache2 and mod_python.
 """
 
 import os
@@ -22,6 +19,7 @@ from mod_python import Cookie, apache, Session
 AUTH_DB = [{'username' : 'vmchecker', 
            'password' : 'vmchecker'}]
 
+
 def get_user(credentials):
 	#XXX : Cu LDAP
 	for user in AUTH_DB:
@@ -37,6 +35,7 @@ def fbuffer(f, chunk_size=10000):
 		chunk = f.read(chunk_size)
 		if not chunk: break
 		yield chunk
+
 
 ########## @ServiceMethod
 def uploadAssignment(req, courseid, assignmentid, username, archivefile):
@@ -83,6 +82,7 @@ def uploadAssignment(req, courseid, assignmentid, username, archivefile):
 	
 	return json.dumps({'status':status,
 			'dumpLog':dumpLog})
+
 	
 ########## @ServiceMethod
 def getResults(req, courseid, assignmentid, username): 
@@ -115,6 +115,7 @@ def getResults(req, courseid, assignmentid, username):
 				resultlog += "===== " + fname + " =====\n"
 				resultlog += f.read()		
 		return json.dumps({'resultlog':resultlog})
+
 	
 ######### @ServiceMethod
 def getCourses(req):
@@ -133,6 +134,7 @@ def getCourses(req):
 		{'id':'pso','title':'Sisteme de Operare 2'},
 		{'id':'cpl','title':'Compilatoare'},
 		{'id':'pa','title':'Proiectarea Algoritmilor'}])
+
 	
 ######### @ServiceMethod
 def getAssignments(req, courseid):
@@ -166,6 +168,7 @@ def getAssignments(req, courseid):
 	else:
 	#'The configuration file doesn't exist'
 		return json.dumps(None) 	
+
 	
 ######### @ServiceMethod
 def login(req, username, password):
@@ -181,6 +184,7 @@ def login(req, username, password):
 	s["username"] = username
 	s.save()
 	return "You are logged in"
+
 	
 ######### @ServiceMethod
 def logout(req):
