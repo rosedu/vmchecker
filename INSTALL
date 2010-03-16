@@ -2,7 +2,8 @@
 == Dependencies ==
 
 1. install needed python modules
-   apt-get install python-paramiko python-pyinotify
+   apt-get install python-paramiko python-pyinotify python-json
+
 
 
 2. (only on the tester machine)
@@ -27,10 +28,12 @@
 == Configure machines ==
 
   # on storer:
-  make storer-dist
-  sudo make storer-install
+  vmchecker-init-course storer
 
   # on tester:
-  make tester-dist
-  sudo make tester-install
+  vmchecker-init-course tester
 
+
+  Don't forget to edit /etc/vmchecker/config.list to add the
+  directories in which vmchecker-init-course was invoked and associate
+  them a course id.
