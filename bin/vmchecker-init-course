@@ -18,12 +18,14 @@ from vmchecker import paths
 _logger = logging.getLogger("vmchecker.initialise_course")
 
 
-def _install_example_config_file(default_root_path, default_repo_path, default_config_path):
-    """Install an example config file to a file named 'config' in the current directory
+def _install_example_config_file(root_path, repo_path, config_path):
+    """Install an example config file to a file named 'config' in the
+    current directory
 
     Initalize some config file variables to point to the location of:
         root = the root of a course's data -- the current directory
-        repo = a subdir in the current directory where the git repo will be stored
+        repo = a subdir in the current directory where the git repo
+               will be stored
     """
 
     # get the data from the package-provided example config template.
@@ -34,19 +36,23 @@ def _install_example_config_file(default_root_path, default_repo_path, default_c
     # the example is a template that contains some '$var' variables.
     s = string.Template(template_data)
 
-    # replace the $vars with these values and write the result in the destination file
-    with open(default_config_path, 'w') as handle:
-        handle.write(s.substitute(root=default_root_path, repo=default_repo_path))
+    # replace the $vars with these values and write the result in the
+    # destination file
+    with open(config_path, 'w') as handle:
+        handle.write(s.substitute(root=root_path, repo=repo_path))
 
 
 
-def _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path):
-    if not os.path.exists(default_config_path):
-        _install_example_config_file(default_root_path, default_repo_path, default_config_path)
-        print(('A new default vmchecker configuration file was written to %s. ' +
-               'Please update it before running any vmchecker code.') % default_config_path)
+def _install_if_needed_example_config_file(root_path, repo_path, config_path):
+    """Install config file only is not already existing"""
+    if not os.path.exists(config_path):
+        _install_example_config_file(root_path, repo_path, config_path)
+        print(('A new default vmchecker configuration file was written to %s. '+
+               'Update it before running any vmchecker code.') % config_path)
     else:
-        print(('Configuration file %s exists. This script will not change it.') %  default_config_path)
+        print('Configuration file ' + config_path + ' exists. Will not change')
+
+
 
 def _mkdir_if_not_exist(path):
     """Make the path if it does not exist"""
@@ -56,9 +62,9 @@ def _mkdir_if_not_exist(path):
         _logger.info('Skipping existing directory %s' % path)
 
 
-def create_paths(paths):
+def create_paths(path_list):
     """ Create all paths in the received 'paths' parameter"""
-    for path in paths:
+    for path in path_list:
         _mkdir_if_not_exist(path)
 
 
@@ -107,6 +113,19 @@ def create_db(db_file):
     db_conn.close()
 
 
+def create_build_run_scritps(root_path):
+    """Copy build and run example scripts into the root path"""
+    files = ['so-linux_vmchecker_build.sh',
+             'so-win_vmchecker_build.sh',
+             'so-linux_vmchecker_run.sh',
+             'so-win_vmchecker_run.sh']
+    for fname in files:
+        full_path = os.path.join('examples', fname)
+        with pkg_resources.resource_stream('vmchecker', full_path) as in_file:
+            msg = in_file.read()
+            with open(os.path.join(root_path, fname), 'w') as out_file:
+                out_file.write(msg)
+
 
 def main_storer(root_path):
     """Run initialization tasks for the storer machine."""
@@ -114,6 +133,7 @@ def main_storer(root_path):
     create_paths(vmpaths.storer_paths())
     create_storer_git_repo(vmpaths.abspath(vmpaths.dir_repository()))
     create_db(vmpaths.db_file())
+    create_build_run_scritps(root_path)
     _logger.info(' -- storer init done setting up paths and db file.')
 
 
@@ -136,18 +156,18 @@ def main():
     """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
 
-    default_root_path = os.getcwd()
-    default_repo_path = os.path.join(default_root_path, 'repo')
-    default_config_path = os.path.join(default_root_path, 'config')
+    root_path = os.getcwd()
+    repo_path = os.path.join(root_path, 'repo')
+    config_path = os.path.join(root_path, 'config')
     if (len(sys.argv) < 2):
         usage()
         exit(1)
     if cmp(sys.argv[1], 'storer') == 0:
-        _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path)
-        main_storer(default_root_path)
+        _install_if_needed_example_config_file(root_path, repo_path, config_path)
+        main_storer(root_path)
     elif cmp(sys.argv[1], 'tester') == 0:
-        _install_if_needed_example_config_file(default_root_path, default_repo_path, default_config_path)
-        main_tester(default_root_path)
+        _install_if_needed_example_config_file(root_path, repo_path, config_path)
+        main_tester(root_path)
     elif cmp(sys.argv[1], '--help') == 0:
         usage()
     else:
