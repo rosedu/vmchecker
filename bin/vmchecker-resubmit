@@ -15,24 +15,28 @@ logger = vmlogging.create_script_sdtout_logger()
 
 
 class Resubmit(repo_walker.RepoWalker):
+    """Class to resubmit submissions"""
     def __init__(self, vmcfg):
         repo_walker.RepoWalker.__init__(self, vmcfg)
 
     def resubmit(self, options, course_id):
-        def _submit(assignment, user, location):
+        """Resubmit homework according to values in options"""
+        def _submit(assignment, user, _):
             """Submits assignment from `location'"""
             submit.queue_for_testing(assignment, user, course_id)
         self.walk(options, _submit)
 
 
 def resubmit(vmcfg, options, course_id):
+    """Resubmit homework according to values in options"""
     r = Resubmit(vmcfg)
     r.resubmit(options, course_id)
 
 def main():
+    """Resubmit homework according to commandline arguments"""
     cmdline = optparse.OptionParser()
     repo_walker.add_optparse_group(cmdline)
-    (options, argv) = cmdline.parse_args()
+    (options, _) = cmdline.parse_args()
     repo_walker.check_arguments(cmdline, options)
     vmcfg = VmcheckerConfig(CourseList().course_config(options.course_id))
     resubmit(vmcfg, options, options.course_id)
