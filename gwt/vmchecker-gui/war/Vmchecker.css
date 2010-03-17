@@ -1,0 +1,71 @@
+/** Add css rules here for your application. */
+
+body {
+	margin: 0px; 
+}
+/** Example rules used by the template application (remove for your app) */
+h1 {
+  font-size: 2em;
+  font-weight: bold;
+  color: #777777;
+  margin: 40px 0px 70px;
+  text-align: center;
+}
+
+.sendButton {
+  display: block;
+  font-size: 16pt;
+}
+
+/** Most GWT widgets already have a style name defined */
+.gwt-DialogBox {
+  width: 400px;
+}
+
+.dialogVPanel {
+  margin: 5px;
+}
+
+.serverResponseLabelError {
+  color: red;
+}
+
+/** Set ids using widget.getElement().setId("idOfElement") */
+#closeButton {
+  margin: 15px 6px 6px;
+}
+
+.numberedMenu {
+	margin-left: 20px;
+	margin-right: 20px;
+	margin-top: 20px;   
+}
+
+.assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem, .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem-selected {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
+	color: #006633;  
+	font-size: 13px; 
+}
+
+.assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem {
+	background-color: #DDDDDD;
+}
+
+.assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem-selected {
+	background-color: #FFFFFF;
+}
+
+.logo {
+	background: url('images/vmchecker_logo_ui.png') left top no-repeat; 
+	width: 200px;
+	height: 40px; 
+}
+
+.loginDescription h2 {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+	font-size: 16px; 
+}
+
+.loginDescription a, .loginDescription a:visited, .loginDescription a:hover {
+	color: #007F00; 
+}

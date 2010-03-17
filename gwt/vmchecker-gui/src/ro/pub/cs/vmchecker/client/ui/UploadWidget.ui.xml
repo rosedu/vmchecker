@@ -1,0 +1,33 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.form {
+			margin: 10px 0 10px 0; 
+		}
+		
+		.container {
+			background-color: #FFF; 
+			padding: 20px 10px 10px 10px;
+		}
+	</ui:style>
+	<g:HTMLPanel styleName="{style.container}">
+		<g:Label>Creeaza o arhiva cu toate fisierele necesare si trimite-o folosind formularul de mai jos</g:Label>
+		<g:FormPanel ui:field="form" styleName="{style.form}">
+			<g:HorizontalPanel>
+				<g:FileUpload ui:field="fileUpload" name="archiveFile"></g:FileUpload>
+				<g:Button ui:field="uploadButton" enabled="false">Upload</g:Button>
+				<g:Hidden ui:field="courseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="assignmentIdField" name="assignmentId"></g:Hidden>
+			</g:HorizontalPanel>
+		</g:FormPanel>
+		<g:HTML>
+			<div>Alte teme trimise:</div>
+			<ul>
+				<li>10 martie 2010, 10:30</li>
+				<li>15 martie 2010, 7:30</li>
+				<li>16 martie 2010, 20:30</li>
+			</ul>
+		</g:HTML>
+	</g:HTMLPanel>
+</ui:UiBinder> 

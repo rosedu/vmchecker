@@ -1,0 +1,128 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+			 xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+	<ui:style type='ro.pub.cs.vmchecker.client.ui.HeaderWidget.HeaderStyle'>
+		.headerPanel {
+			width: 100%;
+		}
+	
+		.header {
+			background-color: #EEEEEE;
+			height: 50px; 
+			width: 100%;
+			margin-bottom: 40px; 
+		}
+	
+		.logo {
+			font-weight: bold; 
+			color: green;
+			font-size: 18px;
+			margin: 10px;
+			line-height: 26px;    
+		}
+		
+		.list {
+			margin: 10px; 
+		}
+		
+		.spacer {
+			width: 100%; 
+		}
+		
+		.username {
+			font-weight: bold;
+			padding-right: 10px;
+			line-height: 20px;  
+		}
+		
+		.rightPanel{
+			margin: 15px;
+			vertical-align: middle;
+			float: right;   
+		}
+		
+		.leftPanel {
+			margin: 3px;
+			float: left;  
+		}
+			
+		.anchor {
+			color: green;
+			margin: 3px;
+			padding-right: 5px;
+			font-size: 14px;
+			cursor: pointer; 
+		}
+		
+		.last {
+			border-right: none; 
+		}
+		
+		a, a:visited, a:hover {
+			color: green; 
+		}
+		
+		a:hover {
+			text-decoration: underline; 
+		}
+		
+		.statusPanel {
+			top: 0px;
+			left: 50%;  
+			height: 30px; 
+			margin-top: 3px;  
+			position: fixed; 
+		}
+		
+		.statusLabel {
+			display: inline;
+			font-family: Verdana, Arial, sans serif; 
+			font-size: 12px; 
+			padding: 5px;
+			font-weight: bold;
+		}
+		
+		.info {
+			background-color: #E2E2E2;
+			color: #000;   
+		}
+		
+		.error {
+			background-color: #9B0000;
+			color: #FFF;  
+		}
+		
+		.success {
+			background-color: #7CBB6C;
+			color: #FFF; 
+		}
+		
+		.action {
+			background-color: #FFCC66;  
+		}
+		
+		.clear {
+			clear: both; 
+		}
+	</ui:style>
+	<g:HTMLPanel>
+		<g:FlowPanel styleName="{style.header}">
+			<g:HorizontalPanel styleName="{style.leftPanel}" verticalAlignment='ALIGN_MIDDLE'>
+				<g:HTML>
+					<div class="logo"></div>
+				</g:HTML>
+				<g:ListBox ui:field="coursesList" visibleItemCount='1'
+					styleName="{style.list}" />
+			</g:HorizontalPanel>
+			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
+				verticalAlignment='ALIGN_MIDDLE'>
+				<g:Label ui:field="usernameLabel" styleName="{style.username}">nume.prenume</g:Label>
+				<g:Anchor ui:field="logoutButton" styleName="{style.anchor}">logout</g:Anchor>
+			</g:HorizontalPanel>
+			<g:SimplePanel styleName="{style.clear}"></g:SimplePanel>
+		</g:FlowPanel>
+	<g:SimplePanel styleName="{style.statusPanel}">
+		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}"></g:Label>
+	</g:SimplePanel>
+	</g:HTMLPanel>
+</ui:UiBinder>

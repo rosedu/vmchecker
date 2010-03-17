@@ -1,0 +1,52 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style type="ro.pub.cs.vmchecker.client.ui.NumberedMenuItem.ItemStyle">
+		.menuItem {
+			padding: 2px 5px 8px 5px;
+			color: #666666; 
+		}
+		
+		.menuItem, .menuItem a, .menuItem .itemNo {
+			font-family: Helvetica, Verdana; 
+			font-size:13px;
+			line-height:110%; 
+		}
+		
+		.menuItem a{
+			width: 150px; 
+			cursor: pointer;
+			display: block; 
+		}
+		
+		.itemNo {
+			padding-right: 5px;
+			width: 10px;
+		}
+		
+		.selected .itemNo, .selected a, .selected a:visited, .selected a:hover {
+			color: green;
+			font-weight: bold;
+		}
+			
+		.selected a, .selected a:visited, .selected a:hover {
+			text-decoration: none; 
+		}
+		
+		.unselected a, .unselected a:visited {
+			color: #666666; 
+			font-weight: normal;
+			text-decoration: none; 
+		}
+		
+		.unselected a:hover {
+			/* color: green; */  
+			text-decoration: underline;   
+		}
+		
+	</ui:style>
+	<g:HorizontalPanel styleName="{style.menuItem} {style.unselected} numberedMenuItem">
+		<g:Label ui:field="itemNo" styleName="{style.itemNo}"></g:Label>
+		<g:Anchor ui:field="itemAnchor" ></g:Anchor>
+	</g:HorizontalPanel>
+</ui:UiBinder> 
