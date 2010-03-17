@@ -249,18 +249,18 @@ def login(req, username, password):
 
     if not s.is_new():
     	return json.dumps({'status':'true', 'username':username,
-									'info':'Already logged in'})
+				'info':'Already logged in'})
     
     user = get_user({'username' : username, 'password' : password})
     if user is None:
         s.invalidate()
         return json.dumps({'status':'false', 'username':"", 
-									'info':'Invalid username/password'})
+				'info':'Invalid username/password'})
 
     s["username"] = username
     s.save()
     return json.dumps({'status':'true', 'username':username,
-									'info':'Succesfully logged in'})
+				'info':'Succesfully logged in'})
 
 
 ######### @ServiceMethod
