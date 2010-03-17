@@ -240,6 +240,6 @@ def login(req, username, password):
 
 ######### @ServiceMethod
 def logout(req):
-    s = Session.Session(req)
-    s.invalidate()
-
+	s = Session.Session(req)
+	s.invalidate()
+	return json.dumps({'info':'You logged out'})
