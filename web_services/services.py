@@ -25,9 +25,9 @@ from vmchecker import submit, config
 
 
 # define ERROR_MESSAGES
-ERR_ACCESS_DENIED = "Access denied."
-ERR_FILE_NOT_UPLOADED = "File not uploaded."
-ERR_EXCEPTION = "An exception occured on our server. Please notify the administrators."
+ERR_AUTH = 1
+ERR_EXCEPTION = 2 
+ERR_OTHER = 3
 
 
 AUTH_DB = [{'username' : 'vmchecker',
@@ -72,14 +72,19 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
 	s = Session.Session(req)
 	if s.is_new():
 		s.invalidate()
-		return json.dumps({"error":ERR_ACCESS_DENIED})
+		return json.dumps({'errorType':ERR_AUTH,
+				'errorMessage':"",
+				'errorTrace':""})
 
-	s.load()
+	strout = OutputString()
 	try:
+		s.load()
 		username = s['username']
 	except:
-		return json.dumps({"error":ERR_EXCEPTION + ": " + 
-						"Could not fetch the username session variable."})  	
+		traceback.print_exc(file = strout)
+		return json.dumps({'errorType':ERR_EXCEPTION,
+			'errorMessage':"",
+			'errorTrace':strout.get()})  	
 	
 	# Reset the timeout
 	s.save()
@@ -89,7 +94,9 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
 
 	# Test if the file was uploaded
 	if fileitem.filename == None:
-		return  json.dumps({'error':ERR_FILE_NOT_UPLOADED})
+		return  json.dumps({'errorType':ERR_OTHER,
+					'errorMessage':"File not uploaded.",
+					'errorTrace':""})
 
 	#  Save file in a temp
 	fd, tmpname = tempfile.mkstemp('.zip')
@@ -100,16 +107,17 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
 	f.close()
 
 	# Call submit.py
-	## Redirect stdout
+	## Redirect stdout to catch logging messages from submit
 	strout = OutputString()
 	sys.stdout = strout
-	
 	try:
 		status = submit.submit(tmpname, assignmentid, 
 							username, courseid)
 	except:
 		traceback.print_exc(file = strout)
-		return json.dumps({'error':ERR_EXCEPTION + " : " + strout.get()})
+		return json.dumps({'errorType':ERR_EXCEPTION,
+			'errorMessage':"",
+			'errorTrace':strout.get()})
 	
 	return json.dumps({'status':status,
             'dumpLog':strout.get()}) 
@@ -123,25 +131,34 @@ def getResults(req, courseid, assignmentid):
 	s = Session.Session(req)
 	if s.is_new():
 		s.invalidate()
-		return json.dumps({"error":ERR_ACCESS_DENIED})
+		return json.dumps({'errorType':ERR_AUTH,
+				'errorMessage':"",
+				'errorTrace':""})
 
 	# Get username session variable
-	s.load()
+	strout = OutputString()
 	try:
+		s.load()
 		username = s['username']
 	except:
-		return json.dumps({"error":ERR_EXCEPTION + ": " + \
-					"Could not fetch the username session variable."})  	
-
+		traceback.print_exc(file = strout)
+		return json.dumps({'errorType':ERR_EXCEPTION,
+				'errorMessage':"",
+				'errorTrace':strout.get()})  	
+		 	
+	# XXX E nevoie? Redirect stdout
 	strout = OutputString()
+	sys.stdout = strout
 	try:
 		vmcfg = config.VmcheckerConfig(CourseList().course_config(courseid))
 	except:
 		traceback.print_exc(file = strout)
-		return json.dumps({'error':ERR_EXCEPTION + " : " + strout.get()})
-				
+		return json.dumps({'errorType':ERR_EXCEPTION,
+			'errorMessage':"",
+			'errorTrace':strout.get()})  	
+						
 	r_path =  vmcfg.repository_path() + "/" + assignmentid + \
-										"/" + username + "/results/"
+						"/" + username + "/results/"
 
 	# Reset the timeout
 	s.save()
@@ -168,8 +185,10 @@ def getCourses(req):
 	s = Session.Session(req)
 	if s.is_new():
 		s.invalidate()
-		return json.dumps({"error":ERR_ACCESS_DENIED})
-
+		return json.dumps({'errorType':ERR_AUTH,
+				'errorMessage':"",
+				'errorTrace':""})
+		
 	# Reset the timeout
 	s.save()
 
@@ -178,7 +197,9 @@ def getCourses(req):
 		clist = CourseList()
 	except:
 		traceback.print_exc(file = strout)
-		return json.dumps({'error':ERR_EXCEPTION + " : " + strout.get()})
+		return json.dumps({'errorType':ERR_EXCEPTION,
+			'errorMessage':"",
+			'errorTrace':strout.get()})  	
 				
 	course_arr = []
 	for course_id in clist.course_names():
@@ -194,8 +215,10 @@ def getAssignments(req, courseid):
 	s = Session.Session(req)
 	if s.is_new():
 		s.invalidate()
-		return json.dumps({"error":ERR_ACCESS_DENIED})
-
+		return json.dumps({'errorType':ERR_AUTH,
+				'errorMessage':"",
+				'errorTrace':""})
+		
 	# Reset the timeout
 	s.save()
 
@@ -204,8 +227,10 @@ def getAssignments(req, courseid):
 		vmcfg = config.VmcheckerConfig(CourseList().course_config(courseid))
 	except:
 		traceback.print_exc(file = strout)
-		return json.dumps({'error':ERR_EXCEPTION + " : " + strout.get()})
-
+		return json.dumps({'errorType':ERR_EXCEPTION,
+			'errorMessage':"",
+			'errorTrace':strout.get()})  	
+		
 	assignments = vmcfg.assignments()
 	ass_arr = []
 
@@ -229,7 +254,7 @@ def login(req, username, password):
     user = get_user({'username' : username, 'password' : password})
     if user is None:
         s.invalidate()
-        return json.dumps({'status':'false', 'username':None, 
+        return json.dumps({'status':'false', 'username':"", 
 									'info':'Invalid username/password'})
 
     s["username"] = username
