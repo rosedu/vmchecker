@@ -19,8 +19,7 @@ import time
 import ConfigParser
 from mod_python import Cookie, apache, Session
 
-#import config
-#import vmcheckerpaths
+from vmchecker.courselist import CourseList
 
 AUTH_DB = [{'username' : 'vmchecker',
            'password' : 'vmchecker'}]
@@ -135,11 +134,12 @@ def getCourses(req):
     # Reset the timeout
     s.save()
 
-    #TODO xxx Dupa ce termina Lucian
-    return json.dumps([{'id':'so','title':'Sisteme de Operare'},
-        {'id':'pso','title':'Sisteme de Operare 2'},
-        {'id':'cpl','title':'Compilatoare'},
-        {'id':'pa','title':'Proiectarea Algoritmilor'}])
+    course_arr = []
+    clist = CourseList()
+    for course_id in clist.course_names():
+        course_arr.append({'id' : course_id,
+                   'title' : course_id}) # XXX: TODO: get a long name
+    return json.dumps(course_arr)
 
 
 ######### @ServiceMethod
