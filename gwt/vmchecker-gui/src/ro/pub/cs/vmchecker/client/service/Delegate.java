@@ -9,13 +9,13 @@ import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 import ro.pub.cs.vmchecker.client.service.json.ErrorResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.JSONDecoder;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class Delegate<T> {
@@ -59,8 +59,8 @@ public class Delegate<T> {
 				eventBus.fireEvent(new ErrorDisplayEvent("[Service Error]" + serviceError.message, serviceError.trace)); 
 			}
 		} catch (Exception e) { 
+			GWT.log("[parseError()]", e); 
 			callback.onFailure(e);
-			Window.alert(e.getMessage());
 		}
 	}
 		
@@ -73,6 +73,7 @@ public class Delegate<T> {
 			}
 		}
 		rb.setCallback(new RequestCallback() {
+			
 			public void onError(Request request, Throwable exception) {
 				callback.onFailure(exception); 
 			}
@@ -82,6 +83,7 @@ public class Delegate<T> {
 					T result = decoder.decode(response.getText()); 
 					callback.onSuccess(result); 
 				} catch (Exception e) {
+					GWT.log("Decoder did not parsed correctly", null); 
 					parseError(callback, response.getText()); 
 				}
 			}			

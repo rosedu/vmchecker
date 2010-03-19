@@ -1,7 +1,6 @@
 package ro.pub.cs.vmchecker.client.service.json;
 
 import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONException;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
@@ -15,20 +14,17 @@ public class CoursesListDecoder implements JSONDecoder<Course[]> {
 	
 	@Override
 	public Course[] decode(String text) throws Exception {
-		try {
-			JSONValue jsonValue = JSONParser.parse(text);
-		    JSONArray jsonArray;
-		     
-		    if ((jsonArray = jsonValue.isArray()) != null) {
-		    	Course[] courses = new Course[jsonArray.size()]; 
-		    	for (int i = 0; i < jsonArray.size(); i++) {
-		    		courses[i] = parseCourse(jsonArray.get(i).isObject());
-		    	}
-		    	return courses; 
-		    } 
-		} catch (JSONException e) {
-			throw e; 
+		JSONValue jsonValue = JSONParser.parse(text);
+		JSONArray jsonArray;
+
+		if ((jsonArray = jsonValue.isArray()) != null) {
+			Course[] courses = new Course[jsonArray.size()];
+			for (int i = 0; i < jsonArray.size(); i++) {
+				courses[i] = parseCourse(jsonArray.get(i).isObject());
+			}
+			return courses;
 		}
+		
 		return null; 
 	}
 	

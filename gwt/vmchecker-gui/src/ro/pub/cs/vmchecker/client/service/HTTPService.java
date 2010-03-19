@@ -19,7 +19,7 @@ import ro.pub.cs.vmchecker.client.service.json.ResultDecoder;
 public class HTTPService {
 	
 	public static final String VMCHECKER_SERVICES_URL = GWT.getHostPageBaseURL() + "services/"; 
-	public static final String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses.json";
+	public static final String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses.php";
 	public static final String GET_ASSIGNMENTS_URL = VMCHECKER_SERVICES_URL + "getAssignments.php";
 	public static final String GET_RESULTS_URL = VMCHECKER_SERVICES_URL + "getResults.php";
 	public static final String PERFORM_AUTHENTICATION_URL = VMCHECKER_SERVICES_URL + "auth.php";

@@ -1,7 +1,6 @@
 package ro.pub.cs.vmchecker.client;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,10 +9,7 @@ import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.AuthenticationEventHandler;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEventHandler;
-import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
-import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
 import ro.pub.cs.vmchecker.client.model.Course;
-import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
 import ro.pub.cs.vmchecker.client.presenter.LoginPresenter;
@@ -74,6 +70,7 @@ public class AppController implements ValueChangeHandler<String> {
 
 			@Override
 			public void onAuthenticationChange(AuthenticationEvent event) {
+				GWT.log("Authentication event received", null); 
 				if (event.getType() == AuthenticationEvent.EventType.SUCCESS) {
 					saveUsername(event.getUsername()); 
 					displayContent(); 
@@ -108,11 +105,13 @@ public class AppController implements ValueChangeHandler<String> {
 	}
 	
 	private void displayContent() {
+		GWT.log("[displayContent()] entering in function", null); 
 		container.clear(); 
 		service.getCourses(new AsyncCallback<Course[]>() {
 
 			@Override
 			public void onFailure(Throwable caught) {
+				GWT.log("[displayContent()]", caught); 
 				Window.alert(caught.getMessage()); 
 			}
 

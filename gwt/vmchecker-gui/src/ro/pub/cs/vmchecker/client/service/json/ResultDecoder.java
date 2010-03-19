@@ -8,17 +8,13 @@ import com.google.gwt.json.client.JSONValue;
 
 public class ResultDecoder implements JSONDecoder<Result> {
 
-	public static final String logKey = "resultLog"; 
-	
+	public static final String logKey = "resultLog";
+
 	@Override
 	public Result decode(String text) throws Exception {
-		try {
-			JSONValue jsonValue = JSONParser.parse(text); 
-			JSONObject jsonObj = jsonValue.isObject();
-			return new Result(jsonObj.get(logKey).isString().stringValue()); 
-		} catch (Exception e) {
-			throw e; 
-		}
+		JSONValue jsonValue = JSONParser.parse(text);
+		JSONObject jsonObj = jsonValue.isObject();
+		return new Result(jsonObj.get(logKey).isString().stringValue());
 	}
 
 }

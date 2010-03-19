@@ -128,7 +128,8 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 		service.getResults(courseId, assignmentId, new AsyncCallback<Result>() {
 
 			public void onFailure(Throwable caught) {
-				Window.alert(caught.getMessage()); 
+				GWT.log("[AssignmentBoardPresenter]", caught); 
+				eventBus.fireEvent(new ErrorDisplayEvent("Getting results failed", caught.getMessage())); 
 			}
 
 			public void onSuccess(Result result) {

@@ -61,7 +61,6 @@ public class LoginPresenter implements Presenter {
 		} else {
 			widget.getPasswordCommentLabel().setText(""); 
 		}
-		GWT.log("valid: " + valid, null); 
 		return valid;  
 	}
 	
