@@ -181,7 +181,8 @@ def create_testing_bundle(user, assignment, course_id):
     asscfg  = vmcfg.assignments()
     machine = asscfg.get(assignment, 'Machine')
 
-    rel_file_list = list(vmcfg.assignments().files_to_include(assignment))
+    #rel_file_list = list(vmcfg.assignments().files_to_include(assignment))
+    rel_file_list = []
     rel_file_list += [ ('build.sh', vmcfg.get(machine, 'BuildScript')),
                        ('run.sh',   vmcfg.get(machine, 'RunScript')) ]
     rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),

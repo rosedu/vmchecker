@@ -18,8 +18,8 @@ Username = cpl
 
 
 [tester]
-Hostname = sanctuary.cs.pub.ro
-Username = cpl
+Hostname = localhost
+Username = szekeres
 QueuePath = /tmp/
 
 [assignment DEFAULT]

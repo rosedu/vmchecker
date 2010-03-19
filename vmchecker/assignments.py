@@ -100,22 +100,6 @@ class Assignments(object):
         if assignment not in self.__assignments:
             raise KeyError, 'No such assignment %s' % repr(assignment)
 
-    def files_to_include(self, assignment):
-        """An iterator over the files to include when submitting an assignment.
-
-        The iterators yields pairs (destination, source) where
-            destination is the name of the file in the archive
-            source is the name of the file on the disk relative to vmchecker root
-
-        The include options is useful to include other scripts
-        and configuration files.
-
-        """
-        self._check_valid(assignment)
-        for option in self.__assignments[assignment]:
-            if option.startswith(_INCLUDE_PREFIX):
-                yield (option[len(_INCLUDE_PREFIX):],
-                       self.get(assignment, option))
 
     def get(self, assignment, option):
         """Returns value of `option' for `assignment'.

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DIR=/tmp/vm/
+DIR=/home/szekeres/vmchecker/
  
 rm -rdf $DIR && mkdir -p $DIR
 cd $DIR
