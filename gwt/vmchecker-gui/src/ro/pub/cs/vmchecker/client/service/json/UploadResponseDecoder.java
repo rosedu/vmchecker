@@ -13,7 +13,7 @@ public class UploadResponseDecoder implements JSONDecoder<UploadStatus> {
 	public static final String dumpLogKey = "dumpLog"; 
 	
 	@Override
-	public UploadStatus decode(String text) throws JSONException {
+	public UploadStatus decode(String text) throws Exception {
 		try {
 			JSONValue jsonValue = JSONParser.parse(text);
 			JSONObject jsonObject = jsonValue.isObject(); 

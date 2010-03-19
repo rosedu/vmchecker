@@ -8,7 +8,7 @@ public class AuthenticationEvent extends GwtEvent<AuthenticationEventHandler> {
 		= new GwtEvent.Type<AuthenticationEventHandler>(); 
 	
 	public enum EventType {
-		SUCCESS, FORCE_CHECK
+		SUCCESS, ERROR
 	}
 	
 	private String username; 

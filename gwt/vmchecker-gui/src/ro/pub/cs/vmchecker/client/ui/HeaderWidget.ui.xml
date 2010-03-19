@@ -69,17 +69,29 @@
 		.statusPanel {
 			top: 0px;
 			left: 50%;  
-			height: 30px; 
-			margin-top: 3px;  
+			height: 16px; 
 			position: fixed; 
+			font-family: Verdana, Arial, sans serif; 
+			font-size: 12px;
+			padding: 5px 2px 5px 2px;  
+		}
+		
+		.statusPanel a, .statusPanel a:hover, .statusPanel a:visited {
+			color: white; 
+			text-decoration: underline;
+			font-size: 11px;
+			cursor: pointer;   
 		}
 		
 		.statusLabel {
 			display: inline;
-			font-family: Verdana, Arial, sans serif; 
-			font-size: 12px; 
-			padding: 5px;
 			font-weight: bold;
+			padding: 2px;
+			margin-top: 3px;  
+		}
+		
+		.statusDetail {
+			padding-left: 5px; 
 		}
 		
 		.info {
@@ -121,8 +133,9 @@
 			</g:HorizontalPanel>
 			<g:SimplePanel styleName="{style.clear}"></g:SimplePanel>
 		</g:FlowPanel>
-	<g:SimplePanel styleName="{style.statusPanel}">
+	<g:FlowPanel ui:field="statusPanel" styleName="{style.statusPanel}">
 		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}"></g:Label>
-	</g:SimplePanel>
+		<g:Anchor ui:field="statusDetailButton" styleName="{style.statusDetail}">detalii</g:Anchor>
+	</g:FlowPanel>
 	</g:HTMLPanel>
 </ui:UiBinder>

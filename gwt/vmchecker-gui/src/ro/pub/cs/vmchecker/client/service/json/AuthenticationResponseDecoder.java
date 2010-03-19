@@ -1,7 +1,6 @@
 package ro.pub.cs.vmchecker.client.service.json;
 
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
-import ro.pub.cs.vmchecker.client.model.Result;
 
 import com.google.gwt.json.client.JSONException;
 import com.google.gwt.json.client.JSONObject;
@@ -15,7 +14,7 @@ public class AuthenticationResponseDecoder implements JSONDecoder<Authentication
 	public static final String infoKey = "info"; 
 	
 	@Override
-	public AuthenticationResponse decode(String text) throws JSONException {
+	public AuthenticationResponse decode(String text) throws Exception {
 		try {
 			JSONValue jsonValue = JSONParser.parse(text); 
 			JSONObject jsonObj = jsonValue.isObject();

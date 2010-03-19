@@ -2,15 +2,16 @@ package ro.pub.cs.vmchecker.client.presenter;
 
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEventHandler;
+import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
+import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 import ro.pub.cs.vmchecker.client.model.Result;
 import ro.pub.cs.vmchecker.client.model.UploadStatus;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
+import ro.pub.cs.vmchecker.client.service.json.ErrorResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.UploadResponseDecoder;
-import ro.pub.cs.vmchecker.client.ui.ResultsWidget;
-import ro.pub.cs.vmchecker.client.ui.StatementWidget;
-import ro.pub.cs.vmchecker.client.ui.UploadWidget;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -21,7 +22,6 @@ import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.event.shared.GwtEvent.Type;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
@@ -30,8 +30,6 @@ import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteHandler;
-import com.google.gwt.user.client.ui.FormPanel.SubmitEvent;
-import com.google.gwt.user.client.ui.FormPanel.SubmitHandler;
 
 public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandler {
 
@@ -86,7 +84,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 		this.courseId = courseId; 
 		bindWidget(widget);
 		listenAssignmentSelect();
-		uploadWidget.getUploadForm().setAction(service.UPLOAD_URL); 
+		uploadWidget.getUploadForm().setAction(HTTPService.UPLOAD_URL); 
 		uploadWidget.getUploadForm().addSubmitCompleteHandler(this); 
 	}
 	
@@ -130,7 +128,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 		service.getResults(courseId, assignmentId, new AsyncCallback<Result>() {
 
 			public void onFailure(Throwable caught) {
-				Window.alert(caught.getMessage());
+				Window.alert(caught.getMessage()); 
 			}
 
 			public void onSuccess(Result result) {
@@ -139,7 +137,6 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 				eventBus.fireEvent(new StatusChangedEvent(
 						StatusChangedEvent.StatusType.RESET, ""));
 			}
-
 		});
 		
 	}
@@ -164,7 +161,6 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 				uploadWidget.getUploadForm().submit(); 
 			}
 		}); 
-
 	}
 	
 	private void listenMenuSelection() {
@@ -192,16 +188,31 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	@Override
 	public void onSubmitComplete(SubmitCompleteEvent event) {
 		UploadResponseDecoder responseDecoder = new UploadResponseDecoder(); 
-		UploadStatus response = responseDecoder.decode(event.getResults());
-		StatusChangedEvent statusChangeEvent = null; 
-		if (response.status) {
-			statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.SUCCESS, 
-					"File uploaded successfully");
-		} else {
-			statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.ERROR,
-					"Error uploading file"); 
+		UploadStatus response;
+		try {
+			response = responseDecoder.decode(event.getResults());
+			StatusChangedEvent statusChangeEvent = null; 
+			if (response.status) {
+				statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.SUCCESS, 
+						"File uploaded successfully");
+			} else {
+				statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.ERROR,
+						"Error uploading file"); 
+			}
+			eventBus.fireEvent(statusChangeEvent); 
+		} catch (Exception e) {
+			ErrorResponseDecoder decoder = new ErrorResponseDecoder(); 
+			try {
+				ErrorResponse serviceError = decoder.decode(event.getResults());
+				if (serviceError.isAuthError()) {
+					eventBus.fireEvent(new AuthenticationEvent(AuthenticationEvent.EventType.ERROR));  
+				} else {
+					eventBus.fireEvent(new ErrorDisplayEvent(serviceError.message, serviceError.trace)); 
+				}				
+			} catch (Exception e1) {
+				Window.alert(e1.getMessage()); 
+			}
 		}
-		eventBus.fireEvent(statusChangeEvent); 
 	}
 
 }
