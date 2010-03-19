@@ -36,8 +36,6 @@ from subprocess import Popen
 
 from . import callback
 from . import vmlogging
-from .config import VmcheckerConfig
-from .courselist import CourseList
 
 
 _logger = vmlogging.create_module_logger('commander')
@@ -152,13 +150,15 @@ def _check_required_files(path):
     found_all = True
     needed_files = ['archive.zip', 'tests.zip', 'config']
     found_files = os.listdir(path)
+    not_found = []
     for need in needed_files:
         if not need in found_files:
             _logger.error('Could not find necessary file [%s] in [%s]' % (
                     need, path))
             found_all = False
+            not_found.append(need)
     if not found_all:
-        exit(-1)
+        raise IOError('Files ' + not_found + ' required for testing missing')
 
 
 
@@ -255,25 +255,3 @@ def _print_usage():
     print >> sys.stderr, """Usage:
     ./commander.py course_id directory - where directory contains:
         `archive.zip' `tests.zip' `config'"""
-
-
-def main():
-    """Invokes executor with parameters from the command line"""
-    if len(sys.argv) != 3:
-        print >> sys.stderr, 'Invalid number of arguments.'
-        _print_usage()
-        exit(1)
-
-    course_id = sys.argv[1]
-    bundle_dir = sys.argv[2]
-    if not os.path.isdir(bundle_dir):
-        print >> sys.stderr, 'Not a directory', bundle_dir
-        _print_usage()
-        exit(1)
-
-    vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
-    prepare_env_and_test(vmcfg, bundle_dir)
-
-
-if __name__ == '__main__':
-    main()
