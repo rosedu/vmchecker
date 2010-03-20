@@ -9,6 +9,7 @@ import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.AuthenticationEventHandler;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEventHandler;
+import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
@@ -145,24 +146,23 @@ public class AppController implements ValueChangeHandler<String> {
 			}			
 		}); 		
 	}
-	
+	/**
+	 * This method handles changes in application's state defined by a 
+	 * certain browser history entry 
+	 */
 	public void onValueChange(ValueChangeEvent<String> event) {
 		String token = event.getValue();
-		if (token != null) {
-			if ("".equals(token)) {
-				token = courses.get(0).id;
-				History.newItem(token); 
-				return; 
-			}
-			
-			if (coursesTags.contains(token)) {
+		if (token != null) {			
+			if (!token.isEmpty() && coursesTags.contains(token)) {
 				if (mainPresenter != null) {
 					mainPresenter.clearEventHandlers(); 
 				}
 				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, new AssignmentWidget());
 				headerPresenter.selectCourse(idToCourse.get(token).id); 
 			} else {
-				Window.alert("State " + token + " not implemented");
+				token = courses.get(0).id;
+				History.newItem(token);
+				return; 				
 			}
 			
 			if (mainPresenter != null) {
