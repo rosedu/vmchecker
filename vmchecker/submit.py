@@ -28,6 +28,13 @@ from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('submit')
 
+class SubmitedTooSoonError(Exception):
+    """Raised when a user sends a submission too soon after a previous one.
+
+    This is used to prevent a user from DOS-ing vmchecker or from
+    monopolising the test queue."""
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 def submission_config(user, assignment, course_id, upload_time,
                       storer_result_dir, storer_username, storer_hostname):
@@ -284,10 +291,9 @@ def submit(archive_filename, assignment, user, course_id,
 
     # checks time difference
     if not skip_time_check and submitted_too_soon(assignment, user, vmcfg):
-        logger.fatal('You are submitting too fast')
-        logger.fatal('Please allow %s between submissions',
-                      str(vmcfg.assignments().timedelta(assignment)))
-        exit(1)
+        raise SubmitedTooSoonError('''You are submitting too fast.
+                                   Please allow %s between submissions''' %
+                                   str(vmcfg.assignments().timedelta(assignment)))
 
     save_submission_in_storer(archive_filename, user, assignment,
                               course_id, upload_time)
