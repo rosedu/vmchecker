@@ -91,7 +91,6 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	public void listenAssignmentSelect() {
 		assignmentSelectReg = eventBus.addHandler(AssignmentSelectedEvent.TYPE, new AssignmentSelectedEventHandler() {
 			public void onSelect(AssignmentSelectedEvent event) {
-				GWT.log("Assignment select event captured: " + widget.hashCode() + " " + container.hashCode(), null);
 				assignmentSelected(event.data); 
 			}			
 		}); 
@@ -211,7 +210,10 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 					eventBus.fireEvent(new ErrorDisplayEvent(serviceError.message, serviceError.trace)); 
 				}				
 			} catch (Exception e1) {
-				Window.alert(e1.getMessage()); 
+				GWT.log("[AssignmentBoardPresenter.onSubmitComplete()]", e1); 
+				/* unexpected format */
+				eventBus.fireEvent(new ErrorDisplayEvent("[Service Error] Unknown format in response", 
+						"<b>Service URL</b>: " + HTTPService.UPLOAD_URL + "<br/><b>Content</b>:<br/>" + event.getResults())); 
 			}
 		}
 	}

@@ -59,8 +59,10 @@ public class Delegate<T> {
 				eventBus.fireEvent(new ErrorDisplayEvent("[Service Error]" + serviceError.message, serviceError.trace)); 
 			}
 		} catch (Exception e) { 
-			GWT.log("[parseError()]", e); 
-			callback.onFailure(e);
+			GWT.log("[parseError()]", e);
+			/* unexpected format */
+			eventBus.fireEvent(new ErrorDisplayEvent("[Service Error] Unknown format in response", 
+					"<b>Service URL</b>: " + URL + "<br/><b>Content</b>:<br/>" + text)); 
 		}
 	}
 		
