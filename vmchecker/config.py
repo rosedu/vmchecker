@@ -12,6 +12,7 @@ from . import assignments
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
+DEFAULT_LDAP_CONFIG = '/etc/vmchecker/ldap.config'
 
 
 class CourseConfig:
@@ -64,3 +65,24 @@ class CourseConfig:
         """Return an Assignment object describing the assignments in
         this course's config file"""
         return assignments.Assignments(self)
+
+
+
+class LdapConfig():
+    """Info for interaction with LDAP for student/teaching
+    assistent authentication"""
+    def __init__(self, ldap_cfg_fname=DEFAULT_LDAP_CONFIG):
+        self.config = ConfigParser.RawConfigParser()
+        with open(os.path.expanduser(ldap_cfg_fname)) as handle:
+            self.config.readfp(handle)
+    def server(self):
+        """Get LDAP server"""
+        return self.config.get('DEFAULT', 'LDAP_SERVER')
+
+    def bind_user(self):
+        """Get LDAP bind user"""
+        return self.config.get('DEFAULT', 'LDAP_BIND_USER')
+
+    def bind_pass(self):
+        """Get LDAP server"""
+        return self.config.get('DEFAULT', 'LDAP_BIND_PASS')
