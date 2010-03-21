@@ -49,7 +49,7 @@ class OutputString():
 
 # using a LDAP server
 def get_user(credentials):
-        try:
+    try:
         con = ldap.initialize(LDAP_SERVER)
         con.simple_bind_s(LDAP_BIND_USER,
                          LDAP_BIND_PASS)
@@ -84,7 +84,7 @@ def get_user(credentials):
             raise
 
         user_dn, entry = result_set[0][0]	
-	con.unbind()
+	    con.unbind_s()
     except:
         raise 
     
@@ -93,8 +93,10 @@ def get_user(credentials):
         con = ldap.initialize(LDAP_SERVER)
         con.simple_bind_s(user_dn,
                           credentials['password'])
-    except:
+    except ldap.INVALID_CREDENTIALS:
         return None
+    except:
+        raise
 
     return entry['cn'][0]
 
