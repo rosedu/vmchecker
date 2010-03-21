@@ -23,14 +23,17 @@ For the latest version check bin/initialise_course.py.
 from __future__ import with_statement
 
 import os
-import logging
 import time
+import sqlite3
 
 from . import paths
 from . import repo_walker
 from . import submissions
 from . import penalty
 from . import vmlogging
+from .paths import VmcheckerPaths
+from .config import CourseConfig
+from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('update_db')
 
@@ -69,7 +72,7 @@ class UpdateDb(repo_walker.RepoWalker):
         db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
         result = db_cursor.fetchone()
         if result is None:
-            return _db_save_user(db_cursor, user)
+            return self._db_save_user(db_cursor, user)
         return result[0]
 
 
@@ -119,8 +122,8 @@ class UpdateDb(repo_walker.RepoWalker):
                     vmcfg.get('vmchecker','PenaltyWeights').split()]
 
         limit = vmcfg.get('vmchecker','PenaltyLimit')
-
-        upload_time = submissions.get_upload_time_str(assignment, user)
+        sss = submissions.Submissions(VmcheckerPaths(vmcfg.root_path()))
+        upload_time = sss.get_upload_time_str(assignment, user)
 
         deadline = time.strptime(vmcfg.assignments.get(assignment, 'Deadline'),
                                                 penalty.DATE_FORMAT)
@@ -151,7 +154,7 @@ class UpdateDb(repo_walker.RepoWalker):
         if holidays != 0:
             holiday_start = vmcfg.get('vmchecker', 'HolidayStart').split(' , ')
             holiday_finish = vmcfg.get('vmchecker', 'HolidayFinish').split(' , ')
-            penalty_value = penalty.compute_penalty(upload_time, deadline, 1 , 
+            penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
                                 weights, limit, holiday_start, holiday_finish)[0]
         else:
             penalty_value = penalty.compute_penalty(upload_time, deadline, 1 ,
@@ -186,7 +189,7 @@ class UpdateDb(repo_walker.RepoWalker):
             sbroot = self.vmpaths.dir_submission_root(assignment, user)
             grade_filename = paths.submission_results_grade(sbroot)
             if os.path.exists(grade_filename):
-                _update_grades(vmcfg, options, assignment, user, grade_filename, db_cursor)
+                self._update_grades(self.vmcfg, options, assignment, user, grade_filename, db_cursor)
                 logger.info('Updated %s, %s (%s)', assignment, user, location)
             else:
                 logger.error('No results found for %s, %s (check %s)',
@@ -195,3 +198,39 @@ class UpdateDb(repo_walker.RepoWalker):
         # call the base implemnetation in RepoWalker.
         self.walk(options, _update_grades_wrapper, args=(db_cursor, options))
 
+
+
+
+def update_all(course_id):
+    """Walk all submissions"""
+    class stupid_hack_class:
+        """We only need this because repo_walker takes an object
+        from cmdline directly. Repo_walker must be refactored."""
+        def __init__(self, course_id):
+            """Repo_walker needs a field named 'all' set to True
+            in the object to be able to walk all assignments"""
+            self.all = True
+            self.recursive = False
+            self.user = None
+            self.assignment = None
+            self.ignore_errors = False
+            self.course_id = course_id
+
+
+    vmcfg = CourseConfig(CourseList().course_config(course_id))
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+
+    # open Db
+    db_conn = sqlite3.connect(vmpaths.db_file(), isolation_level="EXCLUSIVE")
+    db_cursor = db_conn.cursor()
+
+    try:
+        # actual work: update according to options the db
+        options = stupid_hack_class(course_id)
+        u = UpdateDb(vmcfg)
+        u.update_db(options, db_cursor)
+    finally:
+        db_cursor.close()
+        db_conn.commit() ## TODO:XXX: check if this should be commit
+                         ## or rollback or whatever
+        db_conn.close()
