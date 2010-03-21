@@ -60,7 +60,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	}
 	
 	public interface StatementWidget {
-		HasHTML getStatementContainer(); 
+		void setStatementHref(String statementHref);  
 	}
 	
 	public interface ResultsWidget {
@@ -98,7 +98,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	}
 	
 	public void assignmentSelected(Assignment data) {
-		statementWidget.getStatementContainer().setHTML(data.statement); 
+		statementWidget.setStatementHref(data.statementLink); 
 		widget.getTitleLabel().setText(data.title);
 		this.assignmentId = data.id; 
 		widget.getDeadlineLabel().setText(data.deadline);
