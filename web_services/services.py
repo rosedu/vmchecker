@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 This script implements the VMChecker's Web Services.
 It's based on apache2 and mod_python.
@@ -12,6 +14,7 @@ except ImportError:
 
 import os
 import sys
+import ldap
 import tempfile
 import subprocess
 import time
@@ -21,7 +24,7 @@ import ConfigParser
 from mod_python import Cookie, apache, Session
 
 from vmchecker.courselist import CourseList
-from vmchecker import submit, config
+from vmchecker import submit, config, assignments
 
 
 # define ERROR_MESSAGES
@@ -29,9 +32,10 @@ ERR_AUTH = 1
 ERR_EXCEPTION = 2 
 ERR_OTHER = 3
 
-
-AUTH_DB = [{'username' : 'vmchecker',
-           'password' : 'vmchecker'}]
+LDAP_SERVER = ""
+LDAP_REQ_OU = []
+LDAP_BIND_USER = ""
+LDAP_BIND_PASS = ""
 
 class OutputString():
     def __init__(self):
@@ -43,16 +47,60 @@ class OutputString():
     def get(self):
         return self.st 
 
-
+# using a LDAP server
 def get_user(credentials):
-    #XXX : Cu LDAP
-    for user in AUTH_DB:
-        if (user['username'] == credentials['username']) and \
-           (user['password'] == credentials['password']):
-            return user
-    return None
+    try:
+        con = ldap.initialize(LDAP_SERVER)
+        con.simple_bind_s(LDAP_BIND_USER,
+                         LDAP_BIND_PASS)
+   
+        baseDN = 'dc=cs,dc=curs,dc=pub,dc=ro'
+        searchScope = ldap.SCOPE_SUBTREE
+        retrieveAttributes = None 
+        searchFilter = 'uid=' + credentials['username'] 
+        timeout = 0
+        count = 0
 
+        # find the user's dn
+        result_id = con.search(baseDN, 
+                          searchScope, 
+                          searchFilter, 
+                          retrieveAttributes)
+        result_set = []
+        while 1:
+            result_type, result_data = con.result(result_id, timeout)
+            if (result_data == []):
+                break
+            else:
+                if result_type == ldap.RES_SEARCH_ENTRY:
+                    result_set.append(result_data)
 
+        if len(result_set) == 0:
+            #no results
+            return None
+
+        if len(result_set) > 1:
+            # too many results for the same uid
+            raise
+
+        user_dn, entry = result_set[0][0]	
+	    con.unbind_s()
+    except:
+        raise 
+    
+    # check the password 
+    try:  
+        con = ldap.initialize(LDAP_SERVER)
+        con.simple_bind_s(user_dn,
+                          credentials['password'])
+    except ldap.INVALID_CREDENTIALS:
+        return None
+    except:
+        raise
+
+    return entry['cn'][0]
+
+  
 # Generator to buffer file chunks
 def fbuffer(f, chunk_size=10000):
     while True:
@@ -63,7 +111,7 @@ def fbuffer(f, chunk_size=10000):
 
 
 ########## @ServiceMethod
-def uploadAssignment(req, courseid, assignmentid, archivefile):
+def uploadAssignment(req, courseId, assignmentId, archiveFile):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
@@ -89,11 +137,7 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
     # Reset the timeout
     s.save()
 
-    # Get the archive name
-    fileitem = req.form['archivefile']
-
-    # Test if the file was uploaded
-    if fileitem.filename == None:
+    if archiveFile.filename == None:
         return  json.dumps({'errorType':ERR_OTHER,
                     'errorMessage':"File not uploaded.",
                     'errorTrace':""})
@@ -102,7 +146,7 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
     fd, tmpname = tempfile.mkstemp('.zip')
     f = open(tmpname, 'wb', 10000)
     ## Read the file in chunks
-    for chunk in fbuffer(fileitem.file):
+    for chunk in fbuffer(archiveFile.file):
         f.write(chunk)
     f.close()
 
@@ -111,8 +155,8 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
     strout = OutputString()
     sys.stdout = strout
     try:
-        status = submit.submit(tmpname, assignmentid, 
-                   username, courseid)
+        status = submit.submit(tmpname, assignmentId, 
+                   username, courseId)
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -124,7 +168,7 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
 
 
 ########## @ServiceMethod
-def getResults(req, courseid, assignmentid):
+def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
 
     # Check permission 	
@@ -150,14 +194,14 @@ def getResults(req, courseid, assignmentid):
     strout = OutputString()
     sys.stdout = strout
     try:
-        vmcfg = config.CourseConfig(CourseList().course_config(courseid))
+        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})  	
 						
-    r_path =  vmcfg.repository_path() + "/" + assignmentid + \
+    r_path =  vmcfg.repository_path() + "/" + assignmentId + \
             "/" + username + "/results/"
 
     # Reset the timeout
@@ -209,7 +253,7 @@ def getCourses(req):
 
 
 ######### @ServiceMethod
-def getAssignments(req, courseid): 
+def getAssignments(req, courseId): 
     """ Returns the list of assignments for a given course """
 
     s = Session.Session(req)
@@ -224,7 +268,7 @@ def getAssignments(req, courseid):
 
     strout = OutputString()
     try:
-        vmcfg = config.CourseConfig(CourseList().course_config(courseid))
+        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -234,11 +278,11 @@ def getAssignments(req, courseid):
     assignments = vmcfg.assignments()
     ass_arr = []
 
-    for key in assignments.__assignments:
+    for key in assignments:
         a = {}
         a['assignmentId'] = key
-        a['assignmentTitle'] = assignments.get(key, "assignmentTitle")
-        a['deadline'] = assignments.get(key, "deadline")
+        a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
+        a['deadline'] = assignments.get(key, "Deadline")
         ass_arr.append(a)
     return json.dumps(ass_arr)
 
@@ -248,18 +292,27 @@ def login(req, username, password):
     s = Session.Session(req)
 
     if not s.is_new():
-        return json.dumps({'status':'true', 'username':username,
+	#TODO take the username from session
+        return json.dumps({'status':True, 'username':username,
             'info':'Already logged in'})
-    
-    user = get_user({'username' : username, 'password' : password})
+
+    strout = OutputString()
+    try:
+        user = get_user({'username' : username, 'password' : password}) 
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})  	
+
     if user is None:
         s.invalidate()
-        return json.dumps({'status':'false', 'username':"", 
+        return json.dumps({'status':False, 'username':"", 
             'info':'Invalid username/password'})
 
-    s["username"] = username
+    s["username"] = user
     s.save()
-    return json.dumps({'status':'true', 'username':username,
+    return json.dumps({'status':True, 'username':user,
             'info':'Succesfully logged in'})
 
 
