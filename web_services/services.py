@@ -132,7 +132,7 @@ def getResults(req, courseId, assignmentId):
             process = subprocess.Popen('/usr/games/fortune', 
                              shell=False, 
                              stdout=subprocess.PIPE)
-            resultlog = "<div align=center> Your results are not ready yet. <p> " + \
+            resultlog = "<div> Your results are not ready yet. <p> " + \
                         "In the meantime have a fortune: <p>" + \
                           process.communicate()[0] + "</div>" 
         else:
@@ -145,7 +145,7 @@ def getResults(req, courseId, assignmentId):
                     f = open(f_path, "r")
                     resultlog += "===== " + fname + " =====\n"
                     resultlog += f.read()
-        return json.dumps({'resultlog':resultlog})
+        return json.dumps({'resultlog':resultLog})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
