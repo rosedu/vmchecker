@@ -132,7 +132,9 @@ def getResults(req, courseId, assignmentId):
             process = subprocess.Popen('/usr/games/fortune', 
                              shell=False, 
                              stdout=subprocess.PIPE)
-            resultlog = process.communicate()[0] 
+            resultlog = "<div align=center> Your results are not ready yet. <p> " + \
+                        "In the meantime have a fortune: <p>" + \
+                          process.communicate()[0] + "</div>" 
         else:
             #XXX: move this update somewhere else? 
             update_db.update_all(courseId)
