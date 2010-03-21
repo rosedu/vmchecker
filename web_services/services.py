@@ -16,6 +16,7 @@ import os
 import sys
 import tempfile
 import traceback
+import subprocess
 
 from mod_python import Session
 
@@ -126,11 +127,20 @@ def getResults(req, courseId, assignmentId):
     s.save()
 
     if not os.path.isdir(r_path):
-        strout = websutil.OutputString()
-        sys.stdout = strout
-        os.system("fortune")
+        res = ""
+        try:
+            strout = websutil.OutputString()
+            process = subprocess.Popen('fortune', 
+                                 shell=False, 
+                                 stdout=subprocess.PIPE)
+            res = process.communicate()[0] 
+        except:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':ERR_EXCEPTION,
+                'errorMessage':"",
+                'errorTrace':strout.get()})  	                 
         #TODO cand se updateaza baza de date?
-        return json.dumps({'resultLog':strout.get()})
+        return json.dumps({'resultLog':res})
     else:
         resultlog = ""
         for fname in os.listdir(r_path):
