@@ -19,7 +19,7 @@ import sqlite3
 import urllib
 
 from vmchecker.courselist import CourseList
-from vmchecker.config import VmcheckerConfig
+from vmchecker.config import CourseConfig
 from vmchecker.paths  import VmcheckerPaths
 
 
@@ -120,7 +120,7 @@ def main():
         exit(1)
 
     course_id = sys.argv[1]
-    vmcfg = VmcheckerConfig(CourseList().course_config(course_id))
+    vmcfg = CourseConfig(CourseList().course_config(course_id))
     vmpaths = VmcheckerPaths(vmcfg.root_path())
 
 

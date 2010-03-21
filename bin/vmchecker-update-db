@@ -9,7 +9,7 @@ from vmchecker import update_db
 from vmchecker import repo_walker
 from vmchecker import paths
 from vmchecker.courselist import CourseList
-from vmchecker.config import VmcheckerConfig
+from vmchecker.config import CourseConfig
 from vmchecker import vmlogging
 
 
@@ -42,7 +42,7 @@ def main():
     add_update_db_optparse(cmdline)
     (options, _) = cmdline.parse_args()
     repo_walker.check_arguments(cmdline, options)
-    vmcfg = VmcheckerConfig(CourseList().course_config(options.course_id))
+    vmcfg = CourseConfig(CourseList().course_config(options.course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     # open Db

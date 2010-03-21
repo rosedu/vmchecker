@@ -150,7 +150,7 @@ def getResults(req, courseid, assignmentid):
     strout = OutputString()
     sys.stdout = strout
     try:
-        vmcfg = config.VmcheckerConfig(CourseList().course_config(courseid))
+        vmcfg = config.CourseConfig(CourseList().course_config(courseid))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -224,7 +224,7 @@ def getAssignments(req, courseid):
 
     strout = OutputString()
     try:
-        vmcfg = config.VmcheckerConfig(CourseList().course_config(courseid))
+        vmcfg = config.CourseConfig(CourseList().course_config(courseid))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,

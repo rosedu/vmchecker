@@ -14,7 +14,7 @@ from . import assignments
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 
 
-class VmcheckerConfig:
+class CourseConfig:
     """An object that encapsulates parsing of the config file of a course"""
     def __init__(self, config_file_):
         self.config_file = config_file_
