@@ -79,11 +79,11 @@
 				<p><b>vmchecker</b> este o aplicație de testare automată a temelor. 
 				Este un produs open-source realizat de către și pentru studenții din Facultatea de Automatică și Calculatoare - UPB, și este menit atât să usureze munca asistenților de a corecta teme cât și sa ofere studenților o evaluare cât mai obiectivă. </p>
 				<h2>Vrei să contribui?</h2>
-				<p><b>vmchecker</b> este un proiect care a început in 2003? și a evoluat în urma contribuției fiecărei generații de studenți.
+				<p><b>vmchecker</b> este un proiect care a început in 2008 și a evoluat în urma contribuției fiecărei generații de studenți.
 				În mare parte este scris în <a href="http://www.python.org/">Python</a> și bash scripting, iar interfața este realizată folosind <a href="http://code.google.com/webtoolkit/">Google Web Toolkit</a>.
 				</p>
 				<p>  
-				Dacă vrei să afli mai multe detalii sau vrei să te implici, poți accesa <a href="http://github.com/vmchecker/vmchecker">repository-ul oficial de pe Github</a> sau te poți abona la <a href="">lista de discuții</a> folosită de catre cei care îl dezvoltă în prezent. </p>
+				Dacă vrei să afli mai multe detalii sau vrei să te implici, poți accesa <a href="http://github.com/vmchecker/vmchecker">repository-ul oficial de pe Github</a> sau te poți abona la <a href="http://lists.rosedu.org/listinfo/vmchecker-dev">lista de discuții</a> folosită de catre cei care îl dezvoltă în prezent. </p>
 				 
 			</g:HTML>
 			<g:FlowPanel styleName="{style.formContainer}">
