@@ -17,19 +17,34 @@ import ro.pub.cs.vmchecker.client.service.json.NullDecoder;
 import ro.pub.cs.vmchecker.client.service.json.ResultDecoder;
 
 public class HTTPService {
+
+	private static final String SERVICES_SUFFIX = "services/services.py"; 
+	public static String VMCHECKER_SERVICES_URL = computeServicesURL(); 
+	public static String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses";
+	public static String GET_ASSIGNMENTS_URL = VMCHECKER_SERVICES_URL + "getAssignments";
+	public static String GET_RESULTS_URL = VMCHECKER_SERVICES_URL + "getResults";
+	public static String PERFORM_AUTHENTICATION_URL = VMCHECKER_SERVICES_URL + "login";
+	public static String LOGOUT_URL = VMCHECKER_SERVICES_URL + "logout"; 
+	public static String UPLOAD_URL = VMCHECKER_SERVICES_URL + "uploadAssignment"; 
 	
-	public static final String VMCHECKER_SERVICES_URL = GWT.getHostPageBaseURL() + "services/"; 
-	public static final String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses.php";
-	public static final String GET_ASSIGNMENTS_URL = VMCHECKER_SERVICES_URL + "getAssignments.php";
-	public static final String GET_RESULTS_URL = VMCHECKER_SERVICES_URL + "getResults.php";
-	public static final String PERFORM_AUTHENTICATION_URL = VMCHECKER_SERVICES_URL + "auth.php";
-	public static final String LOGOUT_URL = VMCHECKER_SERVICES_URL + "logout.php"; 
-	public static final String UPLOAD_URL = VMCHECKER_SERVICES_URL + "upload.php"; 
+	/**
+	 * Computes the base URL for services by erasing the last level 
+	 * of directories from the URL and add the SERVICES_SUFFIX to it 
+	 * For example, if the UI is loaded on 
+	 * http://vmchecker.cs.pub.ro/vmchecker/ui/Vmchecker.html
+	 * the services URL will be: 
+	 * http://vmchecker.cs.pub.ro/vmchecker/<SERVICES_SUFFIX>/
+	 * @return the base URL for vmchecker services 
+	 */
+	public static String computeServicesURL() {
+		String uiURL = GWT.getHostPageBaseURL(); 
+		return uiURL.substring(0, uiURL.substring(0, uiURL.lastIndexOf('/')).lastIndexOf('/') + 1) + SERVICES_SUFFIX + '/'; 		
+	}
 	
 	private HandlerManager eventBus; 
 	
 	public HTTPService(HandlerManager eventBus) {
-		this.eventBus = eventBus; 
+		this.eventBus = eventBus;
 	}
 	
 	public void getCourses(final AsyncCallback<Course[]> callback) {
