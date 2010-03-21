@@ -214,6 +214,7 @@ def getAssignments(req, courseId):
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
         a['deadline'] = assignments.get(key, "Deadline")
+        a['statement'] = assignments.get(key, 'Statement')
         ass_arr.append(a)
     return json.dumps(ass_arr)
 
