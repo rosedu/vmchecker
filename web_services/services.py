@@ -21,8 +21,7 @@ import subprocess
 from mod_python import Session
 
 from vmchecker.courselist import CourseList
-from vmchecker import submit, config, websutil
-
+from vmchecker import submit, config, websutil, update_db
 
 # define ERROR_MESSAGES
 ERR_AUTH = 1
@@ -113,6 +112,7 @@ def getResults(req, courseId, assignmentId):
 		 	
     strout = websutil.OutputString()
     try:
+        
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
@@ -126,30 +126,29 @@ def getResults(req, courseId, assignmentId):
     # Reset the timeout
     s.save()
 
-    if not os.path.isdir(r_path):
-        res = ""
-        try:
-            strout = websutil.OutputString()
+    strout = websutil.OutputString()
+    try:
+        if not os.path.isdir(r_path):
             process = subprocess.Popen('/usr/games/fortune', 
-                                 shell=False, 
-                                 stdout=subprocess.PIPE)
-            res = process.communicate()[0] 
-        except:
-            traceback.print_exc(file = strout)
-            return json.dumps({'errorType':ERR_EXCEPTION,
-                'errorMessage':"",
-                'errorTrace':strout.get()})  	                 
-        #TODO cand se updateaza baza de date?
-        return json.dumps({'resultLog':res})
-    else:
-        resultlog = ""
-        for fname in os.listdir(r_path):
-            f_path = os.path.join(r_path, fname)
-            if os.path.isfile(f_path):
-                f = open(f_path, "r")
-                resultlog += "===== " + fname + " =====\n"
-                resultlog += f.read()
+                             shell=False, 
+                             stdout=subprocess.PIPE)
+            resultlog = process.communicate()[0] 
+        else:
+            #XXX: move this update somewhere else? 
+            update_db.update_all(courseId)
+            resultlog = ""
+            for fname in os.listdir(r_path):
+                f_path = os.path.join(r_path, fname)
+                if os.path.isfile(f_path):
+                    f = open(f_path, "r")
+                    resultlog += "===== " + fname + " =====\n"
+                    resultlog += f.read()
         return json.dumps({'resultlog':resultlog})
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+                 'errorMessage':"",
+                 'errorTrace':strout.get()})  	                           
 
 
 ######### @ServiceMethod
