@@ -102,6 +102,7 @@ public class AppController implements ValueChangeHandler<String> {
 	private void displayLogin() {
 		loginPresenter = new LoginPresenter(eventBus, service, new LoginWidget());
 		container.clear();
+		History.newItem("", false); 
 		loginPresenter.go(container); 
 	}
 	
@@ -112,7 +113,7 @@ public class AppController implements ValueChangeHandler<String> {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				GWT.log("[displayContent()]", caught); 
+				GWT.log("[displayContent.onFailure()]", caught); 
 				Window.alert(caught.getMessage()); 
 			}
 

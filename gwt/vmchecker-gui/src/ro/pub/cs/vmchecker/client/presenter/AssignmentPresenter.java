@@ -26,8 +26,8 @@ public class AssignmentPresenter implements Presenter {
 	private Assignment[] assignments; 
 	private String courseId; 
 	
-	private MenuPresenter menuPresenter; 
-	private AssignmentBoardPresenter boardPresenter; 
+	private MenuPresenter menuPresenter = null; 
+	private AssignmentBoardPresenter boardPresenter = null; 
 	
 	public interface AssignmentWidget {
 		HasWidgets getMenuPanel();
@@ -97,8 +97,12 @@ public class AssignmentPresenter implements Presenter {
 
 	@Override
 	public void clearEventHandlers() {
-		menuPresenter.clearEventHandlers(); 
-		boardPresenter.clearEventHandlers(); 
+		if (menuPresenter != null) {
+			menuPresenter.clearEventHandlers();
+		}
+		if (boardPresenter != null) {
+			boardPresenter.clearEventHandlers();
+		}
 	}
 
 }
