@@ -110,9 +110,7 @@ def getResults(req, courseId, assignmentId):
                 'errorMessage':"",
                 'errorTrace':strout.get()})  	
 		 	
-    # XXX E nevoie? Redirect stdout
     strout = websutil.OutputString()
-    sys.stdout = strout
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
@@ -128,9 +126,11 @@ def getResults(req, courseId, assignmentId):
     s.save()
 
     if not os.path.isdir(r_path):
-        #TODO fortune
+        strout = websutil.OutputString()
+        sys.stdout = strout
+        os.system("fortune")
         #TODO cand se updateaza baza de date?
-        return json.dumps({'resultLog':'The results are not ready.'})
+        return json.dumps({'resultLog':strout.get()})
     else:
         resultlog = ""
         for fname in os.listdir(r_path):
