@@ -62,12 +62,15 @@ Deadline = 2009.03.31 23:59:00
 Machine = so-linux
 Timeout=120
 KernelMessages=0
+AssignmentTitle = 1 - Minishell (Linux)
+
 
 [assignment 1-minishell-windows]
 Deadline = 2009.03.31 23:59:00
 Machine = so-win
 Timeout=120
 KernelMessages=0
+AssignmentTitle = 1 - Minishell (Windows)
 
 
 
