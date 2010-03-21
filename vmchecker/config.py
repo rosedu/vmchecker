@@ -84,5 +84,9 @@ class LdapConfig():
         return self.config.get('DEFAULT', 'LDAP_BIND_USER')
 
     def bind_pass(self):
-        """Get LDAP server"""
+        """Get LDAP bind pass"""
         return self.config.get('DEFAULT', 'LDAP_BIND_PASS')
+
+    def root_search(self):
+        """Get LDAP root search"""
+        return self.config.get('DEFAULT', 'LDAP_ROOT_SEARCH')

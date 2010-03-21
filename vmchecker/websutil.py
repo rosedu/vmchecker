@@ -20,7 +20,7 @@ def get_user(credentials):
     con.simple_bind_s(ldap_cfg.bind_user(),
                         ldap_cfg.bind_pass())
 
-    baseDN = 'dc=cs,dc=curs,dc=pub,dc=ro'
+    baseDN = ldap_cfg.root_search()
     searchScope = ldap.SCOPE_SUBTREE
     retrieveAttributes = None 
     searchFilter = 'uid=' + credentials['username'] 
