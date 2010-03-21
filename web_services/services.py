@@ -14,17 +14,13 @@ except ImportError:
 
 import os
 import sys
-import ldap
 import tempfile
-import subprocess
-import time
 import traceback
 
-import ConfigParser
-from mod_python import Cookie, apache, Session
+from mod_python import Session
 
 from vmchecker.courselist import CourseList
-from vmchecker import submit, config, assignments
+from vmchecker import submit, config, websutil
 
 
 # define ERROR_MESSAGES
@@ -32,82 +28,6 @@ ERR_AUTH = 1
 ERR_EXCEPTION = 2 
 ERR_OTHER = 3
 
-LDAP_SERVER = ""
-LDAP_REQ_OU = []
-LDAP_BIND_USER = ""
-LDAP_BIND_PASS = ""
-
-class OutputString():
-    def __init__(self):
-        self.st = ""
-
-    def write(self, st):
-        self.st += st
-	
-    def get(self):
-        return self.st 
-
-# using a LDAP server
-def get_user(credentials):
-    try:
-        con = ldap.initialize(LDAP_SERVER)
-        con.simple_bind_s(LDAP_BIND_USER,
-                         LDAP_BIND_PASS)
-   
-        baseDN = 'dc=cs,dc=curs,dc=pub,dc=ro'
-        searchScope = ldap.SCOPE_SUBTREE
-        retrieveAttributes = None 
-        searchFilter = 'uid=' + credentials['username'] 
-        timeout = 0
-        count = 0
-
-        # find the user's dn
-        result_id = con.search(baseDN, 
-                          searchScope, 
-                          searchFilter, 
-                          retrieveAttributes)
-        result_set = []
-        while 1:
-            result_type, result_data = con.result(result_id, timeout)
-            if (result_data == []):
-                break
-            else:
-                if result_type == ldap.RES_SEARCH_ENTRY:
-                    result_set.append(result_data)
-
-        if len(result_set) == 0:
-            #no results
-            return None
-
-        if len(result_set) > 1:
-            # too many results for the same uid
-            raise
-
-        user_dn, entry = result_set[0][0]	
-	    con.unbind_s()
-    except:
-        raise 
-    
-    # check the password 
-    try:  
-        con = ldap.initialize(LDAP_SERVER)
-        con.simple_bind_s(user_dn,
-                          credentials['password'])
-    except ldap.INVALID_CREDENTIALS:
-        return None
-    except:
-        raise
-
-    return entry['cn'][0]
-
-  
-# Generator to buffer file chunks
-def fbuffer(f, chunk_size=10000):
-    while True:
-        chunk = f.read(chunk_size)
-        if not chunk: 
-            break
-        yield chunk
 
 
 ########## @ServiceMethod
@@ -124,7 +44,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
                 'errorMessage':"",
                 'errorTrace':""})
 
-    strout = OutputString()
+    strout = websutil.OutputString()
     try:
         s.load()
         username = s['username']
@@ -146,13 +66,13 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     fd, tmpname = tempfile.mkstemp('.zip')
     f = open(tmpname, 'wb', 10000)
     ## Read the file in chunks
-    for chunk in fbuffer(archiveFile.file):
+    for chunk in websutil.fbuffer(archiveFile.file):
         f.write(chunk)
     f.close()
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = OutputString()
+    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         status = submit.submit(tmpname, assignmentId, 
@@ -180,7 +100,7 @@ def getResults(req, courseId, assignmentId):
                 'errorTrace':""})
 
     # Get username session variable
-    strout = OutputString()
+    strout = websutil.OutputString()
     try:
         s.load()
         username = s['username']
@@ -191,7 +111,7 @@ def getResults(req, courseId, assignmentId):
                 'errorTrace':strout.get()})  	
 		 	
     # XXX E nevoie? Redirect stdout
-    strout = OutputString()
+    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
@@ -210,7 +130,7 @@ def getResults(req, courseId, assignmentId):
     if not os.path.isdir(r_path):
         #TODO fortune
         #TODO cand se updateaza baza de date?
-        return json.dumps({'resultLog':'The results are not ready.'});
+        return json.dumps({'resultLog':'The results are not ready.'})
     else:
         resultlog = ""
         for fname in os.listdir(r_path):
@@ -236,7 +156,7 @@ def getCourses(req):
     # Reset the timeout
     s.save()
 
-    strout = OutputString()
+    strout = websutil.OutputString()
     try:
         clist = CourseList()
     except:
@@ -266,7 +186,7 @@ def getAssignments(req, courseId):
     # Reset the timeout
     s.save()
 
-    strout = OutputString()
+    strout = websutil.OutputString()
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
@@ -296,9 +216,9 @@ def login(req, username, password):
         return json.dumps({'status':True, 'username':username,
             'info':'Already logged in'})
 
-    strout = OutputString()
+    strout = websutil.OutputString()
     try:
-        user = get_user({'username' : username, 'password' : password}) 
+        user = websutil.get_user({'username' : username, 'password' : password})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
