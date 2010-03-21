@@ -206,10 +206,12 @@ def getAssignments(req, courseId):
             'errorMessage':"",
             'errorTrace':strout.get()})  	
 		
-    assignments = sorted(vmcfg.assignments(), lambda x, y: int(assignments.get(x, "OrderNumber")) - int(assignments.get(x, "OrderNumber")))
+    assignments = vmcfg.assignments()
+    sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
+                                                   int(assignments.get(y, "OrderNumber")))
     ass_arr = []
 
-    for key in assignments:
+    for key in sorted_assg:
         a = {}
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
