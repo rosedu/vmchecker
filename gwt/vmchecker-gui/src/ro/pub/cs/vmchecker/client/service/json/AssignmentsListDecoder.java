@@ -11,7 +11,8 @@ public class AssignmentsListDecoder implements JSONDecoder<Assignment[]> {
 
 	public static final String idKey = "assignmentId"; 
 	public static final String titleKey = "assignmentTitle"; 
-	public static final String deadlineKey = "deadline"; 
+	public static final String deadlineKey = "deadline";
+	public static final String statementKey = "statement"; 
 	
 	@Override
 	public Assignment[] decode(String text) throws Exception {
@@ -34,7 +35,8 @@ public class AssignmentsListDecoder implements JSONDecoder<Assignment[]> {
 		String id = jsonObj.get(idKey).isString().stringValue(); 
 		String title = jsonObj.get(titleKey).isString().stringValue();
 		String deadline = jsonObj.get(deadlineKey).isString().stringValue();
-		return new Assignment(id, title, deadline); 
+		String statement = jsonObj.get(statementKey).isString().stringValue(); 
+		return new Assignment(id, title, deadline, statement); 
 	}
 	
 }

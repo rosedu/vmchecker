@@ -25,6 +25,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.HasHTML;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Hidden;
@@ -59,11 +60,11 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	}
 	
 	public interface StatementWidget {
-		HasText getStatementContainer(); 
+		HasHTML getStatementContainer(); 
 	}
 	
 	public interface ResultsWidget {
-		HasText getResultContainer(); 
+		HasHTML getResultContainer(); 
 	}
 	
 	private HandlerManager eventBus;
@@ -97,6 +98,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	}
 	
 	public void assignmentSelected(Assignment data) {
+		statementWidget.getStatementContainer().setHTML(data.statement); 
 		widget.getTitleLabel().setText(data.title);
 		this.assignmentId = data.id; 
 		widget.getDeadlineLabel().setText(data.deadline);
@@ -132,7 +134,7 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 			}
 
 			public void onSuccess(Result result) {
-				resultsWidget.getResultContainer().setText(result.log);
+				resultsWidget.getResultContainer().setHTML(result.log);
 				widget.displayView((com.google.gwt.user.client.ui.Widget) resultsWidget);
 				eventBus.fireEvent(new StatusChangedEvent(
 						StatusChangedEvent.StatusType.RESET, ""));
