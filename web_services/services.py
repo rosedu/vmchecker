@@ -145,7 +145,7 @@ def getResults(req, courseId, assignmentId):
                     f = open(f_path, "r")
                     resultlog += "===== " + fname + " =====\n"
                     resultlog += f.read()
-        return json.dumps({'resultlog':resultLog})
+        return json.dumps({'resultLog':resultlog})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -216,7 +216,7 @@ def getAssignments(req, courseId):
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
         a['deadline'] = assignments.get(key, "Deadline")
-        a['statement'] = assignments.get(key, 'StatementLink')
+        a['statementLink'] = assignments.get(key, 'StatementLink')
         ass_arr.append(a)
     return json.dumps(ass_arr)
 
