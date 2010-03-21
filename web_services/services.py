@@ -206,7 +206,7 @@ def getAssignments(req, courseId):
             'errorMessage':"",
             'errorTrace':strout.get()})  	
 		
-    assignments = vmcfg.assignments()
+    assignments = sorted(vmcfg.assignments(), lambda x, y: int(assignments.get(x, "OrderNumber")) - int(assignments.get(x, "OrderNumber")))
     ass_arr = []
 
     for key in assignments:
@@ -214,7 +214,7 @@ def getAssignments(req, courseId):
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
         a['deadline'] = assignments.get(key, "Deadline")
-        a['statement'] = assignments.get(key, 'Statement')
+        a['statement'] = assignments.get(key, 'StatementLink')
         ass_arr.append(a)
     return json.dumps(ass_arr)
 

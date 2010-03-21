@@ -19,7 +19,7 @@ Username = cpl
 
 [tester]
 Hostname = localhost
-Username = szekeres
+Username = gringo
 QueuePath = /tmp/
 
 [assignment DEFAULT]
@@ -56,13 +56,18 @@ Timeout = 120
 # Machine = an id of the machine used in testing
 # timeout = a timeout for test execution (override the default)
 # kernelmessages = override the default kernelmessages
+# AssignmentTitle = a human readable name
+# statementlink = a link to the statement
+# OrderNumber = the number of the assignment (used for sorting)
 
 [assignment 1-minishell-linux]
 Deadline = 2009.03.31 23:59:00
 Machine = so-linux
 Timeout=120
 KernelMessages=0
-AssignmentTitle = 1 - Minishell (Linux)
+AssignmentTitle = Minishell (Linux)
+StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
+OrderNumber = 1
 
 
 [assignment 1-minishell-windows]
@@ -71,6 +76,8 @@ Machine = so-win
 Timeout=120
 KernelMessages=0
 AssignmentTitle = 1 - Minishell (Windows)
+StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
+OrderNumber = 2
 
 
 
