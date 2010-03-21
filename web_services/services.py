@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin python
 
 """
 This script implements the VMChecker's Web Services.
@@ -49,7 +49,7 @@ class OutputString():
 
 # using a LDAP server
 def get_user(credentials):
-    try:
+        try:
         con = ldap.initialize(LDAP_SERVER)
         con.simple_bind_s(LDAP_BIND_USER,
                          LDAP_BIND_PASS)
@@ -84,7 +84,7 @@ def get_user(credentials):
             raise
 
         user_dn, entry = result_set[0][0]	
-	con.unbind_s()
+	con.unbind()
     except:
         raise 
     
@@ -93,10 +93,8 @@ def get_user(credentials):
         con = ldap.initialize(LDAP_SERVER)
         con.simple_bind_s(user_dn,
                           credentials['password'])
-    except ldap.INVALID_CREDENTIALS:
-        return None
     except:
-        raise
+        return None
 
     return entry['cn'][0]
 
@@ -111,7 +109,7 @@ def fbuffer(f, chunk_size=10000):
 
 
 ########## @ServiceMethod
-def uploadAssignment(req, courseid, assignmentid, archivefile):
+def uploadAssignment(req, courseId, assignmentId, archiveFile):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
@@ -137,11 +135,7 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
     # Reset the timeout
     s.save()
 
-    # Get the archive name
-    fileitem = req.form['archivefile']
-
-    # Test if the file was uploaded
-    if fileitem.filename == None:
+    if archiveFile.filename == None:
         return  json.dumps({'errorType':ERR_OTHER,
                     'errorMessage':"File not uploaded.",
                     'errorTrace':""})
@@ -150,7 +144,7 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
     fd, tmpname = tempfile.mkstemp('.zip')
     f = open(tmpname, 'wb', 10000)
     ## Read the file in chunks
-    for chunk in fbuffer(fileitem.file):
+    for chunk in fbuffer(archiveFile.file):
         f.write(chunk)
     f.close()
 
@@ -159,8 +153,8 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
     strout = OutputString()
     sys.stdout = strout
     try:
-        status = submit.submit(tmpname, assignmentid, 
-                   username, courseid)
+        status = submit.submit(tmpname, assignmentId, 
+                   username, courseId)
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -172,7 +166,7 @@ def uploadAssignment(req, courseid, assignmentid, archivefile):
 
 
 ########## @ServiceMethod
-def getResults(req, courseid, assignmentid):
+def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
 
     # Check permission 	
@@ -194,16 +188,18 @@ def getResults(req, courseid, assignmentid):
                 'errorMessage':"",
                 'errorTrace':strout.get()})  	
 		 	
+    # XXX E nevoie? Redirect stdout
     strout = OutputString()
+    sys.stdout = strout
     try:
-        vmcfg = config.VmcheckerConfig(CourseList().course_config(courseid))
+        vmcfg = config.VmcheckerConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})  	
 						
-    r_path =  vmcfg.repository_path() + "/" + assignmentid + \
+    r_path =  vmcfg.repository_path() + "/" + assignmentId + \
             "/" + username + "/results/"
 
     # Reset the timeout
@@ -283,8 +279,8 @@ def getAssignments(req, courseId):
     for key in assignments:
         a = {}
         a['assignmentId'] = key
-        a['assignmentTitle'] = assignments.get(key, "assignmentTitle")
-        a['deadline'] = assignments.get(key, "deadline")
+        a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
+        a['deadline'] = assignments.get(key, "Deadline")
         ass_arr.append(a)
     return json.dumps(ass_arr)
 
