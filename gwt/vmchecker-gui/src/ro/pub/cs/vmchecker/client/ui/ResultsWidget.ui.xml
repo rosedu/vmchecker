@@ -10,6 +10,6 @@
 		}
 	</ui:style>
 	<g:HTMLPanel>
-		<g:Label styleName="{style.container}" ui:field="container"></g:Label>
+		<g:HTML styleName="{style.container}" ui:field="container"></g:HTML>
 	</g:HTMLPanel>
 </ui:UiBinder> 
