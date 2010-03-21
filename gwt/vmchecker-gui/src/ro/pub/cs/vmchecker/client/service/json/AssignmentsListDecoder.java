@@ -1,7 +1,6 @@
 package ro.pub.cs.vmchecker.client.service.json;
 
 import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONException;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
@@ -15,7 +14,7 @@ public class AssignmentsListDecoder implements JSONDecoder<Assignment[]> {
 	public static final String deadlineKey = "deadline"; 
 	
 	@Override
-	public Assignment[] decode(String text) throws JSONException {
+	public Assignment[] decode(String text) throws Exception {
 		JSONValue jsonValue = JSONParser.parse(text); 
 		JSONArray jsonArray; 
 		Assignment[] assignments = null; 

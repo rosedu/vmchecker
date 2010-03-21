@@ -1,6 +1,7 @@
 package ro.pub.cs.vmchecker.client.presenter;
 
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEvent;
+import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
@@ -25,8 +26,8 @@ public class AssignmentPresenter implements Presenter {
 	private Assignment[] assignments; 
 	private String courseId; 
 	
-	private MenuPresenter menuPresenter; 
-	private AssignmentBoardPresenter boardPresenter; 
+	private MenuPresenter menuPresenter = null; 
+	private AssignmentBoardPresenter boardPresenter = null; 
 	
 	public interface AssignmentWidget {
 		HasWidgets getMenuPanel();
@@ -46,14 +47,12 @@ public class AssignmentPresenter implements Presenter {
 			@Override
 			public void onClick(ClickEvent event) {
 				int assignmentIndex = menuPresenter.getWidget().getSelectedIndex(); 
-				GWT.log("Assignment number " +  assignmentIndex + " was selected", null);
 				fireAssignmentSelected(assignmentIndex); 
 			}
 		});
 	}
 	
 	private void fireAssignmentSelected(int assignmentIndex) {
-		GWT.log("Event fired", null); 
 		eventBus.fireEvent(new AssignmentSelectedEvent(assignments[assignmentIndex].id, 
 				assignments[assignmentIndex])); 		
 	}
@@ -64,7 +63,8 @@ public class AssignmentPresenter implements Presenter {
 		service.getAssignments(courseId, new AsyncCallback<Assignment[]>(){
 
 			public void onFailure(Throwable caught) {
-				Window.alert(caught.getMessage()); 
+				GWT.log("[AssignmentPresenter]", caught); 
+				eventBus.fireEvent(new ErrorDisplayEvent("[Service error]" + caught.toString(), caught.getMessage())); 
 			}
 
 			public void onSuccess(Assignment[] result) {				
@@ -97,8 +97,12 @@ public class AssignmentPresenter implements Presenter {
 
 	@Override
 	public void clearEventHandlers() {
-		menuPresenter.clearEventHandlers(); 
-		boardPresenter.clearEventHandlers(); 
+		if (menuPresenter != null) {
+			menuPresenter.clearEventHandlers();
+		}
+		if (boardPresenter != null) {
+			boardPresenter.clearEventHandlers();
+		}
 	}
 
 }

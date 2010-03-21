@@ -21,13 +21,5 @@
 				<g:Hidden ui:field="assignmentIdField" name="assignmentId"></g:Hidden>
 			</g:HorizontalPanel>
 		</g:FormPanel>
-		<g:HTML>
-			<div>Alte teme trimise:</div>
-			<ul>
-				<li>10 martie 2010, 10:30</li>
-				<li>15 martie 2010, 7:30</li>
-				<li>16 martie 2010, 20:30</li>
-			</ul>
-		</g:HTML>
 	</g:HTMLPanel>
 </ui:UiBinder> 

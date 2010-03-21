@@ -69,3 +69,15 @@ h1 {
 .loginDescription a, .loginDescription a:visited, .loginDescription a:hover {
 	color: #007F00; 
 }
+
+.errorPopup {
+	border: 3px solid #9B0000;
+	padding:10px;
+	background:none repeat scroll 0 0 white; 
+	overflow:scroll;
+}
+
+.errorPopup a, .errorPopup a:hover, .errorPopup a:visited {
+	color: #9B0000; 
+	font-weight: bold; 
+}

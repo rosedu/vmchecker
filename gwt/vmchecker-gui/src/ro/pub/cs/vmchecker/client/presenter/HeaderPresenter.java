@@ -5,12 +5,12 @@ import java.util.HashMap;
 
 import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.CourseSelectedEvent;
+import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEventHandler;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -18,7 +18,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerManager;
-import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
@@ -35,13 +34,16 @@ public class HeaderPresenter implements Presenter {
 	
 	private HashMap<String, Integer> idToIndex = new HashMap<String, Integer>();
 	private ArrayList<String> coursesIds = new ArrayList<String>(); 
-	private String statusMessage = ""; 
+	private String statusDetails = ""; 
 	
 	public interface HeaderWidget {
 		HasText getStatusLabel();
 		HasText getUsernameLabel(); 
-		void setStatusLabelVisible(boolean visible);
-		HasClickHandlers getLogoutButton(); 
+		HasClickHandlers getStatusDetailsButton();
+		void setStatusVisible(boolean visible);
+		void setStatusDetailsButtonVisible(boolean visible);
+		void showStatusDetails(String details); 
+		HasClickHandlers getLogoutButton();
 		HasChangeHandlers getCoursesList(); 
 		void addCourse(String name, String id);
 		void clearCourses();
@@ -54,7 +56,8 @@ public class HeaderPresenter implements Presenter {
 		this.eventBus = eventBus; 
 		this.service = service; 
 		bindWidget(widget);
-		listenStatusChange(); 
+		listenStatusChange();
+		listenStatusDetails(); 
 	}
 	
 	public void setCourses(ArrayList<Course> courses) {
@@ -86,7 +89,7 @@ public class HeaderPresenter implements Presenter {
 			@Override
 			public void onSuccess(Boolean result) {
 				/* force a check that will eventually fail and will display the login screen */
-				eventBus.fireEvent(new AuthenticationEvent(AuthenticationEvent.EventType.FORCE_CHECK)); 
+				eventBus.fireEvent(new AuthenticationEvent(AuthenticationEvent.EventType.ERROR)); 
 			}
 			
 		}); 
@@ -103,15 +106,37 @@ public class HeaderPresenter implements Presenter {
 		}); 
 	}
 	
+	private void listenStatusDetails() {
+		widget.getStatusDetailsButton().addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				widget.showStatusDetails(statusDetails); 
+			}
+			
+		}); 
+	}
+	
+	private void displayError(ErrorDisplayEvent event) {
+		widget.setStatusType(event.getType());
+		widget.getStatusLabel().setText(event.getText());
+		statusDetails = event.getDetails(); 
+		widget.setStatusDetailsButtonVisible(true); 
+		widget.setStatusVisible(true); 		
+	}
+	
 	private void listenStatusChange() {
 		this.eventBus.addHandler(StatusChangedEvent.TYPE, new StatusChangedEventHandler() {
 			public void onChange(StatusChangedEvent event) {
 				if (event.getType() == StatusChangedEvent.StatusType.RESET) {
-					widget.setStatusLabelVisible(false); 
+					widget.setStatusVisible(false); 
+				} else if (event instanceof ErrorDisplayEvent){
+					displayError((ErrorDisplayEvent)event); 
 				} else {
 					widget.getStatusLabel().setText(event.getText());
 					widget.setStatusType(event.getType()); 
-					widget.setStatusLabelVisible(true); 
+					widget.setStatusDetailsButtonVisible(false); 
+					widget.setStatusVisible(true);
 				}
 			}
 		}); 

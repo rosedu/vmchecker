@@ -10,12 +10,14 @@ public class StatusChangedEvent extends GwtEvent<StatusChangedEventHandler> {
 	}
 	
 	private StatusType type; 
-	private String text; 
+	private String text;
 	
 	public StatusChangedEvent(StatusType type, String text) {
 		this.type = type; 
 		this.text = text; 
 	}
+	
+	
 	
 	public String getText() {
 		return text; 

@@ -2,17 +2,24 @@ package ro.pub.cs.vmchecker.client.ui;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent.StatusType;
@@ -28,7 +35,9 @@ public class HeaderWidget extends Composite
 		String info(); 
 		String error(); 
 		String success(); 
-		String action(); 
+		String action();
+		String detailsPopupContainer();
+		String detailsPopupContent(); 
 	}
 	
 	@UiField 
@@ -36,6 +45,12 @@ public class HeaderWidget extends Composite
 	
 	@UiField 
 	Label statusLabel; 
+	
+	@UiField
+	Anchor statusDetailButton; 
+	
+	@UiField
+	FlowPanel statusPanel; 
 	
 	@UiField
 	Label usernameLabel; 
@@ -46,6 +61,11 @@ public class HeaderWidget extends Composite
 	@UiField
 	Anchor logoutButton; 
 	
+	private PopupPanel detailsPopup = new PopupPanel(true, true);
+	private FlowPanel detailsPopupContainer = new FlowPanel(); 
+	private SimplePanel detailsPopupContent = new SimplePanel(); 
+	private Anchor popupCloseButton = new Anchor("close"); 
+	
 	private String[] statusStyles = new String[4]; 
 	
 	public HeaderWidget(String username) {
@@ -54,9 +74,33 @@ public class HeaderWidget extends Composite
 		statusStyles[0] = style.action();  
 		statusStyles[1] = style.error();  
 		statusStyles[2] = style.success();   
-		statusStyles[3] = style.info();   
+		statusStyles[3] = style.info(); 
+		statusDetailButton.setVisible(false);
+		setupPopup(); 
 	}
 
+	private void setupPopup() {
+		detailsPopup.hide();
+		detailsPopup.setWidth("" + (Window.getClientWidth()/2) + "px"); 
+		detailsPopup.setHeight("" + (Window.getClientHeight() - 200) + "px");
+		detailsPopup.setStyleName("errorPopup");
+		detailsPopup.setGlassEnabled(true);
+		detailsPopupContainer.add(popupCloseButton);
+		detailsPopupContainer.add(detailsPopupContent);
+		detailsPopup.add(detailsPopupContainer); 
+		detailsPopupContainer.setStyleName(style.detailsPopupContainer());
+		detailsPopupContent.setStyleName(style.detailsPopupContent());
+		popupCloseButton.setStyleName(""); 
+		popupCloseButton.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				detailsPopup.hide(); 
+			}
+			
+		}); 
+	}
+	
 	@Override
 	public HasText getStatusLabel() {
 		return statusLabel; 
@@ -88,27 +132,27 @@ public class HeaderWidget extends Composite
 	}
 
 	@Override
-	public void setStatusLabelVisible(boolean visible) {
-		statusLabel.setVisible(visible); 
+	public void setStatusVisible(boolean visible) {
+		statusPanel.setVisible(visible); 
 	}
 
 	@Override
 	public void setStatusType(StatusType type) {
 		for (int i = 0; i < statusStyles.length; i++) {
-			statusLabel.removeStyleName(statusStyles[i]); 
+			statusPanel.removeStyleName(statusStyles[i]); 
 		}
 		switch (type) {
 		case ACTION:
-			statusLabel.addStyleName(style.action()); 
+			statusPanel.addStyleName(style.action()); 
 			break; 
 		case ERROR:
-			statusLabel.addStyleName(style.error()); 
+			statusPanel.addStyleName(style.error()); 
 			break; 
 		case SUCCESS:
-			statusLabel.addStyleName(style.success()); 
+			statusPanel.addStyleName(style.success()); 
 			break; 
 		case INFO:
-			statusLabel.addStyleName(style.info()); 
+			statusPanel.addStyleName(style.info()); 
 			break; 
 		}
 	}
@@ -121,6 +165,24 @@ public class HeaderWidget extends Composite
 	@Override
 	public HasClickHandlers getLogoutButton() {
 		return logoutButton; 
+	}
+
+	@Override
+	public HasClickHandlers getStatusDetailsButton() {
+		return statusDetailButton; 
+	}
+
+	@Override
+	public void setStatusDetailsButtonVisible(boolean visible) {
+		statusDetailButton.setVisible(visible); 
+	}
+
+	@Override
+	public void showStatusDetails(String details) {
+		detailsPopupContent.clear();
+		detailsPopupContent.add(new HTML(details)); 
+		detailsPopup.center(); 
+		detailsPopup.show(); 
 	}
 
 }

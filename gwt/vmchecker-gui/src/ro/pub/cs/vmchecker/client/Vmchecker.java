@@ -10,7 +10,7 @@ public class Vmchecker implements EntryPoint {
 
 public void onModuleLoad() {
 		HandlerManager eventBus = new HandlerManager(null);
-		HTTPService rpcService = new HTTPService();
+		HTTPService rpcService = new HTTPService(eventBus);
 		AppController appCtrl = new AppController(eventBus, rpcService); 
 		appCtrl.go(RootPanel.get()); 
 	}
