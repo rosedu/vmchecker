@@ -8,7 +8,7 @@
 	
 		.header {
 			background-color: #EEEEEE;
-			height: 50px; 
+			height: 60px; 
 			width: 100%;
 			margin-bottom: 40px; 
 		}
@@ -21,11 +21,22 @@
 			line-height: 26px;    
 		}
 		
+		.listWrapper {
+			margin-left: 10px;
+			margin-top: 9px;  
+		}
+		
 		.list {
-			margin: 10px;
 			font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
 			font-size: 16px;
 			line-height: 26px;  
+		}
+		
+		.courseListIndication {
+			font-size: 12px; 
+			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+			color: #999999;
+			margin-left: 2px; 
 		}
 		
 		.spacer {
@@ -35,7 +46,7 @@
 		.username {
 			font-weight: bold;
 			padding-right: 10px;
-			line-height: 20px;  
+			line-height: 16px;  
 		}
 		
 		.rightPanel{
@@ -137,8 +148,11 @@
 				<g:HTML>
 					<div class="logo"></div>
 				</g:HTML>
-				<g:ListBox ui:field="coursesList" visibleItemCount='1'
-					styleName="{style.list}" />
+				<g:FlowPanel styleName="{style.listWrapper}">
+					<g:ListBox ui:field="coursesList" visibleItemCount='1'
+						styleName="{style.list}" />
+					<g:Label styleName="{style.courseListIndication}">alege cursul</g:Label>
+				</g:FlowPanel>
 			</g:HorizontalPanel>
 			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
 				verticalAlignment='ALIGN_MIDDLE'>
