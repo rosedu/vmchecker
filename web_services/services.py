@@ -1,4 +1,4 @@
-#!/usr/bin python
+#!/usr/bin/env python
 
 """
 This script implements the VMChecker's Web Services.
