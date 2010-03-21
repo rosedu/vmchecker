@@ -119,6 +119,17 @@
 		.clear {
 			clear: both; 
 		}
+		
+		.detailsPopupContainer {
+			overflow: scroll; 
+		}
+		
+		.detailsPopupContent {
+			margin-top: 10px; 
+			padding-top: 10px; 
+			border-top: 1px solid #CCCCCC; 
+		}
+		
 	</ui:style>
 	<g:HTMLPanel>
 		<g:FlowPanel styleName="{style.header}">

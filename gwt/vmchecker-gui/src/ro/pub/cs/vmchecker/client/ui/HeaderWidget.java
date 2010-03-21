@@ -2,12 +2,15 @@ package ro.pub.cs.vmchecker.client.ui;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -16,6 +19,7 @@ import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent.StatusType;
@@ -31,7 +35,9 @@ public class HeaderWidget extends Composite
 		String info(); 
 		String error(); 
 		String success(); 
-		String action(); 
+		String action();
+		String detailsPopupContainer();
+		String detailsPopupContent(); 
 	}
 	
 	@UiField 
@@ -55,7 +61,10 @@ public class HeaderWidget extends Composite
 	@UiField
 	Anchor logoutButton; 
 	
-	private PopupPanel detailsPopup = new PopupPanel(true, true); 
+	private PopupPanel detailsPopup = new PopupPanel(true, true);
+	private FlowPanel detailsPopupContainer = new FlowPanel(); 
+	private SimplePanel detailsPopupContent = new SimplePanel(); 
+	private Anchor popupCloseButton = new Anchor("close"); 
 	
 	private String[] statusStyles = new String[4]; 
 	
@@ -67,12 +76,31 @@ public class HeaderWidget extends Composite
 		statusStyles[2] = style.success();   
 		statusStyles[3] = style.info(); 
 		statusDetailButton.setVisible(false);
-		detailsPopup.hide();
-		detailsPopup.setWidth("600px"); 
-		detailsPopup.setHeight("400px");
-		detailsPopup.setStyleName("errorPopup"); 
+		setupPopup(); 
 	}
 
+	private void setupPopup() {
+		detailsPopup.hide();
+		detailsPopup.setWidth("" + (Window.getClientWidth()/2) + "px"); 
+		detailsPopup.setHeight("" + (Window.getClientHeight() - 200) + "px");
+		detailsPopup.setStyleName("errorPopup");
+		detailsPopup.setGlassEnabled(true);
+		detailsPopupContainer.add(popupCloseButton);
+		detailsPopupContainer.add(detailsPopupContent);
+		detailsPopup.add(detailsPopupContainer); 
+		detailsPopupContainer.setStyleName(style.detailsPopupContainer());
+		detailsPopupContent.setStyleName(style.detailsPopupContent());
+		popupCloseButton.setStyleName(""); 
+		popupCloseButton.addClickHandler(new ClickHandler() {
+
+			@Override
+			public void onClick(ClickEvent event) {
+				detailsPopup.hide(); 
+			}
+			
+		}); 
+	}
+	
 	@Override
 	public HasText getStatusLabel() {
 		return statusLabel; 
@@ -151,8 +179,8 @@ public class HeaderWidget extends Composite
 
 	@Override
 	public void showStatusDetails(String details) {
-		detailsPopup.clear(); 
-		detailsPopup.add(new HTML(details)); 
+		detailsPopupContent.clear();
+		detailsPopupContent.add(new HTML(details)); 
 		detailsPopup.center(); 
 		detailsPopup.show(); 
 	}
