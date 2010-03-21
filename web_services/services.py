@@ -130,7 +130,7 @@ def getResults(req, courseId, assignmentId):
         res = ""
         try:
             strout = websutil.OutputString()
-            process = subprocess.Popen('fortune', 
+            process = subprocess.Popen('/usr/games/fortune', 
                                  shell=False, 
                                  stdout=subprocess.PIPE)
             res = process.communicate()[0] 
