@@ -58,7 +58,8 @@ h1 {
 .logo {
 	background: url('images/vmchecker_logo_ui.png') left top no-repeat; 
 	width: 200px;
-	height: 40px; 
+	height: 40px;
+	margin-top: 8px;  
 }
 
 .loginDescription h2 {

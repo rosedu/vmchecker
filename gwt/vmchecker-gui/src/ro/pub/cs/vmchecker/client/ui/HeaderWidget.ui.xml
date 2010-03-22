@@ -18,25 +18,24 @@
 			color: green;
 			font-size: 18px;
 			margin: 10px;
-			line-height: 26px;    
+			line-height: 26px;
 		}
 		
 		.listWrapper {
 			margin-left: 10px;
-			margin-top: 9px;  
 		}
 		
 		.list {
 			font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
 			font-size: 16px;
-			line-height: 26px;  
+			line-height: 26px;
 		}
 		
 		.courseListIndication {
-			font-size: 12px; 
+			font-size: 11px; 
 			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
 			color: #999999;
-			margin-left: 2px; 
+			padding: 2px;
 		}
 		
 		.spacer {
@@ -50,7 +49,7 @@
 		}
 		
 		.rightPanel{
-			margin: 15px;
+			margin: 25px 10px 0 0;
 			vertical-align: middle;
 			float: right;   
 		}
@@ -145,14 +144,13 @@
 	<g:HTMLPanel>
 		<g:FlowPanel styleName="{style.header}">
 			<g:HorizontalPanel styleName="{style.leftPanel}" verticalAlignment='ALIGN_MIDDLE'>
-				<g:HTML>
-					<div class="logo"></div>
-				</g:HTML>
-				<g:FlowPanel styleName="{style.listWrapper}">
-					<g:ListBox ui:field="coursesList" visibleItemCount='1'
-						styleName="{style.list}" />
-					<g:Label styleName="{style.courseListIndication}">alege cursul</g:Label>
-				</g:FlowPanel>
+			<g:HTML>
+				<div class="logo"></div>
+			</g:HTML>
+			<g:FlowPanel styleName="{style.listWrapper}">
+				<g:Label styleName="{style.courseListIndication}">alegeti cursul</g:Label>
+				<g:ListBox ui:field="coursesList" visibleItemCount='1' styleName="{style.list}" />
+			</g:FlowPanel>
 			</g:HorizontalPanel>
 			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
 				verticalAlignment='ALIGN_MIDDLE'>
