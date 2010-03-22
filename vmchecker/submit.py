@@ -281,6 +281,7 @@ def submit(archive_filename, assignment, user, course_id,
     If forced_upload_time is not specified, the current system time is
     used.
     """
+    os.umask(0007)
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
 
     if forced_upload_time != None:

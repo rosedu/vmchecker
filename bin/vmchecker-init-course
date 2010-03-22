@@ -155,6 +155,7 @@ def usage():
 def main():
     """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
+    os.umask(0007)
 
     root_path = os.getcwd()
     repo_path = os.path.join(root_path, 'repo')
