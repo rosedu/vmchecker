@@ -7,13 +7,17 @@ import ro.pub.cs.vmchecker.client.service.HTTPService;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.dom.client.HasKeyPressHandlers;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
 
-public class LoginPresenter implements Presenter {
+public class LoginPresenter implements Presenter, KeyPressHandler {
 
 	public interface Widget {
 		HasText getUsernameField(); 
@@ -26,6 +30,7 @@ public class LoginPresenter implements Presenter {
 		HasText getLoginCommentLabel();
 		void setLoginCommentVisible(boolean visible); 
 		void setInputsEnabled(boolean enabled);
+		HasKeyPressHandlers[] getEnterSources(); 
 	}
 	
 	private HandlerManager eventBus; 
@@ -35,7 +40,15 @@ public class LoginPresenter implements Presenter {
 	public LoginPresenter(HandlerManager eventBus, HTTPService service, Widget widget) {
 		this.eventBus = eventBus; 
 		this.service = service;
-		bindWidget(widget); 
+		bindWidget(widget);
+		listenEnterPress(); 
+	}
+	
+	private void listenEnterPress() {
+		HasKeyPressHandlers[] enterSources = widget.getEnterSources(); 
+		for (int i = 0; i < enterSources.length; i++) {
+			enterSources[i].addKeyPressHandler(this); 
+		}
 	}
 	
 	private boolean validateUsername(String username) {
@@ -117,6 +130,16 @@ public class LoginPresenter implements Presenter {
 	@Override
 	public void go(HasWidgets container) {
 		container.add((com.google.gwt.user.client.ui.Widget) widget); 
+	}
+
+	@Override
+	public void onKeyPress(KeyPressEvent event) {
+		if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+			/* enter was pressed, send the request */
+			if (validateFields()) {
+				sendAuthenticationRequest(); 
+			}
+		}
 	}
 
 }
