@@ -8,7 +8,7 @@
 	
 		.header {
 			background-color: #EEEEEE;
-			height: 60px; 
+			height: 54px; 
 			width: 100%;
 			margin-bottom: 40px; 
 		}
@@ -44,12 +44,13 @@
 		
 		.username {
 			font-weight: bold;
+			font-size: 14px; 
 			padding-right: 10px;
-			line-height: 16px;  
+			line-height: 20px;  
 		}
 		
 		.rightPanel{
-			margin: 25px 10px 0 0;
+			margin: 17px 10px 0 0;
 			vertical-align: middle;
 			float: right;   
 		}
@@ -59,12 +60,20 @@
 			float: left;  
 		}
 			
-		.anchor {
+		a.anchor, a.anchor:visited {
 			color: green;
-			margin: 3px;
 			padding-right: 5px;
+			padding-left: 5px; 
 			font-size: 14px;
-			cursor: pointer; 
+			line-height: 20px; 
+			cursor: pointer;
+			font-weight: bold;
+		}
+		
+		a.anchor:hover {
+			background: green; 
+			color: white;
+			text-decoration: none;  	
 		}
 		
 		.last {
@@ -80,10 +89,10 @@
 		}
 		
 		.statusPanel {
-			top: 0px;
+			top: 15px;
 			left: 50%;  
 			height: 16px; 
-			position: fixed; 
+			position: absolute; 
 			font-family: Verdana, Arial, sans serif; 
 			font-size: 12px;
 			padding: 5px 2px 5px 2px;  
@@ -152,8 +161,7 @@
 				<g:ListBox ui:field="coursesList" visibleItemCount='1' styleName="{style.list}" />
 			</g:FlowPanel>
 			</g:HorizontalPanel>
-			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
-				verticalAlignment='ALIGN_MIDDLE'>
+			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}">
 				<g:Label ui:field="usernameLabel" styleName="{style.username}">nume.prenume</g:Label>
 				<g:Anchor ui:field="logoutButton" styleName="{style.anchor}">logout</g:Anchor>
 			</g:HorizontalPanel>

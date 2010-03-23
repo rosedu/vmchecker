@@ -33,16 +33,15 @@
 		</g:FormPanel>
 		<g:HTML styleName="{style.help}">
 		<p>	
-		O rezolvare consta intr-o arhiva de tip
-			<b>zip</b>
-			care contine toate fisierele sursa alaturi de un
-			<b>Makefile</b>
-			ce va fi folosit pentru compilare. Trebuie respectate urmatoarele <u>reguli</u> generale: 
-			<ul>
-				<li>Makefile-ul trebuie sa aiba obligatoriu regula pentru <b>build</b> si <b>clean</b></li>
-				<li>Fisierele sursa trebuie sa fie in radacina arhivei. Mai exact, nu faceti un director in care se afla toate sursele si arhivati directorul, ci selectati toate sursele si faceti arhiva din ele.</li>
-			</ul>
-			Este posibil ca unele teme sa aiba reguli si restrictii speciale pentru arhiva. Pentru aceste cazuri o sa fie specificat in enuntul temei. 
+		O rezolvare consta intr-o arhiva de tip <b>zip</b> care contine toate fisierele sursa alaturi de un	<b>Makefile</b>
+		ce va fi folosit pentru compilare. Trebuie respectate urmatoarele <u>reguli</u> generale: 
+		</p>
+		<ul>
+			<li>Makefile-ul trebuie sa aiba obligatoriu regula pentru <b>build</b> si <b>clean</b></li>
+			<li>Fisierele sursa trebuie sa fie in radacina arhivei. Mai exact, nu faceti un director in care se afla toate sursele si arhivati directorul, ci selectati toate sursele si faceti arhiva din ele.</li>
+		</ul>			
+		<p style="padding-top: 0; margin-top: 0;">
+				Este posibil ca unele teme sa aiba reguli si restrictii speciale pentru arhiva. Pentru aceste cazuri o sa fie specificat in enuntul temei. 
 		</p>
 		</g:HTML>			
 	</g:HTMLPanel>

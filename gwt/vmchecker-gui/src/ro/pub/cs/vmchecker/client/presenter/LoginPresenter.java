@@ -4,7 +4,6 @@ import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -18,12 +17,15 @@ public class LoginPresenter implements Presenter {
 
 	public interface Widget {
 		HasText getUsernameField(); 
-		HasText getUsernameCommentLabel(); 
+		HasText getUsernameCommentLabel();
+		void setUsernameCommentVisible(boolean visible); 
 		HasText getPasswordField(); 
-		HasText getPasswordCommentLabel(); 
+		HasText getPasswordCommentLabel();
+		void setPasswordCommentVisible(boolean visible); 
 		HasClickHandlers getLoginButton();
 		HasText getLoginCommentLabel();
-		void setInputsEnabled(boolean enabled); 
+		void setLoginCommentVisible(boolean visible); 
+		void setInputsEnabled(boolean enabled);
 	}
 	
 	private HandlerManager eventBus; 
@@ -49,17 +51,21 @@ public class LoginPresenter implements Presenter {
 		/* username */
 		if (!validateUsername(widget.getUsernameField().getText())) {
 			widget.getUsernameCommentLabel().setText("Utilizator necompletat");
+			widget.setUsernameCommentVisible(true);
 			valid = false; 
 		} else {
 			widget.getUsernameCommentLabel().setText("");
+			widget.setUsernameCommentVisible(false); 
 		}
 		
 		/* password */
 		if (!validatePassword(widget.getPasswordField().getText())) {
 			widget.getPasswordCommentLabel().setText("Parola necompletata");
+			widget.setPasswordCommentVisible(true); 
 			valid = false; 
 		} else {
 			widget.getPasswordCommentLabel().setText(""); 
+			widget.setPasswordCommentVisible(false); 
 		}
 		return valid;  
 	}
@@ -97,6 +103,7 @@ public class LoginPresenter implements Presenter {
 							eventBus.fireEvent(authEvent); 
 						} else {
 							widget.getLoginCommentLabel().setText(result.info);
+							widget.setLoginCommentVisible(true); 
 							widget.setInputsEnabled(true); 
 						}
 					}

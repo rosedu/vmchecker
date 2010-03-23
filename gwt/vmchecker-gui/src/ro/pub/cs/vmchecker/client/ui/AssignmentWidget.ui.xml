@@ -9,7 +9,6 @@
 		
 		.contentWrapper {
 			width: 100%; 
-			text-align: center; 
 		}
 		
 		.contentPanel {

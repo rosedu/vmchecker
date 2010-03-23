@@ -1,12 +1,9 @@
 package ro.pub.cs.vmchecker.client.ui;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasText;
@@ -45,6 +42,9 @@ public class LoginWidget extends Composite
 	
 	public LoginWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
+		usernameComment.setVisible(false); 
+		passwordComment.setVisible(false); 
+		loginComment.setVisible(false); 
 	}
 
 	@Override
@@ -82,6 +82,21 @@ public class LoginWidget extends Composite
 		usernameField.setEnabled(enabled); 
 		passwordField.setEnabled(enabled); 
 		loginButton.setEnabled(enabled); 
+	}
+
+	@Override
+	public void setLoginCommentVisible(boolean visible) {
+		loginComment.setVisible(visible); 
+	}
+
+	@Override
+	public void setPasswordCommentVisible(boolean visible) {
+		passwordComment.setVisible(visible); 
+	}
+
+	@Override
+	public void setUsernameCommentVisible(boolean visible) {
+		usernameComment.setVisible(visible); 
 	}
 
 }
