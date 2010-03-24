@@ -9,6 +9,8 @@ import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasText;
@@ -50,7 +52,11 @@ public class LoginWidget extends Composite
 		usernameComment.setVisible(false); 
 		passwordComment.setVisible(false); 
 		loginComment.setVisible(false);
-		usernameField.setFocus(true); 
+		DeferredCommand.addCommand(new Command() {
+			public void execute() {
+				usernameField.setFocus(true);
+			}
+		}); 
 	}
 	
 	
