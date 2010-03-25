@@ -13,6 +13,7 @@ from . import assignments
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 DEFAULT_LDAP_CONFIG = '/etc/vmchecker/ldap.config'
+DEFAULT_ACL_CONFIG = '/etc/vmchecker/acl.config'
 
 
 class CourseConfig:
@@ -90,3 +91,23 @@ class LdapConfig():
     def root_search(self):
         """Get LDAP root search"""
         return self.config.get('DEFAULT', 'LDAP_ROOT_SEARCH')
+
+
+
+class AclConfig():
+    """Configuration for the users and groups that will implicitly
+    receive default ACLs for all storer root folders"""
+    def __init__(self, acl_cfg_fname=DEFAULT_ACL_CONFIG):
+        self.config = ConfigParser.RawConfigParser()
+        with open(acl_cfg_fname) as handle:
+            self.config.readfp(handle)
+
+    def users(self):
+        """The list of users that will receive default ACLs"""
+        return self.config.get('DEFAULT', 'users').split(' ')
+
+    def groups(self):
+        """The list of groups that will receive default ACLs"""
+        return self.config.get('DEFAULT', 'groups').split(' ')
+
+

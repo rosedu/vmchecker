@@ -9,9 +9,11 @@ import sqlite3
 import sys
 import logging
 import string
+import getpass
 import pkg_resources
 from subprocess import check_call, CalledProcessError
 
+from vmchecker.config import AclConfig
 from vmchecker import paths
 
 
@@ -127,6 +129,50 @@ def create_build_run_scritps(root_path):
                 out_file.write(msg)
 
 
+
+
+def set_default_acls():
+    """Set default POSIX ACLs for the current directory.
+
+    The current user and the user the web browser runs under both need
+    to create/change the same files in the storer root directory.
+
+    One approach is to use the SETGUID bit on the storer root
+    directory (the current directory in which the script is being
+    called) and be carefull about group bits being setup correctly on
+    all files created:
+    * directly by vmchecker
+    * indirectly by any other library used by vmchecker (e.g. zipfile)
+    * indirectly by other binaries called by vmchecker (e.g. by git).
+
+    Also umask must be setup correctly at every point of entry in the
+    vmchecker code (in every script invoked by the user or by the
+    web-services) that can lead to creation of files.
+
+    Managing all these is cumbersome so we opted for a POSIX ACL based
+    solution for now: we add default ACLs for the storer root
+    directory (the current directory) for two users: the current user
+    and www-data (or the user under which the webservices will
+    run). The default ACLs will be inherited by all the files and
+    directories created in this directory giving both users rwx access
+    for all these files.
+
+
+    For more info check:  http://www.suse.de/~agruen/acl/linux-acls/online/
+
+    The section named "Default ACL Example" talks about default groups
+    ACLs. We use default user ACLs.
+    """
+    acl_cfg = AclConfig()
+    users  = [getpass.getuser(), acl_cfg.users()]
+    groups = acl_cfg.groups()
+    def_acl_list =  ['user:'  + user  + ':rwx' for user  in users]
+    def_acl_list += ['group:' + group + ':rwx' for group in groups]
+    for def_acl in def_acl_list:
+        check_call(['setfacl', '-d', '-m', def_acl])
+
+
+
 def main_storer(root_path):
     """Run initialization tasks for the storer machine."""
     vmpaths = paths.VmcheckerPaths(root_path)
@@ -134,6 +180,7 @@ def main_storer(root_path):
     create_storer_git_repo(vmpaths.abspath(vmpaths.dir_repository()))
     create_db(vmpaths.db_file())
     create_build_run_scritps(root_path)
+    set_default_acls()
     _logger.info(' -- storer init done setting up paths and db file.')
 
 
@@ -155,7 +202,6 @@ def usage():
 def main():
     """Initialize course based on sys.argv."""
     logging.basicConfig(level=logging.DEBUG)
-    os.umask(0007)
 
     root_path = os.getcwd()
     repo_path = os.path.join(root_path, 'repo')

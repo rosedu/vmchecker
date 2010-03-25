@@ -40,7 +40,6 @@ class _Lock(object):
     def __init__(self, vmpaths, assignment):
         location = vmpaths.dir_assignment(assignment)
         if not os.path.isdir(location):
-            os.umask(0007)
             os.makedirs(location)
 
         self.__fd = os.open(
