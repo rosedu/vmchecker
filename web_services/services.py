@@ -131,14 +131,14 @@ def getResults(req, courseId, assignmentId):
 
     strout = websutil.OutputString()
     try:
-        result_files = {}
+        result_files = []
         if not os.path.isdir(r_path):
             process = subprocess.Popen('/usr/games/fortune',
                                        shell=False,
                                        stdout=subprocess.PIPE)
             msg = "In the meantime have a fortune cookie: <blockquote>"
             msg += process.communicate()[0] + "</blockquote>"
-            result_files['Your results are not ready yet'] = msg
+            result_files = [ {'Your results are not ready yet' :  msg } ]
         else:
             #XXX: move this update somewhere else?
             update_db.update_all(courseId)
@@ -146,8 +146,8 @@ def getResults(req, courseId, assignmentId):
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
                     with open(f_path, 'r') as f:
-                        result_files[fname] = f.read()
-        return json.dumps({'resultFiles':result_files})
+                        result_files.append({fname  : f.read() })
+        return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
