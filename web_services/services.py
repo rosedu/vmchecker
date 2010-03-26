@@ -76,15 +76,14 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     strout = websutil.OutputString()
     sys.stdout = strout
     try:
-        status = submit.submit(tmpname, assignmentId, 
-                   username, courseId)
+        submit.submit(tmpname, assignmentId, username, courseId)
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})
 	
-    return json.dumps({'status':status,
+    return json.dumps({'status':True,
                        'dumpLog':strout.get()}) 
 
 
