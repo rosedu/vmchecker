@@ -14,7 +14,6 @@ import ConfigParser
 import os
 import shutil
 import subprocess
-import tempfile
 import time
 import datetime
 from contextlib import closing
@@ -24,6 +23,7 @@ from . import paths
 from . import ziputil
 from . import submissions
 from . import vmlogging
+from . import tempfileutil
 from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('submit')
@@ -150,7 +150,7 @@ def save_submission_in_storer(archive_filename, user, assignment,
     # here, each submission gets a separate entry.
     # in git the former entryes get overwritten and commited to git.
     name_prefix = submission_backup_prefix(course_id, assignment, user, upload_time)
-    back_dir = tempfile.mkdtemp(prefix=name_prefix, dir=vmpaths.dir_backup())
+    back_dir = tempfileutil.mkdtemp(prefix=name_prefix, dir=vmpaths.dir_backup())
     submission_backup(back_dir, archive_filename, sbcfg)
 
 
@@ -201,7 +201,7 @@ def create_testing_bundle(user, assignment, course_id):
     # builds archive with configuration
     with vmcfg.assignments().lock(vmpaths, assignment):
         # creates the zip archive with an unique name
-        (bundle_fd, bundle_path) = tempfile.mkstemp(
+        (bundle_fd, bundle_path) = tempfileutil.mkstemp(
             suffix='.zip',
             prefix='%s_%s_%s_' % (course_id, assignment, user),
             dir=vmpaths.dir_unchecked())  # FIXME not here
