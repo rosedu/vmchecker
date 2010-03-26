@@ -23,7 +23,7 @@ SSHId = $home/.ssh/id_rsa
 [tester]
 Hostname = sanctuary.cs.pub.ro
 Username = so
-QueuePath = /tmp/
+QueuePath = vmchecker/2010/queue
 
 [assignment DEFAULT]
 
@@ -61,7 +61,7 @@ Timeout = 120
 
 [assignment 1-minishell-linux]
 Deadline = 2009.03.31 23:59:00
-Machine = so-linux
+Machine = so-lin
 Timeout=120
 KernelMessages=0
 AssignmentTitle = Minishell (Linux)
@@ -74,7 +74,7 @@ Deadline = 2009.03.31 23:59:00
 Machine = so-win
 Timeout=120
 KernelMessages=0
-AssignmentTitle = 1 - Minishell (Windows)
+AssignmentTitle = Minishell (Windows)
 StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
 OrderNumber = 2
 
@@ -82,12 +82,24 @@ OrderNumber = 2
 
 
 # test virtual machine configuration
-[so-linux]
-VMPath=/home/so/vmware/so-vm-debian-sid/faust.vmx
-GuestUser=so
-GuestPassword=so
-GuestBasePath=/home/so/
+[so-lin]
+VMPath=/home/courses/so/vmware/2010/so-vm-linux-ubuntu/so-vm-linux-ubuntu.vmx
+GuestUser=student
+GuestPassword=student
+GuestBasePath=/home/student/
 GuestShellPath=/bin/bash
-GuestHomeInBash=/home/so/
+GuestHomeInBash=/home/student/
 BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
+
+# test virtual machine configuration
+[so-win]
+VMPath=/home/courses/so/vmware/2010/so-vm-win2k3/so-vm-win2k3.vmx
+GuestUser=Administrator
+GuestPassword=student
+GuestBasePath=C:\cygwin\home\Administrator\
+GuestShellPath=C:\cygwin\bin\bash.exe
+GuestHomeInBash=/home/Administrator/
+BuildScript=so-win_vmchecker_build.sh
+RunScript=so-win_vmchecker_run.sh
+
