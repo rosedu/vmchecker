@@ -16,6 +16,8 @@ HolidayFinish = 2009.04.02 23:59:00
 [storer]
 Hostname = elf.cs.pub.ro
 Username = so
+SSHId = $home/.ssh/id_rsa
+
 
 
 [tester]

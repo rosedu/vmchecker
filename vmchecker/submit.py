@@ -15,7 +15,9 @@ import os
 import shutil
 import subprocess
 import time
+import socket
 import datetime
+import paramiko
 from contextlib import closing
 
 from . import config
@@ -27,6 +29,8 @@ from . import tempfileutil
 from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('submit')
+
+_DEFAULT_SSH_PORT = 22
 
 class SubmitedTooSoonError(Exception):
     """Raised when a user sends a submission too soon after a previous one.
@@ -223,15 +227,26 @@ def ssh_bundle(bundle_path, vmcfg):
     tester_username  = vmcfg.tester_username()
     tester_hostname  = vmcfg.tester_hostname()
     tester_queuepath = vmcfg.tester_queue_path()
-    cmd = [ 'scp', bundle_path,
-            '%s@%s:%s' % (tester_username, tester_hostname, tester_queuepath)]
-    logger.info('Invoking submission script %s', cmd)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((tester_hostname, _DEFAULT_SSH_PORT))
+    t = paramiko.Transport(sock)
     try:
-        subprocess.check_call(cmd)
-    except:
-        logger.fatal('Cannot evaluate submission %s', bundle_path)
-        os.unlink(bundle_path)
-        raise
+        t.start_client()
+        # XXX cannot validate remote key, because www-data does not
+        # have $home/.ssh/known_hosts where to store such info. For
+        # now, we'll assume the remote host is the desired one.
+        #remotekey = t.get_remote_server_key()
+        key = paramiko.RSAKey.from_private_key_file(vmcfg.storer_sshid())
+        # todo check DSA keys too
+        # key = paramiko.DSAKey.from_private_key_file(vmcfg.storer_sshid())
+        t.auth_publickey(tester_username, key)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        # XXX os.path.join is not correct here as these are paths on the
+        # remote machine.
+        sftp.put(bundle_path, os.path.join(tester_queuepath, os.path.basename(bundle_path)))
+    finally:
+        t.close()
 
 
 

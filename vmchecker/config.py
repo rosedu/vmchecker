@@ -54,6 +54,10 @@ class CourseConfig:
         """The hostname to use when logging in with ssh to the storer machine"""
         return self.config.get('storer', 'hostname')
 
+    def storer_sshid(self):
+        """The ssh id used to communicate from the storer to the tester"""
+        return self.config.get('storer', 'sshid')
+
     def tester_hostname(self):
         """The hostname to use when logging in with ssh to the tester machine"""
         return self.config.get('tester', 'hostname')
@@ -65,7 +69,6 @@ class CourseConfig:
     def course_name(self):
         """Return a human readable name for the course"""
         return self.config.get('vmchecker', 'coursename')
-
 
     def assignments(self):
         """Return an Assignment object describing the assignments in

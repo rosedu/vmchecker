@@ -41,7 +41,9 @@ def _install_example_config_file(root_path, repo_path, config_path):
     # replace the $vars with these values and write the result in the
     # destination file
     with open(config_path, 'w') as handle:
-        handle.write(s.substitute(root=root_path, repo=repo_path))
+        handle.write(s.substitute(root=root_path,
+                                  repo=repo_path,
+                                  home=os.path.expanduser('~')))
 
 
 
