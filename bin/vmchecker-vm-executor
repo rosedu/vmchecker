@@ -197,7 +197,8 @@ def test_submission(args):
     scripts_path = os.path.join(host['vmchecker_root'], host['scripts_path'])
 
     (h, vm) = connectToVM(host['vmx_path'])
-    revertToSnapshot(vm, 0)
+    revertToSnapshot(vm, vm.nRootSnapshots - 1) # revert to the last snapshot
+    vm.waitForToolsInGuest()
     vm.loginInGuest(guest['username'], guest['password'])
 
     if args['km_enable']:
