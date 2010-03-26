@@ -44,7 +44,7 @@ class _Lock(object):
 
         self.__fd = os.open(
                 os.path.join(location, '.lock'),
-                os.O_CREAT | os.O_RDWR, 0600)
+                os.O_CREAT | os.O_RDWR, 0660)
         assert self.__fd != -1
 
     def acquire(self):
