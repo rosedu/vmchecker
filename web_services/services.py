@@ -22,7 +22,7 @@ from mod_python import Session
 
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
-from vmchecker import submit, config, websutil, update_db
+from vmchecker import submit, config, websutil, update_db, paths
 
 # define ERROR_MESSAGES
 ERR_AUTH = 1
@@ -121,9 +121,10 @@ def getResults(req, courseId, assignmentId):
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})  	
-						
-    r_path =  vmcfg.repository_path() + "/" + assignmentId + \
-            "/" + username + "/results/"
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    submission_dir = vmpaths.dir_submission_root(assignmentId, username)
+    r_path = paths.dir_submission_results(submission_dir)
 
     # Reset the timeout
     s.save()
