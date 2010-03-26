@@ -243,10 +243,6 @@ def prepare_env_and_test(vmcfg, bundle_dir):
         _run_callback(bundle_dir)
     except:
         _logger.exception('cannot run callback')
-
-    # clears files
-    shutil.rmtree(bundle_dir)
-
     _logger.info('all done')
 
 
