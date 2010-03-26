@@ -36,12 +36,16 @@ _logger = vmlogging.create_script_sdtout_logger()
 class _InotifyHandler(ProcessEvent):
     """Dummy class needed to start processing events"""
 
+    def __init__(self, vmcfg, vmpaths):
+        self.vmcfg = vmcfg
+        self.vmpaths = vmpaths
+
     def process_IN_CLOSE_WRITE(self, event):
         """Called when a write ends (this means a new
         bundle has arrived). Imediatly start the new job.
 
         """
-        process_job(event.path, event.name)
+        process_job(event.path, event.name, self.vmcfg, self.vmpaths)
 
 
 def process_job(path, name, vmcfg, vmpaths):
@@ -97,7 +101,7 @@ def start_queue(vmcfg, vmpaths):
     # register for inotify envents before processing stale jobs
     watch_manager = WatchManager()
     watch_manager.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
-    notifier = Notifier(watch_manager, _InotifyHandler())
+    notifier = Notifier(watch_manager, _InotifyHandler(vmcfg, vmpaths))
     process_stale_jobs(dir_queue, vmcfg, vmpaths)
 
     # set callback to receive notifications (includes queued jobs after
