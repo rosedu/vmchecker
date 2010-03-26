@@ -21,9 +21,9 @@ from random import Random as _Random
 
 
 try:
-    import _thread
+    import thread as _thread
 except ImportError:
-    import _dummy_thread as _thread
+    import dummy_thread as _thread
 _allocate_lock = _thread.allocate_lock
 
 if hasattr(_os, 'TMP_MAX'):
@@ -99,7 +99,7 @@ def _mkstemp_inner(dir, pre, suf, mode):
         try:
             fd = _os.open(file, _os.O_RDWR | _os.O_CREAT | _os.O_EXCL, mode)
             return (fd, _os.path.abspath(file))
-        except OSError as e:
+        except OSError, e:
             if e.errno == _errno.EEXIST:
                 continue # try again
             raise
@@ -107,7 +107,7 @@ def _mkstemp_inner(dir, pre, suf, mode):
     raise IOError(_errno.EEXIST, "No usable temporary file name found")
 
 
-def mkstemp(suffix="", prefix=template, dir="", mode=0o660, text=False):
+def mkstemp(suffix="", prefix=template, dir="", mode=0660, text=False):
     """User-callable function to create and return a unique temporary
     file.  The return value is a pair (fd, name) where fd is the
     file descriptor returned by os.open, and name is the filename.
@@ -135,7 +135,7 @@ def mkstemp(suffix="", prefix=template, dir="", mode=0o660, text=False):
     return _mkstemp_inner(dir, prefix, suffix, mode)
 
 
-def mkdtemp(suffix="", prefix=template, dir="", mode=0o770):
+def mkdtemp(suffix="", prefix=template, dir="", mode=0770):
     """User-callable function to create and return a unique temporary
     directory.  The return value is the pathname of the directory.
 
@@ -156,7 +156,7 @@ def mkdtemp(suffix="", prefix=template, dir="", mode=0o770):
         try:
             _os.mkdir(file, mode)
             return file
-        except OSError as e:
+        except OSError, e:
             if e.errno == _errno.EEXIST:
                 continue # try again
             raise
