@@ -5,6 +5,7 @@ This script implements the VMChecker's Web Services.
 It's based on apache2 and mod_python.
 """
 
+from __future__ import with_statement
 
 # Use simplejson or Python 2.6 json, prefer simplejson.
 try:
@@ -108,19 +109,18 @@ def getResults(req, courseId, assignmentId):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
-                'errorMessage':"",
-                'errorTrace':strout.get()})  	
-		 	
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
     strout = websutil.OutputString()
     try:
-        
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})  	
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     submission_dir = vmpaths.dir_submission_root(assignmentId, username)
@@ -131,29 +131,28 @@ def getResults(req, courseId, assignmentId):
 
     strout = websutil.OutputString()
     try:
+        result_files = {}
         if not os.path.isdir(r_path):
-            process = subprocess.Popen('/usr/games/fortune', 
-                             shell=False, 
-                             stdout=subprocess.PIPE)
-            resultlog = "<div> <b> Your results are not ready yet. </b> <p> " + \
-                        "In the meantime have a fortune: <blockquote>" + \
-                          process.communicate()[0] + "</blockquote></div>" 
+            process = subprocess.Popen('/usr/games/fortune',
+                                       shell=False,
+                                       stdout=subprocess.PIPE)
+            msg = "In the meantime have a fortune cookie: <blockquote>"
+            msg += process.communicate()[0] + "</blockquote>"
+            result_files['Your results are not ready yet'] = msg
         else:
-            #XXX: move this update somewhere else? 
+            #XXX: move this update somewhere else?
             update_db.update_all(courseId)
-            resultlog = ""
             for fname in os.listdir(r_path):
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
-                    f = open(f_path, "r")
-                    resultlog += "===== " + fname + " =====\n"
-                    resultlog += f.read()
-        return json.dumps({'resultLog':resultlog})
+                    with open(f_path, 'r') as f:
+                        result_files[fname] = f.read()
+        return json.dumps({'resultFiles':result_files})
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
-                 'errorMessage':"",
-                 'errorTrace':strout.get()})  	                           
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
 
 
 ######### @ServiceMethod
