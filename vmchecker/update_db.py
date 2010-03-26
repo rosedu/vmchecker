@@ -215,6 +215,7 @@ def update_all(course_id):
             self.assignment = None
             self.ignore_errors = False
             self.course_id = course_id
+            self.simulate = False
 
 
     vmcfg = CourseConfig(CourseList().course_config(course_id))
