@@ -97,6 +97,12 @@ def create_db(db_file):
         _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
         return
 
+    # need to create a file without messing with the group persmission
+    # bits to not upset POSIX ACL masks
+    file = open(db_file, 'w')
+    file.write('')
+    file.close()
+
     db_conn = sqlite3.connect(db_file)
     db_cursor = db_conn.cursor()
     db_cursor.executescript("""
