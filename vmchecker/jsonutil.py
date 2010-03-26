@@ -19,26 +19,32 @@ def stringify_json(obj):
     the unicode strings to str strings, but this is prone to errors:
     one might easily forget to convert one such value.
     """
-    newobj = {}
-    for key, value in obj.iteritems():
-        key = str(key)
-        if isinstance(value, dict):
-            newobj[key] = stringify_json(value)
-        elif isinstance(value, list):
-            newobj[key] = [stringify_json(v) for v in value]
-        elif isinstance(value, unicode):
-            val = str(value)
-            if val.isdigit():
-                val = int(val)
-            else:
-                try:
-                    val = float(val)
-                except ValueError:
-                    val = str(val)
-            newobj[key] = val
+
+    # for dicts: make a new dict stringifying keys and values
+    if isinstance(obj, dict):
+        newobj = {}
+        for key, value in obj.iteritems():
+            key = str(key)
+            newobj[str(key)] = stringify_json(value)
+        return newobj
+
+    # return a list with all elems stringifyed
+    if isinstance(obj, list):
+        return [stringify_json(v) for v in obj]
+
+    # try to convert unicode strings to int/float, or just stringify
+    # with str()
+    if isinstance(obj, unicode):
+        if obj.isdigit():
+            return int(obj)
         else:
-            newobj[key] = value
-    return newobj
+            try:
+                return float(obj)
+            except ValueError:
+                return str(obj)
+
+    # if all else fails, just return the object as is
+    return obj
 
 
 def _test_stringify_json():
