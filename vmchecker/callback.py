@@ -203,7 +203,11 @@ def send_results_and_notify(files, conf_vars):
     """Opens a connection, transfers files, and
     TODO: calls a script on the storer.
     """
-    t = connect_to_host(conf_vars)
+    try:
+        t = connect_to_host(conf_vars)
+    except:
+        _logger.exception('could not connect to remote host')
+        return
     try:
         if len(files) > 0:
             sftp = paramiko.SFTPClient.from_transport(t)
@@ -223,7 +227,7 @@ def print_usage():
 def run_callback(config_file, files):
     _setup_logging()
     conf_vars = _config_variables(config_file, 'Assignment')
-    send_results_and_notify(files, conf_vars)
+    send_results_and_notify(list(files), conf_vars)
 
 
 def main():
