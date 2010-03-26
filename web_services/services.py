@@ -21,6 +21,7 @@ import subprocess
 from mod_python import Session
 
 from vmchecker.courselist import CourseList
+from vmchecker.config import CourseConfig
 from vmchecker import submit, config, websutil, update_db
 
 # define ERROR_MESSAGES
@@ -167,19 +168,22 @@ def getCourses(req):
     # Reset the timeout
     s.save()
 
+    course_arr = []
     strout = websutil.OutputString()
     try:
         clist = CourseList()
+        for course_id in clist.course_names():
+            course_cfg_fname = clist.course_config(course_id)
+            course_cfg = CourseConfig(course_cfg_fname)
+            course_title = course_cfg.course_name()
+            course_arr.append({'id' : course_id,
+                               'title' : course_title})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
              'errorMessage':"",
              'errorTrace':strout.get()})  	
 				
-    course_arr = []
-    for course_id in clist.course_names():
-        course_arr.append({'id' : course_id,
-            'title' : course_id}) # XXX: TODO: get a long name
     return json.dumps(course_arr)
 
 

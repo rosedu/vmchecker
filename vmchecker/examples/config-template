@@ -1,6 +1,7 @@
 [vmchecker]
 root = $root
 repository = $repo
+CourseName = Sisteme de operare
 
 
 PenaltyWeights = 0.25
@@ -23,10 +24,6 @@ Username = so
 QueuePath = /tmp/
 
 [assignment DEFAULT]
-# the name of the course
-# as of now this is only used in the name of some files
-# but in the future it may be used in scheduling tests
-Course = Sisteme de operare
 
 # minimum time (in seconds) between two successive
 # submissions by the same student.

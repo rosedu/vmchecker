@@ -62,6 +62,11 @@ class CourseConfig:
         """The path on the tester machine where the queued files are put"""
         return self.config.get('tester', 'queuepath')
 
+    def course_name(self):
+        """Return a human readable name for the course"""
+        return self.config.get('vmchecker', 'coursename')
+
+
     def assignments(self):
         """Return an Assignment object describing the assignments in
         this course's config file"""
