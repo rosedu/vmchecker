@@ -249,6 +249,7 @@ def make_testing_configuration():
         }
 
 
+
 def main():
     """Main entry point when run as a script; prepares environment for
     test_submission()"""
@@ -263,7 +264,8 @@ def main():
     else:
         testcfg_file = sys.argv[1]
         with open(testcfg_file, 'r') as handler:
-            test = json.loads(handler.read())
+            test_unicode = json.loads(handler.read())
+            test = jsonutil.stringify_json(test_unicode)
 
     # run the test :)
     test_submission(test)
