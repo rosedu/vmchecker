@@ -38,6 +38,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
         the testing queue"""
 	
     # Check permission
+    req.content_type = 'text/html'
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
@@ -91,7 +92,8 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
 
-    # Check permission 	
+    # Check permission
+    req.content_type = 'text/html'
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
@@ -157,6 +159,7 @@ def getResults(req, courseId, assignmentId):
 def getCourses(req):
     """ Returns a JSON object containing the list of available courses """
 
+    req.content_type = 'text/html'
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
@@ -190,6 +193,7 @@ def getCourses(req):
 def getAssignments(req, courseId): 
     """ Returns the list of assignments for a given course """
 
+    req.content_type = 'text/html'
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
@@ -226,6 +230,7 @@ def getAssignments(req, courseId):
 
 ######### @ServiceMethod
 def login(req, username, password):
+    req.content_type = 'text/html'
     s = Session.Session(req)
 
     if not s.is_new():
@@ -255,6 +260,7 @@ def login(req, username, password):
 
 ######### @ServiceMethod
 def logout(req):
+    req.content_type = 'text/html'
     s = Session.Session(req)
     s.invalidate()
     return json.dumps({'info':'You logged out'})
