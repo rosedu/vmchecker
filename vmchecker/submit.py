@@ -101,7 +101,7 @@ def submission_backup(back_dir, archive_filename, sbcfg):
     # copy the (unmodified) archive. This should be the first thing we
     # do, to make sure the uploaded submission is on the server no
     # matter what happens next
-    shutil.copy(archive_filename, back_zip)
+    shutil.copyfile(archive_filename, back_zip)
 
     # write the config. Again do this before unzipping (which might fail)
     # to make sure we have the upload data ready.
