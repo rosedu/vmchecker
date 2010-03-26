@@ -212,7 +212,6 @@ def create_testing_bundle(user, assignment, course_id):
                 ziputil.create_zip(handler, file_list)
         except:
             logger.error('Failed to create zip archive %s', bundle_path)
-            os.unlink(bundle_path)
             raise # just cleaned up the bundle. the error still needs
                   # to be reported.
 
