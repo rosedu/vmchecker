@@ -125,7 +125,7 @@ class UpdateDb(repo_walker.RepoWalker):
         sss = submissions.Submissions(VmcheckerPaths(vmcfg.root_path()))
         upload_time = sss.get_upload_time_str(assignment, user)
 
-        deadline = time.strptime(vmcfg.assignments.get(assignment, 'Deadline'),
+        deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                                                 penalty.DATE_FORMAT)
         holidays = int(vmcfg.get('vmchecker','Holidays'))
 
