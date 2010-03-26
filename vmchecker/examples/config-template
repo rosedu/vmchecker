@@ -13,20 +13,20 @@ HolidayFinish = 2009.04.02 23:59:00
 
 
 [storer]
-Hostname = cursuri.cs.pub.ro
-Username = cpl
+Hostname = elf.cs.pub.ro
+Username = so
 
 
 [tester]
-Hostname = localhost
-Username = gringo
+Hostname = sanctuary.cs.pub.ro
+Username = so
 QueuePath = /tmp/
 
 [assignment DEFAULT]
 # the name of the course
 # as of now this is only used in the name of some files
 # but in the future it may be used in scheduling tests
-Course = CPL
+Course = Sisteme de operare
 
 # minimum time (in seconds) between two successive
 # submissions by the same student.
