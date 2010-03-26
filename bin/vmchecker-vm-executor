@@ -20,6 +20,7 @@ import logging
 from threading import Thread
 import sys
 
+from vmchecker import jsonutil
 
 _logger = logging.getLogger('vm_executor')
 
