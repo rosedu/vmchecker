@@ -36,6 +36,7 @@ from subprocess import Popen
 from . import callback
 from . import vmlogging
 from .paths import submission_config_file
+from .config import CourseConfig
 
 _logger = vmlogging.create_module_logger('commander')
 
@@ -149,7 +150,7 @@ def _check_required_files(path):
     """Checks that a set of files required by commander is present in
     the given path."""
     found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'submission-config']
+    needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'machine-config']
     found_files = os.listdir(path)
     not_found = []
     for need in needed_files:
@@ -163,7 +164,7 @@ def _check_required_files(path):
 
 
 
-def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
+def _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path):
     """Returns an object with a configuration suitable for
     vm-executor"""
     timeout = asscfg.get(assignment, 'Timeout')
@@ -174,17 +175,17 @@ def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
     return {
         'km_enable' : kernel_messages,
         'host' : {
-            'vmx_path'       : vmcfg.get(machine, 'VMPath'),
-            'vmchecker_root' : vmcfg.root_path(),
+            'vmx_path'       : mccfg.get(machine, 'VMPath'),
+            'vmchecker_root' : tester_root_path,
             'jobs_path'      : bundle_dir,
             'scripts_path'   : bundle_dir},
         'guest' : {
-            'username'  : vmcfg.get(machine, 'GuestUser'),
-            'password'  : vmcfg.get(machine, 'GuestPassword'),
-            'shell'     : vmcfg.get(machine, 'GuestShellPath'),
+            'username'  : mccfg.get(machine, 'GuestUser'),
+            'password'  : mccfg.get(machine, 'GuestPassword'),
+            'shell'     : mccfg.get(machine, 'GuestShellPath'),
             'root_path' : {
-                'native_style' : vmcfg.get(machine, 'GuestBasePath'),
-                'shell_style'  : vmcfg.get(machine, 'GuestHomeInBash'),
+                'native_style' : mccfg.get(machine, 'GuestBasePath'),
+                'shell_style'  : mccfg.get(machine, 'GuestHomeInBash'),
                 'separator'    : '/',
                 },
             },
@@ -204,12 +205,11 @@ def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
             ]
         }
 
-
-def _write_test_config(dst_file, bundle_dir, assignment, vmcfg, asscfg):
+def _write_test_config(dst_file, bundle_dir, assignment, mccfg, asscfg, tester_root_path):
     """Write the test configuration to a json file to be passed in to
     the vm-executor"""
     with open(dst_file, 'w') as handler:
-        testcfg = _make_test_config(bundle_dir, assignment, vmcfg, asscfg)
+        testcfg = _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path)
         testcfg_str = json.dumps(testcfg)
         handler.write(testcfg_str)
 
@@ -223,21 +223,25 @@ def _get_assignment_id(bundle_dir):
     assignment = config.get('Assignment', 'Assignment')
     return assignment
 
+def _get_machine_config(bundle_dir):
+    """Returns a parser for the machine-config in the bundle dir"""
+    return CourseConfig(os.path.join(bundle_dir, 'machine-config'))
 
 
-def prepare_env_and_test(vmcfg, bundle_dir):
+def prepare_env_and_test(tester_root_path, bundle_dir):
     """Prepare testing environment for vm-executor, create a config
     file and run vm-executor"""
 
     _check_required_files(bundle_dir)
 
     assignment = _get_assignment_id(bundle_dir)
-    asscfg  = vmcfg.assignments()
+    mccfg = _get_machine_config(bundle_dir)
+    asscfg  = mccfg.assignments()
     timeout = asscfg.get(assignment, 'Timeout')
 
 
     json_cfg_fname = os.path.join(bundle_dir, 'vm_executor_config.json')
-    _write_test_config(json_cfg_fname, bundle_dir, assignment, vmcfg, asscfg)
+    _write_test_config(json_cfg_fname, bundle_dir, assignment, mccfg, asscfg, tester_root_path)
 
     try:
         _run_executor(json_cfg_fname, bundle_dir, assignment, timeout)
