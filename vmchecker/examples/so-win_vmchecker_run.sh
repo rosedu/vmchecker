@@ -21,4 +21,4 @@ run_tests()
     else echo dont know how to run tests; fi  2>&1 
 }
 
-run_tests  >job_run 2> job_run
+run_tests  >run-stdout.vmr 2> run-stderr.vmr

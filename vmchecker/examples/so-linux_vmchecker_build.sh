@@ -99,7 +99,7 @@ main()
 {
 
 	# test it
-	check_job  > job_build 2>job_errors;  err=$?
+	check_job  > build-stdout.vmr 2>build-stderr.vmr;  err=$?
 
 	return $err
 }

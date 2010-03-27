@@ -97,12 +97,12 @@ main()
 {
 
 	# test it
-	touch job_build job_errors
-	echo 'checker: building' >> job_build
-	check_job > job_build 2>job_errors;  err=$?
+	touch build-stdout.vmr build-stderr.vmr
+	echo 'checker: building' >> build-stdout.vmr
+	check_job > build-stdout.vmr 2>build-stderr.vmr;  err=$?
 
 	if [ $err -gt 1 ]; then
-		echo "this looks like a checker system error, admins should be notified" >>job_output
+		echo "this looks like a checker system error, admins should be notified" >>build-stderr.vmr
 	fi
 
 	return $err

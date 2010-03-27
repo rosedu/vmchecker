@@ -120,7 +120,7 @@ def dir_submission_results(submission_root):
 def submission_results_grade(submission_root):
     """Returns the path to the users's grade file for the given
     assignment"""
-    return os.path.join(dir_submission_results(submission_root), 'job_results')
+    return os.path.join(dir_submission_results(submission_root), 'grade.vmr')
 
 
 def submission_archive_file(submission_root):

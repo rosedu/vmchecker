@@ -41,11 +41,13 @@ from . import vmlogging
 _logger = vmlogging.create_module_logger('commander')
 
 _FILES_TO_SEND = (
-    'job_build',
-    'job_run',
-    'job_errors',
-    'job_results',
-    'job_km', )
+    'vmchecker-stderr.vmr',
+    'build-stdout.vmr',
+    'build-stderr.vmr',
+    'run-stdout.vmr',
+    'run-stderr.vmr',
+    'run-km.vmr',
+    'grade.vmr',)
 _EXECUTOR_OVERHEAD = 300
 
 
@@ -83,11 +85,11 @@ def _run_executor(json_cfg_fname, executor_job_dir, assignment, timeout):
 
         popen = Popen(cmd)
 
-        with open(os.path.join(executor_job_dir, 'job_results'), 'w') as handler:
+        with open(os.path.join(executor_job_dir, 'grade.vmr'), 'w') as handler:
             print >> handler, 'ok'
     except OSError:
         _logger.exception('Cannot invoke VMExecutor.')
-        with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
+        with open(os.path.join(executor_job_dir, 'vmchecker-stderr.vmr'), 'a') as handler:
             print >> handler, 'Cannot run VMExecutor.'
             print >> handler, 'Please contact the administrators.'
         # if we cannot open the process, there is nothing more to be done
@@ -110,7 +112,7 @@ def _run_executor(json_cfg_fname, executor_job_dir, assignment, timeout):
                 # polls every 5 seconds
                 time.sleep(5)
             else:
-                with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
+                with open(os.path.join(executor_job_dir, 'vmchecker-stderr.vmr'), 'a') as handler:
                     print >> handler, 'VMExecutor returned %d (%s)' % (
                         exit_code, ['success', 'error'][exit_code < 0])
 
@@ -119,14 +121,14 @@ def _run_executor(json_cfg_fname, executor_job_dir, assignment, timeout):
                 return
         else:
             _logger.error("VMChecker timeouted on assignment `%s'" % assignment)
-            with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
+            with open(os.path.join(executor_job_dir, 'vmchecker-stderr.vmr'), 'a') as handler:
                 print >> handler, """\ VMExecutor successfuly started,
                       but it's taking too long. Check your sources,
                       makefiles, etc and resubmit.  If the problem
                       persists please contact administrators."""
     except:
         _logger.exception('Exception after starting VMExecutor.')
-        with open(os.path.join(executor_job_dir, 'job_errors'), 'a') as handler:
+        with open(os.path.join(executor_job_dir, 'vmchecker-stderr.vmr'), 'a') as handler:
             print >> handler, """\ Error after starting VMExecutor.
                   If the problem persists please contact
                   administrators."""
@@ -191,13 +193,13 @@ def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
             0 : {
                 'input'  : ['archive.zip', 'tests.zip'],
                 'script' : ['build.sh'],
-                'output' : ['job_build'],
+                'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
                 'timeout': int(timeout),
                 },
             1  : {
                 'input'  : [],
                 'script' : ['run.sh'],
-                'output' : ['job_run', 'job_errors'],
+                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
                 'timeout': int(timeout)
                 }
             }

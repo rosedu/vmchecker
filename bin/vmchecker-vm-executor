@@ -238,13 +238,13 @@ def make_testing_configuration():
             0 : {
                 'input'  : ['file.zip', 'tests.zip'],
                 'script' : ['vmchecker_build.sh'],
-                'output' : ['job_build', 'job_errors'],
+                'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
                 'timeout': 120
                 },
             1  : {
                 'input'  : [],
                 'script' : ['vmchecker_run.sh'],
-                'output' : ['job_run'],
+                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
                 'timeout': 120
                 }
             }
