@@ -205,8 +205,8 @@ def test_submission(args):
         start_kernel_listener(args)
 
     tests = args['test']
-    for i in tests:
-        success = copy_files_and_run_script(vm, jobs_path, scripts_path, guest, tests[i])
+    for test in tests:
+        success = copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test)
         if not success:
             break # stop running tests if an error occured.
 
@@ -234,20 +234,20 @@ def make_testing_configuration():
                 'separator'    : '/',
                 },
             },
-        'test'  : {
-            0 : {
+        'test'  : [
+            {
                 'input'  : ['file.zip', 'tests.zip'],
                 'script' : ['vmchecker_build.sh'],
                 'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
                 'timeout': 120
                 },
-            1  : {
+            {
                 'input'  : [],
                 'script' : ['vmchecker_run.sh'],
                 'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
                 'timeout': 120
                 }
-            }
+            ]
         }
 
 

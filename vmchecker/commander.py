@@ -189,20 +189,20 @@ def _make_test_config(bundle_dir, assignment, vmcfg, asscfg):
                 'separator'    : '/',
                 },
             },
-        'test'  : {
-            0 : {
+        'test'  : [
+            {
                 'input'  : ['archive.zip', 'tests.zip'],
                 'script' : ['build.sh'],
                 'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
                 'timeout': int(timeout),
                 },
-            1  : {
+            {
                 'input'  : [],
                 'script' : ['run.sh'],
                 'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
                 'timeout': int(timeout)
                 }
-            }
+            ]
         }
 
 
