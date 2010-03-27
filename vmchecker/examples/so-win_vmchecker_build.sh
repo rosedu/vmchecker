@@ -52,7 +52,7 @@ install_tests()
 
 build_tests()
 {
-	if [ -f NMakefile.checker ]; then echo $winbuildenv \&\& nmake /nologo -f NMakefile.checker build-$1 > __checker.bat; cmd /E:ON /V:ON /T:0E /C /c __checker.bat;
+	if [ -f NMakefile.checker ]; then echo $winbuildenv \&\& nmake /nologo -f NMakefile.checker build-$1 > __checker.bat; cmd /E:ON /V:ON /T:0E /C __checker.bat;
        	elif [ -f Makefile.checker ]; then make -f Makefile.checker build-$1;
        	else echo dont know how to build tests;
        	fi  2>&1
