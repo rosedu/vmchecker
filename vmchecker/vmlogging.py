@@ -19,7 +19,7 @@ def create_module_logger(name):
     It must have a default handler, because, it the application does
     not provide any, logging will throw exceptions.
     """
-    logger = logging.getLogger('vmchecker' + name)
+    logger = logging.getLogger('vmchecker.' + name)
     logger.addHandler(_NullHandler())
     return logger
 
