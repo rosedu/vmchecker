@@ -180,6 +180,8 @@ def set_default_acls():
     for def_acl in def_acl_list:
         check_call(['setfacl', '-d', '-m', def_acl, '.'])
         check_call(['setfacl',       '-m', def_acl, '.'])
+    print 'Make sure the ssh key identified in the config file is readable by www-data'
+    print 'Either create the keys somewhere readable by www-data or use setfacl'
 
 
 
