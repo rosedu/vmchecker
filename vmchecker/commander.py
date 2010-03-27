@@ -221,7 +221,7 @@ def _get_assignment_id(bundle_dir):
     with open(os.path.join(bundle_dir, 'config')) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
-    assignment = config.get('Assignment', 'Assignment')  # yet another hack
+    assignment = config.get('Assignment', 'Assignment')
     return assignment
 
 
