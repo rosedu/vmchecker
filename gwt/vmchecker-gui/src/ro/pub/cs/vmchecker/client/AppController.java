@@ -158,7 +158,7 @@ public class AppController implements ValueChangeHandler<String> {
 				if (mainPresenter != null) {
 					mainPresenter.clearEventHandlers(); 
 				}
-				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, new AssignmentWidget());
+				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, getUsername(), new AssignmentWidget());
 				headerPresenter.selectCourse(idToCourse.get(token).id); 
 			} else {
 				token = courses.get(0).id;

@@ -13,11 +13,18 @@
 		
 		.contentPanel {
 		}
+		
+		.statsButton {
+			margin-left: 22px; 	
+		}
 	</ui:style>
 	<g:SimplePanel styleName="{style.contentWrapper}"> 
 		<g:HorizontalPanel styleName="{style.contentPanel}">
-			<g:SimplePanel ui:field="menuPanel">
-			</g:SimplePanel>
+			<g:FlowPanel>
+				<g:Anchor ui:field="viewStatsButton" styleName="{style.statsButton} fillButton">rezultate generale</g:Anchor>
+				<g:SimplePanel ui:field="menuPanel">
+				</g:SimplePanel>
+			</g:FlowPanel>
 			<g:SimplePanel ui:field="boardPanel" styleName="{style.content}">
 			</g:SimplePanel>
 		</g:HorizontalPanel>
