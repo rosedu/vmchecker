@@ -11,8 +11,14 @@ rm -rf /usr/lib/python2.6/dist-packages/vmchecker/*
 rm -rf /usr/local/lib/python2.6/vmchecker/*
 rm -rf /usr/lib/python2.6/vmchecker/*
 
+rm -rf /usr/local/lib/python2.6/site-packages/vmchecker/*
+rm -rf /usr/lib/python2.6/site-packages/vmchecker/*
+
 rm -rf /usr/local/lib/python2.5/dist-packages/vmchecker/*
 rm -rf /usr/lib/python2.5/dist-packages/vmchecker/*
+
+rm -rf /usr/local/lib/python2.5/site-packages/vmchecker/*
+rm -rf /usr/lib/python2.5/site-packages/vmchecker/*
 
 rm -rf /usr/local/lib/python2.5/vmchecker/*
 rm -rf /usr/lib/python2.5/vmchecker/*
