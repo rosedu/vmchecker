@@ -143,7 +143,9 @@ def getResults(req, courseId, assignmentId):
                     with open(f_path, 'r') as f:
                         result_files.append({fname  : f.read() })
 
-        if len(result_files) == 0:
+        if len(result_files) != 0:
+            result_files = websutil.sortResultFiles(result_files)
+        else:
             process = subprocess.Popen('/usr/games/fortune',
                                        shell=False,
                                        stdout=subprocess.PIPE)

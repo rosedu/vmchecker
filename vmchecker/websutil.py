@@ -73,3 +73,36 @@ def fbuffer(f, chunk_size=10000):
             break
         yield chunk
 
+
+def _find_file(searched_file_name, rfiles):
+    """Search for a filename in an array for {fname:fcontent} dicts"""
+    for rfile in rfiles:
+        if rfile.has_key(searched_file_name):
+            return rfile
+    return None
+
+
+def sortResultFiles(rfiles):
+    """Sort the vector of result files and change keys with human
+    readable descriptions"""
+
+    file_descriptions = [
+        {'grade.vmr'            : 'Nota și observații'},
+        {'vmchecker-stderr.vmr' : 'Erori vmchecker'},
+        {'build-stdout.vmr'     : 'Compilarea temei și a testelor (stdout)'},
+        {'build-stderr.vmr'     : 'Compilarea temei și a testelor (stderr)'},
+        {'run-stdout.vmr'       : 'Execuția testelor (stdout)'},
+        {'run-stderr.vmr'       : 'Execuția testelor (stderr)'},
+        {'run-km.vmr'           : 'Mesaje kernel (netconsole)'},
+        ]
+    ret = []
+    for f_des in file_descriptions:
+        key = f_des.keys()[0] # there is only one key:value pair in each dict
+        rfile = _find_file(key, rfiles)
+        if rfile == None:
+            ret.append({f_des.get(key) : 'Nu a fost găsit în vmchecker storer'})
+        else:
+            ret.append({f_des.get(key) : rfile.get(key)})
+            rfiles.remove(rfile)
+    ret += rfiles
+    return ret
