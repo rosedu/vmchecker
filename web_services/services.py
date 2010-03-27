@@ -143,6 +143,9 @@ def getResults(req, courseId, assignmentId):
             #XXX: move this update somewhere else?
             update_db.update_all(courseId)
             for fname in os.listdir(r_path):
+                # skill all files not ending in '.vmr'
+                if not fname.endswith('.vmr'):
+                    continue
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
                     with open(f_path, 'r') as f:
