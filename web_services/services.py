@@ -89,6 +89,8 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
                        'dumpLog':strout.get()}) 
 
 
+
+
 ########## @ServiceMethod
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
@@ -112,7 +114,16 @@ def getResults(req, courseId, assignmentId):
         return json.dumps({'errorType' : ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
+    # Reset the timeout
+    s.save()
+    return getUserResults(req, courseId, assignmentId, username)
 
+
+
+
+def getUserResults(req, courseId, assignmentId, username):
+    """Get the results for a given username"""
+    req.content_type = 'text/html'
     strout = websutil.OutputString()
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
@@ -126,8 +137,6 @@ def getResults(req, courseId, assignmentId):
     submission_dir = vmpaths.dir_submission_root(assignmentId, username)
     r_path = paths.dir_submission_results(submission_dir)
 
-    # Reset the timeout
-    s.save()
 
     strout = websutil.OutputString()
     try:
@@ -231,6 +240,12 @@ def getAssignments(req, courseId):
         a['statementLink'] = assignments.get(key, 'StatementLink')
         ass_arr.append(a)
     return json.dumps(ass_arr)
+
+
+
+def getAllGrades(req, courseId):
+    """Returns a table with all the grades of all students for a given course"""
+    return []
 
 
 ######### @ServiceMethod
