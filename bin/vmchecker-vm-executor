@@ -177,9 +177,9 @@ def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
         for script in test['script']:
             timedout = makeExecutableAndRun(vm, guest['shell'], guest['root_path']['shell_style'] +
                                             guest['root_path']['separator'] + script, test['timeout'])
+            copyFilesFromGuestToHost(vm, jobs_path, guest['root_path']['native_style'], test['output'])
             if timedout:
                 return False
-        copyFilesFromGuestToHost(vm, jobs_path,    guest['root_path']['native_style'], test['output'])
     finally:
         return True
 
