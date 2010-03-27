@@ -245,6 +245,7 @@ def getAssignments(req, courseId):
 
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
+    req.content_type = 'text/html'
     return []
 
 
