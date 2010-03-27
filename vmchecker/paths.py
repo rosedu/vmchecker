@@ -135,7 +135,7 @@ def submission_config_file(submission_root):
     Among others this file contains data about user, assignment,
     upload time.
     """
-    return os.path.join(submission_root, 'config')
+    return os.path.join(submission_root, 'submission-config')
 
 
 

@@ -28,7 +28,6 @@ except ImportError:
 
 
 import ConfigParser
-import shutil
 import time
 import sys
 import os
@@ -36,7 +35,7 @@ from subprocess import Popen
 
 from . import callback
 from . import vmlogging
-
+from .paths import submission_config_file
 
 _logger = vmlogging.create_module_logger('commander')
 
@@ -55,7 +54,7 @@ _EXECUTOR_OVERHEAD = 300
 def _run_callback(bundle_dir):
     """Runs callback script to upload results"""
     abs_files = (os.path.join(bundle_dir, f) for f in _FILES_TO_SEND)
-    callback.run_callback(os.path.join(bundle_dir, 'config'), abs_files)
+    callback.run_callback(submission_config_file(bundle_dir), abs_files)
 
 
 
@@ -150,7 +149,7 @@ def _check_required_files(path):
     """Checks that a set of files required by commander is present in
     the given path."""
     found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'config']
+    needed_files = ['archive.zip', 'tests.zip', 'submission-config']
     found_files = os.listdir(path)
     not_found = []
     for need in needed_files:
@@ -218,7 +217,7 @@ def _write_test_config(dst_file, bundle_dir, assignment, vmcfg, asscfg):
 def _get_assignment_id(bundle_dir):
     """Reads the assignment identifier from the config file of the
     submission from bundle_dir"""
-    with open(os.path.join(bundle_dir, 'config')) as handle:
+    with open(submission_config_file(bundle_dir)) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
     assignment = config.get('Assignment', 'Assignment')

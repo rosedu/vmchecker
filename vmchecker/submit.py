@@ -88,11 +88,11 @@ def submission_backup(back_dir, archive_filename, sbcfg):
     Each entry is of the following structure:
     +--$back_dir/
     |  +--archive/
-    |  |  +-- X         (all the files from the archive)
-    |  |  +-- Y         (all the files from the archive)
-    |  +--config        config describing the submission
-    |  |                (user, uploadtime, assignment)
-    |  +--archive.zip   the original (unmodified) archive
+    |  |  +-- X              (all the files from the archive)
+    |  |  +-- Y              (all the files from the archive)
+    |  +--submission-config  config describing the submission
+    |  |                     (user, uploadtime, assignment)
+    |  +--archive.zip        the original (unmodified) archive
     """
     back_arc = paths.dir_submission_expanded_archive(back_dir)
     back_cfg = paths.submission_config_file(back_dir)
@@ -179,7 +179,7 @@ def create_testing_bundle(user, assignment, course_id):
     needed to run the tests on a submission.
 
     The bundle contains:
-        config      - assignment config (eg. name, time of submission etc)
+        submission-config - assignment config (eg. name, time of submission etc)
         archive.zip - a zip containing the sources
         tests.zip   - a zip containing the tests
         ???         - assignment's extra files (see Assignments.include())
@@ -198,7 +198,7 @@ def create_testing_bundle(user, assignment, course_id):
                        ('run.sh',   vmcfg.get(machine, 'RunScript')) ]
     rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
                        ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                       ('config', paths.submission_config_file(sbroot)) ]
+                       ('submission-config', paths.submission_config_file(sbroot)) ]
 
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list ]
 
