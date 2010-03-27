@@ -132,15 +132,7 @@ def getResults(req, courseId, assignmentId):
     strout = websutil.OutputString()
     try:
         result_files = []
-        if not os.path.isdir(r_path):
-            process = subprocess.Popen('/usr/games/fortune',
-                                       shell=False,
-                                       stdout=subprocess.PIPE)
-            msg = "In the meantime have a fortune cookie: <blockquote>"
-            msg += process.communicate()[0] + "</blockquote>"
-            result_files = [ {'Your results are not ready yet' :  msg } ]
-        else:
-            #XXX: move this update somewhere else?
+        if os.path.isdir(r_path):
             update_db.update_all(courseId)
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
@@ -150,6 +142,14 @@ def getResults(req, courseId, assignmentId):
                 if os.path.isfile(f_path):
                     with open(f_path, 'r') as f:
                         result_files.append({fname  : f.read() })
+
+        if len(result_files) == 0:
+            process = subprocess.Popen('/usr/games/fortune',
+                                       shell=False,
+                                       stdout=subprocess.PIPE)
+            msg = "In the meantime have a fortune cookie: <blockquote>"
+            msg += process.communicate()[0] + "</blockquote>"
+            result_files = [ {'Your results are not ready yet' :  msg } ]
         return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)
