@@ -179,7 +179,8 @@ def create_testing_bundle(user, assignment, course_id):
     needed to run the tests on a submission.
 
     The bundle contains:
-        submission-config - assignment config (eg. name, time of submission etc)
+        submission-config - submission config (eg. name, time of submission etc)
+        machine-config    - configuration for the virtual machine
         archive.zip - a zip containing the sources
         tests.zip   - a zip containing the tests
         ???         - assignment's extra files (see Assignments.include())
@@ -198,7 +199,10 @@ def create_testing_bundle(user, assignment, course_id):
                        ('run.sh',   vmcfg.get(machine, 'RunScript')) ]
     rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
                        ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                       ('submission-config', paths.submission_config_file(sbroot)) ]
+                       ('submission-config', paths.submission_config_file(sbroot)),
+                       ('machine-config', os.path.join(vmcfg.root_path(), 'config')) ] # XXX
+    # XXX for now 'machine-config' contains all the config of the storer
+    # in the future we should include only what's really necessary
 
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list ]
 
