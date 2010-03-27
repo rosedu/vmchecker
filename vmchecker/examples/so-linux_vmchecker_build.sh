@@ -17,11 +17,11 @@ get_vm_ip()
 install_job()
 {
 	echo "homework contents: "
-	unzip -l file.zip 2>&1
+	unzip -l archive.zip 2>&1
 	echo "unpacking ..."
-	# note stdout redirected to stderr: do not output file.zip contents
+	# note stdout redirected to stderr: do not output archive.zip contents
 	# contents printed with more info above with "unzip -l"
-	unzip -o file.zip 1>&2
+	unzip -o archive.zip 1>&2
 	return $?
 }
 
