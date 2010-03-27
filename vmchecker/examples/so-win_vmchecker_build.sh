@@ -3,7 +3,7 @@
 #runs inside vm
 
 home=$1
-winbuildenv="\"C:\Program Files\Microsoft SDKs\Windows\v6.1\Bin\SetEnv.Cmd\""
+winbuildenv="\"C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat\""
 
 cd $home
 
