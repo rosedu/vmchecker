@@ -59,27 +59,12 @@
 			margin: 3px;
 			float: left;  
 		}
-			
-		a.anchor, a.anchor:visited {
-			color: green;
-			padding-right: 5px;
-			padding-left: 5px; 
-			font-size: 14px;
-			line-height: 20px; 
-			cursor: pointer;
-			font-weight: bold;
-		}
-		
-		a.anchor:hover {
-			background: green; 
-			color: white;
-			text-decoration: none;  	
-		}
-		
+					
 		.last {
 			border-right: none; 
 		}
 		
+		/* 
 		a, a:visited, a:hover {
 			color: green; 
 		}
@@ -87,6 +72,7 @@
 		a:hover {
 			text-decoration: underline; 
 		}
+		*/
 		
 		.statusPanel {
 			top: 15px;
@@ -139,16 +125,6 @@
 			clear: both; 
 		}
 		
-		.detailsPopupContainer {
-			overflow: scroll; 
-		}
-		
-		.detailsPopupContent {
-			margin-top: 10px; 
-			padding-top: 10px; 
-			border-top: 1px solid #CCCCCC; 
-		}
-		
 	</ui:style>
 	<g:HTMLPanel>
 		<g:FlowPanel styleName="{style.header}">
@@ -163,7 +139,7 @@
 			</g:HorizontalPanel>
 			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}">
 				<g:Label ui:field="usernameLabel" styleName="{style.username}">nume.prenume</g:Label>
-				<g:Anchor ui:field="logoutButton" styleName="{style.anchor}">logout</g:Anchor>
+				<g:Anchor ui:field="logoutButton" styleName="fillButton">logout</g:Anchor>
 			</g:HorizontalPanel>
 			<g:SimplePanel styleName="{style.clear}"></g:SimplePanel>
 		</g:FlowPanel>
