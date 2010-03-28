@@ -81,10 +81,8 @@ def process_stale_jobs(dir_queue, vmpaths):
 
 
 def _callback(watch_manager):
-    """XXX: check python documentation about the _callback.
-    it receives an instance of the WatchManager.
-
-    TODO.
+    """Called after each event is processed in the Notifier. We just
+    use it to write to the logger that we finished processing.
 
     """
     _logger.info('Waiting for the next job to arrive')
