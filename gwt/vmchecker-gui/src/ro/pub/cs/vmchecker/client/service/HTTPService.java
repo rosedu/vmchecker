@@ -25,7 +25,7 @@ public class HTTPService {
 	public static String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses";
 	public static String GET_ASSIGNMENTS_URL = VMCHECKER_SERVICES_URL + "getAssignments";
 	public static String GET_USER_RESULTS_URL = VMCHECKER_SERVICES_URL + "getUserResults";	
-	public static String GET_ALL_RESULTS_URL = VMCHECKER_SERVICES_URL + "getAllResults";	
+	public static String GET_ALL_RESULTS_URL = VMCHECKER_SERVICES_URL + "getAllGrades";	
 	public static String GET_RESULTS_URL = VMCHECKER_SERVICES_URL + "getResults";
 	public static String PERFORM_AUTHENTICATION_URL = VMCHECKER_SERVICES_URL + "login";
 	public static String LOGOUT_URL = VMCHECKER_SERVICES_URL + "logout"; 
