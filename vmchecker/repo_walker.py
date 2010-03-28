@@ -44,7 +44,7 @@ class RepoWalker:
                 _logger.debug('Ignoring %s (not a directory)', path)
                 continue
 
-            if not os.path.isfile(os.path.join(path, 'config')):
+            if not os.path.isfile(paths.submission_config_file(path)):
                 _logger.debug("Ignoring %s (no config file)", path)
                 continue
 
