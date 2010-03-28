@@ -15,6 +15,7 @@ except ImportError:
 
 import os
 import sys
+import sqlite3
 import tempfile
 import traceback
 import subprocess
@@ -246,7 +247,44 @@ def getAssignments(req, courseId):
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'
-    return []
+    try:
+        update_db.update_all(courseId)
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+        db_conn = sqlite3.connect(vmpaths.db_file())
+        assignments = vmcfg.assignments()
+        sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
+                                                       int(assignments.get(y, "OrderNumber")))
+
+        grades = {}
+        try:
+            db_cursor = db_conn.cursor()
+            db_cursor.execute(
+                'SELECT users.name, assignments.name, grades.grade '
+                'FROM users, assignments, grades '
+                'WHERE 1 '
+                'AND users.id = grades.user_id '
+                'AND assignments.id = grades.assignment_id')
+            for row in db_cursor:
+                user, assignment, grade = row
+                grades.setdefault(user, {})[assignment] = grade
+            db_cursor.close()
+        finally:
+            db_conn.close()
+
+        ret = []
+        for user in sorted(grades.keys()):
+            ret.append({'studentName' : user,
+                        'studentId'   : user,
+                        'results'     : grades.get(user)})
+        return json.dumps(ret)
+    except:
+        strout = websutil.OutputString()
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
 
 
 ######### @ServiceMethod
