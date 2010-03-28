@@ -158,6 +158,7 @@ def main():
     vmcfg = CourseConfig(CourseList().course_config(course_id))
     vmpaths = VmcheckerPaths(vmcfg.root_path())
 
+    os.chdir(vmcfg.root_path())
     # fail early if something is not setup corectly, and not at a
     # distant point when we'll need these things.
     check_tester_setup_correctly(vmpaths)
