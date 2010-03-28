@@ -1,18 +1,37 @@
-#!/bin/bash
+#!/bin/sh
 
-VMCHECKER_CONFIG_LIST=/etc/vmchecker/config.list
+set -e
+
+# Must be a valid filename
+NAME=vmchecker-queue-manager
+PIDFILE=/var/run/$NAME.pid
+#This is the command to be run, give the full pathname
+DAEMON=/usr/bin/vmchecker-queue-manager
+DAEMON_OPTS="--course_id so --stdin=/dev/null --stdout=queue-manager.log --stderr=queue-manager.log"
+DAEMON_USER="so"
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 case "$1" in
-  start)
-	cat $VMCHECKER_CONFIG_LIST | while read cfg ; do
-		vmchecker start --config $cfg
-	done;
+    start)
+        echo -n "Starting daemon: "$NAME
+	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --pidfile $PIDFILE --background --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
+        echo "."
 	;;
-  stop)
-	cat $VMCHECKER_CONFIG_LIST | while read cfg ; do
-		vmchecker stop --config $cfg
-	done;
+    stop)
+        echo -n "Stopping daemon: "$NAME
+	start-stop-daemon --stop  --quiet --chuid $DAEMON_USER --user $DAEMON_USER --oknodo --pidfile $PIDFILE
+        echo "."
 	;;
+    restart)
+        echo -n "Restarting daemon: "$NAME
+	start-stop-daemon --stop  --quiet --chuid $DAEMON_USER --user $DAEMON_USER --oknodo --retry 30 --pidfile $PIDFILE
+	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --pidfile $PIDFILE --background --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
+	echo "."
+	;;
+    *)
+	echo "Usage: "$1" {start|stop|restart}"
+	exit 1
 esac
 
-
+exit 0
