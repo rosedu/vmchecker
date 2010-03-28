@@ -1,12 +1,10 @@
 package ro.pub.cs.vmchecker.client.ui;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -29,6 +27,9 @@ public class AssignmentWidget extends Composite
 	@UiField
 	SimplePanel boardPanel; 
 	
+	@UiField
+	Anchor viewStatsButton; 
+	
 	public AssignmentWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
 	}
@@ -41,6 +42,11 @@ public class AssignmentWidget extends Composite
 	@Override
 	public HasWidgets getMenuPanel() {
 		return menuPanel; 
+	}
+
+	@Override
+	public HasClickHandlers getViewStatsButton() {
+		return viewStatsButton; 
 	}
 
 }

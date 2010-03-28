@@ -82,8 +82,13 @@ public class Delegate<T> {
 
 			public void onResponseReceived(Request request, Response response) {
 				try {
-					T result = decoder.decode(response.getText()); 
-					callback.onSuccess(result); 
+					T result = decoder.decode(response.getText());
+					if (result != null) {
+						callback.onSuccess(result);
+					} else {
+						GWT.log("Null result from Decoder: ", new NullPointerException());
+						parseError(callback, response.getText());
+					}
 				} catch (Exception e) {
 					GWT.log("Decoder did not parsed correctly", e);
 					parseError(callback, response.getText()); 

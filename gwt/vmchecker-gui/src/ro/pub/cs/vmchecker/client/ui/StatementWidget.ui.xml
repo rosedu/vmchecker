@@ -4,34 +4,18 @@
 	<ui:style>
 		.container {
 			background-color: #FFF;
-			padding: 10px;   
+			padding: 20px;
+		}
+		
+		.link {
+			font-weight: bold; 
+			font-size: 14px;
 		}
 	</ui:style>
 	<g:HTMLPanel>
-		<g:HTML styleName="{style.container}" ui:field="container">
-			<p>Să se scrie un modul de kernel care să implementeze un driver pentru
-				portul serial (UART16550). Device driver-ul trebuie să suporte cele
-				două porturi seriale standard dintr-un PC, COM1 şi COM2 (0x3f8,
-				0x2f8). În afară de rutinele standard care trebuie suportate (open,
-				read, write, close), driver-ul trebuie să suporte şi schimbarea
-				parametrilor de comunicaţie cu ajutorul unei operaţii ioctl sau
-				DeviceIoControl (UART16550_IOCTL_SET_LINE). 
-				</p>
-			<p>Driverul trebuie să folosească înteruperi atât pentru recepţie cât
-				şi pentru transmisie, pentru a reduce latenţa şi timpul de utilizare a
-				procesorului. De asemenea, apelurile read şi write trebuie să fie
-				blocante. Temele care nu respectă aceste cerinţe nu se iau în
-				considerare. Este indicat să folosiţi în cadrul driver-ului un buffer
-				de citire şi un buffer de scriere pentru fiecare port serial.
-			</p>
-			<p>
-				Un apel read blocant înseamnă că rutina de read apelată din user-space
-				se va bloca până la citirea a cel puţin un octet (buffer-ul de read
-				din kernel este gol şi nu se pot citi date). Un apel write blocant
-				înseamnă că rutina de write apelată din user-space se va bloca până la
-				scrierea a cel puţin un octet (buffer-ul de write din kernel este plin
-				şi nu se pot scrie date).		
-			</p>
-		</g:HTML>
+		<g:FlowPanel styleName="{style.container}" ui:field="container">
+			<g:Label>Continutul enuntului il puteti gasi la urmatorul link:</g:Label>
+			<g:Anchor ui:field="statementAnchor" styleName="{style.link}">link enunt</g:Anchor>
+		</g:FlowPanel>
 	</g:HTMLPanel>
 </ui:UiBinder> 

@@ -3,6 +3,8 @@
 body {
 	margin: 0px; 
 }
+
+
 /** Example rules used by the template application (remove for your app) */
 h1 {
   font-size: 2em;
@@ -12,33 +14,25 @@ h1 {
   text-align: center;
 }
 
-.sendButton {
-  display: block;
-  font-size: 16pt;
+p, ul, li {
+	font-size: 13px;
 }
 
-/** Most GWT widgets already have a style name defined */
-.gwt-DialogBox {
-  width: 400px;
+p {
+	padding: 0px 0 5px 0;  
 }
 
-.dialogVPanel {
-  margin: 5px;
-}
-
-.serverResponseLabelError {
-  color: red;
-}
-
-/** Set ids using widget.getElement().setId("idOfElement") */
-#closeButton {
-  margin: 15px 6px 6px;
+h2 {
+	font-size: 16px; 
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+	padding: 0px 0 5px 0;
+	margin: 0;  
 }
 
 .numberedMenu {
 	margin-left: 20px;
 	margin-right: 20px;
-	margin-top: 20px;   
+	margin-top: 10px;   
 }
 
 .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem, .assignmentContentMenuPanel .gwt-TabBar .gwt-TabBarItem-selected {
@@ -58,7 +52,8 @@ h1 {
 .logo {
 	background: url('images/vmchecker_logo_ui.png') left top no-repeat; 
 	width: 200px;
-	height: 40px; 
+	height: 40px;
+	margin-top: 8px;  
 }
 
 .loginDescription h2 {
@@ -81,3 +76,42 @@ h1 {
 	color: #9B0000; 
 	font-weight: bold; 
 }
+
+.resultsPopup {
+	border: 3px solid green;
+	padding:10px;
+	background:none repeat scroll 0 0 white; 
+	overflow:scroll;
+}
+
+.resultsPopup a, .resultsPopup a:hover, .resultsPopup a:visited {
+	color: green; 
+	font-weight: bold; 
+}
+
+a.fillButton, a.fillButton:visited {
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+	color: green;
+	padding: 3px 5px 3px 5px; 
+	font-size: 13px;
+	line-height: 20px;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+a.fillButton:hover {
+	background: green;
+	color: white;
+	text-decoration: none;
+}
+
+.popupContainer {	
+	overflow: scroll;
+}
+
+.popupContentPanel {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #CCCCCC;
+}		
+

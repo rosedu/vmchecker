@@ -9,19 +9,23 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
 import ro.pub.cs.vmchecker.client.model.Course;
-import ro.pub.cs.vmchecker.client.model.Result;
+import ro.pub.cs.vmchecker.client.model.EvaluationResult;
+import ro.pub.cs.vmchecker.client.model.StudentInfo;
 import ro.pub.cs.vmchecker.client.service.json.AssignmentsListDecoder;
 import ro.pub.cs.vmchecker.client.service.json.AuthenticationResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.CoursesListDecoder;
 import ro.pub.cs.vmchecker.client.service.json.NullDecoder;
 import ro.pub.cs.vmchecker.client.service.json.ResultDecoder;
+import ro.pub.cs.vmchecker.client.service.json.StatisticsDecoder;
 
 public class HTTPService {
-
+	
 	private static final String SERVICES_SUFFIX = "services/services.py"; 
 	public static String VMCHECKER_SERVICES_URL = computeServicesURL(); 
 	public static String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses";
 	public static String GET_ASSIGNMENTS_URL = VMCHECKER_SERVICES_URL + "getAssignments";
+	public static String GET_USER_RESULTS_URL = VMCHECKER_SERVICES_URL + "getUserResults";	
+	public static String GET_ALL_RESULTS_URL = VMCHECKER_SERVICES_URL + "getAllGrades";	
 	public static String GET_RESULTS_URL = VMCHECKER_SERVICES_URL + "getResults";
 	public static String PERFORM_AUTHENTICATION_URL = VMCHECKER_SERVICES_URL + "login";
 	public static String LOGOUT_URL = VMCHECKER_SERVICES_URL + "logout"; 
@@ -53,22 +57,46 @@ public class HTTPService {
 	}
 	
 	public void getAssignments(String courseId, final AsyncCallback<Assignment[]> callback) {
-		Delegate<Assignment[]> delegate = new Delegate<Assignment[]>(eventBus, GET_ASSIGNMENTS_URL, true); 
+		Delegate<Assignment[]> delegate = 
+			new Delegate<Assignment[]>(eventBus, GET_ASSIGNMENTS_URL, true); 
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		delegate.sendRequest(callback, new AssignmentsListDecoder(), params); 
 	}
 	
-	public void getResults(String courseId, String assignmentId, final AsyncCallback<Result> callback) {
-		Delegate<Result> delegate = new Delegate<Result>(eventBus, GET_RESULTS_URL, true);
+	public void getResults(String courseId, String assignmentId, 
+			final AsyncCallback<EvaluationResult[]> callback) {
+		Delegate<EvaluationResult[]> delegate = 
+			new Delegate<EvaluationResult[]>(eventBus, GET_RESULTS_URL, true);
 		HashMap<String, String> params = new HashMap<String, String>(); 
 		params.put("courseId", courseId);  
 		params.put("assignmentId", assignmentId); 
 		delegate.sendRequest(callback, new ResultDecoder(), params); 
 	}
+
+	public void getUserResults(String courseId, String assignmentId, String username, 
+			final AsyncCallback<EvaluationResult[]> callback) {
+		Delegate<EvaluationResult[]> delegate = 
+			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true);
+		HashMap<String, String> params = new HashMap<String, String>(); 
+		params.put("courseId", courseId);  
+		params.put("assignmentId", assignmentId);
+		params.put("username", username); 
+		delegate.sendRequest(callback, new ResultDecoder(), params); 
+	}
 	
-	public void performAuthentication(String username, String password, final AsyncCallback<AuthenticationResponse> callback) {
-		Delegate<AuthenticationResponse> delegate = new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false);
+	public void getAllResults(String courseId, final AsyncCallback<StudentInfo[]> callback) {
+		Delegate<StudentInfo[]> delegate = 
+			new Delegate<StudentInfo[]>(eventBus, GET_ALL_RESULTS_URL, true); 
+		HashMap<String, String> params = new HashMap<String, String>(); 
+		params.put("courseId", courseId);  
+		delegate.sendRequest(callback, new StatisticsDecoder(), params); 		
+	}
+	
+	public void performAuthentication(String username, String password, 
+			final AsyncCallback<AuthenticationResponse> callback) {
+		Delegate<AuthenticationResponse> delegate = 
+			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false);
 		HashMap<String, String> params = new HashMap<String, String>(); 
 		params.put("username", username);  
 		params.put("password", password); 

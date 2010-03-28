@@ -6,10 +6,11 @@
 			font-family: 'Courier New', monospace; 
 			font-size: 14px;
 			background-color: #FFF;
-			padding: 10px;   
+			padding: 30px 10px 10px 10px;
+			overflow: hidden; 
 		}
 	</ui:style>
 	<g:HTMLPanel>
-		<g:Label styleName="{style.container}" ui:field="container"></g:Label>
+		<g:HTML styleName="{style.container}" ui:field="container"></g:HTML>
 	</g:HTMLPanel>
 </ui:UiBinder> 

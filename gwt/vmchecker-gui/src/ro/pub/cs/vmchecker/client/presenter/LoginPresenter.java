@@ -4,26 +4,33 @@ import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.dom.client.HasKeyPressHandlers;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
 
-public class LoginPresenter implements Presenter {
+public class LoginPresenter implements Presenter, KeyPressHandler {
 
 	public interface Widget {
 		HasText getUsernameField(); 
-		HasText getUsernameCommentLabel(); 
+		HasText getUsernameCommentLabel();
+		void setUsernameCommentVisible(boolean visible); 
 		HasText getPasswordField(); 
-		HasText getPasswordCommentLabel(); 
+		HasText getPasswordCommentLabel();
+		void setPasswordCommentVisible(boolean visible); 
 		HasClickHandlers getLoginButton();
 		HasText getLoginCommentLabel();
-		void setInputsEnabled(boolean enabled); 
+		void setLoginCommentVisible(boolean visible); 
+		void setInputsEnabled(boolean enabled);
+		HasKeyPressHandlers[] getEnterSources(); 
 	}
 	
 	private HandlerManager eventBus; 
@@ -33,7 +40,15 @@ public class LoginPresenter implements Presenter {
 	public LoginPresenter(HandlerManager eventBus, HTTPService service, Widget widget) {
 		this.eventBus = eventBus; 
 		this.service = service;
-		bindWidget(widget); 
+		bindWidget(widget);
+		listenEnterPress(); 
+	}
+	
+	private void listenEnterPress() {
+		HasKeyPressHandlers[] enterSources = widget.getEnterSources(); 
+		for (int i = 0; i < enterSources.length; i++) {
+			enterSources[i].addKeyPressHandler(this); 
+		}
 	}
 	
 	private boolean validateUsername(String username) {
@@ -49,17 +64,21 @@ public class LoginPresenter implements Presenter {
 		/* username */
 		if (!validateUsername(widget.getUsernameField().getText())) {
 			widget.getUsernameCommentLabel().setText("Utilizator necompletat");
+			widget.setUsernameCommentVisible(true);
 			valid = false; 
 		} else {
 			widget.getUsernameCommentLabel().setText("");
+			widget.setUsernameCommentVisible(false); 
 		}
 		
 		/* password */
 		if (!validatePassword(widget.getPasswordField().getText())) {
 			widget.getPasswordCommentLabel().setText("Parola necompletata");
+			widget.setPasswordCommentVisible(true); 
 			valid = false; 
 		} else {
 			widget.getPasswordCommentLabel().setText(""); 
+			widget.setPasswordCommentVisible(false); 
 		}
 		return valid;  
 	}
@@ -97,6 +116,7 @@ public class LoginPresenter implements Presenter {
 							eventBus.fireEvent(authEvent); 
 						} else {
 							widget.getLoginCommentLabel().setText(result.info);
+							widget.setLoginCommentVisible(true); 
 							widget.setInputsEnabled(true); 
 						}
 					}
@@ -110,6 +130,16 @@ public class LoginPresenter implements Presenter {
 	@Override
 	public void go(HasWidgets container) {
 		container.add((com.google.gwt.user.client.ui.Widget) widget); 
+	}
+
+	@Override
+	public void onKeyPress(KeyPressEvent event) {
+		if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+			/* enter was pressed, send the request */
+			if (validateFields()) {
+				sendAuthenticationRequest(); 
+			}
+		}
 	}
 
 }

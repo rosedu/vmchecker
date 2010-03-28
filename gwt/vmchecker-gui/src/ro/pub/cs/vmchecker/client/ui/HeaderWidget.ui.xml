@@ -8,7 +8,7 @@
 	
 		.header {
 			background-color: #EEEEEE;
-			height: 50px; 
+			height: 54px; 
 			width: 100%;
 			margin-bottom: 40px; 
 		}
@@ -18,14 +18,24 @@
 			color: green;
 			font-size: 18px;
 			margin: 10px;
-			line-height: 26px;    
+			line-height: 26px;
+		}
+		
+		.listWrapper {
+			margin-left: 10px;
 		}
 		
 		.list {
-			margin: 10px;
 			font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
 			font-size: 16px;
-			line-height: 26px;  
+			line-height: 26px;
+		}
+		
+		.courseListIndication {
+			font-size: 11px; 
+			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+			color: #999999;
+			padding: 2px;
 		}
 		
 		.spacer {
@@ -34,12 +44,13 @@
 		
 		.username {
 			font-weight: bold;
+			font-size: 14px; 
 			padding-right: 10px;
 			line-height: 20px;  
 		}
 		
 		.rightPanel{
-			margin: 15px;
+			margin: 17px 10px 0 0;
 			vertical-align: middle;
 			float: right;   
 		}
@@ -48,19 +59,12 @@
 			margin: 3px;
 			float: left;  
 		}
-			
-		.anchor {
-			color: green;
-			margin: 3px;
-			padding-right: 5px;
-			font-size: 14px;
-			cursor: pointer; 
-		}
-		
+					
 		.last {
 			border-right: none; 
 		}
 		
+		/* 
 		a, a:visited, a:hover {
 			color: green; 
 		}
@@ -68,12 +72,13 @@
 		a:hover {
 			text-decoration: underline; 
 		}
+		*/
 		
 		.statusPanel {
-			top: 0px;
+			top: 15px;
 			left: 50%;  
 			height: 16px; 
-			position: fixed; 
+			position: absolute; 
 			font-family: Verdana, Arial, sans serif; 
 			font-size: 12px;
 			padding: 5px 2px 5px 2px;  
@@ -120,30 +125,21 @@
 			clear: both; 
 		}
 		
-		.detailsPopupContainer {
-			overflow: scroll; 
-		}
-		
-		.detailsPopupContent {
-			margin-top: 10px; 
-			padding-top: 10px; 
-			border-top: 1px solid #CCCCCC; 
-		}
-		
 	</ui:style>
 	<g:HTMLPanel>
 		<g:FlowPanel styleName="{style.header}">
 			<g:HorizontalPanel styleName="{style.leftPanel}" verticalAlignment='ALIGN_MIDDLE'>
-				<g:HTML>
-					<div class="logo"></div>
-				</g:HTML>
-				<g:ListBox ui:field="coursesList" visibleItemCount='1'
-					styleName="{style.list}" />
+			<g:HTML>
+				<div class="logo"></div>
+			</g:HTML>
+			<g:FlowPanel styleName="{style.listWrapper}">
+				<g:Label styleName="{style.courseListIndication}">alegeti cursul</g:Label>
+				<g:ListBox ui:field="coursesList" visibleItemCount='1' styleName="{style.list}" />
+			</g:FlowPanel>
 			</g:HorizontalPanel>
-			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}"
-				verticalAlignment='ALIGN_MIDDLE'>
+			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}">
 				<g:Label ui:field="usernameLabel" styleName="{style.username}">nume.prenume</g:Label>
-				<g:Anchor ui:field="logoutButton" styleName="{style.anchor}">logout</g:Anchor>
+				<g:Anchor ui:field="logoutButton" styleName="fillButton">logout</g:Anchor>
 			</g:HorizontalPanel>
 			<g:SimplePanel styleName="{style.clear}"></g:SimplePanel>
 		</g:FlowPanel>

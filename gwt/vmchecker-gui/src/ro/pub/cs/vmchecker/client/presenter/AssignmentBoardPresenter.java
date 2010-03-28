@@ -7,7 +7,7 @@ import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.model.ErrorResponse;
-import ro.pub.cs.vmchecker.client.model.Result;
+import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.model.UploadStatus;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.service.json.ErrorResponseDecoder;
@@ -22,9 +22,9 @@ import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.HasHTML;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Hidden;
@@ -59,11 +59,11 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	}
 	
 	public interface StatementWidget {
-		HasText getStatementContainer(); 
+		void setStatementHref(String statementHref);  
 	}
 	
 	public interface ResultsWidget {
-		HasText getResultContainer(); 
+		HasHTML getResultContainer(); 
 	}
 	
 	private HandlerManager eventBus;
@@ -91,12 +91,16 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	public void listenAssignmentSelect() {
 		assignmentSelectReg = eventBus.addHandler(AssignmentSelectedEvent.TYPE, new AssignmentSelectedEventHandler() {
 			public void onSelect(AssignmentSelectedEvent event) {
+				container.clear(); 
+				((com.google.gwt.user.client.ui.Widget)widget).setVisible(false); 
+				container.add((com.google.gwt.user.client.ui.Widget)widget);
 				assignmentSelected(event.data); 
 			}			
 		}); 
 	}
 	
 	public void assignmentSelected(Assignment data) {
+		statementWidget.setStatementHref(data.statementLink); 
 		widget.getTitleLabel().setText(data.title);
 		this.assignmentId = data.id; 
 		widget.getDeadlineLabel().setText(data.deadline);
@@ -124,15 +128,20 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, 
 		"incarca rezultatele...")); 
 
-		service.getResults(courseId, assignmentId, new AsyncCallback<Result>() {
+		service.getResults(courseId, assignmentId, new AsyncCallback<EvaluationResult[]>() {
 
 			public void onFailure(Throwable caught) {
 				GWT.log("[AssignmentBoardPresenter]", caught); 
 				eventBus.fireEvent(new ErrorDisplayEvent("Getting results failed", caught.getMessage())); 
 			}
 
-			public void onSuccess(Result result) {
-				resultsWidget.getResultContainer().setText(result.log);
+			public void onSuccess(EvaluationResult[] result) {
+				String resultHTML = ""; 
+				for (int i = 0; i < result.length; i++) {
+					EvaluationResult resultPack = result[i];
+					resultHTML += resultPack.toHTML(); 
+				}
+				resultsWidget.getResultContainer().setHTML(resultHTML);
 				widget.displayView((com.google.gwt.user.client.ui.Widget) resultsWidget);
 				eventBus.fireEvent(new StatusChangedEvent(
 						StatusChangedEvent.StatusType.RESET, ""));
@@ -175,9 +184,6 @@ public class AssignmentBoardPresenter implements Presenter, SubmitCompleteHandle
 	@Override
 	public void go(HasWidgets container) {
 		this.container = container;  
-		container.clear(); 
-		((com.google.gwt.user.client.ui.Widget)widget).setVisible(false); 
-		container.add((com.google.gwt.user.client.ui.Widget)widget);
 	}
 
 	@Override

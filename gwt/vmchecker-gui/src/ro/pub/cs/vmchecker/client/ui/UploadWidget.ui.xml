@@ -10,9 +10,19 @@
 			background-color: #FFF; 
 			padding: 20px 10px 10px 10px;
 		}
+		
+		.help {
+			color: #666666; 
+		}
+		
 	</ui:style>
 	<g:HTMLPanel styleName="{style.container}">
-		<g:Label>Creeaza o arhiva cu toate fisierele necesare si trimite-o folosind formularul de mai jos</g:Label>
+		<g:HTML >
+		<p>
+			Prin acest formular vei putea trimite rezolvari la aceasta tema. 
+		</p>
+						 
+		</g:HTML>
 		<g:FormPanel ui:field="form" styleName="{style.form}">
 			<g:HorizontalPanel>
 				<g:FileUpload ui:field="fileUpload" name="archiveFile"></g:FileUpload>
@@ -21,5 +31,18 @@
 				<g:Hidden ui:field="assignmentIdField" name="assignmentId"></g:Hidden>
 			</g:HorizontalPanel>
 		</g:FormPanel>
+		<g:HTML styleName="{style.help}">
+		<p>	
+		O rezolvare consta intr-o arhiva de tip <b>zip</b> care contine toate fisierele sursa alaturi de un	<b>Makefile</b>
+		ce va fi folosit pentru compilare. Trebuie respectate urmatoarele <u>reguli</u> generale: 
+		</p>
+		<ul>
+			<li>Makefile-ul trebuie sa aiba obligatoriu regula pentru <b>build</b> si <b>clean</b></li>
+			<li>Fisierele sursa trebuie sa fie in radacina arhivei. Mai exact, nu faceti un director in care se afla toate sursele si arhivati directorul, ci selectati toate sursele si faceti arhiva din ele.</li>
+		</ul>			
+		<p style="padding-top: 0; margin-top: 0;">
+				Este posibil ca unele teme sa aiba reguli si restrictii speciale pentru arhiva. Pentru aceste cazuri o sa fie specificat in enuntul temei. 
+		</p>
+		</g:HTML>			
 	</g:HTMLPanel>
 </ui:UiBinder> 
