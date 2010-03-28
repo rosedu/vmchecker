@@ -15,10 +15,11 @@ all as described above.
 
 """
 
-import sys
-import tempfile
-import shutil
 import os
+import sys
+import shutil
+import tempfile
+import optparse
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 from vmchecker import ziputil
@@ -116,14 +117,49 @@ def check_tester_setup_correctly(vmpats):
             _logger.error('"%s" missing. Run `vmchecker-init course tester`!' % path)
             exit(1)
 
+
+def redirect_std_files(stdin_fname=None, stdout_fname=None, stderr_fname=None):
+    """Redirect standard files for the files that are not null"""
+    if stdin_fname != None:
+        stdin = file(stdin_fname, 'r')
+        os.dup2(stdin.fileno(), sys.stdin.fileno())
+
+    if stdout_fname != None:
+        sys.stdout.flush()
+        stdout = file(stdout_fname, 'a+')
+        os.dup2(stdout.fileno(), sys.stdout.fileno())
+
+    if stderr_fname != None:
+        sys.stderr.flush()
+        stderr = file(stderr_fname, 'a+', 0)
+        os.dup2(stderr.fileno(), sys.stderr.fileno())
+
+
 def main():
-    """Entry point for the queue manager."""
-    if len(sys.argv) <= 1:
+    """Entry point for the queue manager"""
+    cmdline = optparse.OptionParser()
+    cmdline.add_option('-0', '--stdin',  dest='stdin',  default=None,
+                       help='Redirect stdin to FILE.',  metavar='FILE')
+    cmdline.add_option('-1', '--stdout', dest='stdout', default=None,
+                       help='Redirect stdout to FILE.', metavar='FILE')
+    cmdline.add_option('-2', '--stderr', dest='stderr', default=None,
+                       help='Redirect stderr to FILE.', metavar='FILE')
+    cmdline.add_option('-c', '--course_id', dest='course_id',
+                       help='The course id for which to start the queue manager.')
+    (options, _) = cmdline.parse_args()
+
+    course_id = options.course_id
+    if course_id == None:
         print "course_id parameter required"
         exit(1)
-    course_id = sys.argv[1]
+
+    redirect_std_files(options.stdin, options.stdout, options.stderr)
+
     vmcfg = CourseConfig(CourseList().course_config(course_id))
     vmpaths = VmcheckerPaths(vmcfg.root_path())
+
+    # fail early if something is not setup corectly, and not at a
+    # distant point when we'll need these things.
     check_tester_setup_correctly(vmpaths)
     start_queue(vmpaths)
 
