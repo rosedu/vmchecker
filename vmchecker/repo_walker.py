@@ -12,9 +12,8 @@ arguments are silently ignored.
 
 from __future__ import with_statement
 
-import optparse
 import os
-import logging
+import optparse
 
 from . import paths
 from . import vmlogging
@@ -136,6 +135,8 @@ def simulate(assignment, user, location, func_name, args):
         func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 def add_optparse_group(cmdline):
+    """Add a option group to @cmdline to receive parameters related to
+    repo walking"""
     group = optparse.OptionGroup(cmdline, 'repo_walker.py')
     group.add_option('-c', '--course_id', help='The ID of the course for'
                        'which you resubmit the homework.')
@@ -150,6 +151,6 @@ def add_optparse_group(cmdline):
                      default=False, help='Only prints homeworks to walk')
     group.add_option('--all', action='store_true', dest='all',
                      default=False, help='Walks all submitted homeworks')
-    group.add_option('--ignore-errors', action='store_true', dest='ignore_errors',
-                     default=False, help='Ignore errors')
+    group.add_option('--ignore-errors', action='store_true',
+                     dest='ignore_errors', default=False, help='Ignore errors')
     cmdline.add_option_group(group)
