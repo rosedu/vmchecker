@@ -37,68 +37,78 @@ from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('update_db')
 
-class UpdateDb(repo_walker.RepoWalker):
-    def __init__(self, vmcfg):
-        repo_walker.RepoWalker.__init__(self, vmcfg)
 
-    def _db_save_assignment(self, db_cursor, assignment):
+
+class CourseDb(object):
+    """A class to encapsulate the logic behind updates and querries of
+    the course's db"""
+
+    def __init__(self, db_cursor):
+        self.db_cursor = db_cursor
+
+    def add_assignment(self, assignment):
         """Creates an id of the homework and returns it."""
-        db_cursor.execute('INSERT INTO assignments (name) values (?)',
-                          (assignment,))
-        db_cursor.execute('SELECT last_insert_rowid()')
-        assignment_id, = db_cursor.fetchone()
+        self.db_cursor.execute('INSERT INTO assignments (name) values (?)', (assignment,))
+        self.db_cursor.execute('SELECT last_insert_rowid()')
+        assignment_id, = self.db_cursor.fetchone()
         return assignment_id
 
 
-    def _db_get_assignment_id(self, db_cursor, assignment):
+    def get_assignment_id(self, assignment):
         """Returns the id of the assignment"""
-        db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
-        result = db_cursor.fetchone()
+        self.db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
+        result = self.db_cursor.fetchone()
         if result is None:
-            return self._db_save_assignment(db_cursor, assignment)
+            return self.add_assignment(assignment)
         return result[0]
 
 
-    def _db_save_user(self, db_cursor, user):
+    def add_user(self, user):
         """Creates an id of the user and returns it."""
-        db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
-        db_cursor.execute('SELECT last_insert_rowid()')
-        user_id, = db_cursor.fetchone()
+        self.db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
+        self.db_cursor.execute('SELECT last_insert_rowid()')
+        user_id, = self.db_cursor.fetchone()
         return user_id
 
 
-    def _db_get_user_id(self, db_cursor, user):
+    def get_user_id(self, user):
         """Returns the id of the user"""
-        db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
-        result = db_cursor.fetchone()
+        self.db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
+        result = self.db_cursor.fetchone()
         if result is None:
-            return self._db_save_user(db_cursor, user)
+            return self.add_user(user)
         return result[0]
 
 
-    def _db_get_grade_mtime(self, db_cursor, assignment_id, user_id):
+    def get_grade_mtime(self, assignment_id, user_id):
         """Returns the mtime of a grade"""
-        db_cursor.execute(
-                'SELECT mtime FROM grades '
-                'WHERE assignment_id = ? and user_id = ?', (
-                    assignment_id, user_id))
-
-        result = db_cursor.fetchone()
+        self.db_cursor.execute('SELECT mtime FROM grades '
+                               'WHERE assignment_id = ? and user_id = ?',
+                               (assignment_id, user_id))
+        result = self.db_cursor.fetchone()
         if result is not None:
             return result[0]
 
 
-    def _db_save_grade(self, db_cursor, assignment_id, user_id, grade, mtime):
-        """Saves the grade into the database
+    def save_grade(self, assignment_id, user_id, grade, mtime):
+        """Save the grade into the database
 
         If the grade identified by (assignment_id, user_id)
         exists then update the DB, else inserts a new entry.
 
         """
-        db_cursor.execute(
+        self.db_cursor.execute('INSERT OR REPLACE INTO grades '
+                               '(grade, mtime, assignment_id, user_id) '
+                               'VALUES (?, ?, ?, ?) ',
+                               (grade, mtime, assignment_id, user_id))
 
-            'INSERT OR REPLACE INTO grades (grade, mtime, assignment_id, user_id) '
-            'VALUES (?, ?, ?, ?) ', (grade, mtime, assignment_id, user_id))
+
+
+
+class UpdateDb(repo_walker.RepoWalker):
+    def __init__(self, vmcfg):
+        repo_walker.RepoWalker.__init__(self, vmcfg)
+
 
 
     def _get_grade_value(self, vmcfg, assignment, user, grade_path):
@@ -163,7 +173,7 @@ class UpdateDb(repo_walker.RepoWalker):
         grade -= penalty_value
         return grade
 
-    def _update_grades(self, vmcfg, force, assignment, user, grade_filename, db_cursor):
+    def _update_grades(self, vmcfg, force, assignment, user, grade_filename, course_db):
         """Updates grade for user's submission of assignment.
 
         Reads the grade's value only if the file containing the
@@ -171,32 +181,32 @@ class UpdateDb(repo_walker.RepoWalker):
         submission.
 
         """
-        assignment_id = self._db_get_assignment_id(db_cursor, assignment)
-        user_id = self._db_get_user_id(db_cursor, user)
+        assignment_id = course_db.get_assignment_id(assignment)
+        user_id = course_db.get_user_id(user)
+        db_mtime = course_db.get_grade_mtime(assignment_id, user_id)
 
         mtime = os.path.getmtime(grade_filename)
-        db_mtime = self._db_get_grade_mtime(db_cursor, assignment_id, user_id)
 
         if force or db_mtime != mtime:
             # modified since last db save
             grade_value = self._get_grade_value(vmcfg, assignment, user, grade_filename)
             # updates information from DB
-            self._db_save_grade(db_cursor, assignment_id, user_id, grade_value, mtime)
+            course_db.save_grade(assignment_id, user_id, grade_value, mtime)
 
-    def update_db(self, options, db_cursor):
-        def _update_grades_wrapper(assignment, user, location, db_cursor, options):
+    def update_db(self, options, course_db):
+        def _update_grades_wrapper(assignment, user, location, course_db, options):
             """A wrapper over _update_grades to use with repo_walker"""
             sbroot = self.vmpaths.dir_submission_root(assignment, user)
             grade_filename = paths.submission_results_grade(sbroot)
             if os.path.exists(grade_filename):
-                self._update_grades(self.vmcfg, options, assignment, user, grade_filename, db_cursor)
+                self._update_grades(self.vmcfg, options, assignment, user, grade_filename, course_db)
                 logger.info('Updated %s, %s (%s)', assignment, user, location)
             else:
                 logger.error('No results found for %s, %s (check %s)',
                              assignment, user, grade_filename)
 
         # call the base implemnetation in RepoWalker.
-        self.walk(options, _update_grades_wrapper, args=(db_cursor, options))
+        self.walk(options, _update_grades_wrapper, args=(course_db, options))
 
 
 
@@ -224,12 +234,13 @@ def update_all(course_id):
     # open Db
     db_conn = sqlite3.connect(vmpaths.db_file(), isolation_level="EXCLUSIVE")
     db_cursor = db_conn.cursor()
+    course_db = CourseDb(db_cursor)
 
     try:
         # actual work: update according to options the db
         options = stupid_hack_class(course_id)
         u = UpdateDb(vmcfg)
-        u.update_db(options, db_cursor)
+        u.update_db(options, course_db)
     finally:
         db_cursor.close()
         db_conn.commit() ## TODO:XXX: check if this should be commit
