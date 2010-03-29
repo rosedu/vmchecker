@@ -24,7 +24,7 @@ from __future__ import with_statement
 
 import os
 import time
-import sqlite3
+
 
 from . import paths
 from . import repo_walker
@@ -33,76 +33,10 @@ from . import penalty
 from . import vmlogging
 from .paths import VmcheckerPaths
 from .config import CourseConfig
+from .coursedb import opening_course_db
 from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('update_db')
-
-
-
-class CourseDb(object):
-    """A class to encapsulate the logic behind updates and querries of
-    the course's db"""
-
-    def __init__(self, db_cursor):
-        self.db_cursor = db_cursor
-
-    def add_assignment(self, assignment):
-        """Creates an id of the homework and returns it."""
-        self.db_cursor.execute('INSERT INTO assignments (name) values (?)',
-                               (assignment,))
-        self.db_cursor.execute('SELECT last_insert_rowid()')
-        assignment_id, = self.db_cursor.fetchone()
-        return assignment_id
-
-
-    def get_assignment_id(self, assignment):
-        """Returns the id of the assignment"""
-        self.db_cursor.execute('SELECT id FROM assignments WHERE name=?',
-                               (assignment,))
-        result = self.db_cursor.fetchone()
-        if result is None:
-            return self.add_assignment(assignment)
-        return result[0]
-
-
-    def add_user(self, user):
-        """Creates an id of the user and returns it."""
-        self.db_cursor.execute('INSERT INTO users (name) values (?)', (user,))
-        self.db_cursor.execute('SELECT last_insert_rowid()')
-        user_id, = self.db_cursor.fetchone()
-        return user_id
-
-
-    def get_user_id(self, user):
-        """Returns the id of the user"""
-        self.db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
-        result = self.db_cursor.fetchone()
-        if result is None:
-            return self.add_user(user)
-        return result[0]
-
-
-    def get_grade_mtime(self, assignment_id, user_id):
-        """Returns the mtime of a grade"""
-        self.db_cursor.execute('SELECT mtime FROM grades '
-                               'WHERE assignment_id = ? and user_id = ?',
-                               (assignment_id, user_id))
-        result = self.db_cursor.fetchone()
-        if result is not None:
-            return result[0]
-
-
-    def save_grade(self, assignment_id, user_id, grade, mtime):
-        """Save the grade into the database
-
-        If the grade identified by (assignment_id, user_id)
-        exists then update the DB, else inserts a new entry.
-
-        """
-        self.db_cursor.execute('INSERT OR REPLACE INTO grades '
-                               '(grade, mtime, assignment_id, user_id) '
-                               'VALUES (?, ?, ?, ?) ',
-                               (grade, mtime, assignment_id, user_id))
 
 
 
@@ -234,17 +168,8 @@ def update_all(course_id):
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     # open Db
-    db_conn = sqlite3.connect(vmpaths.db_file(), isolation_level="EXCLUSIVE")
-    db_cursor = db_conn.cursor()
-    course_db = CourseDb(db_cursor)
-
-    try:
+    with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
         # actual work: update according to options the db
         options = stupid_hack_class(course_id)
         u = UpdateDb(vmcfg)
         u.update_db(options, course_db)
-    finally:
-        db_cursor.close()
-        db_conn.commit() ## TODO:XXX: check if this should be commit
-                         ## or rollback or whatever
-        db_conn.close()
