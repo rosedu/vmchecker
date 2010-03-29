@@ -48,7 +48,8 @@ class CourseDb(object):
 
     def add_assignment(self, assignment):
         """Creates an id of the homework and returns it."""
-        self.db_cursor.execute('INSERT INTO assignments (name) values (?)', (assignment,))
+        self.db_cursor.execute('INSERT INTO assignments (name) values (?)',
+                               (assignment,))
         self.db_cursor.execute('SELECT last_insert_rowid()')
         assignment_id, = self.db_cursor.fetchone()
         return assignment_id
@@ -56,7 +57,8 @@ class CourseDb(object):
 
     def get_assignment_id(self, assignment):
         """Returns the id of the assignment"""
-        self.db_cursor.execute('SELECT id FROM assignments WHERE name=?', (assignment,))
+        self.db_cursor.execute('SELECT id FROM assignments WHERE name=?',
+                               (assignment,))
         result = self.db_cursor.fetchone()
         if result is None:
             return self.add_assignment(assignment)
