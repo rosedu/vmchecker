@@ -1,24 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Updates marks for modified results
-
-For reference below is the (possible outdated) database schema.
-For the latest version check bin/initialise_course.py.
-
-    CREATE TABLE assignments (
-        id INTEGER PRIMARY KEY,
-        name TEXT);
-    CREATE TABLE users (
-        id INTEGER PRIMARY KEY,
-        name TEXT);
-    CREATE TABLE grades (
-        assignment_id INTEGER,
-        user_id INTEGER,
-        grade TEXT,
-        mtime TIMESTAMP NOT NULL,
-        PRIMARY KEY(assignment_id, user_id));
-
-"""
+"""Updates marks for modified results"""
 
 from __future__ import with_statement
 

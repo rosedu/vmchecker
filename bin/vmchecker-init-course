@@ -5,7 +5,6 @@
 from __future__ import with_statement
 
 import os
-import sqlite3
 import sys
 import logging
 import string
@@ -14,7 +13,7 @@ import pkg_resources
 from subprocess import check_call, CalledProcessError
 
 from vmchecker.config import AclConfig
-from vmchecker import paths
+from vmchecker import paths, coursedb
 
 
 _logger = logging.getLogger("vmchecker.initialise_course")
@@ -102,25 +101,7 @@ def create_db(db_file):
     file = open(db_file, 'w')
     file.write('')
     file.close()
-
-    db_conn = sqlite3.connect(db_file)
-    db_cursor = db_conn.cursor()
-    db_cursor.executescript("""
-    CREATE TABLE assignments (
-        id INTEGER PRIMARY KEY,
-        name TEXT);
-    CREATE TABLE users (
-        id INTEGER PRIMARY KEY,
-        name TEXT);
-    CREATE TABLE grades (
-        assignment_id INTEGER,
-        user_id INTEGER,
-        grade TEXT,
-        mtime TIMESTAMP NOT NULL,
-        PRIMARY KEY(assignment_id, user_id));
-    """)
-    db_cursor.close()
-    db_conn.close()
+    coursedb.create_db_tables(db_file)
 
 
 def create_build_run_scritps(root_path):

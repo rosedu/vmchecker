@@ -7,12 +7,29 @@ from __future__ import with_statement
 import sqlite3
 from contextlib import contextmanager, closing
 
+
+
 class CourseDb(object):
     """A class to encapsulate the logic behind updates and querries of
     the course's db"""
 
     def __init__(self, db_cursor):
         self.db_cursor = db_cursor
+
+    def create_tables(self):
+        """Create the tables needed for vmchecker"""
+        self.db_cursor.executescript("""
+             CREATE TABLE assignments (id INTEGER PRIMARY KEY, name TEXT);
+
+             CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);
+
+             CREATE TABLE grades (assignment_id INTEGER,
+                                  user_id       INTEGER,
+                                  grade         TEXT,
+                                  mtime         TIMESTAMP NOT NULL,
+                                  PRIMARY KEY(assignment_id, user_id));""")
+
+
 
     def add_assignment(self, assignment):
         """Creates an id of the homework and returns it."""
@@ -96,3 +113,8 @@ def opening_course_db(db_file, isolation_level=None):
     finally:
         db_conn.close()
 
+
+def create_db_tables(db_file):
+    """Create vmchecker's tables inside the given db_file"""
+    with opening_course_db(db_file) as course_db:
+        course_db.create_tables()
