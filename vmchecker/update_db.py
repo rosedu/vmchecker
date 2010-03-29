@@ -129,15 +129,15 @@ class UpdateDb(repo_walker.RepoWalker):
         """
 
         weights = [float(x) for x in
-                    vmcfg.get('vmchecker','PenaltyWeights').split()]
+                    vmcfg.get('vmchecker', 'PenaltyWeights').split()]
 
-        limit = vmcfg.get('vmchecker','PenaltyLimit')
+        limit = vmcfg.get('vmchecker', 'PenaltyLimit')
         sss = submissions.Submissions(VmcheckerPaths(vmcfg.root_path()))
         upload_time = sss.get_upload_time_str(assignment, user)
 
         deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
-                                                penalty.DATE_FORMAT)
-        holidays = int(vmcfg.get('vmchecker','Holidays'))
+                                 penalty.DATE_FORMAT)
+        holidays = int(vmcfg.get('vmchecker', 'Holidays'))
 
         grade = 10
         words = 0
@@ -147,7 +147,7 @@ class UpdateDb(repo_walker.RepoWalker):
             for line in handler.readlines():
                 for word in line.split():
                     words += 1
-                    if word[0] in ['+','-']:
+                    if word[0] in ['+', '-']:
                         try:
                             grade += float(word)
                         except ValueError:
