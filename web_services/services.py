@@ -15,6 +15,7 @@ except ImportError:
 
 import os
 import sys
+import time
 import sqlite3
 import tempfile
 import paramiko
@@ -291,6 +292,8 @@ def getAllGrades(req, courseId):
 ######### @ServiceMethod
 def login(req, username, password):
     req.content_type = 'text/html'
+    # don't permit brute force password guessing:
+    time.sleep(1)
     s = Session.Session(req)
 
     if not s.is_new():
