@@ -1,7 +1,17 @@
 #!/usr/bin/env python
 
-from vmchecker.config import LdapConfig
+import os
 import ldap
+
+from vmchecker import paths
+from vmchecker.courselist import CourseList
+from vmchecker.config import LdapConfig, CourseConfig
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 
 class OutputString():
     def __init__(self):
@@ -13,8 +23,57 @@ class OutputString():
     def get(self):
         return self.st 
 
-# using a LDAP server
+
 def get_user(credentials):
+    """Find the username for a user based on username/password.
+
+    This searches LDAP or some file-based json files in the user's
+    home directories.
+
+    Returns the username on success.
+    """
+    username = credentials['username']
+    password = credentials['password']
+
+    # allthough a misconfigured user can block access to any course,
+    # we preffer early LOUD errors to silently ignored ones.
+    # Fail fast, fail lowdly!
+    r = get_user_from_auth_files(username, password)
+    if not r is None:
+        return r
+    return get_ldap_user(credentials)
+
+
+def get_user_from_auth_files(username, password):
+    """Search all courseses for auth_files and if we can login in any
+    course, return the login from there"""
+    for coursecfg_fname in CourseList().course_configs():
+        vmpaths = paths.VmcheckerPaths(CourseConfig(coursecfg_fname))
+        r = get_user_from_auth_file(vmpaths, username, password)
+        if not r is None:
+            return r
+    return None
+
+
+
+def get_user_from_auth_file(vmpaths, username, password):
+    """Try to authenticate using one course's auth_file.
+
+    Return the username on success.
+    """
+    if not os.path.exists(vmpaths.auth_file()):
+        return None
+    auth_dic = json.loads(vmpaths.auth_file())['auth']
+    if auth_dic.has_key(username) and auth_dic[username] == password:
+        return username
+    return None
+
+
+def get_ldap_user(credentials):
+    """Try to authenticate using the global LDAP configuration file.
+
+    Return the username on success.
+    """
     ldap_cfg = LdapConfig()
     con = ldap.initialize(ldap_cfg.server())
     con.simple_bind_s(ldap_cfg.bind_user(),

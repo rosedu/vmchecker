@@ -90,6 +90,11 @@ class VmcheckerPaths:
         return self.abspath('vmchecker.db')
 
 
+    def auth_file(self):
+        """An authentication file for students not in LDAP"""
+        return self.abspath('auth_file.json')
+
+
     def dir_bin(self):
         """Returns absolute path for the bin/ directory"""
         return self.abspath('bin')

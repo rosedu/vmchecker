@@ -1,0 +1,4 @@
+{
+    '_comment': 'in auth put entries of the type "username":"password"',
+    'auth' : { },
+}
