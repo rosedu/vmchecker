@@ -100,7 +100,7 @@ def opening_course_db(db_file, isolation_level=None):
     they must be rolled back.
 
     """
-    db_conn = sqlite3.connect(db_file, isolation_level)
+    db_conn = sqlite3.connect(db_file, isolation_level=isolation_level)
     try:
         with closing(db_conn.cursor()) as db_cursor:
             course_db = CourseDb(db_cursor)
