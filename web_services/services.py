@@ -300,7 +300,7 @@ def login(req, username, password):
 
     strout = websutil.OutputString()
     try:
-        user = websutil.get_user({'username' : username, 'password' : password})
+        user = websutil.get_user(username, password)
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,

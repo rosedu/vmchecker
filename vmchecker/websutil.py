@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from __future__ import with_statement
+
+
 import os
 import ldap
 
@@ -24,7 +27,7 @@ class OutputString():
         return self.st 
 
 
-def get_user(credentials):
+def get_user(username, password):
     """Find the username for a user based on username/password.
 
     This searches LDAP or some file-based json files in the user's
@@ -32,8 +35,6 @@ def get_user(credentials):
 
     Returns the username on success.
     """
-    username = credentials['username']
-    password = credentials['password']
 
     # allthough a misconfigured user can block access to any course,
     # we preffer early LOUD errors to silently ignored ones.
@@ -41,14 +42,14 @@ def get_user(credentials):
     r = get_user_from_auth_files(username, password)
     if not r is None:
         return r
-    return get_ldap_user(credentials)
+    return get_ldap_user(username, password)
 
 
 def get_user_from_auth_files(username, password):
     """Search all courseses for auth_files and if we can login in any
     course, return the login from there"""
     for coursecfg_fname in CourseList().course_configs():
-        vmpaths = paths.VmcheckerPaths(CourseConfig(coursecfg_fname))
+        vmpaths = paths.VmcheckerPaths(CourseConfig(coursecfg_fname).root_path())
         r = get_user_from_auth_file(vmpaths, username, password)
         if not r is None:
             return r
@@ -63,13 +64,15 @@ def get_user_from_auth_file(vmpaths, username, password):
     """
     if not os.path.exists(vmpaths.auth_file()):
         return None
-    auth_dic = json.loads(vmpaths.auth_file())['auth']
+    with open(vmpaths.auth_file()) as handle:
+        auth_file_contents =  handle.read()
+        auth_dic = json.loads(auth_file_contents)['auth']
     if auth_dic.has_key(username) and auth_dic[username] == password:
         return username
     return None
 
 
-def get_ldap_user(credentials):
+def get_ldap_user(username, password):
     """Try to authenticate using the global LDAP configuration file.
 
     Return the username on success.
@@ -82,7 +85,7 @@ def get_ldap_user(credentials):
     baseDN = ldap_cfg.root_search()
     searchScope = ldap.SCOPE_SUBTREE
     retrieveAttributes = None 
-    searchFilter = 'uid=' + credentials['username'] 
+    searchFilter = 'uid=' + username
     timeout = 0
     count = 0
 
@@ -114,8 +117,7 @@ def get_ldap_user(credentials):
     # check the password 
     try:  
         con = ldap.initialize(ldap_cfg.server())
-        con.simple_bind_s(user_dn,
-                          credentials['password'])
+        con.simple_bind_s(user_dn, password)
     except ldap.INVALID_CREDENTIALS:
         return None
     except:
