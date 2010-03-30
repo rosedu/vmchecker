@@ -17,6 +17,7 @@ import os
 import sys
 import sqlite3
 import tempfile
+import paramiko
 import traceback
 import subprocess
 
@@ -323,3 +324,30 @@ def logout(req):
     s = Session.Session(req)
     s.invalidate()
     return json.dumps({'info':'You logged out'})
+
+
+def viewQueue(req, courseId):
+    # XXX TODO uncomment this when we have a gui
+    #req.content_type = 'text/html'
+    client = paramiko.SSHClient()
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        client.load_system_host_keys('/home/so/.ssh/known_hosts')
+        client.connect(vmcfg.tester_hostname(),
+                       username=vmcfg.tester_username(),
+                       key_filename=vmcfg.storer_sshid(),
+                       look_for_keys=False)
+        stdin, stdout, stderr = client.exec_command('ls -l ' + vmcfg.tester_queue_path())
+        stdfiles = [stdin, stdout, stderr]
+        stdin.close()
+        stdfiles_data = [s.readlines() for s in [stdout, stderr]]
+        for s in stdfiles:
+            s.close()
+        client.close()
+        return json.dumps(stdfiles_data, indent=4)
+    except:
+        strout = websutil.OutputString()
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()}, indent=4)
