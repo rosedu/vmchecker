@@ -23,9 +23,11 @@ logger = vmlogging.create_module_logger('update_db')
 
 
 
-class UpdateDb(repo_walker.RepoWalker):
+class UpdateDb(object):
     def __init__(self, vmcfg):
-        repo_walker.RepoWalker.__init__(self, vmcfg)
+        self.vmcfg = vmcfg
+        self.vmpaths = VmcheckerPaths(vmcfg.root_path())
+        self.walker = repo_walker.RepoWalker(vmcfg)
 
 
 
@@ -124,7 +126,7 @@ class UpdateDb(repo_walker.RepoWalker):
                              assignment, user, grade_filename)
 
         # call the base implemnetation in RepoWalker.
-        self.walk(options, _update_grades_wrapper, args=(course_db, options))
+        self.walker.walk(options, _update_grades_wrapper, args=(course_db, options))
 
 
 
