@@ -119,7 +119,7 @@ class UpdateDb(object):
             sbroot = self.vmpaths.dir_submission_root(assignment, user)
             grade_filename = paths.submission_results_grade(sbroot)
             if os.path.exists(grade_filename):
-                self._update_grades(self.vmcfg, options, assignment, user, grade_filename, course_db)
+                self._update_grades(self.vmcfg, options.force, assignment, user, grade_filename, course_db)
                 logger.info('Updated %s, %s (%s)', assignment, user, location)
             else:
                 logger.error('No results found for %s, %s (check %s)',
@@ -146,6 +146,7 @@ def update_all(course_id):
             self.ignore_errors = False
             self.course_id = course_id
             self.simulate = False
+            self.force = False
 
 
     vmcfg = CourseConfig(CourseList().course_config(course_id))
