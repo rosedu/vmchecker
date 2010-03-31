@@ -6,6 +6,7 @@ import optparse
 
 from vmchecker import update_db
 from vmchecker import repo_walker
+from vmchecker import vmlogging
 
 
 
@@ -14,15 +15,15 @@ def add_update_db_optparse(cmdline):
     populated family of options.
     """
     group = optparse.OptionGroup(cmdline, 'vmchecker-update-db')
-    group.add_option('-f', '--force', action='store_true', dest='force',
-                     default=False, help='Force updating all marks ignoring '
-                     'modification times')
+    group.add_option('-i', '--ignore-timestamp', action='store_true', dest='ignore_timestamp',
+                     default=False, help='Update all grades ignoring result file modification time.')
     cmdline.add_option_group(group)
 
 
 def main():
     """Checks for modified grades and updates the database"""
 
+    vmlogging.create_script_stdout_logger()
     # parse and check command line arguments
     cmdline = optparse.OptionParser()
     repo_walker.add_optparse_group(cmdline)

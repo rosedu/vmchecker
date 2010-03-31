@@ -88,7 +88,7 @@ def compute_grade(assignment, user, grade_filename, vmcfg):
 
 
 
-def db_save_grade(assignment, user, grade_filename,
+def db_save_grade(assignment, user, submission_root,
                   vmcfg, course_db, ignore_timestamp=False):
     """Updates grade for user's submission of assignment.
 
@@ -97,6 +97,7 @@ def db_save_grade(assignment, user, grade_filename,
     submission.
 
     """
+    grade_filename = paths.submission_results_grade(submission_root)
     assignment_id = course_db.get_assignment_id(assignment)
     user_id = course_db.get_user_id(user)
     db_mtime = course_db.get_grade_mtime(assignment_id, user_id)
@@ -106,6 +107,7 @@ def db_save_grade(assignment, user, grade_filename,
     # only update grades for newer submissions than those already checked
     # or when forced to do so
     if db_mtime != mtime or ignore_timestamp:
+        _logger.info('Updating %s, %s (%s)', assignment, user, grade_filename)
         grade = compute_grade(assignment, user, grade_filename, vmcfg)
         course_db.save_grade(assignment_id, user_id, grade, mtime)
         _logger.info('Updated %s, %s (%s)', assignment, user, grade_filename)

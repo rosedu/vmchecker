@@ -9,10 +9,10 @@ from . import paths
 from . import vmlogging
 
 
-def simulator_func(assignment, user, location, args):
+def simulator_func(assignment, user, submission_root, args):
     """Just prints the function the function call"""
     print 'calling %s(%s, %s, %s, *%s)' % (
-        repr(assignment), repr(user), repr(location), repr(args))
+        repr(assignment), repr(user), repr(submission_root), repr(args))
 
 
 

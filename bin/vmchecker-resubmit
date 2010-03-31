@@ -11,7 +11,7 @@ from vmchecker.config import CourseConfig
 from vmchecker.courselist import CourseList
 
 
-def resubmit_wrapper(assignment, user, grade_path, course_id):
+def resubmit_wrapper(assignment, user, submission_root, course_id):
     """Resubmit the user's submission for that assignment.
 
     This is only a wrapper for queue_for_testing.
