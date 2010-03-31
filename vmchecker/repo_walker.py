@@ -59,19 +59,18 @@ class RepoWalker:
         for assignment in os.listdir(self.vmpaths.dir_repository()):
             self.walk_assignment(assignment, func, args)
 
-    def walk(self, all=False, user=None, assignment=None,
-             func=simulator_func, args=()):
+    def walk(self, user=None, assignment=None, func=simulator_func, args=()):
         """Walk submissions based on the combination of arguments:
 
-        all==True will compute all grades
-        all==False:
-          * user==None, assignment==None -- AssertionError
+        @user and @assignment can be used to narrow the search:
+
+          * user==None, assignment==None -- compute all grades
           * user==None, assignment!=None -- all submissions for the assignment
           * user!=None, assignment==None -- all submissions from the user
           * user!=None, assignment!=None -- the user's last submission for the assignment
-    """
-        assert not (all == False and user == None and assignment == None), (str(all), str(user), str(assignment))
-        if all:
+          """
+
+        if user == None and assignment == None:
             self.walk_all(func, args)
         elif user != None and assignment != None:
             self.walk_submission(assignment, user, func, args)
@@ -103,11 +102,10 @@ def add_optparse_group(cmdline):
     """Add a option group to @cmdline to receive parameters related to
     repo walking"""
     group = optparse.OptionGroup(cmdline, 'repo_walker.py')
-    group.add_option('-c', '--course_id', help='The ID of the course for'
-                       'which you resubmit the homework.')
-    group.add_option('-u', '--user', dest='user',
-                     help="Specifies whose user's homeworks to walk")
-    group.add_option('-a', '--assignment', dest='assignment',
+    group.add_option('-c', '--course_id', help='The ID of the course')
+    group.add_option('-u', '--user', dest='user', default=None,
+                     help="Specifies which user's submissions to walk")
+    group.add_option('-a', '--assignment', dest='assignment', default=None,
                      help="Specifies which assignment to walk")
     group.add_option('--simulate', action='store_true', dest='simulate',
                      default=False, help='Only prints homeworks to walk')

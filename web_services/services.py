@@ -146,7 +146,7 @@ def getUserResults(req, courseId, assignmentId, username):
         result_files = []
         if os.path.isdir(r_path):
              # XXX should we narrow scope on user & assignment?
-            update_db.update_grades(courseId, all=True)
+            update_db.update_grades(courseId)
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
@@ -251,7 +251,7 @@ def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'
     try:
-        update_db.update_grades(courseId, all=True)
+        update_db.update_grades(courseId)
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
         db_conn = sqlite3.connect(vmpaths.db_file())

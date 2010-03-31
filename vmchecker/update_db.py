@@ -114,24 +114,21 @@ def db_save_grade(assignment, user, grade_filename,
 
 
 
-def update_grades(course_id, all=False, user=None,
-                  assignment=None, ignore_timestamp=False, simulate=False):
+def update_grades(course_id, user=None, assignment=None, ignore_timestamp=False, simulate=False):
     """Update grades based on the given parameters.
 
-    all==True will compute all grades
-    all==False:
-        * user==None, assignment==None -- AssertionError
-        * user==None, assignment!=None -- all submissions for the assignment
-        * user!=None, assignment==None -- all submissions from the user
-        * user!=None, assignment!=None -- the user's last submission for the assignment
-    """
-    assert (all != False and user != None and assignment != None)
+        @user and @assignment can be used to narrow the search:
 
+          * user==None, assignment==None -- compute all grades
+          * user==None, assignment!=None -- all submissions for the assignment
+          * user!=None, assignment==None -- all submissions from the user
+          * user!=None, assignment!=None -- the user's last submission for the assignment
+    """
     vmcfg   = CourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     walker  = repo_walker.RepoWalker(vmcfg, simulate)
     db_file = vmpaths.db_file()
 
     with opening_course_db(db_file, isolation_level="EXCLUSIVE") as course_db:
-        walker.walk(all, user, assignment, func=db_save_grade,
+        walker.walk(user, assignment, func=db_save_grade,
                     args=(vmcfg, course_db, ignore_timestamp))

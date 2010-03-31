@@ -31,9 +31,8 @@ def main():
     repo_walker.check_arguments(cmdline, options)
 
 
-    update_db.update_grades(options.course_id, options.all, options.user,
-                            options.assignment, options.ignore_timestamp,
-                            options.simulate)
+    update_db.update_grades(options.course_id, options.user, options.assignment,
+                            options.ignore_timestamp, options.simulate)
 
 
 
