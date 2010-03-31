@@ -85,7 +85,10 @@ def get_ldap_user(username, password):
     baseDN = ldap_cfg.root_search()
     searchScope = ldap.SCOPE_SUBTREE
     retrieveAttributes = None 
-    searchFilter = 'uid=' + username
+
+    # XXX : Needs sanitation
+    searchFilter = '(uid=' + username + ')'
+
     timeout = 0
     count = 0
 
