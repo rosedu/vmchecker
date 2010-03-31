@@ -24,7 +24,7 @@ def create_module_logger(name):
     return logger
 
 
-def create_script_sdtout_logger():
+def create_script_stdout_logger():
     """Create a logger for scripts that use vmchecker modules. The
     logger spits all to stdout.
     """

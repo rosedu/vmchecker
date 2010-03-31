@@ -5,9 +5,6 @@
 import optparse
 
 from vmchecker import submit
-from vmchecker import vmlogging
-
-logger = vmlogging.create_script_sdtout_logger()
 
 def main():
     """Parse arguments and sends the submission for evaluation"""

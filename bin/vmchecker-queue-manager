@@ -31,7 +31,7 @@ from vmchecker import vmlogging
 
 
 
-_logger = vmlogging.create_script_sdtout_logger()
+_logger = vmlogging.create_script_stdout_logger()
 
 
 class _InotifyHandler(ProcessEvent):
