@@ -21,6 +21,14 @@ from . import vmlogging
 _logger = vmlogging.create_module_logger('repo_walker')
 
 
+
+def simulate(assignment, user, location, func_name, args):
+    """Just prints the function the function call"""
+    print 'calling %s(%s, %s, %s, *%s)' % (
+        func_name, repr(assignment), repr(user), repr(location), repr(args))
+
+
+
 class RepoWalker:
     """Walks through all submissions in a repository and applies a
     user supplied function"""
@@ -31,7 +39,7 @@ class RepoWalker:
         self.vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
 
-    def walk_submission(self, assignment, user, func, args):
+    def walk_submission(self, assignment, user, func=simulate, args=()):
         """Runs @func on the user's submission for the given assignment"""
         path = self.vmpaths.dir_submission_root(assignment, user)
         if not os.path.exists(path):
@@ -43,19 +51,19 @@ class RepoWalker:
                               func, assignment, user, path)
 
 
-    def walk_user(self, user, func, args):
+    def walk_user(self, user, func=simulate, args=()):
         """Runs @func on the user's latest submissions for all assignments"""
         for assignment in os.listdir(self.vmpaths.dir_repository()):
             self.walk_submission(assignment, user, func, args)
 
 
-    def walk_assignment(self, assignment, func, args):
+    def walk_assignment(self, assignment, func=simulate, args=()):
         """Runs @func on the latest submissions of @assignment from
         all users that sent that assignment"""
         for user in self.vmpaths.dir_assignment(assignment):
             self.walk_submission(assignment, user, func, args)
 
-    def walk_all(self, func, args):
+    def walk_all(self, func=simulate, args=()):
         """Runs @func on all submissions"""
         for assignment in os.listdir(self.vmpaths.dir_repository()):
             self.walk_assignment(assignment, func, args)
@@ -156,10 +164,6 @@ def check_arguments(cmdline, options):
     if options.recursive and options.all:
         cmdline.error("You can't specify both --recursive and --all")
 
-def simulate(assignment, user, location, func_name, args):
-    """Just prints the function the function call"""
-    print 'calling %s(%s, %s, %s, *%s)' % (
-        func_name, repr(assignment), repr(user), repr(location), repr(args))
 
 def add_optparse_group(cmdline):
     """Add a option group to @cmdline to receive parameters related to
