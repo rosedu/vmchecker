@@ -5,32 +5,24 @@
 
 import optparse
 
-from vmchecker.config import CourseConfig
 from vmchecker import submit
 from vmchecker import repo_walker
+from vmchecker.config import CourseConfig
 from vmchecker.courselist import CourseList
-from vmchecker import vmlogging
-
-logger = vmlogging.create_script_sdtout_logger()
 
 
-class Resubmit(repo_walker.RepoWalker):
-    """Class to resubmit submissions"""
-    def __init__(self, vmcfg):
-        repo_walker.RepoWalker.__init__(self, vmcfg)
+def resubmit_wrapper(assignment, user, grade_path, course_id):
+    """Resubmit the user's submission for that assignment.
 
-    def resubmit(self, options, course_id):
-        """Resubmit homework according to values in options"""
-        def _submit(assignment, user, _):
-            """Submits assignment from `location'"""
-            submit.queue_for_testing(assignment, user, course_id)
-        self.walk(options, _submit)
+    This is only a wrapper for queue_for_testing.
 
+    We only need this function because RepoWalker calls the func with
+    at least three arguments: (assignment, user, grade_path), but
+    queue_for_testing doesn't take grade_path.
 
-def resubmit(vmcfg, options, course_id):
-    """Resubmit homework according to values in options"""
-    r = Resubmit(vmcfg)
-    r.resubmit(options, course_id)
+    """
+    submit.queue_for_testing(assignment, user, course_id)
+
 
 def main():
     """Resubmit homework according to commandline arguments"""
@@ -38,8 +30,11 @@ def main():
     repo_walker.add_optparse_group(cmdline)
     (options, _) = cmdline.parse_args()
     repo_walker.check_arguments(cmdline, options)
+
     vmcfg = CourseConfig(CourseList().course_config(options.course_id))
-    resubmit(vmcfg, options, options.course_id)
+    walker = repo_walker.RepoWalker(vmcfg, options.simulate)
+    walker.walk(options.all, options.user, options.assignment,
+                func=resubmit_wrapper, args=(options.course_id))
 
 if __name__ == '__main__':
     main()
