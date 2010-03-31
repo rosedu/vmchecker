@@ -35,7 +35,8 @@ public class Delegate<T> {
 		} else {
 			rb = new RequestBuilder(RequestBuilder.POST, url);
 		}
-		rb.setHeader("Content-Type", "application/x-www-form-urlencoded"); 
+		rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		rb.setTimeoutMillis(2000);
 	}
 	
 	private String packParameters(HashMap<String, String> params) {
