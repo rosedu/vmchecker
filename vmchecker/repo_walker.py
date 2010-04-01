@@ -51,13 +51,20 @@ class RepoWalker:
     def walk_assignment(self, assignment, func=simulator_func, args=()):
         """Runs @func on the latest submissions of @assignment from
         all users that sent that assignment"""
-        for user in self.vmpaths.dir_assignment(assignment):
+
+        dir_assignment = self.vmpaths.dir_assignment(assignment)
+        for user in os.listdir(dir_assignment):
+            # skip over files that may be in the assignment directory (e.g. a '.lock' file)
+            if not os.path.isdir(os.path.join(dir_assignment, user)):
+                continue
             self.walk_submission(assignment, user, func, args)
+
 
     def walk_all(self, func=simulator_func, args=()):
         """Runs @func on all submissions"""
-        for assignment in os.listdir(self.vmpaths.dir_repository()):
+        for assignment in self.vmcfg.assignments():
             self.walk_assignment(assignment, func, args)
+
 
     def walk(self, user=None, assignment=None, func=simulator_func, args=()):
         """Walk submissions based on the combination of arguments:
