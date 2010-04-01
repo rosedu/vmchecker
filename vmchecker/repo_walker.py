@@ -47,6 +47,9 @@ class RepoWalker:
         all users that sent that assignment"""
 
         dir_assignment = self.vmpaths.dir_assignment(assignment)
+        if not os.path.exists(dir_assignment):
+            # if no student sent a submission for this assignment, there's noting to do
+            return
         for user in os.listdir(dir_assignment):
             # skip over files that may be in the assignment directory (e.g. a '.lock' file)
             if not os.path.isdir(os.path.join(dir_assignment, user)):
