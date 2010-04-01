@@ -6,7 +6,6 @@ import os
 import optparse
 
 from . import paths
-from . import vmlogging
 
 
 def simulator_func(assignment, user, submission_root, args):
@@ -32,14 +31,9 @@ class RepoWalker:
         path = self.vmpaths.dir_submission_root(assignment, user)
         if not os.path.exists(path):
             return
-        try:
-            if self.simulate:
-                func = simulator_func
-            func(assignment, user, path, *args)
-        except:
-            logger = vmlogging.create_module_logger('repo_walker')
-            logger.exception('%s failed for %s, %s (%s)',
-                             func, assignment, user, path)
+        if self.simulate:
+            func = simulator_func
+        func(assignment, user, path, *args)
 
 
     def walk_user(self, user, func=simulator_func, args=()):
