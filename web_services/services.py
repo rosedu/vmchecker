@@ -16,6 +16,7 @@ except ImportError:
 import os
 import sys
 import time
+import codecs
 import sqlite3
 import tempfile
 import paramiko
@@ -153,7 +154,7 @@ def getUserResults(req, courseId, assignmentId, username):
                     continue
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
-                    with open(f_path, 'r') as f:
+                    with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
                         result_files.append({fname  : f.read() })
 
         if len(result_files) != 0:
