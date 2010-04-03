@@ -34,7 +34,7 @@ def main():
     vmcfg = CourseConfig(CourseList().course_config(options.course_id))
     walker = repo_walker.RepoWalker(vmcfg, options.simulate)
     walker.walk(options.user, options.assignment,
-                func=resubmit_wrapper, args=(options.course_id))
+                func=resubmit_wrapper, args=(options.course_id,))
 
 if __name__ == '__main__':
     main()
