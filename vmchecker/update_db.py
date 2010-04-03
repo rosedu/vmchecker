@@ -102,6 +102,10 @@ def db_save_grade(assignment, user, submission_root,
     user_id = course_db.get_user_id(user)
     db_mtime = course_db.get_grade_mtime(assignment_id, user_id)
 
+    # if results are not in yet, bail out
+    if not os.path.exists(grade_filename):
+        return
+
     mtime = os.path.getmtime(grade_filename)
 
     # only update grades for newer submissions than those already checked
