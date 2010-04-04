@@ -31,11 +31,6 @@ QueuePath = vmchecker/2010/queue
 # submissions by the same student.
 Timedelta = 180
 
-# do we need to get kernel printk/dprintf ?
-# 0 - means no
-# non-zero means yes
-KernelMessages = 0
-
 # maximum execution time (in seconds) of a test on the vm
 # it this is exceeded, the test is stopped.
 Timeout = 120
@@ -54,7 +49,6 @@ Timeout = 120
 # Deadline = date
 # Machine = an id of the machine used in testing
 # timeout = a timeout for test execution (override the default)
-# kernelmessages = override the default kernelmessages
 # AssignmentTitle = a human readable name
 # statementlink = a link to the statement
 # OrderNumber = the number of the assignment (used for sorting)
@@ -63,7 +57,6 @@ Timeout = 120
 Deadline = 2009.03.31 23:59:00
 Machine = so-lin
 Timeout=120
-KernelMessages=0
 AssignmentTitle = Minishell (Linux)
 StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
 OrderNumber = 1
@@ -73,7 +66,6 @@ OrderNumber = 1
 Deadline = 2009.03.31 23:59:00
 Machine = so-win
 Timeout=120
-KernelMessages=0
 AssignmentTitle = Minishell (Windows)
 StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
 OrderNumber = 2
@@ -91,6 +83,9 @@ GuestShellPath=/bin/bash
 GuestHomeInBash=/home/student/
 BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
+KernelMessages=netcat -l -u -p6000
+
+
 
 # test virtual machine configuration
 [so-win]

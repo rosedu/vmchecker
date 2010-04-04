@@ -24,9 +24,12 @@ class CourseConfig:
         with open(os.path.expanduser(config_file_)) as handle:
             self.config.readfp(handle)
 
-    def get(self, section, option):
+    def get(self, section, option, default=None):
         """A convenient wrapper for config.get()"""
-        return self.config.get(section, option)
+        if default != None and not self.config.has_option(section, option):
+            return default
+        self.config.get(section, option)
+
 
     def repository_path(self):
         """Get the submission (git) repository path for this course."""

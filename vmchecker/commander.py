@@ -169,11 +169,10 @@ def _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path):
     vm-executor"""
     timeout = asscfg.get(assignment, 'Timeout')
     machine = asscfg.get(assignment, 'Machine')
-    kernel_messages_str = asscfg.get(assignment, 'KernelMessages')
+    km_command = mccfg.get(machine, 'KernelMessages', default='')
 
-    kernel_messages = True if int(kernel_messages_str) != 0 else False
     return {
-        'km_enable' : kernel_messages,
+        'km_command' : km_command,
         'host' : {
             'vmx_path'       : mccfg.get(machine, 'VMPath'),
             'vmchecker_root' : tester_root_path,

@@ -16,24 +16,31 @@ except ImportError:
 
 import pyvix.vix
 import os
-import logging
-from threading import Thread
 import sys
+import logging
+import traceback
+from threading import Thread
+from subprocess import Popen, PIPE
 
 from vmchecker import jsonutil
 
 _logger = logging.getLogger('vm_executor')
 
 
-def start_kernel_listener(args):
+def start_kernel_listener(km_command):
     """Starts the listener for kernel messages (e.g. netconsole)"""
-    # TODO: dummy start kernel listener implementation
+    km_proc = Popen(km_command, stdout=PIPE, stderr=PIPE, shell=True)
     _logger.info('started kernel listener')
+    return km_proc
 
 
-def stop_kernel_listener(args):
+def stop_kernel_listener(km_stdout_filename, km_proc):
     """Stops the listener for kernel messages (e.g. netconsole)"""
-    # TODO: dummy stop kernel listener implementation
+    (stdout, stderr) = km_proc.communicate()
+    with open(km_stdout_filename, 'w') as km_stdout:
+        km_stdout.write(stdout)
+        km_stdout.write(stderr)
+    km_proc.terminate()
     _logger.info('stopped kernel listener')
 
 
@@ -201,24 +208,36 @@ def test_submission(args):
     vm.waitForToolsInGuest()
     vm.loginInGuest(guest['username'], guest['password'])
 
-    if args['km_enable']:
-        start_kernel_listener(args)
+    km_stdout_fname = 'run-km.vmr' ### XXX HARDCODED PATH
 
-    tests = args['test']
-    for test in tests:
-        success = copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test)
-        if not success:
-            break # stop running tests if an error occured.
+    km_command = args['km_command']
+    if len(km_command) > 0:
+        try:
+            km_proc = start_kernel_listener(km_command)
+        except:
+            with open(km_stdout_fname, 'a') as km_stdout:
+                traceback.print_exc(file=km_stdout)
 
-    if args['km_enable']:
-        stop_kernel_listener(args)
+    try:
+        tests = args['test']
+        for test in tests:
+            success = copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test)
+            if not success:
+                break # stop running tests if an error occured.
+    finally:
+        if len(km_command) > 0:
+            try:
+                stop_kernel_listener(km_stdout_fname, km_proc)
+            except:
+                with open(km_stdout_fname, 'a') as km_stdout:
+                    traceback.print_exc(file=km_stdout)
 
 
 def make_testing_configuration():
     """Returns a configuration object for vm-executor testing without
     depending on other scripts"""
     return {
-        'km_enable' : False,
+        'km_command' : '',
         'host' : {
             'vmx_path'       : '/home/so/vmware/so-vm-debian-sid/faust.vmx',
             'vmchecker_root' : '/home/lucian/vmchecker/vmchecker/',
