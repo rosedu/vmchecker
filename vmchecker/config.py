@@ -28,7 +28,7 @@ class CourseConfig:
         """A convenient wrapper for config.get()"""
         if default != None and not self.config.has_option(section, option):
             return default
-        self.config.get(section, option)
+        return self.config.get(section, option)
 
 
     def repository_path(self):
