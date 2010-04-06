@@ -21,6 +21,8 @@ import com.google.gwt.http.client.URL;
 
 public class Delegate<T> {
 	
+	public static final int requestTimeoutMillis = 10000; /* 10 seconds */
+	
 	private HandlerManager eventBus; 
 	private RequestBuilder rb; 
 	private boolean isGet;
@@ -36,7 +38,7 @@ public class Delegate<T> {
 			rb = new RequestBuilder(RequestBuilder.POST, url);
 		}
 		rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
-		rb.setTimeoutMillis(2000);
+		rb.setTimeoutMillis(requestTimeoutMillis);
 	}
 	
 	private String packParameters(HashMap<String, String> params) {
