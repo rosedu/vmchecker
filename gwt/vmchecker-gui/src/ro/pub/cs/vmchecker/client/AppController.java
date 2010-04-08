@@ -34,8 +34,6 @@ import com.google.gwt.user.client.ui.SimplePanel;
 
 public class AppController implements ValueChangeHandler<String> {
 	
-	public static final String USERNAME_COOKIE = "VMCHK-USER"; 
-	
 	private HandlerManager eventBus;
 	private HTTPService service; 
 	private HasWidgets container;
@@ -56,16 +54,6 @@ public class AppController implements ValueChangeHandler<String> {
 		listenAuthenticationEvents(); 
 	}
 	
-	private void saveUsername(String username) {
-		Date now = new Date(); 
-		Cookies.setCookie(USERNAME_COOKIE, username, new Date(now.getYear() + 1, now.getMonth(), now.getDay())); 		
-	}
-	
-	private String getUsername() {
-		GWT.log("username cookie: " + Cookies.getCookie(USERNAME_COOKIE), null); 
-		return Cookies.getCookie(USERNAME_COOKIE); 
-	}
-	
 	private void listenAuthenticationEvents() {
 		eventBus.addHandler(AuthenticationEvent.TYPE, new AuthenticationEventHandler() {
 
@@ -73,7 +61,7 @@ public class AppController implements ValueChangeHandler<String> {
 			public void onAuthenticationChange(AuthenticationEvent event) {
 				GWT.log("Authentication event received", null); 
 				if (event.getType() == AuthenticationEvent.EventType.SUCCESS) {
-					saveUsername(event.getUsername()); 
+					CookieManager.saveUsername(event.getUsername()); 
 					displayContent(); 
 				} else if (event.getType() == AuthenticationEvent.EventType.ERROR) {
 					displayLogin(); 
@@ -85,6 +73,7 @@ public class AppController implements ValueChangeHandler<String> {
 	private void listenCourseChange() {
 		eventBus.addHandler(CourseSelectedEvent.TYPE, new CourseSelectedEventHandler(){
 			public void onSelect(CourseSelectedEvent event) {
+				CookieManager.saveLastCourse(event.getCourseId()); 
 				History.newItem(event.getCourseId()); 
 			}			
 		}); 
@@ -131,7 +120,8 @@ public class AppController implements ValueChangeHandler<String> {
 				}
 				
 				/* initialize header presenter */
-				headerPresenter = new HeaderPresenter(eventBus, service, new HeaderWidget(getUsername()));
+				headerPresenter = new HeaderPresenter(eventBus, service, 
+						new HeaderWidget(CookieManager.getUsername()));
 				headerPresenter.setCourses(courses); 
 				 
 				headerPresenter.go(container); 
@@ -140,7 +130,14 @@ public class AppController implements ValueChangeHandler<String> {
 				container.add(content); 
 				/* initialize history entries */
 				if ("".equals(History.getToken())) {
-					History.newItem(courses.get(0).id);
+					String defaultCourse = null; 
+					String lastCourse = CookieManager.getLastCourse(); 
+					if (lastCourse != null && coursesTags.contains(lastCourse)) {
+						defaultCourse = lastCourse; 
+					} else {
+						defaultCourse = courses.get(0).id; 
+					}
+					History.newItem(defaultCourse);
 				} else {
 					History.fireCurrentHistoryState(); 
 				}
@@ -158,7 +155,7 @@ public class AppController implements ValueChangeHandler<String> {
 				if (mainPresenter != null) {
 					mainPresenter.clearEventHandlers(); 
 				}
-				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, getUsername(), new AssignmentWidget());
+				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, CookieManager.getUsername(), new AssignmentWidget());
 				headerPresenter.selectCourse(idToCourse.get(token).id); 
 			} else {
 				token = courses.get(0).id;
