@@ -65,6 +65,7 @@ public class AssignmentPresenter implements Presenter {
 		widget.getViewStatsButton().addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
+				menuPresenter.getWidget().setSelectedIndex(-1); 
 				statsPresenter.go(widget.getBoardPanel());
 			}			
 		}); 
