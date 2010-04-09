@@ -1,0 +1,17 @@
+CFLAGS		= -Wall 
+TRACKER		=tracker
+INPUTS_DIR	=input/
+OUTPUTS_DIR	=output/
+
+
+default: build
+
+build: $(TRACKER)
+
+$(TRACKER): $(TRACKER).c
+
+clean: 
+	rm -f *~ $(TRACKER)
+	rm -rf $(OUTPUTS_DIR)
+	@make clean
+

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+input_file=$1
+output_file=$2
+ref_file=$3
+
+out_value=`head -n 1 $output_file`
+ref_value=`head -n 1 $ref_file`
+if [ $out_value -eq $ref_value ]; 
+then
+    exit 0; 
+else
+    echo "incorrect result - expecting $ref_value, found $out_value";
+    exit 1; 
+fi
