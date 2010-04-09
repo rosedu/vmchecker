@@ -27,8 +27,9 @@
 #define MAKEFILE "Makefile"
 #define MAKEFILE_TARGET "run"
 
-#define UERR 1000
-#define UFACT 1000000
+#define UERR 1000		/* error admitted for comparing time values, in microseconds */
+
+#define UFACT 1000000		/* micro-factor: 10^6 */
 
 int setup_job(int timeout, char *in, char *out) {
     struct rlimit limit;

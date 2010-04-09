@@ -50,7 +50,7 @@ run_test()
                     return 1; 
                 fi
             else
-                echo "verifier not found";
+                echo "verifier $VERIFIER not found";
                 exit; 
             fi
         else
