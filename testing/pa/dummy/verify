@@ -4,12 +4,35 @@ input_file=$1
 output_file=$2
 ref_file=$3
 
+# validate output file
+if [ -z $output_file ]; 
+then
+    echo "output filename not given"
+    exit 1
+elif [ ! -f $output_file ]; 
+then
+    echo "output file '$output_file' is missing"
+    exit 1
+fi
+
+# validate reference file 
+if [ -z $ref_file ]; 
+then
+    echo "reference filename not given"
+    exit 1
+elif [ ! -f $ref_file ]; 
+then 
+    echo "reference file '$ref_file' is missing"
+    exit 1
+fi
+
 out_value=`head -n 1 $output_file`
 ref_value=`head -n 1 $ref_file`
+
 if [ $out_value -eq $ref_value ]; 
 then
-    exit 0; 
+    exit 0
 else
-    echo "incorrect result - expecting $ref_value, found $out_value";
-    exit 1; 
+    echo "incorrect result - expecting $ref_value, found $out_value"
+    exit 1
 fi
