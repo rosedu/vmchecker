@@ -146,8 +146,9 @@ def getUserResults(req, courseId, assignmentId, username):
     try:
         result_files = []
         if os.path.isdir(r_path):
-             # XXX should we narrow scope on user & assignment?
-            update_db.update_grades(courseId)
+            # XXX should we narrow scope on user & assignment?
+            # TODO: add a routine to update user+asignment+course grade only
+            #update_db.update_grades(courseId)
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
