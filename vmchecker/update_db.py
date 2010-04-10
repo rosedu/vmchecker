@@ -62,7 +62,7 @@ def compute_grade(assignment, user, grade_filename, vmcfg):
                 words += 1
                 if word[0] in ['+', '-']:
                     try:
-                        grade += float(word)
+                        grade += float(word.split(':')[0])
                     except ValueError:
                         pass
 
