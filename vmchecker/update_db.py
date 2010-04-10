@@ -111,10 +111,12 @@ def db_save_grade(assignment, user, submission_root,
     # only update grades for newer submissions than those already checked
     # or when forced to do so
     if db_mtime != mtime or ignore_timestamp:
-        _logger.info('Updating %s, %s (%s)', assignment, user, grade_filename)
+        _logger.debug('Updating %s, %s (%s)', assignment, user, grade_filename)
         grade = compute_grade(assignment, user, grade_filename, vmcfg)
         course_db.save_grade(assignment_id, user_id, grade, mtime)
-        _logger.info('Updated %s, %s (%s)', assignment, user, grade_filename)
+        _logger.info('Updated %s, %s (%s) -- grade=%s', assignment, user, grade_filename, str(grade))
+    else:
+        _logger.info('SKIP (no tstamp change) %s, %s (%s)', assignment, user, grade_filename)
 
 
 
