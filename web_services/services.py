@@ -155,14 +155,9 @@ def getUserResults(req, courseId, assignmentId, username):
                     continue
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
-                    # try to just open the file and get it's contents
-                    try:
-                        with open(f_path, 'r') as f:
-                            result_files.append({fname  : f.read() })
-                    except:
-                        # if that fails, decode as utf-8 and ignore any errors
-                        with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
-                            result_files.append({fname  : f.read() })
+                    # decode as utf-8 and ignore any errors, because characters will be badly encoded as json.
+                    with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        result_files.append({fname  : f.read() })
 
         if len(result_files) != 0:
             result_files = websutil.sortResultFiles(result_files)
