@@ -22,57 +22,24 @@ _logger = vmlogging.create_module_logger('update_db')
 
 
 
-
-
-def compute_grade(assignment, user, grade_filename, vmcfg):
-    """Returns the grade value after applying penalties and bonuses.
+def compute_late_penalty(assignment, user, vmcfg):
+    """Returns the late submission penalty for this submission
 
     Computes the time penalty for the user, obtains the other
     penalties and bonuses from the grade_filename file
     and computes the final grade.
 
-    The grade_filename file can have any structure.
-    The only rule is the following: any number that starts with '-'
-    or '+' is taken into account when computing the grade.
-
-    An example for the file:
-        +0.1 very good comments
-        -0.2 possible leak of memory on line 234
-        +0.1 treats exceptions
-        -0.2 use of magic numbers
     """
 
     weights = [float(x) for x in vmcfg.get('vmchecker', 'PenaltyWeights').split()]
 
-    limit = vmcfg.get('vmchecker', 'PenaltyLimit')
+    limit = int(vmcfg.get('vmchecker', 'PenaltyLimit'))
     sss = submissions.Submissions(VmcheckerPaths(vmcfg.root_path()))
-    upload_time = sss.get_upload_time_str(assignment, user)
+    upload_time = sss.get_upload_time_struct(assignment, user)
 
     deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                              penalty.DATE_FORMAT)
     holidays = int(vmcfg.get('vmchecker', 'Holidays'))
-
-    grade = 10
-    words = 0
-    word = ""
-
-    with open(grade_filename) as handler:
-        for line in handler.readlines():
-            for word in line.split():
-                words += 1
-                if word[0] in ['+', '-']:
-                    try:
-                        grade += float(word.split(':')[0])
-                    except ValueError:
-                        pass
-
-    #word can be either 'copiat' or 'ok'
-    if words == 1:
-        return word
-
-    #at this point, grade is <= 0 if the homework didn't compile
-    if grade <= 0:
-        return 0
 
     if holidays != 0:
         holiday_start  = vmcfg.get('vmchecker', 'HolidayStart') .split(' , ')
@@ -82,8 +49,55 @@ def compute_grade(assignment, user, grade_filename, vmcfg):
     else:
         penalty_value = penalty.compute_penalty(upload_time, deadline, 1,
                             weights, limit)[0]
+    return (-penalty_value)
 
-    grade -= penalty_value
+
+def compute_TA_penalty(grade_filename):
+    """Compute the penalty assigned by the teaching assistant
+
+    The grade_filename file can have any structure.
+
+    The only rule is the following: any line that starts with a number
+    with '-' or '+' is taken into account when computing the grade.
+
+    An example for the file:
+        +0.1 very good comments
+        -0.2 possible leak of memory on line 234
+        +0.1 treats exceptions
+        -0.2 use of magic numbers
+
+    """
+
+    acc = 0
+    with open(grade_filename) as handler:
+        for line in handler.readlines():
+            for word in line.split():
+                if word[0] in ['+', '-']:
+                    try:
+                        acc += float(word.split(':')[0])
+                    except ValueError:
+                        pass
+    return acc
+
+
+def compute_grade(assignment, user, grade_filename, vmcfg):
+    """Returns the grade value after applying penalties and bonuses."""
+
+    #if the file only contains 'ok' or 'copiat' there's noting to compute
+    with open(grade_filename) as f:
+        lines = f.readlines()
+        if len(lines) == 1 and len(lines[0].split()) == 1:
+            # only one word in the file!
+            return lines[0].split()[0]
+
+    grade = 10
+    grade += compute_TA_penalty(grade_filename)
+    grade += compute_late_penalty(assignment, user, vmcfg)
+
+    #at this point, grade is <= 0 if the homework didn't compile
+    if grade <= 0:
+        grade = 0
+
     return grade
 
 
