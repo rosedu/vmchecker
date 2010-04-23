@@ -5,8 +5,9 @@ from __future__ import with_statement
 
 import os
 import ldap
+import time
 
-from vmchecker import paths
+from vmchecker import paths, update_db, penalty, submissions
 from vmchecker.courselist import CourseList
 from vmchecker.config import LdapConfig, CourseConfig
 
@@ -22,9 +23,9 @@ class OutputString():
 
     def write(self, st):
         self.st += st
-	
+
     def get(self):
-        return self.st 
+        return self.st
 
 
 def get_user(username, password):
@@ -84,7 +85,7 @@ def get_ldap_user(username, password):
 
     baseDN = ldap_cfg.root_search()
     searchScope = ldap.SCOPE_SUBTREE
-    retrieveAttributes = None 
+    retrieveAttributes = None
 
     # XXX : Needs sanitation
     searchFilter = '(uid=' + username + ')'
@@ -93,9 +94,9 @@ def get_ldap_user(username, password):
     count = 0
 
     # find the user's dn
-    result_id = con.search(baseDN, 
-                        searchScope, 
-                        searchFilter, 
+    result_id = con.search(baseDN,
+                        searchScope,
+                        searchFilter,
                         retrieveAttributes)
     result_set = []
     while 1:
@@ -114,11 +115,11 @@ def get_ldap_user(username, password):
         # too many results for the same uid
         raise
 
-    user_dn, entry = result_set[0][0]	
+    user_dn, entry = result_set[0][0]
     con.unbind_s()
-    
-    # check the password 
-    try:  
+
+    # check the password
+    try:
         con = ldap.initialize(ldap_cfg.server())
         con.simple_bind_s(user_dn, password)
     except ldap.INVALID_CREDENTIALS:
@@ -128,12 +129,12 @@ def get_ldap_user(username, password):
 
     return entry['cn'][0]
 
-  
+
 # Generator to buffer file chunks
 def fbuffer(f, chunk_size=10000):
     while True:
         chunk = f.read(chunk_size)
-        if not chunk: 
+        if not chunk:
             break
         yield chunk
 
@@ -146,12 +147,48 @@ def _find_file(searched_file_name, rfiles):
     return None
 
 
+
+def submission_upload_info(courseId, user, assignment):
+    """Return a string explaining the submission upload time, deadline
+    and the late submission penalty
+    """
+    vmcfg = CourseConfig(CourseList().course_config(courseId))
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    sbroot = vmpaths.dir_submission_root(assignment, user)
+    late_penalty = update_db.compute_late_penalty(assignment, user, vmcfg)
+    ta_penalty   = update_db.compute_TA_penalty(paths.submission_results_grade(sbroot))
+    deadline_str = vmcfg.assignments().get(assignment, 'Deadline')
+    deadline_struct = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
+                                    penalty.DATE_FORMAT)
+    sss = submissions.Submissions(vmpaths)
+    upload_time_str = sss.get_upload_time_str(assignment, user)
+    upload_time_struct = sss.get_upload_time_struct(assignment, user)
+
+    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
+
+    ret = ""
+    ret += "Data trimiterii temei : " + upload_time_str + "\n"
+    ret += "Deadline temă         : " + deadline_str    + "\n"
+    ret += deadline_explanation + "\n"
+    ret += "\n"
+    ret += "Depunctare întârziere : " + str(late_penalty) + "\n"
+    ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
+    ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
+    ret += "-----------------------\n"
+    ret += "Nota                  : " + str(10 + ta_penalty + late_penalty) + "\n"
+    ret += "\n"
+
+    return ret
+
+
+
 def sortResultFiles(rfiles):
     """Sort the vector of result files and change keys with human
     readable descriptions"""
 
     file_descriptions = [
         {'grade.vmr'            : 'Nota și observații'},
+        {'late-submission.vmr'  : 'Date și depunctări'},
         {'vmchecker-stderr.vmr' : 'Erori vmchecker'},
         {'build-stdout.vmr'     : 'Compilarea temei și a testelor (stdout)'},
         {'build-stderr.vmr'     : 'Compilarea temei și a testelor (stderr)'},

@@ -145,6 +145,8 @@ def getUserResults(req, courseId, assignmentId, username):
     strout = websutil.OutputString()
     try:
         result_files = []
+        result_files.append({'late-submission.vmr' :
+                             websutil.submission_upload_info(courseId, username, assignmentId)})
         if os.path.isdir(r_path):
             # XXX should we narrow scope on user & assignment?
             # TODO: add a routine to update user+asignment+course grade only

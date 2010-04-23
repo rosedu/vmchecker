@@ -48,7 +48,7 @@ class Submissions:
 
 
     def get_upload_time_str(self, assignment, user):
-        """Returns a datetime object with upload time user's last submission"""
+        """Returns a string representing the user's last submission date"""
         config_file = self._get_submission_config(assignment, user)
         if config_file == None:
             return None
@@ -56,12 +56,19 @@ class Submissions:
         with open(config_file) as handler:
             hrc.readfp(handler)
 
-        upload_time = hrc.get('Assignment', 'UploadTime')
-        upload_time = time.strptime(upload_time, DATE_FORMAT)
-        return upload_time
+        upload_time_str = hrc.get('Assignment', 'UploadTime')
+        return upload_time_str
+
+    def get_upload_time_struct(self, assignment, user):
+        """Returns a time_struct object with the upload time of the user's last submission"""
+        upload_time_str = self.get_upload_time_str(assignment, user)
+        upload_time_struct = time.strptime(upload_time_str, DATE_FORMAT)
+        return upload_time_struct
+
 
     def get_upload_time(self, assignment, user):
-        return datetime.datetime(*self.get_upload_time_str(assignment, user)[:6])
+        """Returns a datetime object with the upload time of the user's last submission"""
+        return datetime.datetime(*self.get_upload_time_struct(assignment, user)[:6])
 
     def submission_exists(self, assignment, user):
         """Returns true if a valid submission exists for the given
