@@ -157,8 +157,13 @@ def submission_upload_info(courseId, user, assignment):
     vmcfg = CourseConfig(CourseList().course_config(courseId))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_submission_root(assignment, user)
+    grade_file = paths.submission_results_grade(sbroot)
+    sbcfg = paths.submission_config_file(sbroot)
+    if not os.path.exists(sbcfg):
+        return "Tema nu a fost încă trimisă"
+
     late_penalty = update_db.compute_late_penalty(assignment, user, vmcfg)
-    ta_penalty   = update_db.compute_TA_penalty(paths.submission_results_grade(sbroot))
+    ta_penalty   = update_db.compute_TA_penalty(grade_file)
     deadline_str = vmcfg.assignments().get(assignment, 'Deadline')
     deadline_struct = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                                     penalty.DATE_FORMAT)
