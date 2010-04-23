@@ -88,4 +88,4 @@ The string after ``assignment`` is the ID of the assignment. This may *NOT* cont
 - ``StatementLink`` - a link to a resource (pdf, html, etc.) describing the assignment
 - ``OrderNumber`` is used to order assignments when presented to the student. These should be numbers starting from ``1`` for the first assignment and incremented for each new one.
 
-
+Assignment test archives must be placed in tests/``assignment-id``.zip

@@ -16,7 +16,7 @@ class _NullHandler(logging.Handler):
 def create_module_logger(name):
     """Create a logger valid for vmchecker modules:
 
-    It must have a default handler, because, it the application does
+    It must have a default handler, because, if the application does
     not provide any, logging will throw exceptions.
     """
     logger = logging.getLogger('vmchecker.' + name)
