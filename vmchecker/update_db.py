@@ -68,6 +68,9 @@ def compute_TA_penalty(grade_filename):
 
     """
 
+    if not os.path.exists(grade_filename):
+        return 0
+
     acc = 0
     with open(grade_filename) as handler:
         for line in handler.readlines():

@@ -6,6 +6,8 @@ from __future__ import with_statement
 import os
 import ldap
 import time
+import paramiko
+import traceback
 
 from vmchecker import paths, update_db, penalty, submissions
 from vmchecker.courselist import CourseList
@@ -187,6 +189,7 @@ def sortResultFiles(rfiles):
     readable descriptions"""
 
     file_descriptions = [
+        {'fortune.vmr'          : 'Rezultatele nu sunt încă disponibile'},
         {'grade.vmr'            : 'Nota și observații'},
         {'late-submission.vmr'  : 'Date și depunctări'},
         {'vmchecker-stderr.vmr' : 'Erori vmchecker'},
@@ -195,15 +198,40 @@ def sortResultFiles(rfiles):
         {'run-stdout.vmr'       : 'Execuția testelor (stdout)'},
         {'run-stderr.vmr'       : 'Execuția testelor (stderr)'},
         {'run-km.vmr'           : 'Mesaje kernel (netconsole)'},
+        {'queue-contents.vmr'   : 'Coada temelor ce urmează să fie testate'},
         ]
     ret = []
     for f_des in file_descriptions:
         key = f_des.keys()[0] # there is only one key:value pair in each dict
         rfile = _find_file(key, rfiles)
         if rfile == None:
-            ret.append({f_des.get(key) : 'Nu a fost găsit în vmchecker storer'})
+            continue
         else:
             ret.append({f_des.get(key) : rfile.get(key)})
             rfiles.remove(rfile)
     ret += rfiles
     return ret
+
+
+def get_test_queue_contents(courseId):
+    client = paramiko.SSHClient()
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        client.load_system_host_keys('/home/so/.ssh/known_hosts')
+        client.connect(vmcfg.tester_hostname(),
+                       username=vmcfg.tester_username(),
+                       key_filename=vmcfg.storer_sshid(),
+                       look_for_keys=False)
+        stdin, stdout, stderr = client.exec_command('ls -ctgG ' + vmcfg.tester_queue_path())
+        stdfiles = [stdin, stdout, stderr]
+        data = stdout.readlines()
+        if len(data) > 0:
+            data = data[1:]
+        for s in stdfiles:
+            s.close()
+        client.close()
+        return json.dumps(data, indent=4)
+    except:
+        strout = OutputString()
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorTrace' : strout.get()}, indent=4)

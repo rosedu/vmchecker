@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 This script implements the VMChecker's Web Services.
@@ -19,7 +20,6 @@ import time
 import codecs
 import sqlite3
 import tempfile
-import paramiko
 import traceback
 import subprocess
 
@@ -145,8 +145,6 @@ def getUserResults(req, courseId, assignmentId, username):
     strout = websutil.OutputString()
     try:
         result_files = []
-        result_files.append({'late-submission.vmr' :
-                             websutil.submission_upload_info(courseId, username, assignmentId)})
         if os.path.isdir(r_path):
             # XXX should we narrow scope on user & assignment?
             # TODO: add a routine to update user+asignment+course grade only
@@ -161,15 +159,17 @@ def getUserResults(req, courseId, assignmentId, username):
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
                         result_files.append({fname  : f.read() })
 
-        if len(result_files) != 0:
-            result_files = websutil.sortResultFiles(result_files)
-        else:
+        if len(result_files) == 0:
             process = subprocess.Popen('/usr/games/fortune',
                                        shell=False,
                                        stdout=subprocess.PIPE)
             msg = "In the meantime have a fortune cookie: <blockquote>"
             msg += process.communicate()[0] + "</blockquote>"
-            result_files = [ {'Your results are not ready yet' :  msg } ]
+            result_files = [ {'fortune.vmr' :  msg } ]
+            result_files.append({'queue-contents.vmr' :  websutil.get_test_queue_contents(courseId) })
+        result_files.append({'late-submission.vmr' :
+                             websutil.submission_upload_info(courseId, username, assignmentId)})
+        result_files = websutil.sortResultFiles(result_files)
         return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)
@@ -335,28 +335,3 @@ def logout(req):
     return json.dumps({'info':'You logged out'})
 
 
-def viewQueue(req, courseId):
-    # XXX TODO uncomment this when we have a gui
-    #req.content_type = 'text/html'
-    client = paramiko.SSHClient()
-    try:
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
-        client.load_system_host_keys('/home/so/.ssh/known_hosts')
-        client.connect(vmcfg.tester_hostname(),
-                       username=vmcfg.tester_username(),
-                       key_filename=vmcfg.storer_sshid(),
-                       look_for_keys=False)
-        stdin, stdout, stderr = client.exec_command('ls -l ' + vmcfg.tester_queue_path())
-        stdfiles = [stdin, stdout, stderr]
-        stdin.close()
-        stdfiles_data = [s.readlines() for s in [stdout, stderr]]
-        for s in stdfiles:
-            s.close()
-        client.close()
-        return json.dumps(stdfiles_data, indent=4)
-    except:
-        strout = websutil.OutputString()
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()}, indent=4)
