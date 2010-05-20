@@ -178,8 +178,9 @@ def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
 
 
 
-def start_host_commands(host_commands):
+def start_host_commands(jobs_path, host_commands):
     """Start a set of processes on the host"""
+    _logger.info("%%% -- starting host commands")
     for cmdspec in host_commands:
         # skip empty commands.
         if len(cmdspec['cmd']) == 0:
@@ -194,7 +195,7 @@ def start_host_commands(host_commands):
             fobj = None
             try:
                 if len(cmdspec[f['name']]) != 0:
-                    fobj = open(cmdspec[f['name']], f['mode'])
+                    fobj = open(os.path.join(jobs_path, cmdspec[f['name']]), f['mode'])
             except:
                 _logger.exception('HOSTPROC: opening file ' + f['name'] + ' as ' + f['mode'])
             cmdspec['std'][f['name']] = fobj
@@ -231,6 +232,8 @@ def stop_host_commands(host_commands):
                         _logger.exception('HOSTPROC: closing file')
         except:
             _logger.exception('HOSTPROC: killing proc and closing files')
+    _logger.info("%%% -- stopped host commands")
+
 
 def test_submission(args):
     """THE function that tests a submission bundle:
@@ -252,7 +255,7 @@ def test_submission(args):
 
 
     # start host commands
-    start_host_commands(args['host_commands'])
+    start_host_commands(jobs_path, args['host_commands'])
 
     try:
         tests = args['test']
