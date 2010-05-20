@@ -40,22 +40,21 @@ from .config import CourseConfig
 
 _logger = vmlogging.create_module_logger('commander')
 
-_FILES_TO_SEND = (
-    'vmchecker-stderr.vmr',
-    'build-stdout.vmr',
-    'build-stderr.vmr',
-    'run-stdout.vmr',
-    'run-stderr.vmr',
-    'run-km.vmr',
-    'grade.vmr',)
-_EXECUTOR_OVERHEAD = 300
+
+# starting vmware, reverting to snapshot, etc
+# will have an additional time overhead
+_EXECUTOR_OVERHEAD = 300 # in seconds
 
 
 
 def _run_callback(bundle_dir):
     """Runs callback script to upload results"""
-    abs_files = (os.path.join(bundle_dir, f) for f in _FILES_TO_SEND)
-    callback.run_callback(submission_config_file(bundle_dir), abs_files)
+    allfiles = os.listdir(bundle_dir)
+    vmrfiles = []
+    for fname in allfiles:
+        if fname.endswith('.vmr'):
+            vmrfiles.append(os.path.join(bundle_dir, fname))
+    callback.run_callback(submission_config_file(bundle_dir), vmrfiles)
 
 
 
