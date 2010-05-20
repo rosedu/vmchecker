@@ -170,9 +170,11 @@ def _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path):
     timeout = asscfg.get(assignment, 'Timeout')
     machine = asscfg.get(assignment, 'Machine')
     km_command = mccfg.get(machine, 'KernelMessages', default='')
+    host_command = mccfg.get(machine, 'HostCommand', default='')
 
     return {
-        'km_command' : km_command,
+        'host_commands' : [{ 'cmd' : km_command, 'in': '', 'out' : 'run-km.vmr', 'err' : '' }, ### XXX HARDCODED .vmr PATH
+                           { 'cmd' : host_command, 'in': '', 'out' : 'run-hostcmd.vmr', 'err' : '' }], ### XXX HARDCODED .vmr PATH
         'host' : {
             'vmx_path'       : mccfg.get(machine, 'VMPath'),
             'vmchecker_root' : tester_root_path,

@@ -84,6 +84,7 @@ GuestHomeInBash=/home/student/
 BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
 KernelMessages=netcat -l -u -p6000
+HostCommand=ls
 
 
 

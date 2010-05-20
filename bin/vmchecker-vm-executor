@@ -18,30 +18,15 @@ import pyvix.vix
 import os
 import sys
 import logging
-import traceback
+import signal
 from threading import Thread
-from subprocess import Popen, PIPE
+from subprocess import Popen
 
 from vmchecker import jsonutil
 
 _logger = logging.getLogger('vm_executor')
 
 
-def start_kernel_listener(km_command):
-    """Starts the listener for kernel messages (e.g. netconsole)"""
-    km_proc = Popen(km_command, stdout=PIPE, stderr=PIPE, shell=True)
-    _logger.info('started kernel listener')
-    return km_proc
-
-
-def stop_kernel_listener(km_stdout_filename, km_proc):
-    """Stops the listener for kernel messages (e.g. netconsole)"""
-    (stdout, stderr) = km_proc.communicate()
-    with open(km_stdout_filename, 'w') as km_stdout:
-        km_stdout.write(stdout)
-        km_stdout.write(stderr)
-    km_proc.terminate()
-    _logger.info('stopped kernel listener')
 
 
 def connectToVM(vmx_path):
@@ -191,6 +176,62 @@ def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
         return True
 
 
+
+
+def start_host_commands(host_commands):
+    """Start a set of processes on the host"""
+    for cmdspec in host_commands:
+        # skip empty commands.
+        if len(cmdspec['cmd']) == 0:
+            continue
+
+        cmdspec['std'] = {}
+        files = [{'name':'in',  'mode':'r'},
+                 {'name':'out', 'mode':'a'},
+                 {'name':'err', 'mode':'a'}]
+
+        for f in files:
+            fobj = None
+            try:
+                if len(cmdspec[f['name']]) != 0:
+                    fobj = open(cmdspec[f['name']], f['mode'])
+            except:
+                _logger.exception('HOSTPROC: opening file ' + f['name'] + ' as ' + f['mode'])
+            cmdspec['std'][f['name']] = fobj
+
+        proc = None
+        try:
+            proc = Popen(cmdspec['cmd'],
+                         stdin  = cmdspec['std']['in'],
+                         stdout = cmdspec['std']['out'],
+                         stderr = cmdspec['std']['err'],
+                         shell=True)
+        except:
+            _logger.exception('HOSTPROC: opening process: ' + cmdspec['cmd'])
+        cmdspec['proc'] = proc
+
+
+def stop_host_commands(host_commands):
+    """Start a set of processes on the host"""
+    for cmdspec in host_commands:
+        # skip empty commands.
+        if len(cmdspec['cmd']) == 0:
+            continue
+
+        try:
+            if cmdspec['proc'] == None:
+                continue
+            # can't do "proc.terminate()" here because that's python2.6 specific
+            os.kill(cmdspec['proc'].pid, signal.SIGTERM)
+            for f in cmdspec['std'].values():
+                if f != None:
+                    try:
+                        f.close()
+                    except:
+                        _logger.exception('HOSTPROC: closing file')
+        except:
+            _logger.exception('HOSTPROC: killing proc and closing files')
+
 def test_submission(args):
     """THE function that tests a submission bundle:
         * opens the vm and reverts to a known snapshot
@@ -208,15 +249,10 @@ def test_submission(args):
     vm.waitForToolsInGuest()
     vm.loginInGuest(guest['username'], guest['password'])
 
-    km_stdout_fname = 'run-km.vmr' ### XXX HARDCODED PATH
 
-    km_command = args['km_command']
-    if len(km_command) > 0:
-        try:
-            km_proc = start_kernel_listener(km_command)
-        except:
-            with open(km_stdout_fname, 'a') as km_stdout:
-                traceback.print_exc(file=km_stdout)
+
+    # start host commands
+    start_host_commands(args['host_commands'])
 
     try:
         tests = args['test']
@@ -225,12 +261,7 @@ def test_submission(args):
             if not success:
                 break # stop running tests if an error occured.
     finally:
-        if len(km_command) > 0:
-            try:
-                stop_kernel_listener(km_stdout_fname, km_proc)
-            except:
-                with open(km_stdout_fname, 'a') as km_stdout:
-                    traceback.print_exc(file=km_stdout)
+        stop_host_commands(args['host_commands'])
 
 
 def make_testing_configuration():
