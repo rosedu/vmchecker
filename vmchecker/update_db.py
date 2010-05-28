@@ -74,12 +74,18 @@ def compute_TA_penalty(grade_filename):
     acc = 0
     with open(grade_filename) as handler:
         for line in handler.readlines():
-            for word in line.split():
-                if word[0] in ['+', '-']:
-                    try:
-                        acc += float(word.split(':')[0])
-                    except ValueError:
-                        pass
+            words = line.split()
+            if len(words) == 0:
+                continue
+            fst_word = words[0].strip()
+            try:
+                # The first line may be of the form: '-1.0: my comment'.
+                # This make the first word be '-1.0:' and that does not
+                # parse as a float.
+                acc += float(fst_word.split(':')[0])
+            except ValueError:
+                pass
+
     return acc
 
 
