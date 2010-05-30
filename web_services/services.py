@@ -29,6 +29,9 @@ from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker import submit, config, websutil, update_db, paths
 
+# .vmr files may be very large because of errors in the student's submission.
+MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
+
 # define ERROR_MESSAGES
 ERR_AUTH = 1
 ERR_EXCEPTION = 2 
@@ -155,9 +158,16 @@ def getUserResults(req, courseId, assignmentId, username):
                     continue
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
-                    # decode as utf-8 and ignore any errors, because characters will be badly encoded as json.
+                    overflow_msg = ''
+                    f_size = os.path.getsize(f_path)
+                    if f_size > MAX_VMR_FILE_SIZE:
+                        overflow_msg = '\n\n<b>File truncated! Actual size: ' + str(f_size) + ' bytes</b>\n'
+                    # decode as utf-8 and ignore any errors, because
+                    # characters will be badly encoded as json.
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        result_files.append({fname  : f.read() })
+                        result_files.append({fname  : (f.read(MAX_VMR_FILE_SIZE) + overflow_msg) })
+
+
 
         if len(result_files) == 0:
             process = subprocess.Popen('/usr/games/fortune',
