@@ -6,6 +6,7 @@
 from __future__ import with_statement
 
 import os
+import time
 import ConfigParser
 
 from . import assignments
@@ -72,6 +73,18 @@ class CourseConfig:
     def course_name(self):
         """Return a human readable name for the course"""
         return self.config.get('vmchecker', 'coursename')
+
+    def upload_active_interval(self):
+        """Time interval when upload is active.
+
+        Return a tuple of time.struct_time objects describing the
+        period in which howework upload is active in vmchecker for
+        this course.
+        """
+        start = self.config.get('vmchecker', 'UploadActiveFrom')
+        stop  = self.config.get('vmchecker', 'UploadActiveUntil')
+        return (time.strptime(start, DATE_FORMAT),
+                time.strptime(stop, DATE_FORMAT))
 
     def assignments(self):
         """Return an Assignment object describing the assignments in

@@ -9,9 +9,11 @@ PenaltyLimit = 3
 
 Holidays = 1
 
-HolidayStart = 2009.03.31 23:59:00
-HolidayFinish = 2009.04.02 23:59:00
+HolidayStart = 2010.03.31 23:59:00
+HolidayFinish = 2010.04.02 23:59:00
 
+UploadActiveFrom  = 2010.03.01 23:59:00
+UploadActiveUntil = 2010.06.10 23:59:00
 
 [storer]
 Hostname = elf.cs.pub.ro

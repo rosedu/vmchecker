@@ -288,7 +288,7 @@ def queue_for_testing(assignment, user, course_id):
 
 def submit(archive_filename, assignment, user, course_id,
            skip_time_check=False, forced_upload_time=None):
-    """Commit in the git repo and queue for testing a new submission.
+    """Main routine: save a new submission and queue it for testing.
 
     The submission is identified by archive_filename.
 
@@ -298,14 +298,28 @@ def submit(archive_filename, assignment, user, course_id,
 
     If forced_upload_time is not specified, the current system time is
     used.
+
+    Checks whether submissions are active for this course.
     """
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
 
     if forced_upload_time != None:
         skip_time_check = True
-        upload_time = forced_upload_time
+        upload_time_str = forced_upload_time
     else:
-        upload_time = time.strftime(config.DATE_FORMAT)
+        upload_time_str = time.strftime(config.DATE_FORMAT)
+
+
+    # check if upload is active at this time (restrict students from
+    # submitting homework to a given interval).
+    upload_time = time.strptime(upload_time_str, config.DATE_FORMAT)
+    (active_start, active_stop) = vmcfg.upload_active_interval()
+    if (upload_time < active_start) or (upload_time > active_stop):
+        msg = 'You can only submit homework between '
+        msg += time.strftime(config.DATE_FORMAT, active_start) + ' and '
+        msg += time.strftime(config.DATE_FORMAT, active_stop)  + '.'
+        raise SubmitedTooSoonError(msg)
+
 
     # checks time difference
     if not skip_time_check and submitted_too_soon(assignment, user, vmcfg):
@@ -314,6 +328,6 @@ def submit(archive_filename, assignment, user, course_id,
                                    str(vmcfg.assignments().timedelta(assignment)))
 
     save_submission_in_storer(archive_filename, user, assignment,
-                              course_id, upload_time)
+                              course_id, upload_time_str)
     queue_for_testing(assignment, user, course_id)
 
