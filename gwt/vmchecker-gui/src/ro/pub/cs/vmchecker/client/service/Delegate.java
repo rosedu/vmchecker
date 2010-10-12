@@ -17,31 +17,35 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.http.client.URL; 
 
 public class Delegate<T> {
+	
+	public static final int requestTimeoutMillis = 10000; /* 10 seconds */
 	
 	private HandlerManager eventBus; 
 	private RequestBuilder rb; 
 	private boolean isGet;
-	private String URL; 
+	private String url; 
 	
-	public Delegate(HandlerManager eventBus, String URL, boolean isGet) {
+	public Delegate(HandlerManager eventBus, String url, boolean isGet) {
 		this.eventBus = eventBus;
 		this.isGet = isGet;
-		this.URL = URL; 
+		this.url = url; 
 		if (isGet) {
-			rb = new RequestBuilder(RequestBuilder.GET, URL);
+			rb = new RequestBuilder(RequestBuilder.GET, url);
 		} else {
-			rb = new RequestBuilder(RequestBuilder.POST, URL);
+			rb = new RequestBuilder(RequestBuilder.POST, url);
 		}
-		rb.setHeader("Content-Type", "application/x-www-form-urlencoded"); 
+		rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		rb.setTimeoutMillis(requestTimeoutMillis);
 	}
 	
 	private String packParameters(HashMap<String, String> params) {
 		StringBuffer result = new StringBuffer();  
 		for (Iterator<String> it = params.keySet().iterator(); it.hasNext(); ) {
 			String key = it.next(); 
-			result.append(key + "=" + params.get(key));
+			result.append(URL.encodeComponent(key, true) + "=" + URL.encodeComponent(params.get(key), true));
 			if (it.hasNext()) {
 				result.append('&'); 
 			}
@@ -62,14 +66,14 @@ public class Delegate<T> {
 			GWT.log("[parseError()]", e);
 			/* unexpected format */
 			eventBus.fireEvent(new ErrorDisplayEvent("[Service Error] Unknown format in response", 
-					"<b>Service URL</b>: " + URL + "<br/><b>Content</b>:<br/>" + text)); 
+					"<b>Service URL</b>: " + url + "<br/><b>Content</b>:<br/>" + text)); 
 		}
 	}
 		
 	public void sendRequest(final AsyncCallback<T> callback, final JSONDecoder<T> decoder, HashMap<String, String> params) {
 		if (params != null) {
 			if (isGet) {
-				rb = new RequestBuilder(RequestBuilder.GET, URL + "?" + packParameters(params)); 
+				rb = new RequestBuilder(RequestBuilder.GET, url + "?" + packParameters(params)); 
 			} else {
 				rb.setRequestData(packParameters(params));
 			}
