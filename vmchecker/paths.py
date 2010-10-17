@@ -91,7 +91,10 @@ class VmcheckerPaths:
 
 
     def auth_file(self):
-        """An authentication file for students not in LDAP"""
+        """The absolute path to the authentication file for students
+        without a LDAP account.
+
+        """
         return self.abspath('auth_file.json')
 
 
