@@ -90,6 +90,11 @@ class VmcheckerPaths:
         return self.abspath('vmchecker.db')
 
 
+    def config_file(self):
+        """The absolute path to the main configuration file """
+        return self.abspath('config')
+
+
     def auth_file(self):
         """The absolute path to the authentication file for students
         without a LDAP account.

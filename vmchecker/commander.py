@@ -149,7 +149,7 @@ def _check_required_files(path):
     """Checks that a set of files required by commander is present in
     the given path."""
     found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'machine-config']
+    needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'course-config']
     found_files = os.listdir(path)
     not_found = []
     for need in needed_files:
@@ -163,29 +163,30 @@ def _check_required_files(path):
 
 
 
-def _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path):
+def _make_test_config(bundle_dir, assignment, vmcfg, tester_root_path):
     """Returns an object with a configuration suitable for
     vm-executor"""
+    asscfg  = vmcfg.assignments()
     timeout = asscfg.get(assignment, 'Timeout')
     machine = asscfg.get(assignment, 'Machine')
-    km_command = mccfg.get(machine, 'KernelMessages', default='')
-    host_command = mccfg.get(machine, 'HostCommand', default='')
+    km_command = vmcfg.get(machine, 'KernelMessages', default='')
+    host_command = vmcfg.get(machine, 'HostCommand', default='')
 
     return {
         'host_commands' : [{ 'cmd' : km_command, 'in': '', 'out' : 'run-km.vmr', 'err' : '' }, ### XXX HARDCODED .vmr PATH
                            { 'cmd' : host_command, 'in': '', 'out' : 'run-hostcmd.vmr', 'err' : '' }], ### XXX HARDCODED .vmr PATH
         'host' : {
-            'vmx_path'       : mccfg.get(machine, 'VMPath'),
+            'vmx_path'       : vmcfg.get(machine, 'VMPath'),
             'vmchecker_root' : tester_root_path,
             'jobs_path'      : bundle_dir,
             'scripts_path'   : bundle_dir},
         'guest' : {
-            'username'  : mccfg.get(machine, 'GuestUser'),
-            'password'  : mccfg.get(machine, 'GuestPassword'),
-            'shell'     : mccfg.get(machine, 'GuestShellPath'),
+            'username'  : vmcfg.get(machine, 'GuestUser'),
+            'password'  : vmcfg.get(machine, 'GuestPassword'),
+            'shell'     : vmcfg.get(machine, 'GuestShellPath'),
             'root_path' : {
-                'native_style' : mccfg.get(machine, 'GuestBasePath'),
-                'shell_style'  : mccfg.get(machine, 'GuestHomeInBash'),
+                'native_style' : vmcfg.get(machine, 'GuestBasePath'),
+                'shell_style'  : vmcfg.get(machine, 'GuestHomeInBash'),
                 'separator'    : '/',
                 },
             },
@@ -205,11 +206,11 @@ def _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path):
             ]
         }
 
-def _write_test_config(dst_file, bundle_dir, assignment, mccfg, asscfg, tester_root_path):
+def _write_test_config(dst_file, bundle_dir, assignment, vmcfg, tester_root_path):
     """Write the test configuration to a json file to be passed in to
     the vm-executor"""
     with open(dst_file, 'w') as handler:
-        testcfg = _make_test_config(bundle_dir, assignment, mccfg, asscfg, tester_root_path)
+        testcfg = _make_test_config(bundle_dir, assignment, vmcfg, tester_root_path)
         testcfg_str = json.dumps(testcfg)
         handler.write(testcfg_str)
 
@@ -223,9 +224,9 @@ def _get_assignment_id(bundle_dir):
     assignment = config.get('Assignment', 'Assignment')
     return assignment
 
-def _get_machine_config(bundle_dir):
+def _get_course_config(bundle_dir):
     """Returns a parser for the machine-config in the bundle dir"""
-    return CourseConfig(os.path.join(bundle_dir, 'machine-config'))
+    return CourseConfig(os.path.join(bundle_dir, 'course-config'))
 
 
 def prepare_env_and_test(tester_root_path, bundle_dir):
@@ -234,16 +235,15 @@ def prepare_env_and_test(tester_root_path, bundle_dir):
 
     _check_required_files(bundle_dir)
 
-    assignment = _get_assignment_id(bundle_dir)
-    mccfg = _get_machine_config(bundle_dir)
-    asscfg  = mccfg.assignments()
-    timeout = asscfg.get(assignment, 'Timeout')
-
-
     json_cfg_fname = os.path.join(bundle_dir, 'vm_executor_config.json')
-    _write_test_config(json_cfg_fname, bundle_dir, assignment, mccfg, asscfg, tester_root_path)
+    assignment = _get_assignment_id(bundle_dir)
+    vmcfg = _get_course_config(bundle_dir)
+
+    _write_test_config(json_cfg_fname, bundle_dir, assignment, vmcfg, tester_root_path)
 
     try:
+        asscfg  = vmcfg.assignments()
+        timeout = asscfg.get(assignment, 'Timeout')
         _run_executor(json_cfg_fname, bundle_dir, assignment, timeout)
         _run_callback(bundle_dir)
     except:
