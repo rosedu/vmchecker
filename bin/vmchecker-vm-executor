@@ -7,24 +7,31 @@ submission bundle (submission + tests), and closes the vm"""
 from __future__ import with_statement
 
 
-# Use simplejson or Python 2.6 json, prefer simplejson.
-try:
-    import simplejson as json
-except ImportError:
-    import json
-
-
 import pyvix.vix
 import os
 import sys
 import logging
 import signal
+import ConfigParser
 from threading import Thread
 from subprocess import Popen
 
-from vmchecker import jsonutil
+from vmchecker import callback
+from vmchecker.paths import submission_config_file
+from vmchecker.config import VmwareMachineConfig, CourseConfig
 
 _logger = logging.getLogger('vm_executor')
+
+
+
+def upload_results_to_sender(bundle_dir):
+    """Runs callback script to upload results"""
+    allfiles = os.listdir(bundle_dir)
+    vmrfiles = []
+    for fname in allfiles:
+        if fname.endswith('.vmr'):
+            vmrfiles.append(os.path.join(bundle_dir, fname))
+    callback.run_callback(submission_config_file(bundle_dir), vmrfiles)
 
 
 
@@ -148,7 +155,7 @@ def runWithTimeout(vm, prog, args, timeout):
         return False
 
 
-def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
+def copy_files_and_run_script(vm, bundle_dir, machinecfg, test):
     """Run a test:
        * copy input files to guest
        * copy script files to guest
@@ -163,17 +170,22 @@ def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
          vm           - a valid python.vix.VixVM object
          jobs_path    - path to the unzipped bundle, where the tests and
                         submission lie
-         scripts_path - paths to the scripts to be executed on the vm
          guest        - an object describing guest configs
          test         - an object describing test  configs
     """
     try:
-        copyFilesFromHostToGuest(vm, jobs_path,    guest['root_path']['native_style'], test['input'])
-        copyFilesFromHostToGuest(vm, scripts_path, guest['root_path']['native_style'], test['script'])
+        files_to_copy = test['input'] + test['script']
+        guest_dest_dir = machinecfg.guest_base_path()
+        copyFilesFromHostToGuest(vm, bundle_dir, guest_dest_dir, files_to_copy)
         for script in test['script']:
-            timedout = makeExecutableAndRun(vm, guest['shell'], guest['root_path']['shell_style'] +
-                                            guest['root_path']['separator'] + script, test['timeout'])
-            copyFilesFromGuestToHost(vm, jobs_path, guest['root_path']['native_style'], test['output'])
+            shell = machinecfg.guest_shell_path()
+            dest_in_guest_shell = machinecfg.guest_home_in_shell()
+            # XXX this assumes the guest shell uses UNIX path
+            # separator '/'. This is fine as for the moment, as it's
+            # used in bash (native/cygwin).
+            script_in_guest_shell = dest_in_guest_shell + '/' + script
+            timedout = makeExecutableAndRun(vm, shell, script_in_guest_shell, test['timeout'])
+            copyFilesFromGuestToHost(vm, bundle_dir, guest_dest_dir, test['output'])
             if timedout:
                 return False
     finally:
@@ -182,152 +194,132 @@ def copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test):
 
 
 
-def start_host_commands(jobs_path, host_commands):
-    """Start a set of processes on the host"""
-    _logger.info("%%% -- starting host commands")
-    for cmdspec in host_commands:
-        # skip empty commands.
-        if len(cmdspec['cmd']) == 0:
-            continue
+def start_host_commands(jobs_path, host_command):
+    """Run a command on the tester (host) machine"""
+    _logger.info('%%% -- starting host commands [' + host_command + ']')
 
-        cmdspec['std'] = {}
-        files = [{'name':'in',  'mode':'r'},
-                 {'name':'out', 'mode':'a'},
-                 {'name':'err', 'mode':'a'}]
+    if len(host_command) == 0:
+        return None
 
-        for f in files:
-            fobj = None
-            try:
-                if len(cmdspec[f['name']]) != 0:
-                    fobj = open(os.path.join(jobs_path, cmdspec[f['name']]), f['mode'])
-            except:
-                _logger.exception('HOSTPROC: opening file ' + f['name'] + ' as ' + f['mode'])
-            cmdspec['std'][f['name']] = fobj
-
-        proc = None
-        try:
-            proc = Popen(cmdspec['cmd'],
-                         stdin  = cmdspec['std']['in'],
-                         stdout = cmdspec['std']['out'],
-                         stderr = cmdspec['std']['err'],
-                         shell=True)
-        except:
-            _logger.exception('HOSTPROC: opening process: ' + cmdspec['cmd'])
-        cmdspec['proc'] = proc
+    outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
+    try:
+        proc = Popen(host_command, stdout=outf, shell=True)
+    except:
+        _logger.exception('HOSTPROC: opening process: ' + host_command)
+    return (proc, outf)
 
 
-def stop_host_commands(host_commands):
-    """Start a set of processes on the host"""
-    for cmdspec in host_commands:
-        # skip empty commands.
-        if len(cmdspec['cmd']) == 0:
-            continue
+def stop_host_commands(host_command_data):
+    """Stop previously run host commands"""
+    if host_command_data == None:
+        return
 
-        try:
-            if cmdspec['proc'] == None:
-                continue
-            # can't do "proc.terminate()" here because that's python2.6 specific
-            os.kill(cmdspec['proc'].pid, signal.SIGTERM)
-            for f in cmdspec['std'].values():
-                if f != None:
-                    try:
-                        f.close()
-                    except:
-                        _logger.exception('HOSTPROC: closing file')
-        except:
-            _logger.exception('HOSTPROC: killing proc and closing files')
+    (proc, outf) = host_command_data
+    try:
+        os.kill(proc.pid, signal.SIGTERM)
+        outf.close()
+    except:
+        _logger.exception('HOSTPROC: while stopping host cmds')
     _logger.info("%%% -- stopped host commands")
 
 
-def test_submission(args):
+def test_submission(bundle_dir, vmcfg, assignment):
     """THE function that tests a submission bundle:
         * opens the vm and reverts to a known snapshot
         * prepares environments and executes all tests
         * manages kernel messages
     """
-    _logger.info(args)
-    host  = args['host']
-    guest = args['guest']
-    jobs_path    = os.path.join(host['vmchecker_root'], host['jobs_path'])
-    scripts_path = os.path.join(host['vmchecker_root'], host['scripts_path'])
+    asscfg  = vmcfg.assignments()
+    timeout = asscfg.get(assignment, 'Timeout')
+    machine = asscfg.get(assignment, 'Machine')
+    machinecfg = VmwareMachineConfig(vmcfg, machine)
 
-    (h, vm) = connectToVM(host['vmx_path'])
+
+    (h, vm) = connectToVM(machinecfg.get_vmx_path())
     revertToSnapshot(vm, vm.nRootSnapshots - 1) # revert to the last snapshot
     vm.waitForToolsInGuest()
-    vm.loginInGuest(guest['username'], guest['password'])
-
-
+    vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
 
     # start host commands
-    start_host_commands(jobs_path, args['host_commands'])
+    host_command = vmcfg.get(machine, 'HostCommand', default='')
+    host_command_data = start_host_commands(bundle_dir, host_command)
 
     try:
-        tests = args['test']
-        for test in tests:
-            success = copy_files_and_run_script(vm, jobs_path, scripts_path, guest, test)
-            if not success:
-                break # stop running tests if an error occured.
+        # XXX: TODO: start km_command!!!
+        km_command = vmcfg.get(machine, 'KernelMessages', default='')
+
+        buildcfg = {
+            'input'  : ['archive.zip', 'tests.zip'],
+            'script' : ['build.sh'],
+            'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
+            'timeout': int(timeout),
+            }
+        if not copy_files_and_run_script(vm, bundle_dir, machinecfg, buildcfg):
+            return
+
+        testcfg = {
+            'input'  : [],
+            'script' : ['run.sh'],
+            'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
+            'timeout': int(timeout)
+            }
+        copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
     finally:
-        stop_host_commands(args['host_commands'])
+        stop_host_commands(host_command_data)
 
 
-def make_testing_configuration():
-    """Returns a configuration object for vm-executor testing without
-    depending on other scripts"""
-    return {
-        'km_command' : '',
-        'host' : {
-            'vmx_path'       : '/home/so/vmware/so-vm-debian-sid/faust.vmx',
-            'vmchecker_root' : '/home/lucian/vmchecker/vmchecker/',
-            'jobs_path'      : 'executor_jobs/',
-            'scripts_path'   : 'executor_scripts/'},
-        'guest' : {
-            'username'  : 'so',
-            'password'  : 'so',
-            'shell'     : '/bin/bash',
-            'root_path' : {
-                'native_style' : '/home/so/',
-                'shell_style'  : '/home/so/',
-                'separator'    : '/',
-                },
-            },
-        'test'  : [
-            {
-                'input'  : ['file.zip', 'tests.zip'],
-                'script' : ['vmchecker_build.sh'],
-                'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
-                'timeout': 120
-                },
-            {
-                'input'  : [],
-                'script' : ['vmchecker_run.sh'],
-                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
-                'timeout': 120
-                }
-            ]
-        }
+def _check_required_files(path):
+    """Checks that a set of files required by commander is present in
+    the given path."""
+    found_all = True
+    needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'course-config']
+    found_files = os.listdir(path)
+    not_found = []
+    for need in needed_files:
+        if not need in found_files:
+            _logger.error('Could not find necessary file [%s] in [%s]' % (
+                    need, path))
+            found_all = False
+            not_found.append(need)
+    if not found_all:
+        raise IOError('Files ' + not_found + ' required for testing missing')
 
+
+def get_assignment_id(bundle_dir):
+    """Reads the assignment identifier from the config file of the
+    submission from bundle_dir"""
+    with open(submission_config_file(bundle_dir)) as handle:
+        config = ConfigParser.RawConfigParser()
+        config.readfp(handle)
+    assignment = config.get('Assignment', 'Assignment')
+    return assignment
 
 
 def main():
-    """Main entry point when run as a script; prepares environment for
-    test_submission()"""
+    """Main entry point when run as a script.
+
+    Requires as an argument the path to a directory containing a bundle.
+
+    The bundle must have:
+      - archive.zip
+      - tests.zip
+      - submission-config
+      - course-config
+      - build and run scripts.
+    """
     logging.basicConfig(level=logging.INFO)
 
-    # if no args specified run a default test
     if len(sys.argv) != 2:
-        print 'Usage: %s [--test | config.json]' % sys.argv[0]
-        exit(1)
-    if sys.argv[1] == '--test':
-        test = make_testing_configuration()
-    else:
-        testcfg_file = sys.argv[1]
-        with open(testcfg_file, 'r') as handler:
-            test_unicode = json.loads(handler.read())
-            test = jsonutil.stringify_json(test_unicode)
+        _logger.error('Usage: %s bundle_dir_location' % sys.argv[1])
+        sys.exit(1)
 
-    # run the test :)
-    test_submission(test)
+    bundle_dir = sys.argv[1]
+    _check_required_files(bundle_dir)
+    vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
+    assignment = get_assignment_id(bundle_dir)
+
+    test_submission(bundle_dir, vmcfg, assignment)
+    upload_results_to_sender(bundle_dir)
 
     # some vmware calls may block indefinetly.  if we don't exit
     # explicitly, we may never return (this is due to python waiting

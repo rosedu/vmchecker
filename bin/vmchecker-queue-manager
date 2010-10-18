@@ -1,34 +1,43 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Queue manager - wait for assignments and invoke the commander for each
+"""Queue manager - wait for assignments to appear and invoke vmchecker-vm-executor to handle them.
 
 This module depends on pyinotify: http://pyinotify.sourceforge.net/
 For each bundle:
   * listen for new files on a directory,
   * decompress the bundle to a temporary directory,
-  * pass path of the directory to commander,
-  * waits for the commander to finish.
+  * pass path of the directory to the executor,
+  * waits for the executor to finish.
 
 At startup it checks whether there are any stale jobs and executes them
 all as described above.
 
 """
 
+from __future__ import with_statement
+
 import os
 import sys
+import time
 import shutil
+import signal
 import tempfile
 import optparse
+import subprocess
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
 from vmchecker import ziputil
-from vmchecker import commander
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker.paths  import VmcheckerPaths
 from vmchecker import vmlogging
 
+
+# The maximum number of seconds each instance of vmchecker-vm-executor
+# is allowed to run. If it runs for more than this ammount of time,
+# the process gets killed automatically by the queue manager
+VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME = 10 * 60 # 10 minutes!
 
 
 _logger = vmlogging.create_script_stdout_logger()
@@ -48,6 +57,63 @@ class _InotifyHandler(ProcessEvent):
         process_job(event.path, event.name, self.vmpaths)
 
 
+def log_vmchecker_stderr(location, string):
+    """Writes a message to 'vmchecker-stderr.vmr'"""
+    vmchecker_stderr = os.path.join(location, 'vmchecker-stderr.vmr')
+    with open(vmchecker_stderr, 'w') as handler:
+        print >> handler, string
+
+
+def launch_executor(location):
+    """Launch the vmchecker-vm-executor process and kill it if it runs
+    for too long"""
+
+    cmd = ['vmchecker-vm-executor', location]
+    deadline = time.time() + VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME
+    _logger.info('Begin homework evaluation. Calling %s', cmd)
+
+    # launch vmchecker-vm-executor
+    try:
+        popen = subprocess.Popen(cmd)
+        with open(os.path.join(location, 'grade.vmr'), 'w') as handler:
+            print >> handler, 'ok'
+    except OSError:
+        _logger.exception('Cannot invoke vmchecker-vm-executor.')
+        log_vmchecker_stderr(location, 'Cannot run vmchecker-vm-executor.')
+        log_vmchecker_stderr(location, 'Please contact the administrators.')
+        # if we cannot open the process, there is nothing more that can be done
+        return
+
+    # wait for vmchecker-vm-executor to finish runing or kill it.
+    try:
+        counter = 0
+        while time.time() < deadline:
+            counter += 1
+            exit_code = popen.poll()
+            if exit_code != None:
+                # the process has terminated. Write to log and return.
+                log_vmchecker_stderr(location, 'vmexecutor exitcode %d (%s)' % (
+                        exit_code, ['error', 'success'] [ exit_code == 0 ]))
+                return
+            # if process has not finished => continue to poll every 5s
+            _logger.debug('-- VMExecutor sleeping for 5s: x=%d', counter)
+            time.sleep(5)
+        else:
+            log_vmchecker_stderr(location, '''VMExecutor successfuly
+                      started, but it's taking too long. Check your
+                      sources, makefiles, etc and resubmit. If the
+                      problem persists please contact administrators.''')
+    except (IOError, OSError):
+        _logger.exception('Exception while waiting for vmexecutor to end')
+
+    try:
+        # can't do "popen.kill()" here because it only
+        # available from python 2.6
+        os.kill(popen.pid, signal.SIGTERM)
+    except OSError:
+        _logger.exception('Exception in kill(PID=%d)', popen.pid)
+
+
 def process_job(path, name, vmpaths):
     """Unzip a bundle archive and call the commander."""
     location = tempfile.mkdtemp(prefix='vmchecker-',
@@ -55,7 +121,7 @@ def process_job(path, name, vmpaths):
     archive = os.path.join(path, name)
     try:
         ziputil.unzip_safely(archive, location)
-        commander.prepare_env_and_test(vmpaths.root_path(), location)
+        launch_executor(location)
     except:
         _logger.exception('Failed to process "%s".' % location)
 
@@ -114,7 +180,7 @@ def check_tester_setup_correctly(vmpats):
     # check needed paths setup correctly
     for path in vmpats.tester_paths():
         if not os.path.isdir(path):
-            _logger.error('"%s" missing. Run `vmchecker-init course tester`!' % path)
+            _logger.error('"%s" missing. Run `vmchecker-init-course tester`' % path)
             exit(1)
 
 
