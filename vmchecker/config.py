@@ -286,3 +286,97 @@ class VmwareConfig():
         datastore_path = self.vmware_datastore_path()
         rel_vmx_path = vmx_path[len(datastore_path):].lstrip('/')
         return "[" + datastore_name + "] " + rel_vmx_path
+
+
+
+class VmwareMachineConfig(object):
+    """Configuration for a virtual machine:
+       * how to login
+       * where to store files
+       * which is the shell
+    """
+
+
+    def __init__(self, config, machine_id):
+        self.config = config
+        self.machine_id = machine_id
+
+
+    def get_tester_id(self):
+        """Returns the id of a tester configuration.
+
+        The config script contains sections named
+            [tester TESTER_ID]
+        from which more info about the tester can be determined.
+        """
+        return self.config.get(self.machine_id, 'Tester')
+
+
+    def get_vmx_path(self):
+        """Path to a .vmx file to be used"""
+        return self.config.get(self.machine_id, 'VMPath')
+
+
+    def guest_user(self):
+        """The user (from the guest virtual machine) used to authenticate"""
+        return self.config.get(self.machine_id, 'GuestUser')
+
+
+    def guest_pass(self):
+        """The password (from the guest virtual machine) used to authenticate"""
+        return self.config.get(self.machine_id, 'GuestPassword')
+
+
+    def guest_base_path(self):
+        """The path where the test+homework files will be stored in
+        the virtual machine.
+
+        This path is written in the way the guest operating system
+        demands it.
+
+        E.g.:
+        - in Linux: /home/test/
+        - in Windows (cygwin): C:\cygwin\home\Administrator
+        - in Windows (native): C:\Users\Administrator
+        """
+        return self.config.get(self.machine_id, 'GuestBasePath')
+
+
+    def guest_shell_path(self):
+        """The path to the shell inside the virtual machine invoked to
+        run the build and run script files.
+
+        This path is written in the way the guest operating system
+        demands it.
+
+        E.g.:
+        - in Linux: /bin/bash
+        - in Windows (cygwin): C:\cygwin\bin\bash.exe
+        - in Windows (native): C:\windows\cmd.exe
+        """
+        return self.config.get(self.machine_id, 'GuestShellPath')
+
+
+    def guest_home_in_shell(self):
+        """The same path as returned by guest_base_path(), but written
+        in the way expected by the shell.
+
+        This path is written in the way the guest operating system
+        demands it.
+
+        E.g.:
+        - in Linux: /home/test
+        - in Windows (cygwin): /home/Administrator
+        - in Windows (native): C:\Users\Administrator
+        """
+        return self.config.get(self.machine_id, 'GuestHomeInBash')
+
+
+    def guest_build_script(self):
+        """The name of the script used to build the homework and tests"""
+        return self.config.get(self.machine_id, 'BuildScript')
+
+
+    def guest_run_script(self):
+        """The name of the script used to run the homework and tests"""
+        return self.config.get(self.machine_id, 'RunScript')
