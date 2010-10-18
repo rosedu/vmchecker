@@ -87,6 +87,12 @@ class ConfigWithDefaults(object):
         return self.section_ids[section_id][option.lower()]
 
 
+    def has(self, section_id, option):
+        """Returns value of `option' for `section_id'. """
+        self._check_valid(section_id)
+        return option.lower() in self.section_ids[section_id]
+
+
     def __iter__(self):
         """Returns an iterator over the section IDs"""
         return iter(self.section_ids)
