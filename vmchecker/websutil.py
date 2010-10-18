@@ -219,23 +219,37 @@ def sortResultFiles(rfiles):
 
 
 def get_test_queue_contents(courseId):
-    client = paramiko.SSHClient()
+    """Get the contents of the test queues for all testers configured
+    in the system."""
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
-        client.load_system_host_keys('/home/so/.ssh/known_hosts')
-        client.connect(vmcfg.tester_hostname(),
-                       username=vmcfg.tester_username(),
-                       key_filename=vmcfg.storer_sshid(),
-                       look_for_keys=False)
-        stdin, stdout, stderr = client.exec_command('ls -ctgG ' + vmcfg.tester_queue_path())
-        stdfiles = [stdin, stdout, stderr]
-        data = stdout.readlines()
-        if len(data) > 0:
-            data = data[1:]
-        for s in stdfiles:
-            s.close()
-        client.close()
-        return json.dumps(data, indent=4)
+        tstcfg = vmcfg.testers()
+        queue_contents = [] # array of strings
+
+        for tester_id in tstcfg:
+            # connect to the tester
+            client = paramiko.SSHClient()
+            client.load_system_host_keys(vmcfg.known_hosts_file())
+            client.connect(tstcfg.hostname(tester_id),
+                           username=tstcfg.login_username(tester_id),
+                           key_filename=vmcfg.storer_sshid(),
+                           look_for_keys=False)
+
+            # run 'ls' in the queue_path and get it's output.
+            stdin, stdout, stderr = client.exec_command('ls -ctgG ' + tstcfg.queue_path(tester_id))
+
+            data = stdout.readlines()
+            if len(data) > 0:
+                data = data[1:]
+            queue_contents.append(data)
+
+            stdin.close()
+            stdout.close()
+            stderr.close()
+            client.close()
+
+        # print the concatenation of all 'ls' instances
+        return json.dumps(queue_contents, indent=4)
     except:
         strout = OutputString()
         traceback.print_exc(file = strout)

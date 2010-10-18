@@ -7,9 +7,11 @@ from __future__ import with_statement
 
 import os
 import time
+import datetime
 import ConfigParser
 
-from . import assignments
+from . import dirlocking
+from . import confdefaults
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
@@ -50,25 +52,18 @@ class CourseConfig:
         """The username to use when logging in with ssh to the storer machine"""
         return self.config.get('storer', 'username')
 
-    def tester_username(self):
-        """The username to use when logging in with ssh to the tester machine"""
-        return self.config.get('tester', 'username')
-
     def storer_hostname(self):
         """The hostname to use when logging in with ssh to the storer machine"""
         return self.config.get('storer', 'hostname')
 
     def storer_sshid(self):
-        """The ssh id used to communicate from the storer to the tester"""
+        """The ssh id used to communicate from the storer to the testers"""
         return self.config.get('storer', 'sshid')
 
-    def tester_hostname(self):
-        """The hostname to use when logging in with ssh to the tester machine"""
-        return self.config.get('tester', 'hostname')
-
-    def tester_queue_path(self):
-        """The path on the tester machine where the queued files are put"""
-        return self.config.get('tester', 'queuepath')
+    def known_hosts_file(self):
+        """The path on the storer machine where the known_hosts file to
+        use to connect to testers is located."""
+        return self.get('storer', 'KnownHostsFile')
 
     def course_name(self):
         """Return a human readable name for the course"""
@@ -87,9 +82,14 @@ class CourseConfig:
                 time.strptime(stop, DATE_FORMAT))
 
     def assignments(self):
-        """Return an Assignment object describing the assignments in
-        this course's config file"""
-        return assignments.Assignments(self)
+        """Return an AssignmentsConfig object describing the
+        assignments in this course's config file"""
+        return AssignmentsConfig(self)
+
+    def testers(self):
+        """Return an TestersConfig object describing the
+        tester machines used."""
+        return TestersConfig(self)
 
 
 
@@ -135,3 +135,75 @@ class AclConfig():
         return self.config.get('DEFAULT', 'groups').split(' ')
 
 
+
+class AssignmentsConfig(confdefaults.ConfigWithDefaults):
+    """Obtain information about assignments from a config file.
+
+        [assignment DEFAULT]
+        somevar = somveval
+
+        [assignment as1]
+        somevar = somveval
+
+        [assignment as2]
+        somevar = somveval
+    """
+
+    def __init__(self, config):
+        confdefaults.ConfigWithDefaults.__init__(self, config, 'assignment ')
+
+
+    def lock(self, vmpaths, assignment):
+        """Returns a lock over assignment"""
+        self._check_valid(assignment)
+        return dirlocking.DirLock(vmpaths.dir_assignment(assignment))
+
+
+    def course(self, assignment):
+        """Returns a string representing course name of assignment"""
+        return self.get(assignment, 'course')
+
+
+    def tests_path(self, vmpaths, assignment):
+        """Returns the path to the tests for assignment"""
+        self._check_valid(assignment)
+        return os.path.join(vmpaths.dir_tests(), assignment + '.zip')
+
+
+    def timedelta(self, assignment):
+        """Returns a timedelta object with minimum delay between submissions"""
+        return datetime.timedelta(seconds=int(
+                self.get(assignment, 'timedelta')))
+
+
+
+class TestersConfig(confdefaults.ConfigWithDefaults):
+    """Obtain information about assignments from a config file.
+
+        [tester DEFAULT]
+        somevar = somveval
+
+        [tester as1]
+        somevar = somveval
+
+        [tester as2]
+        somevar = somveval
+    """
+
+    def __init__(self, config):
+        confdefaults.ConfigWithDefaults.__init__(self, config, 'tester ')
+
+
+    def login_username(self, tester):
+        """The username to use when logging in with ssh to the tester machine"""
+        return self.get(tester, 'username')
+
+
+    def hostname(self, tester):
+        """The hostname to use when logging in with ssh to the tester machine"""
+        return self.get(tester, 'hostname')
+
+
+    def queue_path(self, tester):
+        """The path on the tester machine where the queued files are put"""
+        return self.get(tester, 'queuepath')

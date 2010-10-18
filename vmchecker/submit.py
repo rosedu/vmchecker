@@ -224,11 +224,16 @@ def create_testing_bundle(user, assignment, course_id):
     return bundle_path
 
 
-def ssh_bundle(bundle_path, vmcfg):
+def ssh_bundle(bundle_path, vmcfg, assignment):
     """Sends a bundle over ssh to the tester machine"""
-    tester_username  = vmcfg.tester_username()
-    tester_hostname  = vmcfg.tester_hostname()
-    tester_queuepath = vmcfg.tester_queue_path()
+    machine = vmcfg.assignments().get(assignment, 'Machine')
+    tester = vmcfg.get(machine, 'Tester')
+
+    tstcfg = vmcfg.testers()
+
+    tester_username  = tstcfg.login_username(tester)
+    tester_hostname  = tstcfg.hostname(tester)
+    tester_queuepath = tstcfg.queue_path(tester)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((tester_hostname, _DEFAULT_SSH_PORT))
@@ -281,7 +286,7 @@ def queue_for_testing(assignment, user, course_id):
     course and user."""
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     bundle_path = create_testing_bundle(user, assignment, course_id)
-    ssh_bundle(bundle_path, vmcfg)
+    ssh_bundle(bundle_path, vmcfg, assignment)
 
 
 def submit(archive_filename, assignment, user, course_id,

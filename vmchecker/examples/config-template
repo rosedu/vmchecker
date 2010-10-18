@@ -15,17 +15,24 @@ HolidayFinish = 2010.04.02 23:59:00
 UploadActiveFrom  = 2010.03.01 23:59:00
 UploadActiveUntil = 2010.06.10 23:59:00
 
+
+
+# information about the machine used to store homework submissions,
+# tests and the configuration data for tester systems and virtual
+# machines.
 [storer]
 Hostname = elf.cs.pub.ro
 Username = so
 SSHId = $home/.ssh/id_rsa
+KnownHostsFile = $home/.ssh/known_hosts
 
 
 
-[tester]
+[tester sanctuary]
 Hostname = sanctuary.cs.pub.ro
 Username = so
 QueuePath = vmchecker/2010/queue
+
 
 [assignment DEFAULT]
 
@@ -77,6 +84,7 @@ OrderNumber = 2
 
 # test virtual machine configuration
 [so-lin]
+Tester=sanctuary
 VMPath=/home/courses/so/vmware/2010/so-vm-linux-ubuntu/so-vm-linux-ubuntu.vmx
 GuestUser=student
 GuestPassword=student
@@ -92,6 +100,7 @@ HostCommand=ls
 
 # test virtual machine configuration
 [so-win]
+Tester=sanctuary
 VMPath=/home/courses/so/vmware/2010/so-vm-win2k3/so-vm-win2k3.vmx
 GuestUser=Administrator
 GuestPassword=student
