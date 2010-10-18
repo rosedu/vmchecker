@@ -58,6 +58,10 @@ def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files
     """Copy files from the host to the guest.
     vm        - an open virtual machine.
 
+    fromHostToGuest - boolean:
+                      - True: copies files from host to guest
+                      - False: copies files from guest to host
+
     host_dir  - the directory on the host
 
     guest_dir - an ABSOLUTE path to the guest directory
