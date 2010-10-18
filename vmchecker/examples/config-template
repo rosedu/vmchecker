@@ -28,11 +28,77 @@ KnownHostsFile = $home/.ssh/known_hosts
 
 
 
+
+
+########################
+# Tester Configuration #
+########################
+
+# Tester configuration syntax:
+# These first 4 fields are mandatory.
+#     [tester TESTER_NAME]
+#     VmType = VmwareWorkstation        # the type of the VM, see bellow
+#     Hostname = orion.cs.pub.ro        # hostname of the tester
+#     Username = admin                  # user to use to connect with ssh
+#     QueuePath = vmchecker/2010/queue  # where the Queue Manager looks for new submissions
+#     [...]                             # virtual-machine-specific settings
+#
+# VmType:
+#  - VmwareServer
+#  - VmwareWorkstation
+#  - VmwareVIServer
+#  - VirtualBox - [not implemented yet, just as a future hint]
+
+
 [tester sanctuary]
+VmType = VmwareServer
 Hostname = sanctuary.cs.pub.ro
 Username = so
 QueuePath = vmchecker/2010/queue
 
+
+[tester orion]
+# The following arguments are required only for
+# VMWare Server 2.0 with datastore
+#
+# NOTE: Remember to create a datastore which contains the path to the
+# tester home for Server >= 2.0!
+#
+# VmwareUseDatastore  = The virtual machine uses datastores,
+#                       not paths to identify vmx files. Implicit value: 'no'.
+# VmwareHostname      = The hostname of the running VMWare Server
+# VmwarePort          = The port of the running VMWare Server Web
+#                       interface running on SSL (default: 8333)
+# VmwareUsername      = The username used to login to VMWare Server
+# VmwareDatastoreName = The name of the datastore which holds the
+#       	        path where the virtual machines will be run
+# VmwareDatastorePath = The path of the datastore
+
+VmType = VmwareServer
+Hostname = orion.cs.pub.ro
+Username = admin
+QueuePath = vmchecker/2010/queue
+VmwareUseDatastore=yes
+VmwareUrl = https://orion.cs.pub.ro:8333/sdk
+VmwareHostname = orion.cs.pub.ro
+VmwarePort = 8333
+VmwareUsername = admin
+VmwarePassword = adminpa$$
+VmwareDatastoreName = home
+VmwareDatastorePath = /home
+
+# optional vmware flag:
+# VmwareRegUnreg = yes|y|1|true
+#   - if set to true, vmchecker will register and unregister the vmx
+#     associated with this file.
+#   - if the key is not present it is assumed false (no reg/unreg done).
+VmwareRegUnreg = yes
+
+
+
+############################
+# Assignment Configuration #
+############################
 
 [assignment DEFAULT]
 
@@ -81,6 +147,9 @@ OrderNumber = 2
 
 
 
+#################################
+# Virtual Machine Configuration #
+#################################
 
 # test virtual machine configuration
 [so-lin]

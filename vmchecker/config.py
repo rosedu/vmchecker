@@ -207,3 +207,82 @@ class TestersConfig(confdefaults.ConfigWithDefaults):
     def queue_path(self, tester):
         """The path on the tester machine where the queued files are put"""
         return self.get(tester, 'queuepath')
+
+
+
+
+class VmwareConfig():
+    """Configuration for the VMWare solution used for testing
+    (Server or Workstation)"""
+
+    def __init__(self, tstcfg, tester_id):
+        self.tstcfg = tstcfg
+        self.tester_id = tester_id
+
+
+    def vmware_register_and_unregister(self):
+        """Should the vmx be unregistered at shutdown?"""
+        if not self.tstcfg.has(self.tester_id, 'VmwareRegUnreg'):
+            return False # if key not present, don't reg/unreg
+
+        val = self.tstcfg.get(self.tester_id, 'VmwareRegUnreg')
+        val = val.strip().lower()
+        return val == "1" or val == "yes" or val == "y" or val == "true"
+
+
+    def vmware_type(self):
+        """The type of the VMWare server encoded as an int for pyvix.Host()"""
+        type_str = self.tstcfg.get(self.tester_id, 'VmType').lower()
+        if type_str == "vmwareserver":
+            return 2 # VIX_SERVICEPROVIDER_VMWARE_SERVER
+        elif type_str == "vmwareworkstation":
+            return 3 # VIX_SERVICEPROVIDER_VMWARE_WORKSTATION
+        elif type_str == "vmwareviserver":
+            return 10 # VIX_SERVICEPROVIDER_VMWARE_VI_SERVER
+        else:
+            return 1 # VIX_SERVICEPROVIDER_DEFAULT
+
+
+    def vmware_url(self):
+        """The URL of the VMWare server"""
+        return self.tstcfg.get(self.tester_id, 'VmwareUrl')
+
+
+    def vmware_hostname(self):
+        """The hostname of the VMWare server"""
+        return self.tstcfg.get(self.tester_id, 'VmwareHostname')
+
+
+    def vmware_port(self):
+        """The port of the VMWare Server"""
+        return self.tstcfg.get(self.tester_id, 'VmwarePort')
+
+
+    def vmware_username(self):
+        """The username used to access the VMWare Server"""
+        return self.tstcfg.get(self.tester_id, 'VmwareUsername')
+
+
+    def vmware_password(self):
+        """The password used to access the VMWare Server"""
+        return self.tstcfg.get(self.tester_id, 'VmwarePassword')
+
+
+    def vmware_datastore_name(self):
+        """The VMWare Server datastore name containing the path to the
+        machines"""
+        return self.tstcfg.get(self.tester_id, 'VmwareDatastoreName')
+
+
+    def vmware_datastore_path(self):
+        """The VMWare Server datastore path with the above name"""
+        return self.tstcfg.get(self.tester_id, 'VmwareDatastorePath')
+
+
+    def vmware_rel_vmx_path(self, vmx_path):
+        """The path given to register/unregister/powerOn operations
+           has to be relative to the datastore in VMWare Server 2.0."""
+        datastore_name = self.vmware_datastore_name()
+        datastore_path = self.vmware_datastore_path()
+        rel_vmx_path = vmx_path[len(datastore_path):].lstrip('/')
+        return "[" + datastore_name + "] " + rel_vmx_path
