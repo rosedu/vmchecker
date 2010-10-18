@@ -33,7 +33,7 @@ def unzip_safely(archive_filename, destination):
         for name in z.namelist():
             if os.path.isabs(name) or name.find('..') != -1:
                 raise zipfile.BadZipfile
-            z.extractall(destination)
+        z.extractall(destination)
     finally:
         z.close()
 
