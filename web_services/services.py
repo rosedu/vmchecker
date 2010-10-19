@@ -261,8 +261,12 @@ def getAssignments(req, courseId):
         a = {}
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
+        a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
+        if a['assignmentStorage'].lower() == "large":
+            a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
+            a['assignmentStorageBasepath'] = assignments.get(key, "AssignmentStorageBasepath")
         a['deadline'] = assignments.get(key, "Deadline")
-        a['statementLink'] = assignments.get(key, 'StatementLink')
+        a['statementLink'] = assignments.get(key, "StatementLink")
         ass_arr.append(a)
     return json.dumps(ass_arr)
 

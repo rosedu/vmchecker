@@ -166,6 +166,14 @@ Timeout = 120
 #       (services like apache, mysql, et al. must be started). This
 #       defines an amount of time (in seconds) to wait after tools are
 #       up, but before starting to run the tests.
+#
+# # These are only for Large assignments
+# AssignmentStorage = Large
+# AssignmentStorageHost = orion.cs.pub.ro # where to look for uploaded vms
+# AssignmentStorageBasepath = /home # where on that machine to look
+# AssignmentStorageQueryUser = root # which user to logon with.
+
+
 
 [assignment 1-minishell-linux]
 Deadline = 2009.03.31 23:59:00
