@@ -87,6 +87,14 @@ class ConfigWithDefaults(object):
         return self.section_ids[section_id][option.lower()]
 
 
+    def getd(self, section_id, option, default):
+        """Returns value of `option' for `section_id'. If no values is
+        present """
+        if not self.has(section_id, option):
+            return default
+        return self.section_ids[section_id][option.lower()]
+
+
     def has(self, section_id, option):
         """Returns value of `option' for `section_id'. """
         self._check_valid(section_id)
