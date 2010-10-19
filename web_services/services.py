@@ -73,12 +73,13 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
                     'errorTrace':""})
 
     #  Save file in a temp
-    fd, tmpname = tempfile.mkstemp('.zip')
+    (fd, tmpname) = tempfile.mkstemp('.zip')
     f = open(tmpname, 'wb', 10000)
     ## Read the file in chunks
     for chunk in websutil.fbuffer(archiveFile.file):
         f.write(chunk)
     f.close()
+    os.close(fd)
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
