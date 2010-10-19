@@ -87,6 +87,11 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
+    except submit.SubmitedTooSoonError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"Tema trimisa prea curand",
+            'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
