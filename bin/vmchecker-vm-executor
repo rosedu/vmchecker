@@ -18,7 +18,7 @@ from subprocess import Popen
 
 from vmchecker import callback
 from vmchecker.paths import submission_config_file
-from vmchecker.config import VmwareMachineConfig, CourseConfig
+from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
@@ -36,15 +36,33 @@ def upload_results_to_sender(bundle_dir):
 
 
 
-def connectToVM(vmx_path):
+def connect_to_vm(vmwarecfg, vmx_path):
     """Connect to the VmWare virtual machine specified by the
     vmx_path.
 
     Returns a pair: (a handle for the connection to the host, a
     virtual machine handle)"""
-    h = pyvix.vix.Host()
-    vm = h.openVM(vmx_path)
-    return (h, vm)
+
+
+    try:
+        # try defaults
+        host = pyvix.vix.Host()
+    except pyvix.vix.VIXException:
+        host = pyvix.vix.Host(vmwarecfg.vmware_type(),
+                              vmwarecfg.vmware_url(),
+                              int(vmwarecfg.vmware_port()),
+                              vmwarecfg.vmware_username(),
+                              vmwarecfg.vmware_password())
+
+    if vmwarecfg.vmware_register_and_unregister():
+        host.registerVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
+
+    try:
+        vm = host.openVM(vmx_path)
+    except pyvix.vix.VIXException:
+        vm = host.openVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
+
+    return (host, vm)
 
 
 def revertToSnapshot(vm, snapNr):
@@ -233,9 +251,10 @@ def test_submission(bundle_dir, vmcfg, assignment):
     timeout = asscfg.get(assignment, 'Timeout')
     machine = asscfg.get(assignment, 'Machine')
     machinecfg = VmwareMachineConfig(vmcfg, machine)
+    vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
 
 
-    (h, vm) = connectToVM(machinecfg.get_vmx_path())
+    (h, vm) = connect_to_vm(vmwarecfg, machinecfg.get_vmx_path())
     revertToSnapshot(vm, vm.nRootSnapshots - 1) # revert to the last snapshot
     vm.waitForToolsInGuest()
     vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
