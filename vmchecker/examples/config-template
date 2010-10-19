@@ -102,6 +102,9 @@ VmwareRegUnreg = yes
 
 [assignment DEFAULT]
 
+# The number of points a student can receive on a normal homework
+TotalPoints=10
+
 # minimum time (in seconds) between two successive
 # submissions by the same student.
 Timedelta = 180

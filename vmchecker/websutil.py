@@ -165,6 +165,7 @@ def submission_upload_info(courseId, user, assignment):
     late_penalty = update_db.compute_late_penalty(assignment, user, vmcfg)
     ta_penalty   = update_db.compute_TA_penalty(grade_file)
     deadline_str = vmcfg.assignments().get(assignment, 'Deadline')
+    total_points = int(vmcfg.assignments().get(assignment, 'TotalPoints'))
     deadline_struct = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                                     penalty.DATE_FORMAT)
     sss = submissions.Submissions(vmpaths)
@@ -182,7 +183,7 @@ def submission_upload_info(courseId, user, assignment):
     ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
     ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
     ret += "-----------------------\n"
-    ret += "Nota                  : " + str(10 + ta_penalty + late_penalty) + "\n"
+    ret += "Nota                  : " + str(total_points + ta_penalty + late_penalty) + "\n"
     ret += "\n"
 
     return ret
