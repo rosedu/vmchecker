@@ -71,7 +71,7 @@ QueuePath = vmchecker/2010/queue
 #                       interface running on SSL (default: 8333)
 # VmwareUsername      = The username used to login to VMWare Server
 # VmwareDatastoreName = The name of the datastore which holds the
-#       	        path where the virtual machines will be run
+#                       path where the virtual machines will be run
 # VmwareDatastorePath = The path of the datastore
 
 VmType = VmwareServer
@@ -121,12 +121,48 @@ Timeout = 120
 #
 # syntax:
 # [assignment NAME]
-# Deadline = date
-# Machine = an id of the machine used in testing
-# timeout = a timeout for test execution (override the default)
+# Deadline      = date
+# Machine       = an id of the machine used in testing
+# timeout       = a timeout for test execution (override the default)
 # AssignmentTitle = a human readable name
 # statementlink = a link to the statement
-# OrderNumber = the number of the assignment (used for sorting)
+# OrderNumber   = the number of the assignment (used for sorting)
+# WaitForVmwareToolsTimeout =
+#
+#       Optional paramter.
+#
+#       If WaitForVmwareToolsTimeout is not set, vmchecker waits
+#       indefinetly (well not really, the queue manager kills the
+#       executor after the global timeout expires).
+#
+#       This setting is useful when the machines are uploaded by the
+#       students and the tools are not preconfigured and we don't want
+#       to wait until the global timeout expires.
+#
+# RevertToSnapshot = [yes|true|y|no]
+#
+#       Optional paramter.
+#
+#       If not specified, defaults to 'yes' and reverts the virtual
+#       machine to it's last snapshot. If the snapshots are not
+#       organized in a straight line (some vmware solutions permit
+#       creating trees of snapshots) behaviour is not specified
+#       (hasn't been tested yet).
+#
+#       Normally machines should have a 'last' snapshot in a state
+#       that is useful for testing. Having a snapshot cuts the bootup
+#       time. Set to 'no' when you really want the machine to boot up
+#       by itself.
+#
+# DelayBetweenToolsAndTests = delay in seconds.
+#
+#       Optional paramter.
+#
+#       If not set defaults to '0'. After Vmware tools are loaded,
+#       there may be some time before the machine is actually usable
+#       (services like apache, mysql, et al. must be started). This
+#       defines an amount of time (in seconds) to wait after tools are
+#       up, but before starting to run the tests.
 
 [assignment 1-minishell-linux]
 Deadline = 2009.03.31 23:59:00
@@ -141,9 +177,12 @@ OrderNumber = 1
 Deadline = 2009.03.31 23:59:00
 Machine = so-win
 Timeout=120
+WaitForVmwareToolsTimeout=100
+DelayBetweenToolsAndTests=10
 AssignmentTitle = Minishell (Windows)
 StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
 OrderNumber = 2
+RevertToSnapshot=no
 
 
 
@@ -154,6 +193,7 @@ OrderNumber = 2
 # test virtual machine configuration
 [so-lin]
 Tester=sanctuary
+# if VMPath is not set, vmchecker will look for it in the student submission
 VMPath=/home/courses/so/vmware/2010/so-vm-linux-ubuntu/so-vm-linux-ubuntu.vmx
 GuestUser=student
 GuestPassword=student
@@ -164,13 +204,6 @@ BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
 KernelMessages=netcat -l -u -p6000
 HostCommand=ls
-# If WaitForVmwareToolsTimeout is not set, vmchecker waits indefinetly
-# (well not really, the queue manager kills the executor after the
-# global timeout expires). This setting is useful when the machines
-# are uploaded by the students and the tools are not preconfigured and
-# we don't want to wait until the global timeout expires.
-WaitForVmwareToolsTimeout=100
-
 
 # test virtual machine configuration
 [so-win]

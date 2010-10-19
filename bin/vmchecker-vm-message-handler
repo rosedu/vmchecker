@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# When starting up a virtual machine, several messages can appear
+# This script takes care of the most common one: the "Is this machine copied or moved?" quesion.
+# This determines whether or not to regenerate the UUIDs of the machine
+
+if test $# -ne 4; then
+        echo "Usage: $0 <server_host> <server_username> <server_password> <vmx_path>"
+        echo "$@"
+        exit 1
+fi
+
+# The vmware shell executable
+VIMSHBIN=vmware-vim-cmd
+# Run the command with the required hostname, username and password
+VIMSHCMD="$VIMSHBIN -H $1 -U $2 -P $3"
+
+# Get virtual machine vmid
+vmware_get_vmid() {
+        $VIMSHCMD vmsvc/getallvms 2>/dev/null \
+            | awk '/'"$1"'/ {print $1}'
+}
+
+# Is the vm waiting for input after a migration?
+vmware_uuid_alt() {
+        $VIMSHCMD vmsvc/message $1 2>/dev/null \
+            | awk /^msg.uuid.altered/
+}
+
+# Get message id
+vmware_get_msgid() {
+        $VIMSHCMD vmsvc/message $1 2>/dev/null \
+            | awk '/^Virtual machine message/ {print $4}' \
+            | awk -F : '{print $1}'
+}
+
+# Answers message
+vmware_answer_msg() {
+        $VIMSHCMD vmsvc/message $1 $2 $3 &> /dev/null
+}
+
+# Get virtual machine power state
+vmware_get_status() {
+        $VIMSHCMD vmsvc/power.getstate $1 2>/dev/null \
+            | awk '/^Powered on/ || /^Powered off/ || /^Suspended/'
+}
+
+# The vmx_path is datastore-relative, meaning it looks like "[datastore_name]VM_folder/VM.vmx"
+# In order to parse the output, '[' and ']' need to be escaped
+ESCAPED_VMX_PATH=$(echo $4 | sed -e 's|\[|\\\[|g' -e "s|\]|\\\]|g" -e "s|\/|\\\/|g")
+VMID=$(vmware_get_vmid "$ESCAPED_VMX_PATH")
+
+if [ -n "`vmware_uuid_alt $VMID`" ]; then
+        MSGID=`vmware_get_msgid $VMID`
+        # Answer 1 means I moved it
+        vmware_answer_msg $VMID $MSGID 1
+fi
+
+exit 0

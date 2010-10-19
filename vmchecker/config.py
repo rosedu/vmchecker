@@ -175,6 +175,35 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         return datetime.timedelta(seconds=int(
                 self.get(assignment, 'timedelta')))
 
+    def revert_to_snapshot(self, assignment):
+        """Should the machine be reverted to it's last snapshot?"""
+        val = self.getd(assignment, 'RevertToSnapshot', 'yes')
+        val = val.strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
+
+
+    def delay_between_tools_and_tests(self, assignment):
+        """After Vmware tools are loaded, there may be some time
+        before the machine is actually usable (services like apache,
+        mysql, et al. must be started). This defines an amount of time
+        (in seconds) to wait after tools are up, but before starting
+        to run the tests.
+
+        If the config file does not set DelayBetweenToolsAndTests it
+        defaults to 0.
+
+        """
+        val = self.getd(assignment, 'DelayBetweenToolsAndTests', '0')
+        return int(val)
+
+
+    def delay_wait_for_tools(self, assignment):
+        """How much time (in seconds) to wait for vmware tools to load."""
+        tools_timeout = self.getd(assignment, 'WaitForVmwareToolsTimeout', None)
+        if tools_timeout == None:
+            return None
+        return int(tools_timeout)
+
 
 
 class TestersConfig(confdefaults.ConfigWithDefaults):
@@ -314,7 +343,10 @@ class VmwareMachineConfig(object):
 
     def get_vmx_path(self):
         """Path to a .vmx file to be used"""
-        return self.config.get(self.machine_id, 'VMPath')
+        path = self.config.get(self.machine_id, 'VMPath', '')
+        if path == '':
+            return None
+        return path
 
 
     def guest_user(self):

@@ -10,13 +10,14 @@ from __future__ import with_statement
 import pyvix.vix
 import os
 import sys
+import time
 import logging
 import signal
 import ConfigParser
 from threading import Thread
 from subprocess import Popen
 
-from vmchecker import callback
+from vmchecker import callback, ziputil
 from vmchecker.paths import submission_config_file
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
@@ -287,6 +288,88 @@ def wait_for_tools_with_timeout(vm, timeout, error_fname):
     return False
 
 
+def power_on_with_message_handler(vm, vmwarecfg, vmx_path):
+    """Powers on virtual machine and answers any input
+       messages that might appear. """
+    # vm.powerOn()
+    power_thd = Thread(target = vm.powerOn)
+    power_thd.start()
+    power_thd.join(5)
+
+    if not power_thd.isAlive():
+        # vm.powerOn() didn't hang: the machine has been powered on
+        return
+
+
+    # we might have an unanswered message waiting.
+    # Start the message handler until the machine powers on.
+
+    # XXX: This is currently a bash script, it should be
+    # integrated as a module
+    proc = Popen(['vmchecker-vm-message-handler',
+                  vmwarecfg.vmware_server_hostname(),
+                  vmwarecfg.vmware_server_username(),
+                  vmwarecfg.vmware_server_password(),
+                  vmwarecfg.vmware_rel_vmx_path(vmx_path)])
+    os.waitpid(proc.pid, 0)
+    # By now all the messages have been handled.
+    # Wait for the VM to power on
+    power_thd.join()
+
+
+
+def power_off_and_unregister(vm, host, vmwarecfg, vmx_path):
+    """ Power off the virtual machine and, if necessary, unregister it. """
+    vm.powerOff()
+
+    if vmwarecfg.vmware_register_and_unregister():
+        host.unregisterVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
+
+
+def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
+    """Power on the virtual machine taking care of possbile messages
+       and handle the case in which the virtual machine doesn't have
+       VMWare Tools installed or the username and password given are
+       wrong."""
+
+    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+    tools_timeout = asscfg.delay_wait_for_tools(assignment)
+
+    if asscfg.revert_to_snapshot(assignment):
+        # revert to the last snapshot
+        revertToSnapshot(vm, vm.nRootSnapshots - 1)
+
+    power_on_with_message_handler(vm, vmwarecfg, vmx_path)
+    if not wait_for_tools_with_timeout(vm, tools_timeout, error_fname):
+        # no tools, nothing to do.
+        return False
+
+    try:
+        vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
+    except pyvix.vix.VIXSecurityException:
+        _logger.error('''Error logging in on the virtual machine.
+                      Make sure you have the accounts properly configured.''')
+        with open(error_fname, 'a') as handler:
+            print >> handler,'''Error logging in on the virtual machine.\n
+                    Make sure you have the user accounts properly configured.'''
+            return False
+
+    time.sleep(asscfg.delay_between_tools_and_tests(assignment))
+    return True
+
+
+def get_submission_vmx_file(bundle_dir):
+    """Unzip archive.zip and locate the .vmx file, no matter in what
+       folders it is located."""
+    # XXX: Hardcoded archive.zip
+    ziputil.unzip_safely(os.path.join(bundle_dir, "archive.zip"), bundle_dir)
+    for (root, _, files) in os.walk(bundle_dir):
+        for f in files:
+            if f.endswith(".vmx"):
+                return os.path.join(root, f)
+    return None
+
+
 def test_submission(bundle_dir, vmcfg, assignment):
     """THE function that tests a submission bundle:
         * opens the vm and reverts to a known snapshot
@@ -295,20 +378,29 @@ def test_submission(bundle_dir, vmcfg, assignment):
     """
     asscfg  = vmcfg.assignments()
     timeout = asscfg.get(assignment, 'Timeout')
-    tools_timeout = asscfg.getd(assignment, 'WaitForVmwareToolsTimeout', None)
     machine = asscfg.get(assignment, 'Machine')
     machinecfg = VmwareMachineConfig(vmcfg, machine)
     vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
 
 
-    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+    # try to get the machine's configuration, or the one uploaded by the student.
+    vmx_path = machinecfg.get_vmx_path()
+    if vmx_path == None:
+        vmx_path = get_submission_vmx_file(bundle_dir)
+    if vmx_path == None:
+        # no vmx, nothing to do.
+        _logger.error('Could not find a vmx to run')
+        return
 
-    (h, vm) = connect_to_vm(vmwarecfg, machinecfg.get_vmx_path())
-    revertToSnapshot(vm, vm.nRootSnapshots - 1) # revert to the last snapshot
-    if not wait_for_tools_with_timeout(vm, tools_timeout, error_fname):
-        return # no tools, nothing that can be done from now on
 
-    vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
+    (host, vm) = connect_to_vm(vmwarecfg, vmx_path)
+    success = try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment,
+                                        asscfg, bundle_dir, vmx_path)
+    if not success:
+        _logger.error('Could not power on or login on the VM')
+        power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
+        sys.exit(1)
+
 
     # start host commands
     host_command = vmcfg.get(machine, 'HostCommand', default='')
@@ -336,6 +428,7 @@ def test_submission(bundle_dir, vmcfg, assignment):
         copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
     finally:
         stop_host_commands(host_command_data)
+        power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
 
 
 def _check_required_files(path):
