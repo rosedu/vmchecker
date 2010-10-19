@@ -241,6 +241,52 @@ def stop_host_commands(host_command_data):
     _logger.info("%%% -- stopped host commands")
 
 
+def _wait_for_tools(vm):
+    """Called by the thread that waits for the VMWare Tools to
+       start. If the Tools do not start, there is no direct way of
+       ending the Thread.  As a result, on powerOff(), the Thread
+       would throw a VIXException on account of the VM not being
+       powered on.
+    """
+    try:
+        vm.waitForToolsInGuest()
+    except pyvix.vix.VIXException:
+        pass
+
+
+def wait_for_tools_with_timeout(vm, timeout, error_fname):
+    """Wait for VMWare Tools to start.
+
+    Returns True on success and False when the VMWare tools did not
+    start properly in the given timeout. Writes error messages to
+    `error_fname`.
+    """
+
+    if timeout != None:
+        timeout = int(timeout)
+        _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
+
+    tools_thd = Thread(target = _wait_for_tools, args=(vm,))
+    tools_thd.start()
+    # normally the thread will end before the timeout expires, so a high timeout
+    tools_thd.join(timeout)
+
+
+    if not tools_thd.isAlive():
+        return True
+
+
+    _logger.error('''Timeout waiting for VMWare Tools to start.
+                  Make sure your virtual machine boots up corectly
+                  and that you have VMWare Tools installed.''')
+
+    with open(error_fname, 'a') as handler:
+        print >> handler, '''Timeout waiting for VMWare Tools to start.\n
+                  Make sure your virtual machine boots up corectly\n
+                  and that you have VMWare Tools installed.'''
+    return False
+
+
 def test_submission(bundle_dir, vmcfg, assignment):
     """THE function that tests a submission bundle:
         * opens the vm and reverts to a known snapshot
@@ -249,14 +295,19 @@ def test_submission(bundle_dir, vmcfg, assignment):
     """
     asscfg  = vmcfg.assignments()
     timeout = asscfg.get(assignment, 'Timeout')
+    tools_timeout = asscfg.getd(assignment, 'WaitForVmwareToolsTimeout', None)
     machine = asscfg.get(assignment, 'Machine')
     machinecfg = VmwareMachineConfig(vmcfg, machine)
     vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
 
 
+    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+
     (h, vm) = connect_to_vm(vmwarecfg, machinecfg.get_vmx_path())
     revertToSnapshot(vm, vm.nRootSnapshots - 1) # revert to the last snapshot
-    vm.waitForToolsInGuest()
+    if not wait_for_tools_with_timeout(vm, tools_timeout, error_fname):
+        return # no tools, nothing that can be done from now on
+
     vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
 
     # start host commands

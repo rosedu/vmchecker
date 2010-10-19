@@ -164,7 +164,12 @@ BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
 KernelMessages=netcat -l -u -p6000
 HostCommand=ls
-
+# If WaitForVmwareToolsTimeout is not set, vmchecker waits indefinetly
+# (well not really, the queue manager kills the executor after the
+# global timeout expires). This setting is useful when the machines
+# are uploaded by the students and the tools are not preconfigured and
+# we don't want to wait until the global timeout expires.
+WaitForVmwareToolsTimeout=100
 
 
 # test virtual machine configuration
