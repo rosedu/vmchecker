@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import with_statement
 
@@ -230,24 +231,24 @@ def get_test_queue_contents(courseId):
         for tester_id in tstcfg:
             # connect to the tester
             client = paramiko.SSHClient()
-            client.load_system_host_keys(vmcfg.known_hosts_file())
-            client.connect(tstcfg.hostname(tester_id),
-                           username=tstcfg.login_username(tester_id),
-                           key_filename=vmcfg.storer_sshid(),
-                           look_for_keys=False)
+            try:
+                client.load_system_host_keys(vmcfg.known_hosts_file())
+                client.connect(tstcfg.hostname(tester_id),
+                               username=tstcfg.login_username(tester_id),
+                               key_filename=vmcfg.storer_sshid(),
+                               look_for_keys=False)
 
-            # run 'ls' in the queue_path and get it's output.
-            stdin, stdout, stderr = client.exec_command('ls -ctgG ' + tstcfg.queue_path(tester_id))
+                # run 'ls' in the queue_path and get it's output.
+                cmd = 'ls -ctgG ' + tstcfg.queue_path(tester_id)
+                stdin, stdout, stderr = client.exec_command(cmd)
+                data = stdout.readlines()
+                for f in [stdin, stdout, stderr]: f.close()
+                if len(data) > 0:
+                    data = data[1:]
+                    queue_contents.append(data)
 
-            data = stdout.readlines()
-            if len(data) > 0:
-                data = data[1:]
-            queue_contents.append(data)
-
-            stdin.close()
-            stdout.close()
-            stderr.close()
-            client.close()
+            finally:
+                client.close()
 
         # print the concatenation of all 'ls' instances
         return json.dumps(queue_contents, indent=4)
@@ -255,3 +256,6 @@ def get_test_queue_contents(courseId):
         strout = OutputString()
         traceback.print_exc(file = strout)
         return json.dumps({'errorTrace' : strout.get()}, indent=4)
+
+
+
