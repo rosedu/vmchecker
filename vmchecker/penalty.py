@@ -63,7 +63,7 @@ def compute_penalty(upload_time, deadline, penalty, weights, limit,
     penalty_points = 0
 
     if interval > 0:
-        #compute the interval representing the intersection between
+        # compute the interval representing the intersection between
         #(deadline, upload_time) and (holiday_start[i], holiday_finish[i])
 
         if holiday_start != []:
@@ -120,19 +120,22 @@ def compute_penalty_weighted(upload_time, deadline):
 
 
 def verbose_time_difference(upload_time, deadline):
-    """returns an intuitive human-readable representation of the
+    """Returns an intuitive human-readable representation of the
     difference between two dates"""
     interval = time.mktime(upload_time) - time.mktime(deadline)
 
     if interval < 0:
-        msg = 'tema trimisă inainte de termenul limită cu'
+        msg = 'Temă trimisă înainte de termenul limită cu'
         interval = - interval
     else:
-        msg = 'tema trimisă după termenul limită cu'
+        msg = 'Temă trimisă după termenul limită cu'
 
     diff = datetime.timedelta(seconds = interval)
-    return msg + ' %d zile %d ore %d minute %d secunde.' % (diff.days, diff.seconds / 3600,
-                  diff.seconds % 3600 / 60, diff.seconds % 60)
+    return msg + ' %d %s %d %s %d %s %d %s.' % (diff.days,
+                  ['zile', 'zi'][diff.days == 1], diff.seconds / 3600,
+                  ['ore', 'oră'][(diff.seconds / 3600) == 1], diff.seconds % 3600 / 60,
+                  ['minute', 'minut'][(diff.seconds % 3600 / 60) == 1], diff.seconds % 60,
+                  ['secunde', 'secundă'][(diff.seconds % 60) == 1])
 
 
 def _test():
