@@ -7,6 +7,13 @@ submission bundle (submission + tests), and closes the vm"""
 from __future__ import with_statement
 
 
+# Use simplejson or Python 2.6 json, prefer simplejson.
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
 import pyvix.vix
 import os
 import sys
@@ -445,7 +452,7 @@ def _check_required_files(path):
             found_all = False
             not_found.append(need)
     if not found_all:
-        raise IOError('Files ' + not_found + ' required for testing missing')
+        raise IOError('Files ' + json.dumps(not_found) + ' required for testing missing')
 
 
 def get_assignment_id(bundle_dir):
