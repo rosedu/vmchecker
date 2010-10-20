@@ -87,7 +87,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
-    except submit.SubmitedTooSoonError:
+    except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"Tema trimisa prea curand",
@@ -141,7 +141,7 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
-    except submit.SubmitedTooSoonError:
+    except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
                            'errorMessage':"Tema trimisa prea curand",
@@ -197,7 +197,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
 
     try:
         submit.evaluateLargeSubmission(archiveFileName, assignmentId, username, courseId)
-    except submit.SubmitedTooSoonError:
+    except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"Tema trimisa prea curand",

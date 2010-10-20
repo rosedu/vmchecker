@@ -32,7 +32,7 @@ logger = vmlogging.create_module_logger('submit')
 
 _DEFAULT_SSH_PORT = 22
 
-class SubmitedTooSoonError(Exception):
+class SubmittedTooSoonError(Exception):
     """Raised when a user sends a submission too soon after a previous one.
 
     This is used to prevent a user from DOS-ing vmchecker or from
@@ -321,12 +321,12 @@ def submit(archive_filename, assignment, user, course_id,
         msg = 'You can only submit homework between '
         msg += time.strftime(config.DATE_FORMAT, active_start) + ' and '
         msg += time.strftime(config.DATE_FORMAT, active_stop)  + '.'
-        raise SubmitedTooSoonError(msg)
+        raise SubmittedTooSoonError(msg)
 
 
     # checks time difference
     if not skip_time_check and submitted_too_soon(assignment, user, vmcfg):
-        raise SubmitedTooSoonError('''You are submitting too fast.
+        raise SubmittedTooSoonError('''You are submitting too fast.
                                    Please allow %s between submissions''' %
                                    str(vmcfg.assignments().timedelta(assignment)))
 
