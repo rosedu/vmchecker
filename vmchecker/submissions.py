@@ -40,8 +40,8 @@ class Submissions:
         self.vmpaths = vmpaths
 
 
-    def _get_submission_config(self, assignment, user):
-        """Returns the configuration file for the last submision of
+    def _get_submission_config_fname(self, assignment, user):
+        """Returns the last submissions's configuration file name for
         the given user for the given assignment.
 
         If the config file cannot be found, returns None.
@@ -59,17 +59,29 @@ class Submissions:
         return config_file
 
 
-    def get_upload_time_str(self, assignment, user):
-        """Returns a string representing the user's last submission date"""
-        config_file = self._get_submission_config(assignment, user)
+
+    def _get_submission_config(self, assignment, user):
+        """Returns a ConfigParser for the last submissions's
+        configuration file name for the given user for the given
+        assignment.
+
+        If the config file cannot be found, returns None.
+        """
+        config_file = self._get_submission_config_fname(assignment, user)
         if config_file == None:
             return None
         hrc = ConfigParser.RawConfigParser()
         with open(config_file) as handler:
             hrc.readfp(handler)
+        return hrc
 
-        upload_time_str = hrc.get('Assignment', 'UploadTime')
-        return upload_time_str
+
+    def get_upload_time_str(self, assignment, user):
+        """Returns a string representing the user's last submission date"""
+        hrc = self._get_submission_config(assignment, user)
+        if hrc == None:
+            return None
+        return hrc.get('Assignment', 'UploadTime')
 
 
     def get_upload_time_struct(self, assignment, user):
