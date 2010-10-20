@@ -146,7 +146,7 @@ def submission_git_commit(dest, user, assignment):
 
 
 
-def save_submission_in_storer(archive_filename, user, assignment,
+def save_submission_in_storer(submission_filename, user, assignment,
                               course_id, upload_time):
     """ Save the submission on the storer machine:
 
@@ -170,7 +170,7 @@ def save_submission_in_storer(archive_filename, user, assignment,
     # in git the former entryes get overwritten and commited to git.
     name_prefix = submission_backup_prefix(course_id, assignment, user, upload_time)
     back_dir = tempfileutil.mkdtemp(prefix=name_prefix, dir=vmpaths.dir_backup())
-    submission_backup(back_dir, archive_filename, sbcfg)
+    submission_backup(back_dir, submission_filename, sbcfg)
 
 
     # commit in git this submission
@@ -179,7 +179,7 @@ def save_submission_in_storer(archive_filename, user, assignment,
         # cleanup any previously commited data
         if os.path.exists(git_dest):
             shutil.rmtree(git_dest)
-        submission_backup(git_dest, archive_filename, sbcfg)
+        submission_backup(git_dest, submission_filename, sbcfg)
         # we only commit the archive's data. the config file and the
         # archive.zip is not commited.
         submission_git_commit(paths.dir_submission_expanded_archive(git_dest),
@@ -304,11 +304,11 @@ def queue_for_testing(assignment, user, course_id):
     ssh_bundle(bundle_path, vmcfg, assignment)
 
 
-def submit(archive_filename, assignment, user, course_id,
+def submit(submission_filename, assignment, user, course_id,
            skip_time_check=False, forced_upload_time=None):
     """Main routine: save a new submission and queue it for testing.
 
-    The submission is identified by archive_filename.
+    The submission is identified by submission_filename.
 
     Implicitly, if the user sent the submission to soon, it isn't
     queued for checking. This check can be skipped by setting
@@ -345,7 +345,7 @@ def submit(archive_filename, assignment, user, course_id,
                                    Please allow %s between submissions''' %
                                    str(vmcfg.assignments().timedelta(assignment)))
 
-    save_submission_in_storer(archive_filename, user, assignment,
+    save_submission_in_storer(submission_filename, user, assignment,
                               course_id, upload_time_str)
     queue_for_testing(assignment, user, course_id)
 
