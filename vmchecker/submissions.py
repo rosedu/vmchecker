@@ -84,6 +84,19 @@ class Submissions:
         return hrc.get('Assignment', 'UploadTime')
 
 
+    def get_eval_queueing_time_str(self, assignment, user):
+        """Returns a string representing the last time the submission
+        was queued for evaluation"""
+        hrc = self._get_submission_config(assignment, user)
+        if hrc == None:
+            return None
+
+        if not hrc.has_option('Assignment', 'EvaluationQueueingTime'):
+            return None
+
+        return hrc.get('Assignment', 'EvaluationQueueingTime')
+
+
     def get_upload_time_struct(self, assignment, user):
         """Returns a time_struct object with the upload time of the
         user's last submission"""
@@ -96,6 +109,20 @@ class Submissions:
         user's last submission"""
         upload_time_struct = self.get_upload_time_struct(assignment, user)
         return get_datetime_from_time_struct(upload_time_struct)
+
+
+    def get_eval_queueing_time_struct(self, assignment, user):
+        """Returns a time_struct object with the upload time of the
+        last evaluation queueing for the user's last submission"""
+        time_str = self.get_eval_queueing_time_str(assignment, user)
+        return get_time_struct_from_str(time_str)
+
+
+    def get_eval_queueing_time(self, assignment, user):
+        """Returns a datetime object with the upload time of the last
+        evaluation queueing for the user's last submission"""
+        time_struct = self.get_eval_queueing_time_struct(assignment, user)
+        return get_datetime_from_time_struct(time_struct)
 
 
     def submission_exists(self, assignment, user):
