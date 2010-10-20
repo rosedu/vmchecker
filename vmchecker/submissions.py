@@ -19,6 +19,18 @@ from . import paths
 
 _logger = logging.getLogger('vmchecker.submissions')
 
+def get_time_struct_from_str(time_str):
+    """Returns a time_struct object from the time_str string given"""
+    time_struct = time.strptime(time_str, DATE_FORMAT)
+    return time_struct
+
+
+def get_datetime_from_time_struct(time_struct):
+    """Returns a datetime object from time time_struct given"""
+    return datetime.datetime(*time_struct[:6])
+
+
+
 class Submissions:
     """A class to manipulate submissions from a given repository"""
     def __init__(self, vmpaths):
@@ -59,16 +71,20 @@ class Submissions:
         upload_time_str = hrc.get('Assignment', 'UploadTime')
         return upload_time_str
 
+
     def get_upload_time_struct(self, assignment, user):
-        """Returns a time_struct object with the upload time of the user's last submission"""
+        """Returns a time_struct object with the upload time of the
+        user's last submission"""
         upload_time_str = self.get_upload_time_str(assignment, user)
-        upload_time_struct = time.strptime(upload_time_str, DATE_FORMAT)
-        return upload_time_struct
+        return get_time_struct_from_str(upload_time_str)
 
 
     def get_upload_time(self, assignment, user):
-        """Returns a datetime object with the upload time of the user's last submission"""
-        return datetime.datetime(*self.get_upload_time_struct(assignment, user)[:6])
+        """Returns a datetime object with the upload time of the
+        user's last submission"""
+        upload_time_struct = self.get_upload_time_struct(assignment, user)
+        return get_datetime_from_time_struct(upload_time_struct)
+
 
     def submission_exists(self, assignment, user):
         """Returns true if a valid submission exists for the given
