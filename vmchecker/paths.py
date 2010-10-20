@@ -28,7 +28,7 @@ class VmcheckerPaths:
 
     def storer_paths(self):
         """A list of all the paths relevant to the storer machine."""
-        return [self.dir_unchecked(), self.dir_tests()]
+        return [self.dir_storer_tmp(), self.dir_tests()]
 
 
     def root_path(self):
@@ -43,11 +43,12 @@ class VmcheckerPaths:
         return self.abspath('repo')
 
 
-    def dir_unchecked(self):
-        """The absolute path of the unchecked homeworks.
+    def dir_storer_tmp(self):
+        """The absolute path of the directory used to store bundles
+        before sending them to the tester.
 
         This path is valid on the storer machine."""
-        return self.abspath('unchecked')
+        return self.abspath('vmchecker_bundle_dir')
 
 
     def dir_tests(self):
@@ -167,7 +168,7 @@ def _simple_test():
                  "storer_paths   :" : vmpaths.storer_paths(),
                  "root_path      :" : vmpaths.root_path(),
                  "dir_repository :" : vmpaths.dir_repository(),
-                 "dir_unchecked  :" : vmpaths.dir_unchecked(),
+                 "dir_storer_tmp :" : vmpaths.dir_storer_tmp(),
                  "dir_tests      :" : vmpaths.dir_tests(),
                  "dir_queue      :" : vmpaths.dir_queue(),
                  "dir_tester_unzip_tmp:" : vmpaths.dir_tester_unzip_tmp(),

@@ -222,7 +222,7 @@ def create_testing_bundle(user, assignment, course_id):
         (bundle_fd, bundle_path) = tempfileutil.mkstemp(
             suffix='.zip',
             prefix='%s_%s_%s_' % (course_id, assignment, user),
-            dir=vmpaths.dir_unchecked())  # FIXME not here
+            dir=vmpaths.dir_storer_tmp())
         logger.info('Creating bundle package %s', bundle_path)
 
         try:
