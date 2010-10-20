@@ -215,16 +215,14 @@ def create_testing_bundle(user, assignment, course_id):
     asscfg  = vmcfg.assignments()
     machine = asscfg.get(assignment, 'Machine')
 
-    #rel_file_list = list(vmcfg.assignments().files_to_include(assignment))
-    rel_file_list = []
-    rel_file_list += [ ('build.sh', vmcfg.get(machine, 'BuildScript')),
-                       ('run.sh',   vmcfg.get(machine, 'RunScript')) ]
-    rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)),
-                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                       ('submission-config', paths.submission_config_file(sbroot)),
-                       ('course-config', vmpaths.config_file()) ]
+    rel_file_list = [ ('run.sh',   vmcfg.get(machine, 'RunScript',   '')),
+                      ('build.sh', vmcfg.get(machine, 'BuildScript', '')),
+                      ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
+                      ('archive.zip', paths.submission_archive_file(sbroot)),
+                      ('course-config', vmpaths.config_file()),
+                      ('submission-config', paths.submission_config_file(sbroot)) ]
 
-    file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list ]
+    file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list if src != '' ]
 
     # builds archive with configuration
     with vmcfg.assignments().lock(vmpaths, assignment):
