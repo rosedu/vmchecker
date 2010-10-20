@@ -331,10 +331,18 @@ def power_on_with_message_handler(vm, vmwarecfg, vmx_path):
 
 def power_off_and_unregister(vm, host, vmwarecfg, vmx_path):
     """ Power off the virtual machine and, if necessary, unregister it. """
-    vm.powerOff()
-
+    try:
+        vm.powerOff()
+    except pyvix.vix.VIXException:
+        _logger.exception('IGNORED EXCEPTION')
+        pass
     if vmwarecfg.vmware_register_and_unregister():
-        host.unregisterVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
+        try:
+            host.unregisterVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
+        except pyvix.vix.VIXException:
+            _logger.exception('IGNORED EXCEPTION')
+            pass
+            
 
 
 def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
