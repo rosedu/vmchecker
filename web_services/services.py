@@ -101,7 +101,59 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     return json.dumps({'status':True,
                        'dumpLog':strout.get()}) 
 
+########## @ServiceMethod
+def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
+    """ Saves a temp file of the uploaded archive and calls
+        vmchecker.submit.submit method to put the homework in
+        the testing queue"""
 
+    # Check permission
+    req.content_type = 'text/html'
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    strout = websutil.OutputString()
+    try:
+        s.load()
+        username = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})
+
+    # Reset the timeout
+    s.save()
+
+    #  Save file in a temp
+    (fd, tmpname) = tempfile.mkstemp('.txt')
+    with open(tmpname, 'wb', 10000) as f:
+        f.write(md5Sum)
+    os.close(fd)
+
+    # Call submit.py
+    ## Redirect stdout to catch logging messages from submit
+    strout = websutil.OutputString()
+    sys.stdout = strout
+    try:
+        submit.submit(tmpname, assignmentId, username, courseId)
+    except submit.SubmitedTooSoonError as inst:
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"Tema trimisa prea curand",
+            'errorTrace':inst.args[0]})
+
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})
+
+    return json.dumps({'status':True,
+                       'dumpLog':strout.get()})
 
 
 ########## @ServiceMethod
