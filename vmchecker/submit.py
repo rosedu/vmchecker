@@ -299,6 +299,7 @@ def queue_for_testing(assignment, user, course_id):
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     bundle_path = create_testing_bundle(user, assignment, course_id)
     ssh_bundle(bundle_path, vmcfg, assignment)
+    os.remove(bundle_path)
 
 
 def submit(submission_filename, assignment, user, course_id,
