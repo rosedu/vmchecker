@@ -57,12 +57,17 @@ def submission_config(user, assignment, course_id, upload_time,
        should be generated automatically when the submission is sent
        for testing.
     """
+    # Get the assignment submission type (zip archive vs. md5 sum)
+    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
+    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
+
     sbcfg = ConfigParser.RawConfigParser()
     sbcfg.add_section('Assignment')
     sbcfg.set('Assignment', 'User', user)
     sbcfg.set('Assignment', 'Assignment', assignment)
     sbcfg.set('Assignment', 'UploadTime', upload_time)
     sbcfg.set('Assignment', 'CourseID', course_id)
+    sbcfg.set('Assignment', 'Storage', storage_type.lower())
 
     # XXX these should go to `callback'
     sbcfg.set('Assignment', 'ResultsDest', storer_result_dir)
@@ -82,10 +87,10 @@ def submission_backup_prefix(course_id, assignment, user, upload_time):
     return '%s_%s_%s_%s_' % (course_id, assignment, user, upload_time)
 
 
-def submission_backup(back_dir, archive_filename, sbcfg):
+def submission_backup(back_dir, submission_filename, sbcfg):
     """Make a backup for this submission.
 
-    Each entry is of the following structure:
+    Each normal submission entry is of the following structure:
     +--$back_dir/
     |  +--archive/
     |  |  +-- X              (all the files from the archive)
@@ -93,27 +98,37 @@ def submission_backup(back_dir, archive_filename, sbcfg):
     |  +--submission-config  config describing the submission
     |  |                     (user, uploadtime, assignment)
     |  +--archive.zip        the original (unmodified) archive
+
+    Each large submission entry is of the following structure:
+    +--$back_dir/
+    |  +--submission-config  config describing the submission
+    |  |                     (user, uploadtime, assignment)
+    |  +--md5.txt            the text file containing the md5 sum
+
     """
     back_arc = paths.dir_submission_expanded_archive(back_dir)
     back_cfg = paths.submission_config_file(back_dir)
     back_zip = paths.submission_archive_file(back_dir)
+    back_md5 = paths.submission_md5_file(back_dir)
 
     # make sure the directory path exists
     if not os.path.exists(back_dir):
         os.makedirs(back_dir)
 
-    # copy the (unmodified) archive. This should be the first thing we
-    # do, to make sure the uploaded submission is on the server no
-    # matter what happens next
-    shutil.copyfile(archive_filename, back_zip)
+    if sbcfg.get('Assignment', 'Storage').lower() == "large":
+        shutil.copyfile(submission_filename, back_md5)
+    else:
+        # copy the (unmodified) archive. This should be the first thing we
+        # do, to make sure the uploaded submission is on the server no
+        # matter what happens next
+        shutil.copyfile(submission_filename, back_zip)
+        # unzip the archive, but check if it has absolute paths or '..'
+        ziputil.unzip_safely(submission_filename, back_arc)
 
     # write the config. Again do this before unzipping (which might fail)
     # to make sure we have the upload data ready.
     with open(back_cfg, 'w') as handle:
         sbcfg.write(handle)
-
-    # unzip the archive, but check if it has absolute paths or '..'
-    ziputil.unzip_safely(archive_filename, back_arc)
 
     logger.info('Stored submission in temporary directory %s', back_dir)
 
