@@ -100,34 +100,35 @@ class VmcheckerPaths:
 
 
 
-def dir_submission_expanded_archive(submission_root):
+def dir_submission_expanded_archive(cur_submission_root):
     """Returns the path to the users's expanded (unzipped) submission archive"""
-    return os.path.join(submission_root, 'archive')
+    return os.path.join(cur_submission_root, 'archive')
 
 
-def dir_submission_results(submission_root):
+def dir_submission_results(cur_submission_root):
     """Returns the path to the users's result for his submission of
     the given assignment"""
-    return os.path.join(submission_root, 'results')
+    return os.path.join(cur_submission_root, 'results')
 
 
-def submission_results_grade(submission_root):
+def submission_results_grade(cur_submission_root):
     """Returns the path to the users's grade file for the given
     assignment"""
-    return os.path.join(dir_submission_results(submission_root), 'grade.vmr')
+    result_dir = dir_submission_results(cur_submission_root)
+    return os.path.join(result_dir, 'grade.vmr')
 
 
-def submission_archive_file(submission_root):
+def submission_archive_file(cur_submission_root):
     """Returns the path to the users's unmodified submission archive.
 
     This is only valid for submissions in which the student uploads
     the archive through vmchecker's user interface.
 
     """
-    return os.path.join(submission_root, 'archive.zip')
+    return os.path.join(cur_submission_root, 'archive.zip')
 
 
-def submission_md5_file(submission_root):
+def submission_md5_file(cur_submission_root):
     """Returns the path to the users's md5 hash.
 
     This is only valid for submissions in which the student uploads
@@ -135,16 +136,16 @@ def submission_md5_file(submission_root):
     is not stored in vmchecker storer, but only it's hash.
 
     """
-    return os.path.join(submission_root, 'md5.txt')
+    return os.path.join(cur_submission_root, 'md5.txt')
 
 
-def submission_config_file(submission_root):
+def submission_config_file(cur_submission_root):
     """Returns the path to the users's submission configuration file
 
     Among others this file contains data about user, assignment,
     upload time.
     """
-    return os.path.join(submission_root, 'submission-config')
+    return os.path.join(cur_submission_root, 'submission-config')
 
 
 
