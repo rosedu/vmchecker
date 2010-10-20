@@ -29,7 +29,7 @@ class VmcheckerPaths:
     def storer_paths(self):
         """A list of all the paths relevant to the storer machine."""
         return [self.dir_unchecked(), self.dir_checked(),
-                self.dir_backup(), self.dir_tests()]
+                self.dir_tests()]
 
 
     def root_path(self):
@@ -76,13 +76,6 @@ class VmcheckerPaths:
         archives are unzipped.
         This path is valid on the tester machine."""
         return self.abspath('tmpunzip')
-
-
-    def dir_backup(self):
-        """The absolute path of the directory where backups
-        of tasks are kept.
-        This path is valid on the storer machine."""
-        return self.abspath('back')
 
 
     def db_file(self):
@@ -192,7 +185,6 @@ def _simple_test():
                  "dir_tests      :" : vmpaths.dir_tests(),
                  "dir_queue      :" : vmpaths.dir_queue(),
                  "dir_tester_unzip_tmp:" : vmpaths.dir_tester_unzip_tmp(),
-                 "dir_backup     :" : vmpaths.dir_backup(),
                  "db_file        :" : vmpaths.db_file(),
                  "dir_bin        :" : vmpaths.dir_bin(),
                  "dir_assignment :" : vmpaths.dir_assignment(assignment),

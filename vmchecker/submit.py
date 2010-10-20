@@ -165,13 +165,6 @@ def save_submission_in_storer(submission_filename, user, assignment,
                               vmcfg.storer_username(),
                               vmcfg.storer_hostname())
 
-    # make a separate backup for each submission, parallel to the git repo
-    # here, each submission gets a separate entry.
-    # in git the former entryes get overwritten and commited to git.
-    name_prefix = submission_backup_prefix(course_id, assignment, user, upload_time)
-    back_dir = tempfileutil.mkdtemp(prefix=name_prefix, dir=vmpaths.dir_backup())
-    submission_backup(back_dir, submission_filename, sbcfg)
-
 
     # commit in git this submission
     git_dest = vmpaths.dir_submission_root(assignment, user)
