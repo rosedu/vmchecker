@@ -180,10 +180,14 @@ def save_submission_in_storer(submission_filename, user, assignment,
         if os.path.exists(git_dest):
             shutil.rmtree(git_dest)
         submission_backup(git_dest, submission_filename, sbcfg)
-        # we only commit the archive's data. the config file and the
-        # archive.zip is not commited.
-        submission_git_commit(paths.dir_submission_expanded_archive(git_dest),
-                              user, assignment)
+        if sbcfg.get('Assignment', 'Storage').lower() == 'large':
+            submission_git_commit(git_dest, user, assignment)
+        else:
+            # we only commit the archive's data. the config file and the
+            # archive.zip is not commited.
+            submission_git_commit(paths.dir_submission_expanded_archive(git_dest),
+                                  user, assignment)
+
 
 
 
