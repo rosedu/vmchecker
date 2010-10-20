@@ -125,6 +125,22 @@ class Submissions:
         return get_datetime_from_time_struct(time_struct)
 
 
+    def set_evaluation_parameters(self, assignment, user, archive, eval_time):
+        """Appends the archive filename to an existing
+        submission-config (used for Large type assignments)"""
+        config_file = self._get_submission_config_fname(assignment, user)
+        if config_file == None:
+            return None
+        hrc = ConfigParser.RawConfigParser()
+        with open(config_file) as handler:
+            hrc.readfp(handler)
+
+        hrc.set('Assignment', 'ArchiveFilename', archive)
+        hrc.set('Assignment', 'EvaluationQueueingTime', eval_time)
+        with open(config_file, "w") as handler:
+            hrc.write(handler)
+
+
     def submission_exists(self, assignment, user):
         """Returns true if a valid submission exists for the given
         user and assignment"""
