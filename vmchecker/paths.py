@@ -96,11 +96,6 @@ class VmcheckerPaths:
         return self.abspath('auth_file.json')
 
 
-    def dir_bin(self):
-        """Returns absolute path for the bin/ directory"""
-        return self.abspath('bin')
-
-
     def dir_assignment(self, assignment):
         """Returns path to all assignment submissions"""
         return os.path.join(self.dir_repository(), assignment)
@@ -186,7 +181,6 @@ def _simple_test():
                  "dir_queue      :" : vmpaths.dir_queue(),
                  "dir_tester_unzip_tmp:" : vmpaths.dir_tester_unzip_tmp(),
                  "db_file        :" : vmpaths.db_file(),
-                 "dir_bin        :" : vmpaths.dir_bin(),
                  "dir_assignment :" : vmpaths.dir_assignment(assignment),
                  "dir_submission_root     :" : sbroot,
                  "dir_submission_expanded_archive :" :
