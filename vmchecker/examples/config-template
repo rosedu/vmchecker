@@ -168,10 +168,11 @@ Timeout = 120
 #       up, but before starting to run the tests.
 #
 # # These are only for Large assignments
-# AssignmentStorage = Large
+# AssignmentStorage = Large               # this is a MD5Submission.
+# AssignmentStoragePort = 22              # the ssh port to use
 # AssignmentStorageHost = orion.cs.pub.ro # where to look for uploaded vms
-# AssignmentStorageBasepath = /home # where on that machine to look
-# AssignmentStorageQueryUser = root # which user to logon with.
+# AssignmentStorageBasepath = /home       # where on that machine to look
+# AssignmentStorageQueryUser = root       # which user to logon with.
 
 
 

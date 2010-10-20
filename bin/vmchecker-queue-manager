@@ -68,13 +68,15 @@ def launch_executor(location):
     """Launch the vmchecker-vm-executor process and kill it if it runs
     for too long"""
 
-    cmd = ['vmchecker-vm-executor', location]
     deadline = time.time() + VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME
-    _logger.info('Begin homework evaluation. Calling %s', cmd)
+    _logger.info('Begin homework evaluation. Location %s', location)
 
     # launch vmchecker-vm-executor
     try:
-        popen = subprocess.Popen(cmd)
+        # download additional files into the bundle dir (location)
+        subprocess.call(['vmchecker-download-external-files', location])
+
+        popen = subprocess.Popen(['vmchecker-vm-executor', location])
         with open(os.path.join(location, 'grade.vmr'), 'w') as handler:
             print >> handler, 'ok'
     except OSError:
