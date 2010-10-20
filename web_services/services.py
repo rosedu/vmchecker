@@ -450,6 +450,50 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+
+######### @ServiceMethod
+def getStorageDirContents(req, courseId, assignmentId):
+    """ Returns the file list from the storage host for the current user"""
+
+    # Check permission
+    req.content_type = 'text/html'
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':ERR_AUTH,
+                           'errorMessage':"",
+                           'errorTrace':""})
+
+    # Get username session variable
+    strout = websutil.OutputString()
+    try:
+        s.load()
+        username = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+    # Reset the timeout
+    s.save()
+    return getUserStorageDirContents(req, courseId, assignmentId, username)
+
+
+
+def getUserStorageDirContents(req, courseId, assignmentId, username):
+    """Get the current files in the home directory on the storage host for a given username"""
+    req.content_type = 'text/html'
+    strout = websutil.OutputString()
+    try:
+        result = websutil.get_storagedir_contents(courseId, assignmentId, username)
+        return result
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'

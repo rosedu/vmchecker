@@ -260,6 +260,40 @@ def get_test_queue_contents(courseId):
 
 
 
+def get_storagedir_contents(courseId, assignmentId, username):
+    """Get the content of a the archive coresponding to a
+    MD5Submission-type homework"""
+    client = paramiko.SSHClient()
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        assignments = vmcfg.assignments()
+        storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
+        storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
+        storage_basepath = assignments.get(assignmentId, 'AssignmentStorageBasepath')
+
+        client.load_system_host_keys(vmcfg.known_hosts_file())
+        client.connect(storage_hostname,
+                       username=storage_username,
+                       key_filename=vmcfg.storer_sshid(),
+                       look_for_keys=False)
+
+        cmd = "find " + storage_basepath + '/' + username + \
+            " \( ! -regex '.*/\..*' \) -type f"
+
+        stdin, stdout, stderr = client.exec_command(cmd)
+        result = []
+        for d in stdout.readlines():
+            result.append({'fileName' : d})
+        for f in [stdin, stdout, stderr]: f.close()
+
+        return json.dumps(result)
+    except:
+        strout = OutputString()
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorTrace' : strout.get()}, indent=4)
+    finally:
+        client.close()
+
 
 def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
     """Checks whether a MD5Submission is valid:
