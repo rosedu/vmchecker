@@ -47,7 +47,7 @@ class Submissions:
         If the config file cannot be found, returns None.
         """
 
-        sbroot = self.vmpaths.dir_submission_root(assignment, user)
+        sbroot = self.vmpaths.dir_cur_submission_root(assignment, user)
         if not os.path.isdir(sbroot):
             return None
 

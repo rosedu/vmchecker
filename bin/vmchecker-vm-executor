@@ -25,11 +25,15 @@ from threading import Thread
 from subprocess import Popen
 
 from vmchecker import callback, ziputil
-from vmchecker.paths import submission_config_file
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
+
+def bundle_submission_config_file(bundle_dir):
+    """Return the name of the submission config file from the unzipped
+    bundle directory"""
+    return os.path.join(bundle_dir, 'submission-config')
 
 
 def upload_results_to_sender(bundle_dir):
@@ -39,7 +43,7 @@ def upload_results_to_sender(bundle_dir):
     for fname in allfiles:
         if fname.endswith('.vmr'):
             vmrfiles.append(os.path.join(bundle_dir, fname))
-    callback.run_callback(submission_config_file(bundle_dir), vmrfiles)
+    callback.run_callback(bundle_submission_config_file(bundle_dir), vmrfiles)
 
 
 
@@ -458,7 +462,7 @@ def _check_required_files(path):
 def get_assignment_id(bundle_dir):
     """Reads the assignment identifier from the config file of the
     submission from bundle_dir"""
-    with open(submission_config_file(bundle_dir)) as handle:
+    with open(bundle_submission_config_file(bundle_dir)) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
     assignment = config.get('Assignment', 'Assignment')

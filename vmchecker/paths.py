@@ -95,25 +95,47 @@ class VmcheckerPaths:
 
 
     def dir_submission_root(self, assignment, user):
-        """Returns path to latest user's submission for the given assignment"""
+        """Returns path to the user's submissions for the given assignment"""
         return os.path.join(self.dir_repository(), assignment, user)
 
+
+    def dir_cur_submission_root(self, assignment, user):
+        """Returns path to latest user's submission for the given assignment"""
+        sbroot = self.dir_submission_root(assignment, user)
+        return os.path.join(sbroot, 'current')
+
+
+    def dir_new_submission_root(self, assignment, user, new_submission):
+        """Returns path to latest user's submission for the given assignment"""
+        sbroot = self.dir_submission_root(assignment, user)
+        return os.path.join(sbroot, new_submission)
+
+
+
+def dir_submission_git(cur_submission_root):
+    """Returns the path to the data stored in git for the current
+    submission the given assignment"""
+    return os.path.join(cur_submission_root, 'git')
 
 
 def dir_submission_expanded_archive(cur_submission_root):
     """Returns the path to the users's expanded (unzipped) submission archive"""
-    return os.path.join(cur_submission_root, 'archive')
+    # the expandend archive contents are stored in git
+    git_dir = dir_submission_git(cur_submission_root)
+    return os.path.join(git_dir, 'archive')
 
 
 def dir_submission_results(cur_submission_root):
     """Returns the path to the users's result for his submission of
     the given assignment"""
+    # not stored in git
     return os.path.join(cur_submission_root, 'results')
 
 
 def submission_results_grade(cur_submission_root):
     """Returns the path to the users's grade file for the given
     assignment"""
+    # not stored in git
     result_dir = dir_submission_results(cur_submission_root)
     return os.path.join(result_dir, 'grade.vmr')
 
@@ -125,6 +147,7 @@ def submission_archive_file(cur_submission_root):
     the archive through vmchecker's user interface.
 
     """
+    # not stored in git
     return os.path.join(cur_submission_root, 'archive.zip')
 
 
@@ -136,7 +159,9 @@ def submission_md5_file(cur_submission_root):
     is not stored in vmchecker storer, but only it's hash.
 
     """
-    return os.path.join(cur_submission_root, 'md5.txt')
+    # the md5 file is stored in git
+    git_dir = dir_submission_git(cur_submission_root)
+    return os.path.join(git_dir, 'md5.txt')
 
 
 def submission_config_file(cur_submission_root):
@@ -145,7 +170,9 @@ def submission_config_file(cur_submission_root):
     Among others this file contains data about user, assignment,
     upload time.
     """
-    return os.path.join(cur_submission_root, 'submission-config')
+    # the submission config file is stored in git
+    git_dir = dir_submission_git(cur_submission_root)
+    return os.path.join(git_dir, 'submission-config')
 
 
 
@@ -164,7 +191,7 @@ def _simple_test():
     assignment = 'assignment-xxx'
     user = 'some-random-user'
     vmpaths = VmcheckerPaths(root_path)
-    sbroot = vmpaths.dir_submission_root(assignment, user)
+    sbroot = vmpaths.dir_cur_submission_root(assignment, user)
     results =  { "tester_paths   :" : vmpaths.tester_paths(),
                  "storer_paths   :" : vmpaths.storer_paths(),
                  "root_path      :" : vmpaths.root_path(),
@@ -175,7 +202,7 @@ def _simple_test():
                  "dir_tester_unzip_tmp:" : vmpaths.dir_tester_unzip_tmp(),
                  "db_file        :" : vmpaths.db_file(),
                  "dir_assignment :" : vmpaths.dir_assignment(assignment),
-                 "dir_submission_root     :" : sbroot,
+                 "dir_cur_submission_root     :" : sbroot,
                  "dir_submission_expanded_archive :" :
                      dir_submission_expanded_archive(sbroot),
                  "dir_submission_results  :" : dir_submission_results(sbroot),

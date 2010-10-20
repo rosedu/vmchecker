@@ -16,15 +16,20 @@ import paramiko
 import ConfigParser
 
 
-from vmchecker.paths import submission_config_file
 from vmchecker.config import CourseConfig
 
+
+
+def bundle_submission_config_file(bundle_dir):
+    """Return the name of the submission config file from the unzipped
+    bundle directory"""
+    return os.path.join(bundle_dir, 'submission-config')
 
 
 def get_assignment_id(bundle_dir):
     """Reads the assignment identifier from the config file of the
     submission from bundle_dir"""
-    with open(submission_config_file(bundle_dir)) as handle:
+    with open(bundle_submission_config_file(bundle_dir)) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
     assignment = config.get('Assignment', 'Assignment')
@@ -35,7 +40,7 @@ def get_external_archive_zip(bundle_dir, asscfg, assignment):
     """Bring an archive.zip from an external location"""
 
     submission_config = ConfigParser.RawConfigParser()
-    with open(submission_config_file(bundle_dir)) as handle:
+    with open(bundle_submission_config_file(bundle_dir)) as handle:
         submission_config.readfp(handle)
 
 

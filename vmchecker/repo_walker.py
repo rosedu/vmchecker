@@ -28,7 +28,7 @@ class RepoWalker:
 
     def walk_submission(self, assignment, user, func=simulator_func, args=()):
         """Runs @func on the user's submission for the given assignment"""
-        path = self.vmpaths.dir_submission_root(assignment, user)
+        path = self.vmpaths.dir_cur_submission_root(assignment, user)
         if not os.path.exists(path):
             return
         if self.simulate:

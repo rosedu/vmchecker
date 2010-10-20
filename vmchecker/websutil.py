@@ -157,7 +157,7 @@ def submission_upload_info(courseId, user, assignment):
     """
     vmcfg = CourseConfig(CourseList().course_config(courseId))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    sbroot = vmpaths.dir_submission_root(assignment, user)
+    sbroot = vmpaths.dir_cur_submission_root(assignment, user)
     grade_file = paths.submission_results_grade(sbroot)
     sbcfg = paths.submission_config_file(sbroot)
     if not os.path.exists(sbcfg):
@@ -337,7 +337,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
 
 
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        submission_dir = vmpaths.dir_submission_root(assignmentId, username)
+        submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
         md5_fpath = paths.submission_md5_file(submission_dir)
 
         if os.path.isfile(md5_fpath):

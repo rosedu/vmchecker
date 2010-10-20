@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import time
 import socket
+import random
 import datetime
 import paramiko
 from contextlib import closing
@@ -92,28 +93,37 @@ def submission_backup(back_dir, submission_filename, sbcfg):
 
     Each normal submission entry is of the following structure:
     +--$back_dir/
-    |  +--archive/
-    |  |  +-- X              (all the files from the archive)
-    |  |  +-- Y              (all the files from the archive)
-    |  +--submission-config  config describing the submission
-    |  |                     (user, uploadtime, assignment)
-    |  +--archive.zip        the original (unmodified) archive
+    |  +--git/
+    |  |  +--archive/
+    |  |  |  +-- X              (all the files from the archive)
+    |  |  |  +-- Y              (all the files from the archive)
+    |  |  +--submission-config  config describing the submission
+    |  |                        (user, uploadtime, assignment)
+    |  +--archive.zip           the original (unmodified) archive
+
 
     Each large submission entry is of the following structure:
     +--$back_dir/
-    |  +--submission-config  config describing the submission
-    |  |                     (user, uploadtime, assignment)
-    |  +--md5.txt            the text file containing the md5 sum
+    |  +--git/
+    |  |  +--md5.txt            the text file containing the md5 sum
+    |  |  |                     (user, uploadtime, assignment)
+    |  |  +--submission-config  config describing the submission
 
     """
+    back_git = paths.dir_submission_git(back_dir)
     back_arc = paths.dir_submission_expanded_archive(back_dir)
     back_cfg = paths.submission_config_file(back_dir)
     back_zip = paths.submission_archive_file(back_dir)
     back_md5 = paths.submission_md5_file(back_dir)
 
     # make sure the directory path exists
-    if not os.path.exists(back_dir):
-        os.makedirs(back_dir)
+    if not os.path.exists(back_git):
+        os.makedirs(back_git)
+
+    # write the config. Do this before unzipping (which might fail)
+    # to make sure we have the dates correctly stored.
+    with open(back_cfg, 'w') as handle:
+        sbcfg.write(handle)
 
     if sbcfg.get('Assignment', 'Storage').lower() == "large":
         shutil.copyfile(submission_filename, back_md5)
@@ -124,11 +134,6 @@ def submission_backup(back_dir, submission_filename, sbcfg):
         shutil.copyfile(submission_filename, back_zip)
         # unzip the archive, but check if it has absolute paths or '..'
         ziputil.unzip_safely(submission_filename, back_arc)
-
-    # write the config. Again do this before unzipping (which might fail)
-    # to make sure we have the upload data ready.
-    with open(back_cfg, 'w') as handle:
-        sbcfg.write(handle)
 
     logger.info('Stored submission in temporary directory %s', back_dir)
 
@@ -159,27 +164,32 @@ def save_submission_in_storer(submission_filename, user, assignment,
     """
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    sbroot = vmpaths.dir_submission_root(assignment, user)
+
+    dir_name = 'sb_' + str(upload_time) + '_rnd' + str(random.randint(0, 1000))
+    # make name more pleasant to use for commandline
+    dir_name = dir_name.replace(' ', '__').replace(':', '.')
+
+    cur_sb = vmpaths.dir_cur_submission_root(assignment, user)
+    new_sb = vmpaths.dir_new_submission_root(assignment, user, dir_name)
+
     sbcfg = submission_config(user, assignment, course_id, upload_time,
-                              paths.dir_submission_results(sbroot),
+                              paths.dir_submission_results(new_sb),
                               vmcfg.storer_username(),
                               vmcfg.storer_hostname())
 
-
-    # commit in git this submission
-    git_dest = vmpaths.dir_submission_root(assignment, user)
     with vmcfg.assignments().lock(vmpaths, assignment):
-        # cleanup any previously commited data
-        if os.path.exists(git_dest):
-            shutil.rmtree(git_dest)
-        submission_backup(git_dest, submission_filename, sbcfg)
-        if sbcfg.get('Assignment', 'Storage').lower() == 'large':
-            submission_git_commit(git_dest, user, assignment)
-        else:
-            # we only commit the archive's data. the config file and the
-            # archive.zip is not commited.
-            submission_git_commit(paths.dir_submission_expanded_archive(git_dest),
-                                  user, assignment)
+        # write data to the backup
+        submission_backup(new_sb, submission_filename, sbcfg)
+
+        # commit in git only part of the files (not the 'archive.zip')
+        git_dest = paths.dir_submission_git(new_sb)
+        submission_git_commit(git_dest, user, assignment)
+
+        # create a new symlink, or make the old one point to the
+        # current new submission. The symlink is not stored in git.
+        if os.path.exists(cur_sb):
+            os.unlink(cur_sb)
+        os.symlink(new_sb, cur_sb)
 
 
 
@@ -200,7 +210,7 @@ def create_testing_bundle(user, assignment, course_id):
     """
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    sbroot = vmpaths.dir_submission_root(assignment, user)
+    sbroot = vmpaths.dir_cur_submission_root(assignment, user)
 
     asscfg  = vmcfg.assignments()
     machine = asscfg.get(assignment, 'Machine')

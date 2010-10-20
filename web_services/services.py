@@ -259,7 +259,7 @@ def getUserResults(req, courseId, assignmentId, username):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_submission_root(assignmentId, username)
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     r_path = paths.dir_submission_results(submission_dir)
 
 
@@ -424,7 +424,7 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_submission_root(assignmentId, username)
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     md5_fpath = paths.submission_md5_file(submission_dir)
 
     strout = websutil.OutputString()
