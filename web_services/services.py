@@ -156,6 +156,65 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
                        'dumpLog':strout.get()})
 
 
+
+########## @ServiceMethod
+def beginEvaluation(req, courseId, assignmentId, archiveFileName):
+    """ Saves a temp file of the uploaded archive and calls
+        vmchecker.submit.submit method to put the homework in
+        the testing queue"""
+
+    # Check permission
+    req.content_type = 'text/html'
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    strout = websutil.OutputString()
+    try:
+        s.load()
+        username = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})
+
+    # Reset the timeout
+    s.save()
+
+    archiveValidationResult = websutil.validate_md5_submission(courseId, assignmentId, username, archiveFileName)
+    if not(archiveValidationResult == "ok"):
+        return json.dumps({'status':False, 'error':archiveValidationResult});
+
+    # Call submit.py
+    ## Redirect stdout to catch logging messages from submit
+    strout = websutil.OutputString()
+    sys.stdout = strout
+
+    try:
+        submit.evaluateLargeSubmission(archiveFileName, assignmentId, username, courseId)
+    except submit.SubmitedTooSoonError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"Tema trimisa prea curand",
+            'errorTrace':strout.get()})
+
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})
+
+    # Reset the timeout
+    s.save()
+
+    return json.dumps({'status':True,
+                       'dumpLog':strout.get()})
+
+
 ########## @ServiceMethod
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""

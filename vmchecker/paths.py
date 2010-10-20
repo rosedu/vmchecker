@@ -137,9 +137,24 @@ def submission_results_grade(submission_root):
 
 
 def submission_archive_file(submission_root):
-    """Returns the path to the users's unmodified submission
-    archive"""
+    """Returns the path to the users's unmodified submission archive.
+
+    This is only valid for submissions in which the student uploads
+    the archive through vmchecker's user interface.
+
+    """
     return os.path.join(submission_root, 'archive.zip')
+
+
+def submission_md5_file(submission_root):
+    """Returns the path to the users's md5 hash.
+
+    This is only valid for submissions in which the student uploads
+    the virtual machine through a separate interface and the archive
+    is not stored in vmchecker storer, but only it's hash.
+
+    """
+    return os.path.join(submission_root, 'md5.txt')
 
 
 def submission_config_file(submission_root):

@@ -259,3 +259,69 @@ def get_test_queue_contents(courseId):
 
 
 
+
+
+def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
+    """Checks whether a MD5Submission is valid:
+       * checks that the uploaded md5 corresponds to the one of the machine
+       * checks that the archive uploaded by the student is a zip file
+
+       On success returns 'ok'.
+       On failure reports the source of the failure:
+       - 'md5' - the uploaded md5 does not match the one computed on the archive
+       - 'zip' - the uploaded archive is not zip.
+    """
+
+    md5_calculated = ""
+    md5_uploaded = ""
+    archive_file_type = ""
+
+    client = paramiko.SSHClient()
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        assignments = vmcfg.assignments()
+        storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
+        storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
+        storage_basepath = assignments.get(assignmentId, 'AssignmentStorageBasepath')
+
+        client.load_system_host_keys(vmcfg.known_hosts_file())
+        client.connect(storage_hostname,
+                       username=storage_username,
+                       key_filename=vmcfg.storer_sshid(),
+                       look_for_keys=False)
+
+        archive_abs = storage_basepath + '/' + username + '/' + archiveFileName
+        # XXX: This will take ages to compute! I wonder how many
+        # connections will Apache hold.
+        stdin, stdout, stderr = client.exec_command("md5sum " + archive_abs)
+        md5_calculated = stdout.readline().split()[0]
+        for f in [stdin, stdout, stderr]: f.close()
+
+        stdin, stdout, stderr = client.exec_command("file " + archive_abs)
+        archive_file_type = stdout.readline().split()[1].split()[0].lower()
+        for f in [stdin, stdout, stderr]: f.close()
+
+
+        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+        submission_dir = vmpaths.dir_submission_root(assignmentId, username)
+        md5_fpath = paths.submission_md5_file(submission_dir)
+
+        if os.path.isfile(md5_fpath):
+            with open(md5_fpath, 'r') as f:
+                md5_uploaded = f.read(32)
+    except:
+        strout = OutputString()
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorTrace' : strout.get()}, indent=4)
+    finally:
+        client.close()
+
+    if not md5_calculated == md5_uploaded:
+        return "md5" # report the type of the problem
+
+    if not archive_file_type == "zip":
+        return "zip" # report the type of the problem
+
+
+    return "ok" # no problemo
+
