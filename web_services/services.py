@@ -27,7 +27,7 @@ from mod_python import Session
 
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
-from vmchecker import submit, config, websutil, update_db, paths
+from vmchecker import submit, config, websutil, update_db, paths, submissions
 
 # .vmr files may be very large because of errors in the student's submission.
 MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
@@ -113,8 +113,8 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     if s.is_new():
         s.invalidate()
         return json.dumps({'errorType':ERR_AUTH,
-                'errorMessage':"",
-                'errorTrace':""})
+                           'errorMessage':"",
+                           'errorTrace':""})
 
     strout = websutil.OutputString()
     try:
@@ -123,8 +123,8 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})
+                           'errorMessage':"",
+                           'errorTrace':strout.get()})
 
     # Reset the timeout
     s.save()
@@ -141,16 +141,17 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
-    except submit.SubmitedTooSoonError as inst:
+    except submit.SubmitedTooSoonError:
+        traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
-            'errorMessage':"Tema trimisa prea curand",
-            'errorTrace':inst.args[0]})
+                           'errorMessage':"Tema trimisa prea curand",
+                           'errorTrace':strout.get()})
 
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})
+                           'errorMessage':"",
+                           'errorTrace':strout.get()})
 
     return json.dumps({'status':True,
                        'dumpLog':strout.get()})
@@ -381,7 +382,73 @@ def getAssignments(req, courseId):
         ass_arr.append(a)
     return json.dumps(ass_arr)
 
+######### @ServiceMethod
+def getUploadedMd5(req, courseId, assignmentId):
+    """ Returns the md5 file for the current user"""
 
+    # Check permission
+    req.content_type = 'text/html'
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    # Get username session variable
+    strout = websutil.OutputString()
+    try:
+        s.load()
+        username = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+    # Reset the timeout
+    s.save()
+    return getUserUploadedMd5(req, courseId, assignmentId, username)
+
+
+
+def getUserUploadedMd5(req, courseId, assignmentId, username):
+    """Get the current MD5 sum submitted for a given username on a given assignment"""
+    req.content_type = 'text/html'
+    strout = websutil.OutputString()
+    try:
+        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    submission_dir = vmpaths.dir_submission_root(assignmentId, username)
+    md5_fpath = paths.submission_md5_file(submission_dir)
+
+    strout = websutil.OutputString()
+
+    md5_result = {}
+    try:
+        if os.path.exists(paths.submission_config_file(submission_dir)) and os.path.isfile(md5_fpath):
+            sss = submissions.Submissions(vmpaths)
+            upload_time_str = sss.get_upload_time_str(assignmentId, username)
+            md5_result['fileExists'] = True
+
+            with open(md5_fpath, 'r') as f:
+                md5_result['md5Sum'] = f.read(32)
+
+            md5_result['uploadTime'] = upload_time_str
+        else:
+            md5_result['fileExists'] = False
+
+        return json.dumps(md5_result)
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
 
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
