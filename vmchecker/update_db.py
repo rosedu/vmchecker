@@ -102,7 +102,9 @@ def compute_grade(assignment, user, grade_filename, vmcfg):
             # only one word in the file!
             return lines[0].split()[0]
 
-    grade = 10
+    # Some courses don't grade on a 10 scale, so read the total number
+    # of points for this assignment
+    grade = float(vmcfg.assignments().get(assignment, 'TotalPoints'))
     grade += compute_TA_penalty(grade_filename)
     grade += compute_late_penalty(assignment, user, vmcfg)
 
