@@ -31,9 +31,12 @@ def compute_late_penalty(assignment, user, vmcfg):
 
     """
 
-    weights = [float(x) for x in vmcfg.get('vmchecker', 'PenaltyWeights').split()]
+    # The weights and limit are specific for each assignment
+    # because you can have different wieghts and limit per
+    # assignment
+    weights = [float(x) for x in vmcfg.assignments().get(assignment, 'PenaltyWeights').split()]
+    limit = int(vmcfg.assignments().get(assignment, 'PenaltyLimit'))
 
-    limit = int(vmcfg.get('vmchecker', 'PenaltyLimit'))
     sss = submissions.Submissions(VmcheckerPaths(vmcfg.root_path()))
     upload_time = sss.get_upload_time_struct(assignment, user)
 

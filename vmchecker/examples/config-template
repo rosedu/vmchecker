@@ -4,8 +4,6 @@ repository = $repo
 CourseName = Sisteme de operare
 
 
-PenaltyWeights = 0.25
-PenaltyLimit = 3
 
 Holidays = 1
 
@@ -101,6 +99,16 @@ VmwareRegUnreg = yes
 ############################
 
 [assignment DEFAULT]
+
+
+# PenaltyWeights = an array of floating point numbers that represent
+#                  the points substracted from the grade for each late
+#                  day. The last element in the list is repeated for
+#                  the remaining days.
+PenaltyWeights = 0.25
+
+# PenaltyLimit = the maximum number of points to substract form the grade.
+PenaltyLimit = 3
 
 # The number of points a student can receive on a normal homework
 TotalPoints=10
