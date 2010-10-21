@@ -315,15 +315,55 @@ def queue_for_testing(assignment, user, course_id):
     os.remove(bundle_path)
 
 
+
+def check_valid_time(course_id, assignment, user,
+                     upload_time_str, skip_toosoon_check):
+    """Check whether students are uploading/evaluating homework at a
+    propper time and that they aren't pushing the 'Submit' button too
+    fast hogging the server.
+
+
+    If skip_toosoon_check is True, it will not check whether there
+    hasn't passed enough time since the last submission/evaluation.
+    This is useful for `bin/` scripts used to force reevaluation of a
+    submission.
+    """
+
+    # check if upload is active at this time (restrict students from
+    # submitting homework to a given interval).
+
+    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
+    upload_time = time.strptime(upload_time_str, config.DATE_FORMAT)
+    (active_start, active_stop) = vmcfg.upload_active_interval()
+
+
+    if (upload_time < active_start) or (upload_time > active_stop):
+        msg = 'You can only submit homework between '
+        msg += time.strftime(config.DATE_FORMAT, active_start) + ' and '
+        msg += time.strftime(config.DATE_FORMAT, active_stop)  + '.'
+        raise SubmittedTooSoonError(msg)
+
+
+    if skip_toosoon_check:
+        return
+
+    # checks time difference between now and the last upload time
+    if submitted_too_soon(assignment, user, vmcfg):
+        min_time_between_subm = str(vmcfg.assignments().timedelta(assignment))
+        raise SubmittedTooSoonError('''You are submitting too fast.
+                                    Please allow %s between submissions''' %
+                                    min_time_between_subm)
+
+
 def submit(submission_filename, assignment, user, course_id,
-           skip_time_check=False, forced_upload_time=None):
+           skip_toosoon_check=False, forced_upload_time=None):
     """Main routine: save a new submission and queue it for testing.
 
     The submission is identified by submission_filename.
 
     Implicitly, if the user sent the submission to soon, it isn't
     queued for checking. This check can be skipped by setting
-    skip_time_check=True.
+    skip_toosoon_check=True.
 
     If forced_upload_time is not specified, the current system time is
     used.
@@ -333,30 +373,50 @@ def submit(submission_filename, assignment, user, course_id,
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
 
     if forced_upload_time != None:
-        skip_time_check = True
+        skip_toosoon_check = True
         upload_time_str = forced_upload_time
     else:
         upload_time_str = time.strftime(config.DATE_FORMAT)
 
-
-    # check if upload is active at this time (restrict students from
-    # submitting homework to a given interval).
-    upload_time = time.strptime(upload_time_str, config.DATE_FORMAT)
-    (active_start, active_stop) = vmcfg.upload_active_interval()
-    if (upload_time < active_start) or (upload_time > active_stop):
-        msg = 'You can only submit homework between '
-        msg += time.strftime(config.DATE_FORMAT, active_start) + ' and '
-        msg += time.strftime(config.DATE_FORMAT, active_stop)  + '.'
-        raise SubmittedTooSoonError(msg)
-
-
-    # checks time difference
-    if not skip_time_check and submitted_too_soon(assignment, user, vmcfg):
-        raise SubmittedTooSoonError('''You are submitting too fast.
-                                   Please allow %s between submissions''' %
-                                   str(vmcfg.assignments().timedelta(assignment)))
-
+    check_valid_time(course_id, assignment, user,
+                     upload_time_str, skip_toosoon_check)
     save_submission_in_storer(submission_filename, user, assignment,
                               course_id, upload_time_str)
+    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
+    if storage_type.lower() != "large":
+        queue_for_testing(assignment, user, course_id)
+
+
+def evaluate_large_submission(archive_fname, assignment, user, course_id):
+    """Queue for testing a large submission"""
+
+    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
+    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
+    if storage_type.lower() != "large":
+        raise Exception("Called evaluate_large_submission for a %s submission" %
+                        storage_type)
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    subm = submissions.Submissions(vmpaths)
+    cur_sb_root = vmpaths.dir_cur_submission_root(assignment, user)
+    results_dir = paths.dir_submission_results(cur_sb_root)
+
+    upload_time_str = time.strftime(config.DATE_FORMAT)
+
+    skip_toosoon_check = False
+    if subm.get_eval_queueing_time_str(assignment, user) == None:
+        # haven't been queued for testing before.
+        skip_toosoon_check = True
+
+    check_valid_time(course_id, assignment, user,
+                     upload_time_str, skip_toosoon_check)
+
+    if os.path.exists(results_dir):
+        shutil.rmtree(results_dir)
+
+    # Write the archive filename and the evaluation time to
+    # the submission config
+    subm.set_eval_parameters(assignment, user, archive_fname, upload_time_str)
+
     queue_for_testing(assignment, user, course_id)
 

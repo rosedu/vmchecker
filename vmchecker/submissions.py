@@ -125,7 +125,7 @@ class Submissions:
         return get_datetime_from_time_struct(time_struct)
 
 
-    def set_evaluation_parameters(self, assignment, user, archive, eval_time):
+    def set_eval_parameters(self, assignment, user, archive, eval_time):
         """Appends the archive filename to an existing
         submission-config (used for Large type assignments)"""
         config_file = self._get_submission_config_fname(assignment, user)

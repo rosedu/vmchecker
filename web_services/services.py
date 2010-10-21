@@ -196,7 +196,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
     sys.stdout = strout
 
     try:
-        submit.evaluateLargeSubmission(archiveFileName, assignmentId, username, courseId)
+        submit.evaluate_large_submission(archiveFileName, assignmentId, username, courseId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
