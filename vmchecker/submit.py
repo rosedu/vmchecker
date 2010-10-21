@@ -218,9 +218,14 @@ def create_testing_bundle(user, assignment, course_id):
     rel_file_list = [ ('run.sh',   vmcfg.get(machine, 'RunScript',   '')),
                       ('build.sh', vmcfg.get(machine, 'BuildScript', '')),
                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                      ('archive.zip', paths.submission_archive_file(sbroot)),
                       ('course-config', vmpaths.config_file()),
                       ('submission-config', paths.submission_config_file(sbroot)) ]
+
+    # Get the assignment submission type (zip archive vs. MD5 Sum).
+    # Large assignments do not have any archive.zip configured.
+    if asscfg.getd(assignment, "AssignmentStorage", "").lower() != "large":
+        rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)) ]
+
 
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list if src != '' ]
 
