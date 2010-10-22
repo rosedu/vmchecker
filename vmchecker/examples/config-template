@@ -181,7 +181,8 @@ Timeout = 120
 # AssignmentStorageHost = orion.cs.pub.ro # where to look for uploaded vms
 # AssignmentStorageBasepath = /home       # where on that machine to look
 # AssignmentStorageQueryUser = root       # which user to logon with.
-
+# UnpackArchive = [yes|y|true]            # whether the archive's contents
+                                          # should be expanded. Default: no
 
 
 [assignment 1-minishell-linux]

@@ -16,22 +16,24 @@ import paramiko
 import ConfigParser
 
 
+from vmchecker import ziputil
 from vmchecker.config import CourseConfig
 
 
 
-def bundle_submission_config_file(bundle_dir):
-    """Return the name of the submission config file from the unzipped
-    bundle directory"""
-    return os.path.join(bundle_dir, 'submission-config')
+def get_submission_config(bundle_dir):
+    """Return the content of the submission config from the bundle"""
+    submission_config = ConfigParser.RawConfigParser()
+    submission_config_file = os.path.join(bundle_dir, 'submission-config')
+    with open(submission_config_file) as handle:
+        submission_config.readfp(handle)
+    return submission_config
 
 
 def get_assignment_id(bundle_dir):
     """Reads the assignment identifier from the config file of the
     submission from bundle_dir"""
-    with open(bundle_submission_config_file(bundle_dir)) as handle:
-        config = ConfigParser.RawConfigParser()
-        config.readfp(handle)
+    config = get_submission_config(bundle_dir)
     assignment = config.get('Assignment', 'Assignment')
     return assignment
 
@@ -39,10 +41,10 @@ def get_assignment_id(bundle_dir):
 def get_external_archive_zip(bundle_dir, asscfg, assignment):
     """Bring an archive.zip from an external location"""
 
-    submission_config = ConfigParser.RawConfigParser()
-    with open(bundle_submission_config_file(bundle_dir)) as handle:
-        submission_config.readfp(handle)
+    if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
+        return
 
+    submission_config = get_submission_config(bundle_dir)
 
     ssh_port = asscfg.get(assignment, 'assignmentstorageport')
     ssh_host = asscfg.get(assignment, 'assignmentstoragehost')
@@ -66,10 +68,25 @@ def get_external_archive_zip(bundle_dir, asscfg, assignment):
             "/" + submission_config.get('Assignment', 'archivefilename')
 
         # download the file from the external machine as 'archive.zip'
-        sftp.get(external_path, bundle_dir + "/archive.zip")
+        sftp.get(external_path, os.path.join(bundle_dir, "archive.zip"))
     finally:
         transp.close()
 
+
+def expand_archive(bundle_dir, assignment, asscfg):
+    """If required by the assignment config, expand the archive"""
+
+    unpack = asscfg.getd(assignment, 'UnpackArchive', '').lower()
+    if not (unpack == 'yes' or unpack == 'y' or unpack == 'True'):
+        return
+
+    unpack_dir = os.path.join(bundle_dir, 'archive')
+    archive_file = os.path.join(bundle_dir, 'archive.zip')
+
+    if not os.path.exists(archive_file):
+        return
+
+    ziputil.unzip_safely(archive_file, unpack_dir)
 
 
 def main():
@@ -88,12 +105,9 @@ def main():
     vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
     asscfg  = vmcfg.assignments()
 
-    # ignore all non-MD5 submissions.
-    if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
-        return
-
     get_external_archive_zip(bundle_dir, asscfg, assignment)
 
+    expand_archive(bundle_dir, assignment, asscfg)
 
 
 if __name__ == "__main__":
