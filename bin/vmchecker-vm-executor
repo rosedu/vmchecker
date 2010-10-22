@@ -24,26 +24,11 @@ import ConfigParser
 from threading import Thread
 from subprocess import Popen
 
-from vmchecker import callback, ziputil
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
 
-def bundle_submission_config_file(bundle_dir):
-    """Return the name of the submission config file from the unzipped
-    bundle directory"""
-    return os.path.join(bundle_dir, 'submission-config')
-
-
-def upload_results_to_sender(bundle_dir):
-    """Runs callback script to upload results"""
-    allfiles = os.listdir(bundle_dir)
-    vmrfiles = []
-    for fname in allfiles:
-        if fname.endswith('.vmr'):
-            vmrfiles.append(os.path.join(bundle_dir, fname))
-    callback.run_callback(bundle_submission_config_file(bundle_dir), vmrfiles)
 
 
 
@@ -378,10 +363,11 @@ def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bun
 
 
 def get_submission_vmx_file(bundle_dir):
-    """Unzip archive.zip and locate the .vmx file, no matter in what
-       folders it is located."""
-    # XXX: Hardcoded archive.zip
-    ziputil.unzip_safely(os.path.join(bundle_dir, "archive.zip"), bundle_dir)
+    """Unzip search the bundle_dir and locate the .vmx file, no matter
+    in what sub-folders it is located in. If the unzipped archive has
+    multiple .vmx files, just pick the first.
+
+    """
     for (root, _, files) in os.walk(bundle_dir):
         for f in files:
             if f.endswith(".vmx"):
@@ -470,7 +456,8 @@ def _check_required_files(path):
 def get_assignment_id(bundle_dir):
     """Reads the assignment identifier from the config file of the
     submission from bundle_dir"""
-    with open(bundle_submission_config_file(bundle_dir)) as handle:
+    sb_config = os.path.join(bundle_dir, 'submission-config')
+    with open(sb_config) as handle:
         config = ConfigParser.RawConfigParser()
         config.readfp(handle)
     assignment = config.get('Assignment', 'Assignment')
@@ -501,7 +488,6 @@ def main():
     assignment = get_assignment_id(bundle_dir)
 
     test_submission(bundle_dir, vmcfg, assignment)
-    upload_results_to_sender(bundle_dir)
 
     # some vmware calls may block indefinetly.  if we don't exit
     # explicitly, we may never return (this is due to python waiting

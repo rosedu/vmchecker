@@ -27,11 +27,12 @@ import optparse
 import subprocess
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 
-from vmchecker import ziputil
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker.paths  import VmcheckerPaths
 from vmchecker import vmlogging
+from vmchecker import callback
+from vmchecker import ziputil
 
 
 # The maximum number of seconds each instance of vmchecker-vm-executor
@@ -41,6 +42,23 @@ VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME = 10 * 60 # 10 minutes!
 
 
 _logger = vmlogging.create_script_stdout_logger()
+
+
+def upload_results_to_sender(bundle_dir):
+    """Runs callback script to upload results"""
+    try:
+        allfiles = os.listdir(bundle_dir)
+        vmrfiles = []
+        for fname in allfiles:
+            if fname.endswith('.vmr'):
+                vmrfiles.append(os.path.join(bundle_dir, fname))
+        sb_config = os.path.join(bundle_dir, 'submission-config')
+        callback.run_callback(sb_config, vmrfiles)
+    except:
+        # XXX: don't know whether to allow exceptions to kill
+        # queue-manager or not. Silent exceptions will most certainly
+        # run unnoticed, QM crashes will surely be noticed by students
+        _logger.exception("--Queue-Manager: error while sending back results")
 
 
 class _InotifyHandler(ProcessEvent):
@@ -64,6 +82,16 @@ def log_vmchecker_stderr(location, string):
         print >> handler, string
 
 
+def launch_external_downloader(location):
+    """Launch a program to download any external files needed for
+    testing"""
+    try:
+        # download additional files into the bundle dir (location)
+        subprocess.call(['vmchecker-download-external-files', location])
+    except OSError:
+        _logger.exception('Cannot invoke vmchecker-download-external-files.')
+
+
 def launch_executor(location):
     """Launch the vmchecker-vm-executor process and kill it if it runs
     for too long"""
@@ -73,9 +101,6 @@ def launch_executor(location):
 
     # launch vmchecker-vm-executor
     try:
-        # download additional files into the bundle dir (location)
-        subprocess.call(['vmchecker-download-external-files', location])
-
         popen = subprocess.Popen(['vmchecker-vm-executor', location])
         with open(os.path.join(location, 'grade.vmr'), 'w') as handler:
             print >> handler, 'ok'
@@ -98,7 +123,8 @@ def launch_executor(location):
                         exit_code, ['error', 'success'] [ exit_code == 0 ]))
                 return
             # if process has not finished => continue to poll every 5s
-            _logger.debug('-- VMExecutor sleeping for 5s: x=%d', counter)
+            _logger.debug('-- QM sleep(5): total=%d max=%d', counter*5,
+                          VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME)
             time.sleep(5)
         else:
             log_vmchecker_stderr(location, '''VMExecutor successfuly
@@ -120,10 +146,15 @@ def process_job(path, name, vmpaths):
     """Unzip a bundle archive and call the commander."""
     location = tempfile.mkdtemp(prefix='vmchecker-',
                                 dir=vmpaths.dir_tester_unzip_tmp())
-    archive = os.path.join(path, name)
+    bundle_archive = os.path.join(path, name)
     try:
-        ziputil.unzip_safely(archive, location)
+        ziputil.unzip_safely(bundle_archive, location)
+        _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
+        launch_external_downloader(location)
+        _logger.info('-- QM: finished downloading external dependencies')
         launch_executor(location)
+        _logger.info('-- QM: finished testing - sending results')
+        upload_results_to_sender(location)
     except:
         _logger.exception('Failed to process "%s".' % location)
 
@@ -131,7 +162,7 @@ def process_job(path, name, vmpaths):
     shutil.rmtree(location)
 
     _logger.info('Removing job from the queue')
-    os.unlink(archive)
+    os.unlink(bundle_archive)
 
 
 def process_stale_jobs(dir_queue, vmpaths):
