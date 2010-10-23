@@ -415,22 +415,38 @@ def test_submission(bundle_dir, vmcfg, assignment):
         # XXX: TODO: start km_command!!!
         km_command = vmcfg.get(machine, 'KernelMessages', default='')
 
-        buildcfg = {
-            'input'  : ['archive.zip', 'tests.zip'],
-            'script' : ['build.sh'],
-            'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
-            'timeout': int(timeout),
-            }
-        if not copy_files_and_run_script(vm, bundle_dir, machinecfg, buildcfg):
-            return
+        if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
+            # normal submissions will run tests the old way:
+            # - upload test and user's submission archive and build them
+            # - run the tests.
+            buildcfg = {
+                'input'  : ['archive.zip', 'tests.zip'],
+                'script' : ['build.sh'],
+                'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
+                'timeout': int(timeout),
+                }
 
-        testcfg = {
-            'input'  : [],
-            'script' : ['run.sh'],
-            'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
-            'timeout': int(timeout)
-            }
-        copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+            if not copy_files_and_run_script(vm, bundle_dir, machinecfg, buildcfg):
+                return
+
+            testcfg = {
+                'input'  : [],
+                'script' : ['run.sh'],
+                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
+                'timeout': int(timeout)
+                }
+            copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+        else:
+            # large submissions don't send the archive to the virtual machine
+            # (the virtual machine is actually part of the unpacked archive)
+            testcfg = {
+                'input'  : ['tests.zip'],
+                'script' : ['run.sh'],
+                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
+                'timeout': int(timeout)
+                }
+            copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+
     finally:
         stop_host_commands(host_command_data)
         power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
