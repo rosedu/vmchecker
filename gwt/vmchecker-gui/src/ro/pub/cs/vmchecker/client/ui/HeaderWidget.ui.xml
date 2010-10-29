@@ -5,126 +5,126 @@
 		.headerPanel {
 			width: 100%;
 		}
-	
+
 		.header {
 			background-color: #EEEEEE;
-			height: 54px; 
+			height: 54px;
 			width: 100%;
-			margin-bottom: 40px; 
+			margin-bottom: 40px;
 		}
-	
+
 		.logo {
-			font-weight: bold; 
+			font-weight: bold;
 			color: green;
 			font-size: 18px;
 			margin: 10px;
 			line-height: 26px;
 		}
-		
+
 		.listWrapper {
 			margin-left: 10px;
 		}
-		
+
 		.list {
-			font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
+			font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
 			font-size: 16px;
 			line-height: 26px;
 		}
-		
+
 		.courseListIndication {
-			font-size: 11px; 
+			font-size: 11px;
 			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
 			color: #999999;
 			padding: 2px;
 		}
-		
+
 		.spacer {
-			width: 100%; 
+			width: 100%;
 		}
-		
+
 		.username {
 			font-weight: bold;
-			font-size: 14px; 
+			font-size: 14px;
 			padding-right: 10px;
-			line-height: 20px;  
+			line-height: 20px;
 		}
-		
+
 		.rightPanel{
 			margin: 17px 10px 0 0;
 			vertical-align: middle;
-			float: right;   
+			float: right;
 		}
-		
+
 		.leftPanel {
 			margin: 3px;
-			float: left;  
+			float: left;
 		}
-					
+
 		.last {
-			border-right: none; 
+			border-right: none;
 		}
-		
-		/* 
+
+		/*
 		a, a:visited, a:hover {
-			color: green; 
+			color: green;
 		}
-		
+
 		a:hover {
-			text-decoration: underline; 
+			text-decoration: underline;
 		}
 		*/
-		
+
 		.statusPanel {
 			top: 15px;
-			left: 50%;  
-			height: 16px; 
-			position: absolute; 
-			font-family: Verdana, Arial, sans serif; 
+			left: 50%;
+			height: 16px;
+			position: absolute;
+			font-family: Verdana, Arial, sans serif;
 			font-size: 12px;
-			padding: 5px 2px 5px 2px;  
+			padding: 5px 2px 5px 2px;
 		}
-		
+
 		.statusPanel a, .statusPanel a:hover, .statusPanel a:visited {
-			color: white; 
+			color: white;
 			text-decoration: underline;
 			font-size: 11px;
-			cursor: pointer;   
+			cursor: pointer;
 		}
-		
+
 		.statusLabel {
 			display: inline;
 			font-weight: bold;
 			padding: 2px;
-			margin-top: 3px;  
+			margin-top: 3px;
 		}
-		
+
 		.statusDetail {
-			padding-left: 5px; 
+			padding-left: 5px;
 		}
-		
+
 		.info {
 			background-color: #E2E2E2;
-			color: #000;   
+			color: #000;
 		}
-		
+
 		.error {
 			background-color: #9B0000;
-			color: #FFF;  
+			color: #FFF;
 		}
-		
+
 		.success {
 			background-color: #7CBB6C;
-			color: #FFF; 
+			color: #FFF;
 		}
-		
+
 		.action {
-			background-color: #FFCC66;  
+			background-color: #FFCC66;
 		}
-		
+
 		.clear {
-			clear: both; 
+			clear: both;
 		}
-		
+
 	</ui:style>
 	<g:HTMLPanel>
 		<g:FlowPanel styleName="{style.header}">
@@ -133,7 +133,7 @@
 				<div class="logo"></div>
 			</g:HTML>
 			<g:FlowPanel styleName="{style.listWrapper}">
-				<g:Label styleName="{style.courseListIndication}">alegeti cursul</g:Label>
+				<g:Label ui:field="courseSelection" styleName="{style.courseListIndication}">alegeti cursul</g:Label>
 				<g:ListBox ui:field="coursesList" visibleItemCount='1' styleName="{style.list}" />
 			</g:FlowPanel>
 			</g:HorizontalPanel>

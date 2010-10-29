@@ -3,14 +3,14 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
 		.container {
-			font-family: 'Courier New', monospace; 
+			font-family: 'Courier New', monospace;
 			font-size: 14px;
 			background-color: #FFF;
 			padding: 30px 10px 10px 10px;
-			overflow: hidden; 
+			overflow: scroll;
 		}
 	</ui:style>
 	<g:HTMLPanel>
 		<g:HTML styleName="{style.container}" ui:field="container"></g:HTML>
 	</g:HTMLPanel>
-</ui:UiBinder> 
+</ui:UiBinder>

@@ -2,106 +2,122 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
-	
+
 		.wrapper {
 			text-align: center;
 			padding-top: 7%;
-			  	
+
 		}
-		
+
 		.container {
-			margin: auto; 
+			margin: auto;
 		}
 
 		.description {
 			width: 600px;
-			padding: 10px;  
+			padding: 10px;
 		}
 
 		.formContainer {
 			padding: 10px;
 			border: 3px solid #EEEEEE;
-			margin-top: 70px;   
+			margin-top: 70px;
 		}
-	
+
 		.formTitle, .fieldLabel, .fieldComment {
 			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
 		}
-	
-		.formTitle {
-			font-size: 24px; 
-			padding: 3px; 
-			margin: 5px 5px 10px 5px; 
+
+		.localeContainer {
+			background-color: #EEEEEE;
+			height: 20px;
+			width: 100%;
+			padding: 5px 0px;
+			margin: auto;
 		}
-	
+
+		.formTitle {
+			font-size: 24px;
+			padding: 3px;
+			margin: 5px 5px 10px 5px;
+		}
+
 		.fieldLabel {
 			font-size: 13px;
-			color: #007F00; 
-			width: 100px; 
-			text-align: right; 
+			color: #007F00;
+			width: 100px;
+			text-align: right;
 			padding: 3px 15px 3px 3px;
 		}
-	
+
 		.inputField {
-			background-color: #E9EEF1; 
-			font-size: 13px; 
+			background-color: #E9EEF1;
+			font-size: 13px;
 			width: 150px;
-			border: 1px solid #CBCBCB;  
+			border: 1px solid #CBCBCB;
 		}
-		
+
 		.inputLine {
-			margin-top: 10px; 
+			margin-top: 10px;
 		}
-		
+
 		.fieldComment {
 			margin-left: 120px;
 			font-size: 12px;
-			width: 150px; 
+			width: 150px;
 		}
-		
+
 		.infoComment {
-			color: #999999; 
+			color: #999999;
 		}
-		
+
 		.errorComment {
-			color: #990000; 
+			color: #990000;
 		}
-	
+
 		.loginButton {
-			margin: 5px 0 5px 120px;  
+			margin: 5px 0 5px 120px;
 		}
-	
+
 	</ui:style>
-	<g:SimplePanel styleName="{style.wrapper}">
-		<g:HorizontalPanel styleName="{style.container}">
-			<g:HTML styleName="{style.description} loginDescription">
-				<img src="images/vmchecker_logo_large.png" /> 
-				<p><b>vmchecker</b> este o aplicație de testare automată a temelor. 
-				Este un produs open-source realizat de către și pentru studenții din Facultatea de Automatică și Calculatoare - UPB, și este menit atât să usureze munca asistenților de a corecta teme cât și sa ofere studenților o evaluare cât mai obiectivă. </p>
-				<h2>Vrei să contribui?</h2>
-				<p><b>vmchecker</b> este un proiect care a început in 2008 și a evoluat în urma contribuției fiecărei generații de studenți.
-				În mare parte este scris în <a href="http://www.python.org/">Python</a> și bash scripting, iar interfața este realizată folosind <a href="http://code.google.com/webtoolkit/">Google Web Toolkit</a>.
-				</p>
-				<p>  
-				Dacă vrei să afli mai multe detalii sau vrei să te implici, poți accesa <a href="http://github.com/vmchecker/vmchecker">repository-ul oficial de pe Github</a> sau te poți abona la <a href="http://lists.rosedu.org/listinfo/vmchecker-dev">lista de discuții</a> folosită de catre cei care îl dezvoltă în prezent. </p>
-				 
-			</g:HTML>
-			<g:FlowPanel styleName="{style.formContainer}">
-				<g:Label styleName="{style.formTitle}">Formular autentificare</g:Label>
-				<g:HorizontalPanel styleName="{style.inputLine}">
-					<g:Label styleName="{style.fieldLabel}">Utilizator</g:Label>
-					<g:TextBox ui:field="usernameField" styleName="{style.inputField}"></g:TextBox>					
-				</g:HorizontalPanel>
-				<g:Label ui:field="usernameComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
-				<g:HorizontalPanel styleName="{style.inputLine}">
-					<g:Label styleName="{style.fieldLabel}">Parola</g:Label>
-					<g:PasswordTextBox ui:field="passwordField" styleName="{style.inputField}"></g:PasswordTextBox>
-				</g:HorizontalPanel>
-				<g:Label ui:field="passwordComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
-				<g:Label ui:field="formComment" styleName="{style.fieldComment} {style.infoComment}">Folositi utilizatorul si parola de pe curs.cs</g:Label>
-				<g:Label ui:field="loginComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
-				<g:Button ui:field="loginButton" styleName="{style.loginButton}">Login</g:Button>
-			</g:FlowPanel>
-		</g:HorizontalPanel>
-	</g:SimplePanel>
-</ui:UiBinder> 
+	<g:FlowPanel>
+		<g:SimplePanel styleName="{style.localeContainer}">
+			<g:HorizontalPanel ui:field="localeContainer">
+				<g:Image ui:field="localeImage"></g:Image>
+				<g:ListBox ui:field="localeBox"></g:ListBox>
+			</g:HorizontalPanel>
+		</g:SimplePanel>
+		<g:SimplePanel styleName="{style.wrapper}">
+			<g:HorizontalPanel styleName="{style.container}">
+				<g:HTML ui:field="loginDescription" styleName="{style.description} loginDescription">
+					<img src="images/vmchecker_logo_large.png" />
+					<p><b>vmchecker</b> este o aplicație de testare automată a temelor.
+					Este un produs open-source realizat de către și pentru studenții din Facultatea de Automatică și Calculatoare - UPB, și este menit atât să usureze munca asistenților de a corecta teme cât și sa ofere studenților o evaluare cât mai obiectivă. </p>
+					<h2>Vrei să contribui?</h2>
+					<p><b>vmchecker</b> este un proiect care a început in 2008 și a evoluat în urma contribuției fiecărei generații de studenți.
+					În mare parte este scris în <a href="http://www.python.org/">Python</a> și bash scripting, iar interfața este realizată folosind <a href="http://code.google.com/webtoolkit/">Google Web Toolkit</a>.
+					</p>
+					<p>
+					Dacă vrei să afli mai multe detalii sau vrei să te implici, poți accesa <a href="http://github.com/vmchecker/vmchecker">repository-ul oficial de pe Github</a> sau te poți abona la <a href="http://lists.rosedu.org/listinfo/vmchecker-dev">lista de discuții</a> folosită de catre cei care îl dezvoltă în prezent. </p>
+
+				</g:HTML>
+				<g:FlowPanel styleName="{style.formContainer}">
+					<g:Label ui:field="formLabel" styleName="{style.formTitle}">Formular autentificare</g:Label>
+					<g:HorizontalPanel styleName="{style.inputLine}">
+						<g:Label ui:field="usernameLabel" styleName="{style.fieldLabel}">Utilizator</g:Label>
+						<g:TextBox ui:field="usernameField" styleName="{style.inputField}"></g:TextBox>
+					</g:HorizontalPanel>
+					<g:Label ui:field="usernameComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
+					<g:HorizontalPanel styleName="{style.inputLine}">
+						<g:Label ui:field="passwordLabel" styleName="{style.fieldLabel}">Parola</g:Label>
+						<g:PasswordTextBox ui:field="passwordField" styleName="{style.inputField}"></g:PasswordTextBox>
+					</g:HorizontalPanel>
+					<g:Label ui:field="passwordComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
+					<g:Label ui:field="formComment" styleName="{style.fieldComment} {style.infoComment}">Folositi utilizatorul si parola de pe curs.cs</g:Label>
+					<g:Label ui:field="loginComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
+					<g:Button ui:field="loginButton" styleName="{style.loginButton}">Login</g:Button>
+				</g:FlowPanel>
+			</g:HorizontalPanel>
+		</g:SimplePanel>
+	</g:FlowPanel>
+</ui:UiBinder>

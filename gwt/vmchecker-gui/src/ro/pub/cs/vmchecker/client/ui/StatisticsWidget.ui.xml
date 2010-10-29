@@ -6,61 +6,62 @@
 		padding: 10px 15px 10px 20px;
 		background-color: #EEEEEE;
 	}
-	
+
 	.title {
-		font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif; 
-		font-size: 18px; 
-		font-weight: bold; 
+		font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+		font-size: 18px;
+		font-weight: bold;
 		line-height: 24px;
-		text-align: center; 
-		width: 100%; 
-		padding-bottom: 20px;  
+		text-align: center;
+		width: 100%;
+		padding-bottom: 20px;
 	}
-	
+
 	.table {
 		border: 3px solid #CCC;
-		background-color: #FFFFFF;  
+		background-color: #FFFFFF;
 	}
-	
+
 	.header {
-		color: #000; 
+		color: #000;
 	}
-	
+
 	.header, .name {
-		font-weight: bold; 
-		font-size: 14px; 
+		font-weight: bold;
+		font-size: 14px;
 	}
-	
+
 	.name {
-		color: #333; 
+		color: #333;
 	}
-	
+
 	.cell {
 		border: 1px solid #FFF;
 	}
-	
-	.innercell {
+
+	.innercell, .innercell a, .innercell a:hover, .innercell a:visited {
+		text-decoration: none;
 		text-align: center;
-		cursor: pointer; 
-		font-weight: bold; 
-		color: green;   
+		cursor: pointer;
+		font-weight: bold;
+		color: green;
 	}
-	
+
 	.oddrow {
-		background: #EAEAEA; 
+		background: #EAEAEA;
 	}
-	
+
 	.evenrow {
-		background: #FAFAFA; 
+		background: #FAFAFA;
 	}
-	
+
 	.itself {
-		background: #EEF49B; 
+		background: #EEF49B;
 	}
-	
+
 	</ui:style>
 	<g:FlowPanel ui:field="panel" styleName="{style.panel}">
-		<g:Label styleName="{style.title}">Rezultate generale</g:Label>
+		<g:Label ui:field="title" styleName="{style.title}">Rezultate generale</g:Label>
 		<g:FlowPanel ui:field="tablePanel"></g:FlowPanel>
 	</g:FlowPanel>
-</ui:UiBinder> 
+</ui:UiBinder>

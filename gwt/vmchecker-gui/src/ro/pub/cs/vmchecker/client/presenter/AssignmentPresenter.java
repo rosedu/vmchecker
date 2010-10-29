@@ -1,5 +1,6 @@
 package ro.pub.cs.vmchecker.client.presenter;
 
+import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 import ro.pub.cs.vmchecker.client.event.AssignmentSelectedEvent;
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
@@ -21,97 +22,99 @@ import com.google.gwt.user.client.ui.Widget;
 public class AssignmentPresenter implements Presenter {
 
 	private HandlerManager eventBus;
-	private HTTPService service; 
-	private AssignmentWidget widget; 
-	
-	private Assignment[] assignments; 
-	private String courseId; 
-	private String username; 
-	
-	private MenuPresenter menuPresenter = null; 
-	private AssignmentBoardPresenter boardPresenter = null; 
-	private StatisticsPresenter statsPresenter = null; 
-	
+	private HTTPService service;
+	private AssignmentWidget widget;
+
+	private Assignment[] assignments;
+	private String courseId;
+	private String username;
+
+	private MenuPresenter menuPresenter = null;
+	private AssignmentBoardPresenter boardPresenter = null;
+	private StatisticsPresenter statsPresenter = null;
+	private static VmcheckerConstants constants = GWT
+			.create(VmcheckerConstants.class);
+
 	public interface AssignmentWidget {
 		HasWidgets getMenuPanel();
 		HasWidgets getBoardPanel();
 		HasClickHandlers getViewStatsButton();
 	}
-	
-	public AssignmentPresenter(HandlerManager eventBus, HTTPService service, String courseId, 
+
+	public AssignmentPresenter(HandlerManager eventBus, HTTPService service, String courseId,
 			String username, AssignmentWidget widget) {
 		this.eventBus = eventBus;
-		this.service = service; 
-		this.courseId = courseId;		
+		this.service = service;
+		this.courseId = courseId;
 		this.widget = widget;
-		this.username = username; 
+		this.username = username;
 	}
-	
+
 	private void bindWidget(final AssignmentWidget widget) {
-		listenViewStatsGesture(); 
+		listenViewStatsGesture();
 		menuPresenter.getWidget().addClickHandler(new ClickHandler() {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				widget.getBoardPanel().clear(); 
-				boardPresenter.go(widget.getBoardPanel()); 
-				int assignmentIndex = menuPresenter.getWidget().getSelectedIndex(); 
-				fireAssignmentSelected(assignmentIndex); 
+				widget.getBoardPanel().clear();
+				boardPresenter.go(widget.getBoardPanel());
+				int assignmentIndex = menuPresenter.getWidget().getSelectedIndex();
+				fireAssignmentSelected(assignmentIndex);
 			}
 		});
 	}
-	
+
 	private void listenViewStatsGesture() {
 		widget.getViewStatsButton().addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				menuPresenter.getWidget().setSelectedIndex(-1); 
+				menuPresenter.getWidget().setSelectedIndex(-1);
 				statsPresenter.go(widget.getBoardPanel());
-			}			
-		}); 
+			}
+		});
 	}
-	
+
 	private void fireAssignmentSelected(int assignmentIndex) {
-		eventBus.fireEvent(new AssignmentSelectedEvent(assignments[assignmentIndex].id, 
-				assignments[assignmentIndex])); 		
+		eventBus.fireEvent(new AssignmentSelectedEvent(assignments[assignmentIndex].id,
+				assignments[assignmentIndex]));
 	}
-	
+
 	@Override
 	public void go(final HasWidgets container) {
-		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, "Incarca teme...")); 
+		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, constants.loadHomeworks()));
 		service.getAssignments(courseId, new AsyncCallback<Assignment[]>(){
 
 			public void onFailure(Throwable caught) {
-				GWT.log("[AssignmentPresenter]", caught); 
-				eventBus.fireEvent(new ErrorDisplayEvent("[Service error]" + caught.toString(), caught.getMessage())); 
+				GWT.log("[AssignmentPresenter]", caught);
+				eventBus.fireEvent(new ErrorDisplayEvent("[Service error]" + caught.toString(), caught.getMessage()));
 			}
 
-			public void onSuccess(Assignment[] result) {				
+			public void onSuccess(Assignment[] result) {
 				/* extract titles */
-				assignments = result; 
-				String[] titles = new String[assignments.length]; 
+				assignments = result;
+				String[] titles = new String[assignments.length];
 				for (int i = 0; i < assignments.length; i++) {
-					titles[i] = assignments[i].title; 
+					titles[i] = assignments[i].title;
 				}
-				
-				menuPresenter = new MenuPresenter(eventBus, new NumberedMenu(titles)); 
+
+				menuPresenter = new MenuPresenter(eventBus, new NumberedMenu(titles));
 				boardPresenter = new AssignmentBoardPresenter(eventBus, service, courseId, new AssignmentBoardWidget());
 				statsPresenter = new StatisticsPresenter(eventBus, service, courseId, username, result, new StatisticsWidget());
-				
+
 				bindWidget(widget);
-				widget.getMenuPanel().clear(); 
-				menuPresenter.go(widget.getMenuPanel()); 
-				menuPresenter.getWidget().setSelectedIndex(-1); 
+				widget.getMenuPanel().clear();
+				menuPresenter.go(widget.getMenuPanel());
+				menuPresenter.getWidget().setSelectedIndex(-1);
 				/* init */
-				statsPresenter.go(widget.getBoardPanel()); 
-				//fireAssignmentSelected(0); 
-				/* boardPresenter.assignmentSelected(assignments[0]); */ 
+				statsPresenter.go(widget.getBoardPanel());
+				//fireAssignmentSelected(0);
+				/* boardPresenter.assignmentSelected(assignments[0]); */
 				container.add((Widget)widget);
-				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null)); 
+				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
 			}
-			
-		}); 
-		
+
+		});
+
 	}
 
 	@Override

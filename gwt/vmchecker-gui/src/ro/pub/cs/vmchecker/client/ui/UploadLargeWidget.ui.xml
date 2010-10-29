@@ -1,0 +1,127 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.form {
+			margin: 10px 0 10px 0;
+		}
+
+		.container {
+			background-color: #FFF;
+			padding: 20px 10px 10px 10px;
+		}
+
+		.formContainer {
+			padding: 10px;
+			border: 3px solid #EEEEEE;
+			margin-top: 20px;
+		}
+
+		.inputField {
+			background-color: #E9EEF1;
+			font-size: 13px;
+			width: 250px;
+			border: 1px solid #CBCBCB;
+		}
+
+		.formTitle {
+			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+			font-size: 18px;
+			padding: 3px;
+			margin: 5px 5px 10px 5px;
+		}
+
+		.fieldComment {
+			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+			padding: 0px 10px 10px 0px;
+			font-size: 12px;
+		}
+
+		.scrollPanel {
+			padding: 10px;
+			height: 100px;
+			width: 300px;
+			cursor: hand;
+			cursor: pointer;
+		}
+
+		.errorComment {
+			color: #990000;
+			font-weight: bold;
+		}
+
+		.okComment {
+			color: #007F00;
+			font-weight: bold;
+		}
+
+		.help {
+			color: #666666;
+		}
+		.gwt-Tree .gwt-TreeItem {
+			padding: 1px 0px;
+			margin: 0px;
+			white-space: nowrap;
+			cursor: hand;
+			cursor: pointer;
+		}
+
+	</ui:style>
+	<g:HTMLPanel styleName="{style.container}">
+		<g:HTML ui:field="uploadLargeHeader">
+		<p>
+			Prin acest formular se pot trimite rezolvari la aceasta tema.
+		</p>
+
+		</g:HTML>
+		<g:FormPanel ui:field="md5Form" styleName="{style.formContainer}">
+			<g:VerticalPanel>
+				<g:Label ui:field="md5Title" styleName="{style.formTitle}">Incarcare MD5</g:Label>
+				<g:HorizontalPanel>
+					<g:Label ui:field="md5SumOldDesc" styleName="{style.fieldComment} {style.help}">Suma MD5 existenta:</g:Label>
+					<g:Label ui:field="md5SumEmptyLabel" styleName="{style.fieldComment} {style.errorComment}">Nici un MD5 incarcat inca.</g:Label>
+					<g:Label ui:field="md5SumValueLabel" styleName="{style.fieldComment} {style.okComment}" visible="false"></g:Label>
+				</g:HorizontalPanel>
+				<g:HorizontalPanel>
+					<g:Label ui:field="md5SumTimeCommentLabel" styleName="{style.fieldComment} {style.help}" visible="false">Data incarcarii:</g:Label>
+					<g:Label ui:field="md5SumTimeLabel" styleName="{style.fieldComment} {style.help}" visible="false"></g:Label>
+				</g:HorizontalPanel>
+				<g:HorizontalPanel>
+					<g:Label ui:field="md5SumDesc" styleName="{style.fieldComment} {style.help}">Suma MD5 a arhivei:</g:Label>
+					<g:TextBox ui:field="md5SumInputField" name="md5Sum" styleName="{style.inputField}"></g:TextBox>
+				</g:HorizontalPanel>
+				<g:Label ui:field="md5SumInputCommentLabel" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
+				<g:Button ui:field="uploadMd5Button" enabled="true">Upload MD5</g:Button>
+				<g:Hidden ui:field="courseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="assignmentIdField" name="assignmentId"></g:Hidden>
+			</g:VerticalPanel>
+		</g:FormPanel>
+		<g:FormPanel ui:field="evaluationForm" styleName="{style.formContainer}">
+			<g:VerticalPanel>
+				<g:Label ui:field="archiveTitle" styleName="{style.formTitle}">Alegere arhiva</g:Label>
+				<g:Label ui:field="archiveDesc" styleName="{style.fieldComment} {style.help}">Alegeti fisierul arhiva:</g:Label>
+				<g:Label ui:field="fileListEmptyLabel" styleName="{style.fieldComment} {style.errorComment}" visible="false">Nu a fost gasit nici un fisier pe serverul de stocare.</g:Label>
+				<g:ScrollPanel styleName="{style.scrollPanel}">
+					<g:Tree ui:field="fileListTree"></g:Tree>
+				</g:ScrollPanel>
+				<g:Button ui:field="beginEvaluationButton" enabled="false">Evalueaza</g:Button>
+				<g:Hidden ui:field="evalCourseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="evalAssignmentIdField" name="assignmentId"></g:Hidden>
+				<g:Hidden ui:field="evalArchiveFileNameField" name="archiveFileName"></g:Hidden>
+			</g:VerticalPanel>
+		</g:FormPanel>
+		<g:HTML ui:field="uploadLargeFooter" styleName="{style.help}">
+		<p>
+		O rezolvare consta intr-o arhiva de tip <b>zip</b> care contine toate fisierele sursa alaturi de un	<b>Makefile</b>
+		ce va fi folosit pentru compilare. Trebuie respectate urmatoarele <u>reguli</u> generale:
+		</p>
+		<ul>
+			<li>Makefile-ul trebuie sa aiba obligatoriu regula pentru <b>build</b> si <b>clean</b></li>
+			<li>Fisierele sursa trebuie sa fie in radacina arhivei. Mai exact, nu faceti un director in care se afla toate sursele si arhivati directorul, ci selectati toate sursele si faceti arhiva din ele.</li>
+		</ul>
+		<p style="padding-top: 0; margin-top: 0;">
+				Este posibil ca unele teme sa aiba reguli si restrictii speciale pentru arhiva. Pentru aceste cazuri o sa fie specificat in enuntul temei.
+		</p>
+		</g:HTML>
+	</g:HTMLPanel>
+</ui:UiBinder>

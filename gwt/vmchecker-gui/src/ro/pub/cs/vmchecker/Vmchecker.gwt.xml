@@ -4,11 +4,12 @@
   <inherits name='com.google.gwt.user.User'/>
   <inherits name="com.google.gwt.http.HTTP" />
   <inherits name="com.google.gwt.json.JSON" />
+  <inherits name="com.google.gwt.i18n.I18N" />
   <!-- Inherit the default GWT style sheet.  You can change       -->
   <!-- the theme of your GWT application by uncommenting          -->
   <!-- any one of the following lines.                            -->
   <inherits name='com.google.gwt.user.theme.standard.Standard'/>
-  
+
   <!-- <inherits name='com.google.gwt.user.theme.chrome.Chrome'/> -->
   <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
 
@@ -16,6 +17,13 @@
 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='ro.pub.cs.vmchecker.client.Vmchecker'/>
+
+  <!-- Internationalization support. -->
+  <extend-property name="locale" values="en"/>
+  <extend-property name="locale" values="ro"/>
+  <!-- Uncomment next line when testing, it reduces the number of permutations -->
+  <!-- <set-property name="locale" value="ro"/> -->
+  <set-property-fallback name="locale" value="ro"/>
 
   <!-- Specify the paths for translatable code                    -->
   <source path='client'/>

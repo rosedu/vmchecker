@@ -70,6 +70,7 @@ h2 {
 	padding:10px;
 	background:none repeat scroll 0 0 white; 
 	overflow:scroll;
+	cursor: pointer;
 }
 
 .errorPopup a, .errorPopup a:hover, .errorPopup a:visited {
@@ -87,6 +88,7 @@ h2 {
 .resultsPopup a, .resultsPopup a:hover, .resultsPopup a:visited {
 	color: green; 
 	font-weight: bold; 
+	cursor: pointer;
 }
 
 a.fillButton, a.fillButton:visited {
@@ -106,12 +108,16 @@ a.fillButton:hover {
 }
 
 .popupContainer {	
-	overflow: scroll;
+	overflow: hidden;
 }
 
 .popupContentPanel {
 	margin-top: 10px;
 	padding-top: 10px;
 	border-top: 1px solid #CCCCCC;
+	overflow: scroll;
 }		
 
+.check_error {
+	color: red;
+}

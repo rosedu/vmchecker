@@ -6,19 +6,19 @@
 		.content {
 			width: 700px;
 		}
-		
+
 		.contentWrapper {
-			width: 100%; 
+			width: 100%;
 		}
-		
+
 		.contentPanel {
 		}
-		
+
 		.statsButton {
-			margin-left: 22px; 	
+			margin-left: 22px;
 		}
 	</ui:style>
-	<g:SimplePanel styleName="{style.contentWrapper}"> 
+	<g:SimplePanel styleName="{style.contentWrapper}">
 		<g:HorizontalPanel styleName="{style.contentPanel}">
 			<g:FlowPanel>
 				<g:Anchor ui:field="viewStatsButton" styleName="{style.statsButton} fillButton">rezultate generale</g:Anchor>
@@ -29,4 +29,4 @@
 			</g:SimplePanel>
 		</g:HorizontalPanel>
 	</g:SimplePanel>
-</ui:UiBinder> 
+</ui:UiBinder>

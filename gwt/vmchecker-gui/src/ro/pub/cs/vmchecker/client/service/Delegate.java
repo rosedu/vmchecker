@@ -6,6 +6,7 @@ import java.util.Iterator;
 import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.model.ErrorResponse;
+import ro.pub.cs.vmchecker.client.service.ServiceError;
 import ro.pub.cs.vmchecker.client.service.json.ErrorResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.JSONDecoder;
 
@@ -17,71 +18,51 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.http.client.URL; 
+import com.google.gwt.http.client.URL;
 
 public class Delegate<T> {
-	
+
 	public static final int requestTimeoutMillis = 10000; /* 10 seconds */
-	
-	private HandlerManager eventBus; 
-	private RequestBuilder rb; 
+
+	private HandlerManager eventBus;
+	private RequestBuilder rb;
 	private boolean isGet;
-	private String url; 
-	
+	private String url;
+
 	public Delegate(HandlerManager eventBus, String url, boolean isGet) {
 		this.eventBus = eventBus;
 		this.isGet = isGet;
-		this.url = url; 
-		if (isGet) {
-			rb = new RequestBuilder(RequestBuilder.GET, url);
-		} else {
+		this.url = url;
+		/**
+		 * We reconstruct the entire RequestBuilder for GET requests when
+		 * we call sendRequest(), so don't create a new instance for it
+		 * here.
+		 */
+		if (!isGet) {
 			rb = new RequestBuilder(RequestBuilder.POST, url);
+			rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
+			rb.setTimeoutMillis(requestTimeoutMillis);
 		}
-		rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
-		rb.setTimeoutMillis(requestTimeoutMillis);
-	}
-	
-	private String packParameters(HashMap<String, String> params) {
-		StringBuffer result = new StringBuffer();  
-		for (Iterator<String> it = params.keySet().iterator(); it.hasNext(); ) {
-			String key = it.next(); 
-			result.append(URL.encodeComponent(key, true) + "=" + URL.encodeComponent(params.get(key), true));
-			if (it.hasNext()) {
-				result.append('&'); 
-			}
-		}
-		return result.toString();  		
 	}
 
-	public void parseError(AsyncCallback<T> callback, String text) {
-		try {
-			ErrorResponseDecoder decoder = new ErrorResponseDecoder(); 
-			ErrorResponse serviceError = decoder.decode(text);
-			if (serviceError.isAuthError()) {
-				eventBus.fireEvent(new AuthenticationEvent(AuthenticationEvent.EventType.ERROR));  
-			} else {
-				eventBus.fireEvent(new ErrorDisplayEvent("[Service Error]" + serviceError.message, serviceError.trace)); 
+	private String packParameters(HashMap<String, String> params) {
+		StringBuffer result = new StringBuffer();
+		for (Iterator<String> it = params.keySet().iterator(); it.hasNext(); ) {
+			String key = it.next();
+			result.append(URL.encodeComponent(key, true) + "=" + URL.encodeComponent(params.get(key), true));
+			if (it.hasNext()) {
+				result.append('&');
 			}
-		} catch (Exception e) { 
-			GWT.log("[parseError()]", e);
-			/* unexpected format */
-			eventBus.fireEvent(new ErrorDisplayEvent("[Service Error] Unknown format in response", 
-					"<b>Service URL</b>: " + url + "<br/><b>Content</b>:<br/>" + text)); 
 		}
+		return result.toString();
 	}
-		
+
 	public void sendRequest(final AsyncCallback<T> callback, final JSONDecoder<T> decoder, HashMap<String, String> params) {
-		if (params != null) {
-			if (isGet) {
-				rb = new RequestBuilder(RequestBuilder.GET, url + "?" + packParameters(params)); 
-			} else {
-				rb.setRequestData(packParameters(params));
-			}
-		}
-		rb.setCallback(new RequestCallback() {
-			
+
+		RequestCallback rqc = new RequestCallback() {
+
 			public void onError(Request request, Throwable exception) {
-				callback.onFailure(exception); 
+				callback.onFailure(exception);
 			}
 
 			public void onResponseReceived(Request request, Response response) {
@@ -91,20 +72,37 @@ public class Delegate<T> {
 						callback.onSuccess(result);
 					} else {
 						GWT.log("Null result from Decoder: ", new NullPointerException());
-						parseError(callback, response.getText());
+						ServiceError se = new ServiceError(eventBus, url);
+						se.parseError(response.getText());
 					}
 				} catch (Exception e) {
-					GWT.log("Decoder did not parsed correctly", e);
-					parseError(callback, response.getText()); 
+					GWT.log("Decoder did not parse correctly", e);
+					ServiceError se = new ServiceError(eventBus, url);
+					se.parseError(response.getText());
 				}
-			}			
-		}); 
+			}
+		};
+
+		String packedParameters = null;
+		if(params != null) packedParameters = packParameters(params);
+
+		if (isGet) {
+			rb = new RequestBuilder(RequestBuilder.GET, url + "?" + packedParameters);
+			rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
+			rb.setTimeoutMillis(requestTimeoutMillis);
+		}
+
 		try {
-			rb.send(); 
-		} catch (RequestException e) {
-			callback.onFailure(e);  
+			/*
+			 * Changed from send() to sendRequest() because sendRequest() doesn't cache,
+			 * or at least so is said in the GWT documentation. Given the nature of the
+			 * different requests this seems more appropriate
+			 */
+			rb.sendRequest(packedParameters, rqc);
+		} catch(RequestException e) {
+			callback.onFailure(e);
 		}
 	}
-	
-	
+
+
 }

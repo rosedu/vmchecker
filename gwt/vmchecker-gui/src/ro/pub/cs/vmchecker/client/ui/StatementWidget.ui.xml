@@ -6,16 +6,16 @@
 			background-color: #FFF;
 			padding: 20px;
 		}
-		
+
 		.link {
-			font-weight: bold; 
+			font-weight: bold;
 			font-size: 14px;
 		}
 	</ui:style>
 	<g:HTMLPanel>
 		<g:FlowPanel styleName="{style.container}" ui:field="container">
-			<g:Label>Continutul enuntului il puteti gasi la urmatorul link:</g:Label>
+			<g:HTML ui:field="statementDescription">Continutul enuntului il puteti gasi la urmatorul link:</g:HTML>
 			<g:Anchor ui:field="statementAnchor" styleName="{style.link}">link enunt</g:Anchor>
 		</g:FlowPanel>
 	</g:HTMLPanel>
-</ui:UiBinder> 
+</ui:UiBinder>
