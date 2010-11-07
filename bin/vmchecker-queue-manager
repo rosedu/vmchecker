@@ -40,6 +40,8 @@ from vmchecker import ziputil
 # the process gets killed automatically by the queue manager
 VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME = 10 * 60 # 10 minutes!
 
+EXIT_SUCCESS = 0
+EXIT_FAIL = 1
 
 _logger = vmlogging.create_script_stdout_logger()
 
@@ -72,6 +74,8 @@ class _InotifyHandler(ProcessEvent):
         bundle has arrived). Imediatly start the new job.
 
         """
+        _logger.info('Processing job "%s" in queue dir "%s"' % (
+                event.name, event.path))
         process_job(event.path, event.name, self.vmpaths)
 
 
@@ -80,6 +84,14 @@ def log_vmchecker_stderr(location, string):
     vmchecker_stderr = os.path.join(location, 'vmchecker-stderr.vmr')
     with open(vmchecker_stderr, 'w') as handler:
         print >> handler, string
+
+def log_vmchecker_grade(location, exit_code):
+    """Writes 'ok' or 'error' to 'grade.vmr'.
+       If exit_code equals 0 then the result is 'ok', otherwise it is 'error'.
+    """
+    vmchecker_grade = os.path.join(location, 'grade.vmr')
+    with open(vmchecker_grade, 'w') as handler:
+        print >> handler, ['error', 'ok'] [ exit_code == 0 ]
 
 
 def launch_external_downloader(location):
@@ -102,10 +114,9 @@ def launch_executor(location):
     # launch vmchecker-vm-executor
     try:
         popen = subprocess.Popen(['vmchecker-vm-executor', location])
-        with open(os.path.join(location, 'grade.vmr'), 'w') as handler:
-            print >> handler, 'ok'
     except OSError:
         _logger.exception('Cannot invoke vmchecker-vm-executor.')
+        log_vmchecker_grade(location, EXIT_FAIL)
         log_vmchecker_stderr(location, 'Cannot run vmchecker-vm-executor.')
         log_vmchecker_stderr(location, 'Please contact the administrators.')
         # if we cannot open the process, there is nothing more that can be done
@@ -121,6 +132,7 @@ def launch_executor(location):
                 # the process has terminated. Write to log and return.
                 log_vmchecker_stderr(location, 'vmexecutor exitcode %d (%s)' % (
                         exit_code, ['error', 'success'] [ exit_code == 0 ]))
+                log_vmchecker_grade(location, exit_code)
                 return
             # if process has not finished => continue to poll every 5s
             _logger.debug('-- QM sleep(5): total=%d max=%d', counter*5,
@@ -131,6 +143,7 @@ def launch_executor(location):
                       started, but it's taking too long. Check your
                       sources, makefiles, etc and resubmit. If the
                       problem persists please contact administrators.''')
+            log_vmchecker_grade(location, EXIT_FAIL)
     except (IOError, OSError):
         _logger.exception('Exception while waiting for vmexecutor to end')
 
