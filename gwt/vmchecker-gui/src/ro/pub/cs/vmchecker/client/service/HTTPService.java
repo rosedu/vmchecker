@@ -124,7 +124,7 @@ public class HTTPService {
 	public void performAuthentication(String username, String password,
 			final AsyncCallback<AuthenticationResponse> callback) {
 		Delegate<AuthenticationResponse> delegate =
-			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false);
+			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, true);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
