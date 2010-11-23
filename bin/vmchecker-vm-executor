@@ -303,9 +303,9 @@ def power_on_with_message_handler(vm, vmwarecfg, vmx_path):
     # XXX: This is currently a bash script, it should be
     # integrated as a module
     proc = Popen(['vmchecker-vm-message-handler',
-                  vmwarecfg.vmware_server_hostname(),
-                  vmwarecfg.vmware_server_username(),
-                  vmwarecfg.vmware_server_password(),
+                  vmwarecfg.vmware_hostname(),
+                  vmwarecfg.vmware_username(),
+                  vmwarecfg.vmware_password(),
                   vmwarecfg.vmware_rel_vmx_path(vmx_path)])
     os.waitpid(proc.pid, 0)
     # By now all the messages have been handled.
