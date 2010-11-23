@@ -352,10 +352,20 @@ def getAssignments(req, courseId):
                 'errorMessage':"",
                 'errorTrace':""})
 		
+
+    # Get username session variable
+    strout = websutil.OutputString()
+    try:
+        s.load()
+        username = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
 
-    strout = websutil.OutputString()
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
@@ -376,7 +386,7 @@ def getAssignments(req, courseId):
         a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
         if a['assignmentStorage'].lower() == "large":
             a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
-            a['assignmentStorageBasepath'] = assignments.get(key, "AssignmentStorageBasepath")
+            a['assignmentStorageBasepath'] = assignments.storage_basepath(key, username)
         a['deadline'] = assignments.get(key, "Deadline")
         a['statementLink'] = assignments.get(key, "StatementLink")
         ass_arr.append(a)

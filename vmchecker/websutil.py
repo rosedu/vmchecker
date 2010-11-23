@@ -269,7 +269,7 @@ def get_storagedir_contents(courseId, assignmentId, username):
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.get(assignmentId, 'AssignmentStorageBasepath')
+        storage_basepath = assignments.storage_basepath(assignmentId, username)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -316,7 +316,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.get(assignmentId, 'AssignmentStorageBasepath')
+        storage_basepath = assignments.storage_basepath(assignmentId, username)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,

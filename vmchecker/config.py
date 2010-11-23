@@ -204,7 +204,22 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
             return None
         return int(tools_timeout)
 
-
+    def storage_basepath(self, assignment, username):
+        """When using an external storage server (for Large assignments).
+           the basepath can be particularized depending on its configuration.
+           Because of this there can be special expressions inserted in the path
+           to help overcome this. We use the format expression to handle this.
+           So far we only support username variations inserted.
+           
+           The syntax is that supported by format.
+           
+           Example:
+                /home/{username[0]}/files for username = john.doe
+                would translate to:
+                /home/j/files
+        """
+        basepath = self.get(assignment, 'AssignmentStorageBasepath')
+        return basepath.format(username=username)
 
 class TestersConfig(confdefaults.ConfigWithDefaults):
     """Obtain information about assignments from a config file.
