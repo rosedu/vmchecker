@@ -76,8 +76,8 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 	private String selectedArchiveFileName;
 	private HasWidgets container;
 
-	private static UploadNormalWidget uploadNormalWidget = new ro.pub.cs.vmchecker.client.ui.UploadNormalWidget();
-	private static UploadLargeWidget uploadLargeWidget = new ro.pub.cs.vmchecker.client.ui.UploadLargeWidget();
+	private UploadNormalWidget uploadNormalWidget = new ro.pub.cs.vmchecker.client.ui.UploadNormalWidget();
+	private UploadLargeWidget uploadLargeWidget = new ro.pub.cs.vmchecker.client.ui.UploadLargeWidget();
 
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);

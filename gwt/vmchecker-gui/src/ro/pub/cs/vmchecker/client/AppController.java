@@ -26,13 +26,14 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.HistoryListener;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 
-public class AppController implements ValueChangeHandler<String> {
+public class AppController implements HistoryListener {
 	
 	private HandlerManager eventBus;
 	private HTTPService service; 
@@ -79,10 +80,6 @@ public class AppController implements ValueChangeHandler<String> {
 		}); 
 	}
 	
-	private void selectCourse(String courseId) {
-		headerPresenter.selectCourse(courses.get(0).id);
-	}
-	
 	public void go(final HasWidgets container) {
 		this.container = container;
 		displayContent(); 
@@ -125,7 +122,7 @@ public class AppController implements ValueChangeHandler<String> {
 				headerPresenter.setCourses(courses); 
 				 
 				headerPresenter.go(container); 
-				selectCourse(courses.get(0).id); 
+				headerPresenter.selectCourse(courses.get(0).id);
 				/* add the content container */
 				container.add(content); 
 				/* initialize history entries */
@@ -148,8 +145,7 @@ public class AppController implements ValueChangeHandler<String> {
 	 * This method handles changes in application's state defined by a 
 	 * certain browser history entry 
 	 */
-	public void onValueChange(ValueChangeEvent<String> event) {
-		String token = event.getValue();
+	public void onHistoryChanged(String token) {
 		if (token != null) {			
 			if (!token.isEmpty() && coursesTags.contains(token)) {
 				if (mainPresenter != null) {
@@ -171,6 +167,6 @@ public class AppController implements ValueChangeHandler<String> {
 	}
 	
 	private void bindHistory() {
-		History.addValueChangeHandler(this); 
+		History.addHistoryListener(this);
 	}
 }
