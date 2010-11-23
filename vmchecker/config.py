@@ -219,7 +219,16 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
                 /home/j/files
         """
         basepath = self.get(assignment, 'AssignmentStorageBasepath')
-        return basepath.format(username=username)
+        try:
+            result = basepath.format(username = username)
+        except:
+            # This is crude, yes, I know, but not every one has python2.6
+            st_idx = basepath.find('{')
+            fin_idx = basepath.find('}')
+            token = basepath[st_idx + 1:fin_idx]
+            result = basepath[:st_idx] + eval(token) + basepath[fin_idx+1:]
+
+        return result
 
 class TestersConfig(confdefaults.ConfigWithDefaults):
     """Obtain information about assignments from a config file.
