@@ -82,7 +82,7 @@ class _InotifyHandler(ProcessEvent):
 def log_vmchecker_stderr(location, string):
     """Writes a message to 'vmchecker-stderr.vmr'"""
     vmchecker_stderr = os.path.join(location, 'vmchecker-stderr.vmr')
-    with open(vmchecker_stderr, 'w') as handler:
+    with open(vmchecker_stderr, 'a+') as handler:
         print >> handler, string
 
 def log_vmchecker_grade(location, exit_code):

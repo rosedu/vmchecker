@@ -178,7 +178,7 @@ def copy_files_and_run_script(vm, bundle_dir, machinecfg, test):
        * execute scripts
        * copy output files from guest
 
-       If at any errors occur, return False.
+       If any errors occur, return False.
        On success, return True.
 
        Parameters:
@@ -273,14 +273,14 @@ def wait_for_tools_with_timeout(vm, timeout, error_fname):
         return True
 
 
-    _logger.error('''Timeout waiting for VMWare Tools to start.
-                  Make sure your virtual machine boots up corectly
-                  and that you have VMWare Tools installed.''')
+    _logger.error('Timeout waiting for VMWare Tools to start.' +
+                  'Make sure your virtual machine boots up corectly' +
+                  'and that you have VMWare Tools installed.')
 
     with open(error_fname, 'a') as handler:
-        print >> handler, '''Timeout waiting for VMWare Tools to start.\n
-                  Make sure your virtual machine boots up corectly\n
-                  and that you have VMWare Tools installed.'''
+        print >> handler, 'Timeout waiting for VMWare Tools to start.\n' + \
+                  'Make sure your virtual machine boots up corectly\n' + \
+                  'and that you have VMWare Tools installed.\n'
     return False
 
 
@@ -351,11 +351,11 @@ def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bun
     try:
         vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
     except pyvix.vix.VIXSecurityException:
-        _logger.error('''Error logging in on the virtual machine.
-                      Make sure you have the accounts properly configured.''')
+        _logger.error('Error logging in on the virtual machine.' +
+                      'Make sure you have the accounts properly configured.')
         with open(error_fname, 'a') as handler:
-            print >> handler,'''Error logging in on the virtual machine.\n
-                    Make sure you have the user accounts properly configured.'''
+            print >> handler,'Error logging in on the virtual machine.\n' + \
+                    'Make sure you have the user accounts properly configured.\n'
             return False
 
     time.sleep(asscfg.delay_between_tools_and_tests(assignment))
@@ -386,6 +386,7 @@ def test_submission(bundle_dir, vmcfg, assignment):
     machine = asscfg.get(assignment, 'Machine')
     machinecfg = VmwareMachineConfig(vmcfg, machine)
     vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
+    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
 
 
     # try to get the machine's configuration, or the one uploaded by the student.
@@ -395,7 +396,10 @@ def test_submission(bundle_dir, vmcfg, assignment):
     if vmx_path == None:
         # no vmx, nothing to do.
         _logger.error('Could not find a vmx to run')
-        return
+        with open(error_fname, 'a') as handler:
+            print >> handler, 'Error powering on the virtual machine.\n' + \
+	    		'Unable to find .vmx file.\n'
+        sys.exit(1) 
 
 
     (host, vm) = connect_to_vm(vmwarecfg, vmx_path)
