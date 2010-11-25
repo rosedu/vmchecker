@@ -223,10 +223,12 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
             result = basepath.format(username = username)
         except:
             # This is crude, yes, I know, but not every one has python2.6
-            st_idx = basepath.find('{')
-            fin_idx = basepath.find('}')
-            token = basepath[st_idx + 1:fin_idx]
-            result = basepath[:st_idx] + eval(token) + basepath[fin_idx+1:]
+            while not basepath.find('{') == -1:
+                st_idx = basepath.find('{')
+                fin_idx = basepath.find('}')
+                token = basepath[st_idx + 1:fin_idx]
+                basepath = basepath[:st_idx] + eval(token) + basepath[fin_idx+1:]
+            result = basepath
 
         return result
 
