@@ -282,7 +282,7 @@ def ssh_bundle(bundle_path, vmcfg, assignment):
 
 
 
-def submitted_too_soon(assignment, user, vmcfg):
+def submitted_too_soon(assignment, user, vmcfg, check_eval_queueing_time):
     """Check if the user submitted this assignment very soon after
     another submission.
 
@@ -293,12 +293,16 @@ def submitted_too_soon(assignment, user, vmcfg):
     subm = submissions.Submissions(vmpaths)
     if not subm.submission_exists(assignment, user):
         return False
-    upload_time = subm.get_upload_time(assignment, user)
 
-    if upload_time is None:
+    if check_eval_queueing_time:
+        check_time = subm.get_eval_queueing_time(assignment, user)
+    else:
+        check_time = subm.get_upload_time(assignment, user)
+
+    if check_time is None:
         return False
 
-    remaining = upload_time
+    remaining = check_time
     remaining += vmcfg.assignments().timedelta(assignment)
     remaining -= datetime.datetime.now()
 
@@ -317,7 +321,7 @@ def queue_for_testing(assignment, user, course_id):
 
 
 def check_valid_time(course_id, assignment, user,
-                     upload_time_str, skip_toosoon_check):
+                     upload_time_str, skip_toosoon_check, check_eval_queueing_time):
     """Check whether students are uploading/evaluating homework at a
     propper time and that they aren't pushing the 'Submit' button too
     fast hogging the server.
@@ -348,7 +352,7 @@ def check_valid_time(course_id, assignment, user,
         return
 
     # checks time difference between now and the last upload time
-    if submitted_too_soon(assignment, user, vmcfg):
+    if submitted_too_soon(assignment, user, vmcfg, check_eval_queueing_time):
         min_time_between_subm = str(vmcfg.assignments().timedelta(assignment))
         raise SubmittedTooSoonError('''You are submitting too fast.
                                     Please allow %s between submissions''' %
@@ -379,7 +383,7 @@ def submit(submission_filename, assignment, user, course_id,
         upload_time_str = time.strftime(config.DATE_FORMAT)
 
     check_valid_time(course_id, assignment, user,
-                     upload_time_str, skip_toosoon_check)
+                     upload_time_str, skip_toosoon_check, False)
     save_submission_in_storer(submission_filename, user, assignment,
                               course_id, upload_time_str)
     storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
@@ -409,7 +413,7 @@ def evaluate_large_submission(archive_fname, assignment, user, course_id):
         skip_toosoon_check = True
 
     check_valid_time(course_id, assignment, user,
-                     upload_time_str, skip_toosoon_check)
+                     upload_time_str, skip_toosoon_check, True)
 
     if os.path.exists(results_dir):
         shutil.rmtree(results_dir)
