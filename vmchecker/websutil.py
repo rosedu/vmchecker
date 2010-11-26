@@ -294,6 +294,8 @@ def get_storagedir_contents(courseId, assignmentId, username):
     finally:
         client.close()
 
+def QuoteForPOSIX(string):
+    return "\\'".join("'" + p + "'" for p in string.split("'"))
 
 def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
     """Checks whether a MD5Submission is valid:
@@ -324,15 +326,16 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
                        key_filename=vmcfg.storer_sshid(),
                        look_for_keys=False)
 
-        archive_abs = storage_basepath + '/' + username + '/' + archiveFileName
+        archive_abs = os.path.join(storage_basepath, username, archiveFileName)
+
         # XXX: This will take ages to compute! I wonder how many
         # connections will Apache hold.
-        stdin, stdout, stderr = client.exec_command("md5sum " + archive_abs)
+        stdin, stdout, stderr = client.exec_command("md5sum " + QuoteForPOSIX(archive_abs))
         md5_calculated = stdout.readline().split()[0]
         for f in [stdin, stdout, stderr]: f.close()
 
-        stdin, stdout, stderr = client.exec_command("file " + archive_abs)
-        archive_file_type = stdout.readline().split()[1].split()[0].lower()
+        stdin, stdout, stderr = client.exec_command("file " + QuoteForPOSIX(archive_abs))
+        archive_file_type = stdout.readline()[len(archive_abs):].split()[1].lower()
         for f in [stdin, stdout, stderr]: f.close()
 
 
