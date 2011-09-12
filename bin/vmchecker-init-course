@@ -25,8 +25,8 @@ def _install_example_config_file(root_path, repo_path, config_path):
 
     Initalize some config file variables to point to the location of:
         root = the root of a course's data -- the current directory
-        repo = a subdir in the current directory where the git repo
-               will be stored
+        repo = a subdir in the current directory where the submission
+               repo will be stored
     """
 
     # get the data from the package-provided example config template.
@@ -72,21 +72,11 @@ def create_paths(path_list):
 
 
 
-def create_storer_git_repo(abs_repo_path):
+def create_storer_repo(abs_repo_path):
     """Creates the repo for the assignments on the storer."""
     # first make teh destination directory
     _mkdir_if_not_exist(abs_repo_path)
 
-    # then, if missing, initialize a git repo in it.
-    repo_path_git = os.path.join(abs_repo_path, '.git')
-    if not(os.path.isdir(repo_path_git)):
-        # no git repo found in the dir.
-        try:
-            env = os.environ
-            env['GIT_DIR'] = repo_path_git
-            check_call(['git', 'init'], env=env)
-        except CalledProcessError:
-            logging.error('cannot create git repo in %s' % repo_path_git)
 
 
 def create_db(db_file):
@@ -140,7 +130,6 @@ def set_default_acls():
     all files created:
     * directly by vmchecker
     * indirectly by any other library used by vmchecker (e.g. zipfile)
-    * indirectly by other binaries called by vmchecker (e.g. by git).
 
     Also umask must be setup correctly at every point of entry in the
     vmchecker code (in every script invoked by the user or by the
@@ -179,7 +168,7 @@ def main_storer(root_path):
     set_default_acls()
     vmpaths = paths.VmcheckerPaths(root_path)
     create_paths(vmpaths.storer_paths())
-    create_storer_git_repo(vmpaths.abspath(vmpaths.dir_repository()))
+    create_storer_repo(vmpaths.abspath(vmpaths.dir_repository()))
     create_db(vmpaths.db_file())
     create_auth_file(vmpaths.auth_file())
     create_build_run_scritps(root_path)
