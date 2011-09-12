@@ -506,7 +506,8 @@ def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'
     try:
-        update_db.update_grades(courseId)
+        # XXX: DON'T DO THIS: performance degrades very much!
+        #update_db.update_grades(courseId)
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
         db_conn = sqlite3.connect(vmpaths.db_file())
