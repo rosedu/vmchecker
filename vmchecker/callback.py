@@ -198,6 +198,16 @@ def get_deadline(conf_vars):
 
 
 
+def call_remote_program(t, cmdline):
+    """Runs the program specified by cmdline on the remote host
+    identified by Transport t"""
+    try:
+        c = t.open_session()
+        c.exec_command(cmdline)
+        _logger.debug('STORER CALL program [' + cmdline + ']')
+    except SSHException:
+        _logger.exception('error while running remote cmd [' + cmdline + ']')
+
 
 def send_results_and_notify(files, conf_vars):
     """Opens a connection, transfers files, and
@@ -213,6 +223,10 @@ def send_results_and_notify(files, conf_vars):
             sftp = paramiko.SFTPClient.from_transport(t)
             sftp_mkdir_if_not_exits(sftp, conf_vars['resultsdest'])
             sftp_transfer_files(sftp, files, conf_vars)
+
+        cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
+            ' --user=' + conf_vars['user'] + ' --assignment=' + conf_vars['assignment']
+        call_remote_program(t, cmdline)
     except:
         _logger.exception('error while transferring files with paramiko')
     finally:
