@@ -182,8 +182,8 @@ def save_submission_in_storer(submission_filename, user, assignment,
         submission_backup(new_sb, submission_filename, sbcfg)
 
         # commit in git only part of the files (not the 'archive.zip')
-        git_dest = paths.dir_submission_git(new_sb)
-        submission_git_commit(git_dest, user, assignment)
+        #git_dest = paths.dir_submission_git(new_sb)
+        #submission_git_commit(git_dest, user, assignment)
 
         # create a new symlink, or make the old one point to the
         # current new submission. The symlink is not stored in git.
