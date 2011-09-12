@@ -130,17 +130,27 @@ def db_save_grade(assignment, user, submission_root,
     user_id = course_db.get_user_id(user)
     db_mtime = course_db.get_grade_mtime(assignment_id, user_id)
 
-    # if results are not in yet, bail out
-    if not os.path.exists(grade_filename):
-        return
 
-    mtime = os.path.getmtime(grade_filename)
+    if os.path.exists(grade_filename):
+        # we have the evaluation results for this homework
+        mtime = os.path.getmtime(grade_filename)
+        grade = compute_grade(assignment, user, grade_filename, vmcfg)
+    elif os.path.exists(submission_root):
+        # we don't have evaluation results, but the homework exists.
+        # it must be in the tester's queue waiting to be evaluated.
+        ignore_timestamp = True
+        grade = 'not-tested'
+        mtime = 0
+    else:
+        # not evaluated and not even submitted. The student did not
+        # send anything for this homework, so we don't fill this entry
+        # in the grade table.
+        return
 
     # only update grades for newer submissions than those already checked
     # or when forced to do so
     if db_mtime != mtime or ignore_timestamp:
         _logger.debug('Updating %s, %s (%s)', assignment, user, grade_filename)
-        grade = compute_grade(assignment, user, grade_filename, vmcfg)
         course_db.save_grade(assignment_id, user_id, grade, mtime)
         _logger.info('Updated %s, %s (%s) -- grade=%s', assignment, user, grade_filename, str(grade))
     else:
