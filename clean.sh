@@ -23,6 +23,7 @@ rm -rf /usr/lib/python2.5/site-packages/vmchecker/*
 rm -rf /usr/local/lib/python2.5/vmchecker/*
 rm -rf /usr/lib/python2.5/vmchecker/*
 
+#DON'T OVERWRITE /etc FILES
 #rm -rf /etc/vmchecker/
-rm -f /etc/init.d/vmchecker
+#rm -f /etc/init.d/vmchecker
 
