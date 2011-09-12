@@ -87,6 +87,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
+        update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -141,6 +142,7 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
+        update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
