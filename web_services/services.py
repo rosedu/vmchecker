@@ -574,7 +574,7 @@ def login(req, username, password):
         return json.dumps({'status':False, 'username':"", 
             'info':'Invalid username/password'})
 
-    s["username"] = username
+    s["username"] = username.lower()
     s.save()
     return json.dumps({'status':True, 'username':user,
             'info':'Succesfully logged in'})
