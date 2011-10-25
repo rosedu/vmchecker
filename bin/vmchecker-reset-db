@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Initialises the directory path for one course"""
+
+from __future__ import with_statement
+
+import os
+import sys
+import logging
+
+from vmchecker.config import AclConfig
+from vmchecker import paths, coursedb
+
+
+_logger = logging.getLogger("vmchecker.reset_db")
+
+def reset_db(db_file):
+    """Create the implicit db if it does not exist."""
+    # check for DB existance
+    if os.path.isfile(db_file):
+        _logger.info('Deleting existing Sqlite3 DB file %s' % db_file)
+        os.remove(db_file)
+
+    # need to create a file without messing with the group persmission
+    # bits to not upset POSIX ACL masks
+    file = open(db_file, 'w')
+    file.write('')
+    file.close()
+    coursedb.create_db_tables(db_file)
+
+
+def main():
+    root_path = os.getcwd()
+    vmpaths = paths.VmcheckerPaths(root_path)
+    reset_db(vmpaths.db_file())
+
+
+if __name__ == '__main__':
+    main()
+
