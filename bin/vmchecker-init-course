@@ -160,6 +160,11 @@ def set_default_acls():
         check_call(['setfacl',       '-m', def_acl, '.'])
     print 'Make sure the ssh key identified in the config file is readable by www-data'
     print 'Either create the keys somewhere readable by www-data or use setfacl'
+    print 'Example (may be incomplete):'
+    print '         setfacl -d -m user:www-data:rx .ssh/'
+    print '         setfacl    -m user:www-data:rx .ssh/'
+    print '         setfacl    -m user:www-data:r  .ssh/known_hosts'
+    print '         setfacl    -m user:www-data:r  .ssh/id_rsa-vmchecker'
 
 
 
