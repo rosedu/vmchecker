@@ -6,7 +6,12 @@ from __future__ import with_statement
 
 import os
 import socket
-import paramiko
+
+import warnings
+with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        import paramiko # ignore deprecation warnings
+
 import sys
 import ConfigParser
 

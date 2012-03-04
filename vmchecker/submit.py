@@ -18,7 +18,12 @@ import time
 import socket
 import random
 import datetime
-import paramiko
+
+import warnings
+with warnings.catch_warnings():
+	warnings.simplefilter("ignore")
+	import paramiko # ignore deprecation warnings
+
 from contextlib import closing
 
 from . import config

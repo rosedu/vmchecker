@@ -7,8 +7,12 @@ from __future__ import with_statement
 import os
 import ldap
 import time
-import paramiko
 import traceback
+
+import warnings
+with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        import paramiko # ignore deprecation warnings
 
 from vmchecker import paths, update_db, penalty, submissions
 from vmchecker.courselist import CourseList
