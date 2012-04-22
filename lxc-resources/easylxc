@@ -35,7 +35,7 @@ VIRTUSER="student"
  
 # A list of local users that will have ssh access to the container
 # They need to have a public key in the local machine
-LOCALUSERS="icecold"
+LOCALUSERS="icecold root"
  
 # The puppet master. This must be the hostname of the master (not an IP addr).
 # No puppet if this is empty.
@@ -234,6 +234,9 @@ _KOKO
 # Install ssh
 run apt-get update
 run apt-get -y install openssh-server
+run apt-get -y install unzip
+run apt-get -y install make
+run apt-get -y install build-essential
 run /etc/init.d/ssh stop
 
 run apt-get -y install sudo
