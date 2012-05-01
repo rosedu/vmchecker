@@ -1,0 +1,41 @@
+### HOW TO INSTALL LXC-tester
+
+# get dependancies
+sudo sh vmchecker/lxc-resources/deps.sh
+
+# setup interfaces 
+sudo cp vmchecker/lxc-resources/interfaces /etc/network/interfaces
+# or add it manually
+
+# add the following to /etc/hosts
+10.3.1.1    deb0 deb0.virt deb0.virt.local
+10.3.1.11    deb1 deb1.virt deb1.virt.local
+10.3.1.12    deb2 deb2.virt deb2.virt.local
+10.3.1.13    deb3 deb3.virt deb3.virt.local
+10.3.1.14    deb4 deb4.virt deb4.virt.local
+
+# create lxc container
+sudo sh vmchecker/lxc-resources/easylxc deb1
+
+# make backup of rootfs
+sudo mkdir /lxc
+sudo cp -pr /var/lib/lxc/deb1/rootfs /lxc
+
+#
+# If you need web conectivity inside the lxc container:
+#
+sudo vmchecker/lxc-resources/host_iptables.sh
+
+
+
+
+
+
+
+
+
+
+
+###
+### REFERENCES: http://www.v13.gr/blog/?p=192
+###
