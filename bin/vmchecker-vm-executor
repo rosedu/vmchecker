@@ -499,7 +499,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) != 2:
-        _logger.error('Usage: %s bundle_dir_location' % sys.argv[1])
+        _logger.error('Usage: %s bundle_dir_location' % sys.argv[0])
         sys.exit(1)
 
     bundle_dir = sys.argv[1]

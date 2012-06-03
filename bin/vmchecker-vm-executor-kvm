@@ -13,21 +13,26 @@ try:
 except ImportError:
     import json
 
+
 import os
 import sys
 import time
 import logging
 import signal
 import ConfigParser
-import shlex
 from threading import Thread
+from subprocess import Popen
+import serial
 from subprocess import Popen, PIPE, STDOUT
-
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
 
+class KVM():
+	def __init__(self):
+		pass
+	
 
 def connect_to_vm(vmwarecfg, vmx_path):
     """Connect to the VmWare virtual machine specified by the
@@ -35,15 +40,9 @@ def connect_to_vm(vmwarecfg, vmx_path):
 
     Returns a pair: (a handle for the connection to the host, a
     virtual machine handle)"""
-    # TODO: why the error?
-    ''' 
-    user = vmwarecfg.vmware_username()
-    pswd = vmwarecfg.vmware_password()
-    typs = vmwarecfg.vmware_type()
-    url = vmwarecfg.vmware_url()
-    path = vmwarecfg.vmware_rel_vmx_path(vmx_path)
-    '''
-    return (None, None)
+    host = None
+    vm = KVM()
+    return (host, vm)
 
 
 def revertToSnapshot(vm, snapNr):
@@ -51,14 +50,11 @@ def revertToSnapshot(vm, snapNr):
 
     Note: snapshots are counted from 0.
     """
-    # cp -pr /lxc/rootfs /var/lib/lxc/deb1
-    # TODO replace deb1 with vm name
-    hostRun("lxc-stop -n deb1")
-    hostRun("rm -rf /var/lib/lxc/deb1/rootfs")
-    hostRun("cp -pr /lxc/rootfs /var/lib/lxc/deb1")
-    hostRun("lxc-start -n deb1 -d")
-    pass
-
+    hostRun("rm /var/lib/kvm/run.qcow2")
+    hostRun("cp /var/lib/kvm/image.qcow2 /var/lib/kvm/run.qcow2")
+    # hostRun("qemu-img create -f qcow2 -b /var/lib/kvm/saisp-vm.qcow2 /var/lib/kvm/image.qcow2")
+    # sudo virt-install --connect qemu:///system --name kvm2 --hvm --ram 512 --disk path=/var/lib/kvm/run.qcow2,format=qcow2 --network network=default --import --graphics none
+    
 
 def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files):
     """Copy files from the host to the guest.
@@ -79,6 +75,8 @@ def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files
 
     files     - list of files (relative to host_dir) to copy to the vm.
     """
+    
+    IP = getIP("kvm2")
 
     for f in files:
         host_path = os.path.join(host_dir, f)
@@ -93,16 +91,20 @@ def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files
             else:
                 _logger.info('copy file %s from host to guest at %s' %
                              (host_path, guest_path))
-                # cp host_path ROOT+guest_path
-                hostRun("cp "+host_path+" /var/lib/lxc/deb1/rootfs"+guest_path) # LXC
-                pass
+                #vm.copyFileFromHostToGuest(host_path, guest_path)
+                
+                hostRun("scp -r "+host_path+" "+"root@"+IP+":"+guest_path)
         else:
             _logger.info('copy file %s from guest to host at %s' %
                          (guest_path, host_path))
-            # cp ROOT+guest_path host_path 
-            hostRun("cp /var/lib/lxc/deb1/rootfs"+guest_path+" "+host_path) # LXC
+            #vm.copyFileFromGuestToHost(guest_path, host_path)
+            hostRun("scp -r root@"+IP+":"+guest_path+" "+host_path)
+            # TODO
             if not os.path.exists(host_path):
                 _logger.error('host file (received) "%s" does not exist' % host_path)
+
+
+
 
 def copyFilesFromGuestToHost(vm, host_dir, guest_dir, files):
     """see copyFilesBetweenHostAndGuest"""
@@ -116,7 +118,7 @@ def copyFilesFromHostToGuest(vm, host_dir, guest_dir, files):
 
 def makeExecutableAndRun(vm, guest_shell, executable_file, timeout):
     """Make a guest file executables and execute it.
-    
+
     Copying a file to the vm will not necesarily make it executable
     (on UNIX systems). Therefore we must first make it executable
     (chmod) and then run it. This will be done on Windows systems also
@@ -131,10 +133,7 @@ def makeExecutableAndRun(vm, guest_shell, executable_file, timeout):
 
     The executable_file path must the path in the shell for that file.
     """
-    # args = ' --login -c ' + '"chmod +x ' + executable_file + '; ' + executable_file + '"'
-    # TODO: execute ssh root@deb1 chmod +x executable_file
-    guestRun("chmod +x "+executable_file)
-    args = executable_file
+    args = '"chmod +x ' + executable_file + '; ' + executable_file + '"'
     return runWithTimeout(vm, guest_shell, args, timeout)
 
 
@@ -149,7 +148,8 @@ def runWithTimeout(vm, prog, args, timeout):
     try:
         _logger.info('executing on the remote: prog=%s args=[%s] timeout=%d' %
                      (prog, args, timeout))
-        thd = Thread(target = guestRun, args = (args,))
+        IP = getIP("kvm2")
+        thd = Thread(target = guestRun, args = (IP,args))
         thd.start()
         thd.join(timeout)
         return thd.isAlive()
@@ -185,13 +185,15 @@ def copy_files_and_run_script(vm, bundle_dir, machinecfg, test):
             # XXX this assumes the guest shell uses UNIX path
             # separator '/'. This is fine as for the moment, as it's
             # used in bash (native/cygwin).
-            script_in_guest_shell = dest_in_guest_shell + '/' + script # TODO - this might not work in lxc
+            script_in_guest_shell = dest_in_guest_shell + '/' + script
             timedout = makeExecutableAndRun(vm, shell, script_in_guest_shell, test['timeout'])
             copyFilesFromGuestToHost(vm, bundle_dir, guest_dest_dir, test['output'])
             if timedout:
                 return False
     finally:
         return True
+
+
 
 
 def start_host_commands(jobs_path, host_command):
@@ -223,6 +225,16 @@ def stop_host_commands(host_command_data):
     _logger.info("%%% -- stopped host commands")
 
 
+
+def waitConnected(ser):
+	while True:
+		o = ser.read(1000)
+		print "waitX"
+		print "** "+o
+		if "login:" in o:
+			return True
+	return False
+
 def _wait_for_tools(vm):
     """Called by the thread that waits for the VMWare Tools to
        start. If the Tools do not start, there is no direct way of
@@ -230,18 +242,14 @@ def _wait_for_tools(vm):
        would throw a VIXException on account of the VM not being
        powered on.
     """
-    try:
-        #vm.waitForToolsInGuest()
-        # TODO : check if lxc-machine has started
-        while True:
-            o = hostRun("lxc-info -n deb1")
-            if not o.contains("-1"):
-                return
-        pass
-    except:
-        pass
-
-
+    tty = getTTYconsole("kvm2")
+    ser = serial.Serial(tty, 115200, timeout=1)
+    print "wait1"
+    ser.write("\x04")
+    print "wait2"
+    waitConnected(ser)
+    print "wait3"
+    	
 def wait_for_tools_with_timeout(vm, timeout, error_fname):
     """Wait for VMWare Tools to start.
 
@@ -249,8 +257,7 @@ def wait_for_tools_with_timeout(vm, timeout, error_fname):
     start properly in the given timeout. Writes error messages to
     `error_fname`.
     """
-    # TODO
-    # not needed
+
     if timeout != None:
         timeout = int(timeout)
         _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
@@ -275,62 +282,49 @@ def wait_for_tools_with_timeout(vm, timeout, error_fname):
                   'and that you have VMWare Tools installed.\n'
     return False
 
-def powerOn():
-    hostRun("lxc-start -n deb1 -d")
-    while True:
-        o = hostRun("lxc-info -n deb1")
-        if not o.contains("-1"):
-            return
+
+def power_on_kvm():
+	o = hostRun("virsh start kvm2")
+	print o
+	if "started" in o:
+		print "Exit"
+		sys.exit()
 
 def power_on_with_message_handler(vm, vmwarecfg, vmx_path):
     """Powers on virtual machine and answers any input
        messages that might appear. """
     # vm.powerOn()
-    # TODO
-    power_thd = Thread(target = powerOn)
+    power_thd = Thread(target = power_on_kvm)
     power_thd.start()
+    print "stuff"
     power_thd.join(5)
+    print "stuff2"
 
     if not power_thd.isAlive():
         # vm.powerOn() didn't hang: the machine has been powered on
         return
     else:
-        print "LXC - wasn't powered on"
+    	print "KVM Not powered on"
+
 
     # we might have an unanswered message waiting.
     # Start the message handler until the machine powers on.
 
     # XXX: This is currently a bash script, it should be
     # integrated as a module
-    proc = Popen(['vmchecker-vm-message-handler',
-                  vmwarecfg.vmware_hostname(),
-                  vmwarecfg.vmware_username(),
-                  vmwarecfg.vmware_password(),
-                  vmwarecfg.vmware_rel_vmx_path(vmx_path)])
-    os.waitpid(proc.pid, 0)
-    # By now all the messages have been handled.
-    # Wait for the VM to power on
-    power_thd.join()
+    print "here"
+    #power_thd.join()
 
 
 
 def power_off_and_unregister(vm, host, vmwarecfg, vmx_path):
     """ Power off the virtual machine and, if necessary, unregister it. """
     try:
-        #vm.powerOff()
-        hostRun("lxc-stop -n deb1")
+        hostRun("virsh destroy kvm2")
     except Exception:
         _logger.exception('IGNORED EXCEPTION')
         pass
-    if vmwarecfg.vmware_register_and_unregister():
-        try:
-            # host.unregisterVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
-            pass
-        except:
-            _logger.exception('IGNORED EXCEPTION')
-            pass
             
-
 
 def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
     """Power on the virtual machine taking care of possbile messages
@@ -343,24 +337,15 @@ def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bun
 
     if asscfg.revert_to_snapshot(assignment):
         # revert to the last snapshot
-        revertToSnapshot(vm, None)
-
+        revertToSnapshot(None,None)
+	print "try1"
     power_on_with_message_handler(vm, vmwarecfg, vmx_path)
+    print "try2"
     if not wait_for_tools_with_timeout(vm, tools_timeout, error_fname):
         # no tools, nothing to do.
+        print "try3"
         return False
-
-    try:
-        pass #vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
-    except Exception:
-        _logger.error('Error logging in on the virtual machine.' +
-                      'Make sure you have the accounts properly configured.')
-        with open(error_fname, 'a') as handler:
-            print >> handler,'Error logging in on the virtual machine.\n' + \
-                    'Make sure you have the user accounts properly configured.\n'
-            return False
-
-    time.sleep(asscfg.delay_between_tools_and_tests(assignment))
+	print "try4"
     return True
 
 
@@ -403,10 +388,13 @@ def test_submission(bundle_dir, vmcfg, assignment):
 	    		'Unable to find .vmx file.\n'
         sys.exit(1) 
 
-
+	print "1"
     (host, vm) = connect_to_vm(vmwarecfg, vmx_path)
+    print "2"
+    
     success = try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment,
                                         asscfg, bundle_dir, vmx_path)
+    print "3"
     if not success:
         _logger.error('Could not power on or login on the VM')
         power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
@@ -486,6 +474,63 @@ def get_assignment_id(bundle_dir):
     return assignment
 
 
+OUTPUTLEN = 10000
+
+def guestRun(IP,cmd):
+    """ runs the command inside the lxc container """
+    p = Popen(["ssh "+IP+" "+cmd], stdout=PIPE,shell=True)
+    output = p.stdout.read()
+    #print "--- RUN GUEST --\n"+cmd
+    #print "--- GUEST: --\n"+output+"\n---\n"
+    return output
+
+def nativeGuestRun(tty, user, password, cmd):
+	try:
+		ser = serial.Serial(tty, 115200, timeout=1 )
+	except:
+		print tty + " serial not open"
+		print "You might need to be ROOT"
+		sys.exit(0)
+	ser.read(OUTPUTLEN)
+	ser.write(user+"\n")
+	ser.read(OUTPUTLEN)
+	ser.write(password+"\n")
+	ser.read(OUTPUTLEN)
+	ser.write(cmd+"\n") # send command
+	o = ser.read(OUTPUTLEN) # get command output
+	ser.write("\x04")   # send logout command
+	ser.read(OUTPUTLEN)
+	return o            # return output
+
+def hostRun(cmd):
+    """ runs the command on the host """
+    p = Popen([cmd],stdout=PIPE,shell=True)
+    output = p.stdout.read()
+    #print "--- RUN HOST --\n"+cmd
+    #print "--- HOST: --\n"+output+"\n---\n"
+    return output
+
+def getIPfromIfconfig(string):
+	s = string[string.find("inet addr:")+10:]
+	s = s[0:s.find(" ")]
+	return s
+
+def waitConnected(ser):
+	while True:
+		o = ser.read(1000)
+		if "login:" in o:
+			return True
+	return False
+
+def getTTYconsole(kvm_name):
+	o = hostRun("virsh ttyconsole "+kvm_name)
+	return o.strip()
+
+def getIP(kvm_name):
+	tty = getTTYconsole("kvm2")
+	o = nativeGuestRun(tty,"root","student","ifconfig eth0")
+	return getIPfromIfconfig(o)
+
 def main():
     """Main entry point when run as a script.
 
@@ -501,7 +546,6 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) != 2:
-        print len(sys.argv)
         _logger.error('Usage: %s bundle_dir_location' % sys.argv[0])
         sys.exit(1)
 
@@ -517,22 +561,6 @@ def main():
     # for all threads to exit, but some threads may be stuck in a
     # blocking vmware vix call.
     sys.exit(0)
-
-def guestRun(cmd):
-    """ runs the command inside the lxc container """
-    p = Popen(["ssh root@deb1 "+cmd], stdout=PIPE,shell=True)
-    output = p.stdout.read()
-    print "--- RUN GUEST --\n"+cmd
-    print "--- GUEST: --\n"+output+"\n---\n"
-    return output
-
-def hostRun(cmd):
-    """ runs the command on the host """
-    p = Popen([cmd],stdout=PIPE,shell=True)
-    output = p.stdout.read()
-    print "--- RUN HOST --\n"+cmd
-    print "--- HOST: --\n"+output+"\n---\n"
-    return output
 
 if __name__ == "__main__":
     main()
