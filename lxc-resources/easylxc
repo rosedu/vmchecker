@@ -35,7 +35,8 @@ VIRTUSER="student"
  
 # A list of local users that will have ssh access to the container
 # They need to have a public key in the local machine
-LOCALUSERS="icecold root"
+LOCALUSERS="icecold root" 
+# TODO specify the exact host user for testing the homework
  
 # The puppet master. This must be the hostname of the master (not an IP addr).
 # No puppet if this is empty.
