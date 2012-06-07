@@ -438,3 +438,9 @@ class VmwareMachineConfig(object):
     def guest_run_script(self):
         """The name of the script used to run the homework and tests"""
         return self.config.get(self.machine_id, 'RunScript')
+        
+    def get_type(self):
+        """The option can be vmware, lxc or kvm.
+           Default is vmware """
+        vmtype = self.config.get(self.machine_id, 'Type', default='vmware')
+        return vmtype
