@@ -22,15 +22,11 @@ import logging
 import signal
 import ConfigParser
 from threading import Thread
-from subprocess import Popen
+from subprocess import Popen, PIPE, STDOUT
 
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
-
-
-
-
 
 
 def connect_to_vm(vmwarecfg, vmx_path):
@@ -506,7 +502,6 @@ def main():
     _check_required_files(bundle_dir)
     vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
     assignment = get_assignment_id(bundle_dir)
-
     test_submission(bundle_dir, vmcfg, assignment)
 
     # some vmware calls may block indefinetly.  if we don't exit

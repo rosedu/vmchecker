@@ -279,7 +279,7 @@ def powerOn():
     hostRun("lxc-start -n deb1 -d")
     while True:
         o = hostRun("lxc-info -n deb1")
-        if not o.contains("-1"):
+        if not "-1" in o:
             return
 
 def power_on_with_message_handler(vm, vmwarecfg, vmx_path):

@@ -506,8 +506,6 @@ def hostRun(cmd):
     """ runs the command on the host """
     p = Popen([cmd],stdout=PIPE,shell=True)
     output = p.stdout.read()
-    #print "--- RUN HOST --\n"+cmd
-    #print "--- HOST: --\n"+output+"\n---\n"
     return output
 
 def getIPfromIfconfig(string):

@@ -44,6 +44,32 @@ class Host():
         vm = VM(self, machinecfg)
         return None
 	
+    def start_host_commands(self, jobs_path, host_command):
+        """Run a command on the tester (host) machine"""
+        _logger.info('%%% -- starting host commands [' + host_command + ']')
+
+        if len(host_command) == 0:
+            return None
+
+        outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
+        try:
+            proc = Popen(host_command, stdout=outf, shell=True)
+        except:
+            _logger.exception('HOSTPROC: opening process: ' + host_command)
+        return (proc, outf)
+        
+    def stop_host_commands(self, host_command_data):
+        """Stop previously run host commands"""
+        if host_command_data == None:
+            return
+
+        (proc, outf) = host_command_data
+        try:
+            os.kill(proc.pid, signal.SIGTERM)
+            outf.close()
+        except:
+            _logger.exception('HOSTPROC: while stopping host cmds')
+        _logger.info("%%% -- stopped host commands")
 		    
 class VM():
     host 	= None
@@ -52,12 +78,12 @@ class VM():
     username	= None
     password	= None
     IP	= None
-    
+    cfg = None
     def __init__(self, host, machinecfg):
 	    self.host = host
 	    self.username = machinecfg.guest_user()
 	    self.password = machinecfg.guest_pass()
-	    
+	    self.cfg = machinecfg
 	    # TODO check if path exists
 
     def executeCommand(self, cmd):
@@ -107,6 +133,37 @@ class VM():
             _logger.exception('error in copy_files_and_run_script')
         finally:
             return True
+            
+    def powerOn(self):
+        """ see power_on_with_message_handler """
+        power_thd = Thread(target = vm.start)
+        power_thd.start()
+        power_thd.join(5)
+
+        if not power_thd.isAlive():
+            # vm.powerOn() didn't hang: the machine has been powered on
+            return
+        else:
+            _logger.error("Could not power on")
+            print "LXC - wasn't powered on"
+
+        power_thd.join()
+        
+    def try_power_on_vm_and_login(self, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
+        """Power on the virtual machine taking care of possbile messages
+           and handle the case in which the virtual machine doesn't have
+           VMWare Tools installed or the username and password given are
+           wrong."""
+
+        error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+        tools_timeout = asscfg.delay_wait_for_tools(assignment)
+
+        if asscfg.revert_to_snapshot(assignment):
+            self.revert()
+
+        self.start()    
+        time.sleep(asscfg.delay_between_tools_and_tests(assignment))
+        return True
 
 
 class LXCVM(VM):
@@ -179,185 +236,12 @@ class LXCVM(VM):
             thd.join()
         else:
             thd.join(timeout)
-        return thd.isAlive() 
+        return thd.isAlive()
         
 class LXCHost(Host):
     def getVM(self, machinecfg):
         return LXCVM(self, machinecfg)
 
-def copy_files_and_run_script(vm, bundle_dir, machinecfg, test):
-    return vm.runTest(bundle_dir, machinecfg, test)
-    
-def start_host_commands(jobs_path, host_command):
-    """Run a command on the tester (host) machine"""
-    _logger.info('%%% -- starting host commands [' + host_command + ']')
-
-    if len(host_command) == 0:
-        return None
-
-    outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
-    try:
-        proc = Popen(host_command, stdout=outf, shell=True)
-    except:
-        _logger.exception('HOSTPROC: opening process: ' + host_command)
-    return (proc, outf)
-
-
-def stop_host_commands(host_command_data):
-    """Stop previously run host commands"""
-    if host_command_data == None:
-        return
-
-    (proc, outf) = host_command_data
-    try:
-        os.kill(proc.pid, signal.SIGTERM)
-        outf.close()
-    except:
-        _logger.exception('HOSTPROC: while stopping host cmds')
-    _logger.info("%%% -- stopped host commands")
-
-
-def _wait_for_tools(vm):
-    """Called by the thread that waits for the VMWare Tools to
-       start. If the Tools do not start, there is no direct way of
-       ending the Thread.  As a result, on powerOff(), the Thread
-       would throw a VIXException on account of the VM not being
-       powered on.
-    """
-    try:
-        #vm.waitForToolsInGuest()
-        # TODO : check if lxc-machine has started
-        while True:
-            o = hostRun("lxc-info -n deb1")
-            if not "-1" in o:
-                return
-        pass
-    except:
-        pass
-
-
-def wait_for_tools_with_timeout(vm, timeout, error_fname):
-    """Wait for VMWare Tools to start.
-
-    Returns True on success and False when the VMWare tools did not
-    start properly in the given timeout. Writes error messages to
-    `error_fname`.
-    """
-    # TODO
-    # not needed
-    if timeout != None:
-        timeout = int(timeout)
-        _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
-
-    tools_thd = Thread(target = _wait_for_tools, args=(vm,))
-    tools_thd.start()
-    # normally the thread will end before the timeout expires, so a high timeout
-    tools_thd.join(timeout)
-
-
-    if not tools_thd.isAlive():
-        return True
-
-
-    _logger.error('Timeout waiting for VMWare Tools to start.' +
-                  'Make sure your virtual machine boots up corectly' +
-                  'and that you have VMWare Tools installed.')
-
-    with open(error_fname, 'a') as handler:
-        print >> handler, 'Timeout waiting for VMWare Tools to start.\n' + \
-                  'Make sure your virtual machine boots up corectly\n' + \
-                  'and that you have VMWare Tools installed.\n'
-    return False
-
-def powerOn():
-    hostRun("lxc-start -n deb1 -d")
-    while True:
-        o = hostRun("lxc-info -n deb1")
-        if not "-1" in o:
-            return
-
-def power_on_with_message_handler(vm, vmwarecfg, vmx_path):
-    """Powers on virtual machine and answers any input
-       messages that might appear. """
-    # vm.powerOn()
-    # TODO
-    power_thd = Thread(target = powerOn)
-    power_thd.start()
-    power_thd.join(5)
-
-    if not power_thd.isAlive():
-        # vm.powerOn() didn't hang: the machine has been powered on
-        return
-    else:
-        print "LXC - wasn't powered on"
-
-    # we might have an unanswered message waiting.
-    # Start the message handler until the machine powers on.
-
-    # XXX: This is currently a bash script, it should be
-    # integrated as a module
-    proc = Popen(['vmchecker-vm-message-handler',
-                  vmwarecfg.vmware_hostname(),
-                  vmwarecfg.vmware_username(),
-                  vmwarecfg.vmware_password(),
-                  vmwarecfg.vmware_rel_vmx_path(vmx_path)])
-    os.waitpid(proc.pid, 0)
-    # By now all the messages have been handled.
-    # Wait for the VM to power on
-    power_thd.join()
-
-
-
-def power_off_and_unregister(vm, host, vmwarecfg, vmx_path):
-    """ Power off the virtual machine and, if necessary, unregister it. """
-    try:
-        #vm.powerOff()
-        hostRun("lxc-stop -n deb1")
-    except Exception:
-        _logger.exception('IGNORED EXCEPTION')
-        pass
-    if vmwarecfg.vmware_register_and_unregister():
-        try:
-            # host.unregisterVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
-            pass
-        except:
-            _logger.exception('IGNORED EXCEPTION')
-            pass
-            
-
-
-def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
-    """Power on the virtual machine taking care of possbile messages
-       and handle the case in which the virtual machine doesn't have
-       VMWare Tools installed or the username and password given are
-       wrong."""
-
-    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
-    tools_timeout = asscfg.delay_wait_for_tools(assignment)
-
-    if asscfg.revert_to_snapshot(assignment):
-        # revert to the last snapshot
-        #revertToSnapshot(vm, None)
-        vm.revert()
-
-    power_on_with_message_handler(vm, vmwarecfg, vmx_path)
-    if not wait_for_tools_with_timeout(vm, tools_timeout, error_fname):
-        # no tools, nothing to do.
-        return False
-
-    try:
-        #hostRun("lxc-start -n deb1 -d")
-        pass #vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
-    except Exception:
-        _logger.error('Error logging in on the virtual machine.' +
-                      'Make sure you have the accounts properly configured.')
-        with open(error_fname, 'a') as handler:
-            print >> handler,'Error logging in on the virtual machine.\n' + \
-                    'Make sure you have the user accounts properly configured.\n'
-            return False
-
-    time.sleep(asscfg.delay_between_tools_and_tests(assignment))
-    return True
 
 
 def get_submission_vmx_file(bundle_dir):
@@ -411,17 +295,17 @@ def test_submission(bundle_dir, vmcfg, assignment):
 
     host = h
     vm = g
-    success = try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment,
+    success = vm.try_power_on_vm_and_login(vmwarecfg, machinecfg, assignment,
                                         asscfg, bundle_dir, vmx_path)
     if not success:
         _logger.error('Could not power on or login on the VM')
-        power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
+        vm.stop()
         sys.exit(1)
 
 
     # start host commands
     host_command = vmcfg.get(machine, 'HostCommand', default='')
-    host_command_data = start_host_commands(bundle_dir, host_command)
+    host_command_data = host.start_host_commands(bundle_dir, host_command)
 
     try:
         # XXX: TODO: start km_command!!!
@@ -438,7 +322,7 @@ def test_submission(bundle_dir, vmcfg, assignment):
                 'timeout': int(timeout),
                 }
             print 'here'
-            if not copy_files_and_run_script(vm, bundle_dir, machinecfg, buildcfg):
+            if not vm.runTest(bundle_dir, machinecfg, buildcfg):
                 return
         
             testcfg = {
@@ -448,7 +332,8 @@ def test_submission(bundle_dir, vmcfg, assignment):
                 'timeout': int(timeout)
                 }
             print 'here2'
-            copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+            #copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+            vm.runTest(bundle_dir, machinecfg, testcfg)
         else:
             # large submissions don't send the archive to the virtual machine
             # (the virtual machine is actually part of the unpacked archive)
@@ -458,12 +343,14 @@ def test_submission(bundle_dir, vmcfg, assignment):
                 'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
                 'timeout': int(timeout)
                 }
-            copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+            #copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+            vm.runTest(bundle_dir, machinecfg, testcfg)
     except Exception:
         _logger.exception('FUCK! Exception!RUUUUUUUN!!!')
     finally:
-        stop_host_commands(host_command_data)
-        power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
+        host.stop_host_commands(host_command_data)
+        #power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
+        vm.stop()
 
 
 def _check_required_files(path):
@@ -526,21 +413,6 @@ def main():
     # blocking vmware vix call.
     sys.exit(0)
 
-def guestRun(cmd):
-    """ runs the command inside the lxc container """
-    p = Popen(["ssh root@deb1 "+cmd], stdout=PIPE,shell=True)
-    output = p.stdout.read()
-    print "--- RUN GUEST --\n"+cmd
-    print "--- GUEST: --\n"+output+"\n---\n"
-    return output
-
-def hostRun(cmd):
-    """ runs the command on the host """
-    p = Popen([cmd],stdout=PIPE,shell=True)
-    output = p.stdout.read()
-    print "--- RUN HOST --\n"+cmd
-    print "--- HOST: --\n"+output+"\n---\n"
-    return output
 
 if __name__ == "__main__":
     main()
