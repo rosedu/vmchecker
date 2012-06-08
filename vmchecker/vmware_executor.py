@@ -29,491 +29,240 @@ from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 _logger = logging.getLogger('vm_executor')
 
 
+class VmWareHost(Host):
+    def getVM(self, bundle_dir, vmcfg, assignment):
+        return VmWareVM(self, bundle_dir, vmcfg, assignment)
+
+class VmWareVM(VM):
+    vmhost = None
+    vminstance = None
+            
+    def initialize(self):
+        try:
+            # try defaults
+            self.vmhost = pyvix.vix.Host()
+        except pyvix.vix.VIXException:
+            self.vmhost = pyvix.vix.Host(self.vmwarecfg.vmware_type(),
+                                  self.vmwarecfg.vmware_url(),
+                                  int(self.vmwarecfg.vmware_port()),
+                                  self.vmwarecfg.vmware_username(),
+                                  self.vmwarecfg.vmware_password())
+
+        if self.vmwarecfg.vmware_register_and_unregister():
+            self.vmhost.registerVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
+
+        try:
+            self.vminstance = self.vmhost.openVM(self.vmx_path)
+        except pyvix.vix.VIXException:
+            self.vminstance = self.vmhost.openVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
 
 
+    def executeCommand(self,cmd):
+        return self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
+    
+    def start(self):
+        self.vminstance.powerOn()
+
+    def stop(self):
+        try:
+            self.vminstance.powerOff()
+        except pyvix.vix.VIXException:
+            _logger.exception('IGNORED EXCEPTION')
+        if self.cfg.vmware_register_and_unregister():
+            try:
+                self.vmhost.unregisterVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
+            except pyvix.vix.VIXException:
+                _logger.exception('IGNORED EXCEPTION')
+
+    def _wait_for_tools(self):
+        """Called by the thread that waits for the VMWare Tools to
+           start. If the Tools do not start, there is no direct way of
+           ending the Thread.  As a result, on powerOff(), the Thread
+           would throw a VIXException on account of the VM not being
+           powered on.
+        """
+        try:
+            self.vminstance.waitForToolsInGuest()
+        except pyvix.vix.VIXException:
+            pass
 
 
-def connect_to_vm(vmwarecfg, vmx_path):
-    """Connect to the VmWare virtual machine specified by the
-    vmx_path.
+    def wait_for_tools_with_timeout(self, timeout, error_fname):
+        """Wait for VMWare Tools to start.
 
-    Returns a pair: (a handle for the connection to the host, a
-    virtual machine handle)"""
+        Returns True on success and False when the VMWare tools did not
+        start properly in the given timeout. Writes error messages to
+        `error_fname`.
+        """
 
+        if timeout != None:
+            timeout = int(timeout)
+            _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
 
-    try:
-        # try defaults
-        host = pyvix.vix.Host()
-    except pyvix.vix.VIXException:
-        host = pyvix.vix.Host(vmwarecfg.vmware_type(),
-                              vmwarecfg.vmware_url(),
-                              int(vmwarecfg.vmware_port()),
-                              vmwarecfg.vmware_username(),
-                              vmwarecfg.vmware_password())
-
-    if vmwarecfg.vmware_register_and_unregister():
-        host.registerVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
-
-    try:
-        vm = host.openVM(vmx_path)
-    except pyvix.vix.VIXException:
-        vm = host.openVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
-
-    return (host, vm)
+        tools_thd = Thread(target = _wait_for_tools)
+        tools_thd.start()
+        # normally the thread will end before the timeout expires, so a high timeout
+        tools_thd.join(timeout)
 
 
-def revertToSnapshot(vm, snapNr):
-    """Revert the vm to the snapNr snapshot
-
-    Note: snapshots are counted from 0.
-    """
-    if vm.nRootSnapshots <= snapNr:
-        err_str = ('''Cannot revert to snapshot %d. Too few
-                    snapshots (nr = %d) found on %s.''' %
-                   (snapNr, vm.nRootSnapshots, vm.vmxPath))
-        raise Exception(err_str)
-    snaps = vm.rootSnapshots
-    vm.revertToSnapshot(snaps[snapNr])
+        if not tools_thd.isAlive():
+            return True
 
 
-def copyFilesBetweenHostAndGuest(vm, fromHostToGuest, host_dir, guest_dir, files):
-    """Copy files from the host to the guest.
-    vm        - an open virtual machine.
+        _logger.error('Timeout waiting for VMWare Tools to start.' +
+                      'Make sure your virtual machine boots up corectly' +
+                      'and that you have VMWare Tools installed.')
 
-    fromHostToGuest - boolean:
-                      - True: copies files from host to guest
-                      - False: copies files from guest to host
+        with open(error_fname, 'a') as handler:
+            print >> handler, 'Timeout waiting for VMWare Tools to start.\n' + \
+                      'Make sure your virtual machine boots up corectly\n' + \
+                      'and that you have VMWare Tools installed.\n'
+        return False
 
-    host_dir  - the directory on the host
+    def powerOn(self):
+        """ see power_on_with_message_handler """
+        power_thd = Thread(target = self.start)
+        power_thd.start()
+        power_thd.join(5)
 
-    guest_dir - an ABSOLUTE path to the guest directory
-                This must be expressed in the native system's path
-                style. For example if the system is Windows and you
-                have installed cygwin, you cannot use cygwin-like
-                paths. This myst end with a GUEST speciffic path
-                separator (e.g.: bad: 'C:\dir'; good: 'C:\dir\')
+        if not power_thd.isAlive():
+            # vm.powerOn() didn't hang: the machine has been powered on
+            return
+        
+        proc = Popen(['vmchecker-self.vminstance-message-handler',
+                  self.vmwarecfg.vmware_hostname(),
+                  self.vmwarecfg.vmware_username(),
+                  self.vmwarecfg.vmware_password(),
+                  self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path)])
+        os.waitpid(proc.pid, 0)
+        
+        power_thd.join()
+        
+    def try_power_on_vm_and_login(self):
+        if self.asscfg.revert_to_snapshot(self.assignment):
+            self.revert()
 
-    files     - list of files (relative to host_dir) to copy to the vm.
-    """
+        tools_timeout = self.asscfg.delay_wait_for_tools(self.assignment)
+        self.powerOn()
+        
+        if not self.wait_for_tools_with_timeout( tools_timeout, self.error_fname):
+            # no tools, nothing to do.
+            return False
 
-    for f in files:
-        host_path = os.path.join(host_dir, f)
-        # NOTE: os.path.join() is not good for guest_path because the
-        #  guest might be on a different platform with different path
-        #  separators. Because of this the guest_dir MUST terminate
-        #  with the guest-speciffic path separator!
-        guest_path = guest_dir + f
-        if fromHostToGuest:
+        try:
+            self.vminstance.loginInGuest(self.machinecfg.guest_user(), self.machinecfg.guest_pass())
+        except pyvix.vix.VIXSecurityException:
+            _logger.error('Error logging in on the virtual machine.' +
+                          'Make sure you have the accounts properly configured.')
+            with open(error_fname, 'a') as handler:
+                print >> handler,'Error logging in on the virtual machine.\n' + \
+                        'Make sure you have the user accounts properly configured.\n'
+                return False
+
+        time.sleep(self.asscfg.delay_between_tools_and_tests(assignment))
+        return True
+
+    def hasStarted(self):
+        o = self.host.executeCommand("lxc-info -n "+self.hostname)
+        if "-1" in o:
+            return False
+        if "refused" in self.executeCommand('echo hello'):
+            return False
+        return True
+            
+    
+    def revert(self, number = None):
+        '''
+        TODO:
+        1. replace hardcoded paths with configurable options
+        2. provide a way for starting multiple containters at the same time
+        '''
+        self.host.executeCommand("lxc-stop -n "+self.hostname)
+        self.host.executeCommand("rm -rf /var/lib/lxc/"+self.hostname+"/rootfs")
+        self.host.executeCommand("cp -pr /lxc/rootfs /var/lib/lxc/"+self.hostname)
+        #self.start()
+        
+        
+    def revert(self, number = None):
+        """Revert the vminstance to the number snapshot
+
+        Note: snapshots are counted from 0.
+        """
+        if number==None:
+            _logger.error('Snapshot number is needed')
+            return
+        if self.vminstance.nRootSnapshots <= number:
+            err_str = ('''Cannot revert to snapshot %d. Too few
+                        snapshots (nr = %d) found on %s.''' %
+                       (number, self.vminstance.nRootSnapshots, self.vminstance.vmxPath))
+            raise Exception(err_str)
+        snaps = self.vminstance.rootSnapshots
+        self.vminstance.revertToSnapshot(snaps[number])
+       
+    def copyTo(self, sourceDir, targetDir, files):
+        """ Copy files from host(source) to guest(target) """
+        for f in files:
+            host_path = os.path.join(sourceDir, f)
+            guest_path = os.path.join(targetDir, f)
             if not os.path.exists(host_path):
                 _logger.error('host file (to send) "%s" does not exist' % host_path)
-            else:
-                _logger.info('copy file %s from host to guest at %s' %
-                             (host_path, guest_path))
-                vm.copyFileFromHostToGuest(host_path, guest_path)
-        else:
-            _logger.info('copy file %s from guest to host at %s' %
-                         (guest_path, host_path))
+                return
+            _logger.info('copy file %s from host to guest at %s' % (host_path, guest_path))
+            vm.copyFileFromHostToGuest(host_path, guest_path)
+        
+    def copyFrom(self, sourceDir, targetDir, files):
+        """ Copy files from guest(source) to host(target) """
+        for f in files:
+            host_path = os.path.join(targetDir, f)
+            guest_path = os.path.join(sourceDir, f)
+            _logger.info('copy file %s from guest to host at %s' % (guest_path, host_path))
             vm.copyFileFromGuestToHost(guest_path, host_path)
             if not os.path.exists(host_path):
                 _logger.error('host file (received) "%s" does not exist' % host_path)
 
-
-
-
-def copyFilesFromGuestToHost(vm, host_dir, guest_dir, files):
-    """see copyFilesBetweenHostAndGuest"""
-    return copyFilesBetweenHostAndGuest(vm, False, host_dir, guest_dir, files)
-
-
-def copyFilesFromHostToGuest(vm, host_dir, guest_dir, files):
-    """see copyFilesBetweenHostAndGuest"""
-    return copyFilesBetweenHostAndGuest(vm, True, host_dir, guest_dir, files)
-
-
-def makeExecutableAndRun(vm, guest_shell, executable_file, timeout):
-    """Make a guest file executables and execute it.
-
-    Copying a file to the vm will not necesarily make it executable
-    (on UNIX systems). Therefore we must first make it executable
-    (chmod) and then run it. This will be done on Windows systems also
-    because we run this in cygwin (for the time being).
-
-    The guest_shell must be specified in a native path style:
-      - c:\cygwin\bin\bash.exe - on windows
-      - /bin/bash - on UNIX.
-
-    This is needed because vmware tools uses native paths and system
-    calls to execute files.
-
-    The executable_file path must the path in the shell for that file.
-    """
-    args = ' --login -c ' + '"chmod +x ' + executable_file + '; ' + executable_file + '"'
-    return runWithTimeout(vm, guest_shell, args, timeout)
-
-
-def runWithTimeout(vm, prog, args, timeout):
-    """ Runs the 'prog' program with 'args' arguments in the 'vm'
-    virtual machine instance (assumming it's running correctly).
-
-    Returns True if the thread terminated it's execution withing
-    'timeout' seconds (or fractions thereof) and False otherwise.
-
-    """
-    try:
-        _logger.info('executing on the remote: prog=%s args=[%s] timeout=%d' %
-                     (prog, args, timeout))
-        thd = Thread(target = vm.runProgramInGuest, args = (prog, args))
+    def run(self, shell, executable_file, timeout):
+        args = ' --login -c ' + '"chmod +x ' + executable_file + '; ' + executable_file + '"'
+        self.executeCommand("chmod +x "+ executable_file)
+        _logger.info('executing on the remote: prog=%s args=[%s] timeout=%d' % (shell, executable_file, timeout))
+        thd = Thread(target = self.vminstance.runProgramInGuest, args = (shell,args))
         thd.start()
         thd.join(timeout)
         return thd.isAlive()
-    except Exception:
-        return False
+        
+    def get_submission_vmx_file(self):
+        """Unzip search the bundle_dir and locate the .vmx file, no matter
+        in what sub-folders it is located in. If the unzipped archive has
+        multiple .vmx files, just pick the first.
 
-
-def copy_files_and_run_script(vm, bundle_dir, machinecfg, test):
-    """Run a test:
-       * copy input files to guest
-       * copy script files to guest
-       * make scripts executable (Linux)
-       * execute scripts
-       * copy output files from guest
-
-       If any errors occur, return False.
-       On success, return True.
-
-       Parameters:
-         vm           - a valid python.vix.VixVM object
-         jobs_path    - path to the unzipped bundle, where the tests and
-                        submission lie
-         guest        - an object describing guest configs
-         test         - an object describing test  configs
-    """
-    try:
-        files_to_copy = test['input'] + test['script']
-        guest_dest_dir = machinecfg.guest_base_path()
-        copyFilesFromHostToGuest(vm, bundle_dir, guest_dest_dir, files_to_copy)
-        for script in test['script']:
-            shell = machinecfg.guest_shell_path()
-            dest_in_guest_shell = machinecfg.guest_home_in_shell()
-            # XXX this assumes the guest shell uses UNIX path
-            # separator '/'. This is fine as for the moment, as it's
-            # used in bash (native/cygwin).
-            script_in_guest_shell = dest_in_guest_shell + '/' + script
-            timedout = makeExecutableAndRun(vm, shell, script_in_guest_shell, test['timeout'])
-            copyFilesFromGuestToHost(vm, bundle_dir, guest_dest_dir, test['output'])
-            if timedout:
-                return False
-    finally:
-        return True
-
-
-
-
-def start_host_commands(jobs_path, host_command):
-    """Run a command on the tester (host) machine"""
-    _logger.info('%%% -- starting host commands [' + host_command + ']')
-
-    if len(host_command) == 0:
+        """
+        for (root, _, files) in os.walk(self.bundle_dir):
+            for f in files:
+                if f.endswith(".vmx"):
+                    return os.path.join(root, f)
         return None
 
-    outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
-    try:
-        proc = Popen(host_command, stdout=outf, shell=True)
-    except:
-        _logger.exception('HOSTPROC: opening process: ' + host_command)
-    return (proc, outf)
-
-
-def stop_host_commands(host_command_data):
-    """Stop previously run host commands"""
-    if host_command_data == None:
-        return
-
-    (proc, outf) = host_command_data
-    try:
-        os.kill(proc.pid, signal.SIGTERM)
-        outf.close()
-    except:
-        _logger.exception('HOSTPROC: while stopping host cmds')
-    _logger.info("%%% -- stopped host commands")
-
-
-def _wait_for_tools(vm):
-    """Called by the thread that waits for the VMWare Tools to
-       start. If the Tools do not start, there is no direct way of
-       ending the Thread.  As a result, on powerOff(), the Thread
-       would throw a VIXException on account of the VM not being
-       powered on.
-    """
-    try:
-        vm.waitForToolsInGuest()
-    except pyvix.vix.VIXException:
-        pass
-
-
-def wait_for_tools_with_timeout(vm, timeout, error_fname):
-    """Wait for VMWare Tools to start.
-
-    Returns True on success and False when the VMWare tools did not
-    start properly in the given timeout. Writes error messages to
-    `error_fname`.
-    """
-
-    if timeout != None:
-        timeout = int(timeout)
-        _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
-
-    tools_thd = Thread(target = _wait_for_tools, args=(vm,))
-    tools_thd.start()
-    # normally the thread will end before the timeout expires, so a high timeout
-    tools_thd.join(timeout)
-
-
-    if not tools_thd.isAlive():
-        return True
-
-
-    _logger.error('Timeout waiting for VMWare Tools to start.' +
-                  'Make sure your virtual machine boots up corectly' +
-                  'and that you have VMWare Tools installed.')
-
-    with open(error_fname, 'a') as handler:
-        print >> handler, 'Timeout waiting for VMWare Tools to start.\n' + \
-                  'Make sure your virtual machine boots up corectly\n' + \
-                  'and that you have VMWare Tools installed.\n'
-    return False
-
-
-def power_on_with_message_handler(vm, vmwarecfg, vmx_path):
-    """Powers on virtual machine and answers any input
-       messages that might appear. """
-    # vm.powerOn()
-    power_thd = Thread(target = vm.powerOn)
-    power_thd.start()
-    power_thd.join(5)
-
-    if not power_thd.isAlive():
-        # vm.powerOn() didn't hang: the machine has been powered on
-        return
-
-
-    # we might have an unanswered message waiting.
-    # Start the message handler until the machine powers on.
-
-    # XXX: This is currently a bash script, it should be
-    # integrated as a module
-    proc = Popen(['vmchecker-vm-message-handler',
-                  vmwarecfg.vmware_hostname(),
-                  vmwarecfg.vmware_username(),
-                  vmwarecfg.vmware_password(),
-                  vmwarecfg.vmware_rel_vmx_path(vmx_path)])
-    os.waitpid(proc.pid, 0)
-    # By now all the messages have been handled.
-    # Wait for the VM to power on
-    power_thd.join()
-
-
-
-def power_off_and_unregister(vm, host, vmwarecfg, vmx_path):
-    """ Power off the virtual machine and, if necessary, unregister it. """
-    try:
-        vm.powerOff()
-    except pyvix.vix.VIXException:
-        _logger.exception('IGNORED EXCEPTION')
-        pass
-    if vmwarecfg.vmware_register_and_unregister():
-        try:
-            host.unregisterVM(vmwarecfg.vmware_rel_vmx_path(vmx_path))
-        except pyvix.vix.VIXException:
-            _logger.exception('IGNORED EXCEPTION')
-            pass
+    def test_submission(self, buildcfg = None):
+        self.vmx_path = machinecfg.get_vmx_path()
+        if self.vmx_path == None:
+            self.vmx_path = self.get_submission_vmx_file()
+        if self.vmx_path == None:
+            # no vmx, nothing to do.
+            _logger.error('Could not find a vmx to run')
+            with open(self.error_fname, 'a') as handler:
+                print >> handler, 'Error powering on the virtual machine.\n' + \
+	        		'Unable to find .vmx file.\n'
+            sys.exit(1) 
             
-
-
-def try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
-    """Power on the virtual machine taking care of possbile messages
-       and handle the case in which the virtual machine doesn't have
-       VMWare Tools installed or the username and password given are
-       wrong."""
-
-    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
-    tools_timeout = asscfg.delay_wait_for_tools(assignment)
-
-    if asscfg.revert_to_snapshot(assignment):
-        # revert to the last snapshot
-        revertToSnapshot(vm, vm.nRootSnapshots - 1)
-
-    power_on_with_message_handler(vm, vmwarecfg, vmx_path)
-    if not wait_for_tools_with_timeout(vm, tools_timeout, error_fname):
-        # no tools, nothing to do.
-        return False
-
-    try:
-        vm.loginInGuest(machinecfg.guest_user(), machinecfg.guest_pass())
-    except pyvix.vix.VIXSecurityException:
-        _logger.error('Error logging in on the virtual machine.' +
-                      'Make sure you have the accounts properly configured.')
-        with open(error_fname, 'a') as handler:
-            print >> handler,'Error logging in on the virtual machine.\n' + \
-                    'Make sure you have the user accounts properly configured.\n'
-            return False
-
-    time.sleep(asscfg.delay_between_tools_and_tests(assignment))
-    return True
-
-
-def get_submission_vmx_file(bundle_dir):
-    """Unzip search the bundle_dir and locate the .vmx file, no matter
-    in what sub-folders it is located in. If the unzipped archive has
-    multiple .vmx files, just pick the first.
-
-    """
-    for (root, _, files) in os.walk(bundle_dir):
-        for f in files:
-            if f.endswith(".vmx"):
-                return os.path.join(root, f)
-    return None
-
-
-def test_submission(bundle_dir, vmcfg, assignment):
-    """THE function that tests a submission bundle:
-        * opens the vm and reverts to a known snapshot
-        * prepares environments and executes all tests
-        * manages kernel messages
-    """
-    asscfg  = vmcfg.assignments()
-    timeout = asscfg.get(assignment, 'Timeout')
-    machine = asscfg.get(assignment, 'Machine')
-    machinecfg = VmwareMachineConfig(vmcfg, machine)
-    vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
-    error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
-
-
-    # try to get the machine's configuration, or the one uploaded by the student.
-    vmx_path = machinecfg.get_vmx_path()
-    if vmx_path == None:
-        vmx_path = get_submission_vmx_file(bundle_dir)
-    if vmx_path == None:
-        # no vmx, nothing to do.
-        _logger.error('Could not find a vmx to run')
-        with open(error_fname, 'a') as handler:
-            print >> handler, 'Error powering on the virtual machine.\n' + \
-	    		'Unable to find .vmx file.\n'
-        sys.exit(1) 
-
-
-    (host, vm) = connect_to_vm(vmwarecfg, vmx_path)
-    success = try_power_on_vm_and_login(vm, vmwarecfg, machinecfg, assignment,
-                                        asscfg, bundle_dir, vmx_path)
-    if not success:
-        _logger.error('Could not power on or login on the VM')
-        power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
-        sys.exit(1)
-
-
-    # start host commands
-    host_command = vmcfg.get(machine, 'HostCommand', default='')
-    host_command_data = start_host_commands(bundle_dir, host_command)
-
-    try:
-        # XXX: TODO: start km_command!!!
-        km_command = vmcfg.get(machine, 'KernelMessages', default='')
+        self.initialize()
 
         if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
-            # normal submissions will run tests the old way:
-            # - upload test and user's submission archive and build them
-            # - run the tests.
-            buildcfg = {
-                'input'  : ['archive.zip', 'tests.zip'],
-                'script' : ['build.sh'],
-                'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
-                'timeout': int(timeout),
-                }
-
-            if not copy_files_and_run_script(vm, bundle_dir, machinecfg, buildcfg):
-                return
-
-            testcfg = {
-                'input'  : [],
-                'script' : ['run.sh'],
-                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
-                'timeout': int(timeout)
-                }
-            copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
+            super(VmWareVM,self).test_submission()
         else:
-            # large submissions don't send the archive to the virtual machine
-            # (the virtual machine is actually part of the unpacked archive)
+            timeout = self.asscfg.get(self.assignment, 'Timeout')
             testcfg = {
                 'input'  : ['tests.zip'],
                 'script' : ['run.sh'],
                 'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
                 'timeout': int(timeout)
                 }
-            copy_files_and_run_script(vm, bundle_dir, machinecfg, testcfg)
-
-    finally:
-        stop_host_commands(host_command_data)
-        power_off_and_unregister(vm, host, vmwarecfg, vmx_path)
-
-
-def _check_required_files(path):
-    """Checks that a set of files required by commander is present in
-    the given path."""
-    found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'course-config']
-    found_files = os.listdir(path)
-    not_found = []
-    for need in needed_files:
-        if not need in found_files:
-            _logger.error('Could not find necessary file [%s] in [%s]' % (
-                    need, path))
-            found_all = False
-            not_found.append(need)
-    if not found_all:
-        raise IOError('Files ' + json.dumps(not_found) + ' required for testing missing')
-
-
-def get_assignment_id(bundle_dir):
-    """Reads the assignment identifier from the config file of the
-    submission from bundle_dir"""
-    sb_config = os.path.join(bundle_dir, 'submission-config')
-    with open(sb_config) as handle:
-        config = ConfigParser.RawConfigParser()
-        config.readfp(handle)
-    assignment = config.get('Assignment', 'Assignment')
-    return assignment
-
-
-def main():
-    """Main entry point when run as a script.
-
-    Requires as an argument the path to a directory containing a bundle.
-
-    The bundle must have:
-      - archive.zip
-      - tests.zip
-      - submission-config
-      - course-config
-      - build and run scripts.
-    """
-    logging.basicConfig(level=logging.INFO)
-
-    if len(sys.argv) != 2:
-        _logger.error('Usage: %s bundle_dir_location' % sys.argv[0])
-        sys.exit(1)
-
-    bundle_dir = sys.argv[1]
-    _check_required_files(bundle_dir)
-    vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
-    assignment = get_assignment_id(bundle_dir)
-
-    test_submission(bundle_dir, vmcfg, assignment)
-
-    # some vmware calls may block indefinetly.  if we don't exit
-    # explicitly, we may never return (this is due to python waiting
-    # for all threads to exit, but some threads may be stuck in a
-    # blocking vmware vix call.
-    sys.exit(0)
-
-if __name__ == "__main__":
-    main()
+            super(VmWareVM,self).test_submission(testcfg)

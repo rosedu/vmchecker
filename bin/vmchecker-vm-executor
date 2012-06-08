@@ -24,6 +24,7 @@ from subprocess import Popen, PIPE, STDOUT
 
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 from vmchecker.lxc_executor import LXCVM, LXCHost
+#from vmchecker.vmware_executor import VmWareVM, VmWareHost
 _logger = logging.getLogger('vm_executor')
 
 
@@ -38,6 +39,7 @@ class GenericHost():
             config.readfp(handle)
         assignment = config.get('Assignment', 'Assignment')
         return assignment
+        
     @staticmethod
     def test(bundle_dir):
         vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
@@ -46,14 +48,16 @@ class GenericHost():
         asscfg  = vmcfg.assignments()
         machine = asscfg.get(assignment, 'Machine')
         machinecfg = VmwareMachineConfig(vmcfg, machine)
-        vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
-        error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+        
         host = None
         if machinecfg.get_type()=='lxc':
             host = LXCHost()
+        if machinecfg.get_type()=='vmware':
+            pass
+            #host = VmWareHost()
         
-        vm = host.getVM(machinecfg)
-        vm.test_submission(bundle_dir, vmcfg, assignment)
+        vm = host.getVM(bundle_dir, vmcfg, assignment)
+        vm.test_submission()
 
 
 def _check_required_files(path):
