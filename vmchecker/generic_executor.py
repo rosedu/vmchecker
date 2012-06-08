@@ -40,8 +40,8 @@ class Host():
         _logger.debug('Command output: %s' % output)
         return output
 
-    def getVM(self, machinecfg):
-        vm = VM(self, machinecfg)
+    def getVM(self, bundle_dir, vmcfg, assignment):
+        vm = VM(self, bundle_dir, vmcfg, assignment)
         return None
 	
     def start_host_commands(self, jobs_path, host_command):
@@ -74,29 +74,35 @@ class Host():
 class VM():
     host 	= None
     path 	= None
-    vmtype 	= None
     username	= None
     password	= None
     IP	= None
-    cfg = None
-    def __init__(self, host, machinecfg):
-	    self.host = host
-	    self.username = machinecfg.guest_user()
-	    self.password = machinecfg.guest_pass()
-	    self.cfg = machinecfg
-	    # TODO check if path exists
+    def __init__(self, host, bundle_dir, vmcfg, assignment):
+        self.host = host
+        self.bundle_dir = bundle_dir
+        self.vmcfg = vmcfg
+        self.assignment = assignment
+
+        self.asscfg  = vmcfg.assignments()
+        self.machine = self.asscfg.get(assignment, 'Machine')
+        self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
+        self.vmwarecfg = VmwareConfig(vmcfg.testers(), self.machinecfg.get_tester_id())
+        self.error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+
+        self.username = self.machinecfg.guest_user()
+        self.password = self.machinecfg.guest_pass()
 
     def executeCommand(self, cmd):
-	    # host.executeCommand(...)
-	    pass
+        # host.executeCommand(...)
+        pass
 
     def executeNativeCommand(self, cmd):
-	    # there is no default need for native commands
-	    return self.executeCommand(cmd)
+        # there is no default need for native commands
+        return self.executeCommand(cmd)
 
     def hasStarted(self):
         return False
-	
+
     def start(self):
         pass
         
@@ -108,11 +114,11 @@ class VM():
         
     def copyTo(self, targetDir, sourceDir, files):
         pass
-    
+
     def copyFrom(self, targetDir, sourceDir, files):
         pass
         
-    def run(self, executable_file, shell=None, timeout=None):
+    def run(self, shell, executable_file, timeout):
         pass
         
     def runTest(self, bundle_dir, machinecfg, test):
@@ -133,76 +139,47 @@ class VM():
             _logger.exception('error in copy_files_and_run_script')
         finally:
             return True
-            
-    def powerOn(self):
-        """ see power_on_with_message_handler """
-        power_thd = Thread(target = vm.start)
-        power_thd.start()
-        power_thd.join(5)
-
-        if not power_thd.isAlive():
-            # vm.powerOn() didn't hang: the machine has been powered on
-            return
-        else:
-            _logger.error("Could not power on")
-
-        power_thd.join()
         
-    def try_power_on_vm_and_login(self, vmwarecfg, machinecfg, assignment, asscfg, bundle_dir, vmx_path):
-        """Power on the virtual machine taking care of possbile messages
-           and handle the case in which the virtual machine doesn't have
-           VMWare Tools installed or the username and password given are
-           wrong."""
-
-        error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
-        tools_timeout = asscfg.delay_wait_for_tools(assignment)
-
-        if asscfg.revert_to_snapshot(assignment):
+    def try_power_on_vm_and_login(self):
+        if self.asscfg.revert_to_snapshot(self.assignment):
             self.revert()
 
-        self.start()    
-        time.sleep(asscfg.delay_between_tools_and_tests(assignment))
+        self.start()
         return True
         
-    def test_submission(self, bundle_dir, vmcfg, assignment):
-        asscfg  = vmcfg.assignments()
-        timeout = asscfg.get(assignment, 'Timeout')
-        machine = asscfg.get(assignment, 'Machine')
-        machinecfg = VmwareMachineConfig(vmcfg, machine)
-        vmwarecfg = VmwareConfig(vmcfg.testers(), machinecfg.get_tester_id())
-        error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
-        
-        vmx_path = machinecfg.get_vmx_path()
-        success = self.try_power_on_vm_and_login(vmwarecfg, machinecfg, assignment,
-                                            asscfg, bundle_dir, vmx_path)
+    def test_submission(self, buildcfg = None):
+        success = self.try_power_on_vm_and_login()
         if not success:
             _logger.error('Could not power on or login on the VM')
             self.stop()
             sys.exit(1)
 
-
         # start host commands
-        host_command = vmcfg.get(machine, 'HostCommand', default='')
-        host_command_data = self.host.start_host_commands(bundle_dir, host_command)
-
-        try:
-            buildcfg = {
-                'input'  : ['archive.zip', 'tests.zip'],
-                'script' : ['build.sh'],
-                'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
-                'timeout': int(timeout),
-                }
-            if not self.runTest(bundle_dir, machinecfg, buildcfg):
-                _logger.info('Build failed')
-                return
+        host_command = self.vmcfg.get(self.machine, 'HostCommand', default='')
+        host_command_data = self.host.start_host_commands(self.bundle_dir, host_command)
         
-            testcfg = {
-                'input'  : [],
-                'script' : ['run.sh'],
-                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
-                'timeout': int(timeout)
-                }
-            self.runTest(bundle_dir, machinecfg, testcfg) 
+        timeout = self.asscfg.get(self.assignment, 'Timeout')
+        try:
+            if buildcfg==None:
+                buildcfg = {
+                    'input'  : ['archive.zip', 'tests.zip'],
+                    'script' : ['build.sh'],
+                    'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
+                    'timeout': int(timeout),
+                    }
+                if not self.runTest(self.bundle_dir, self.machinecfg, buildcfg):
+                    _logger.info('Build failed')
+                    return
+            
+                testcfg = {
+                    'input'  : [],
+                    'script' : ['run.sh'],
+                    'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
+                    'timeout': int(timeout)
+                    }
+                self.runTest(self.bundle_dir, self.machinecfg, testcfg) 
+            else:
+                self.runTest(self.bundle_dir, self.machinecfg, buildcfg)
         except Exception:
             _logger.exception('FUCK! Exception!RUUUUUUUN!!!')
         finally:

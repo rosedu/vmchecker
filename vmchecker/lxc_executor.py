@@ -6,6 +6,11 @@ from vmchecker.generic_executor import Host,VM
 _logger = logging.getLogger('vm_executor')
 from threading import Thread
 
+
+class LXCHost(Host):
+    def getVM(self, bundle_dir, vmcfg, assignment):
+        return LXCVM(self, bundle_dir, vmcfg, assignment)
+
 class LXCVM(VM):
     hostname = 'deb1'
     #hostpath = '/var/lib/lxc/'+hostname
@@ -64,7 +69,7 @@ class LXCVM(VM):
             if not os.path.exists(host_path):
                 _logger.error('host file (received) "%s" does not exist' % host_path)
 
-    def run(self, shell, executable_file, timeout ):
+    def run(self, shell, executable_file, timeout):
         self.executeCommand("chmod +x "+ executable_file)
         _logger.info('executing on the remote: prog=%s args=[%s] timeout=%d' % (shell, executable_file, timeout))
         thd = Thread(target = self.executeCommand, args = (executable_file,))
@@ -75,7 +80,16 @@ class LXCVM(VM):
             thd.join(timeout)
         return thd.isAlive()
         
-class LXCHost(Host):
-    def getVM(self, machinecfg):
-        return LXCVM(self, machinecfg)
+    def get_submission_vmx_file(self):
+        """Unzip search the bundle_dir and locate the .vmx file, no matter
+        in what sub-folders it is located in. If the unzipped archive has
+        multiple .vmx files, just pick the first.
 
+        """
+        for (root, _, files) in os.walk(bundle_dir):
+            for f in files:
+                if f.endswith(".vmx"):
+                    return os.path.join(root, f)
+        return None
+
+    
