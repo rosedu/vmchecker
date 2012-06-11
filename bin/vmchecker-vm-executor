@@ -24,6 +24,7 @@ from subprocess import Popen, PIPE, STDOUT
 
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 from vmchecker.lxc_executor import LXCVM, LXCHost
+from vmchecker.kvm_executor import kvmVM, kvmHost
 #from vmchecker.vmware_executor import VmWareVM, VmWareHost
 _logger = logging.getLogger('vm_executor')
 
@@ -53,8 +54,9 @@ class GenericHost():
         if machinecfg.get_type()=='lxc':
             host = LXCHost()
         if machinecfg.get_type()=='vmware':
-            pass
-            #host = VmWareHost()
+            pass #host = VmWareHost()
+        if machinecfg.get_type()=='kvm':
+            host = kvmHost()
         
         vm = host.getVM(bundle_dir, vmcfg, assignment)
         vm.test_submission()

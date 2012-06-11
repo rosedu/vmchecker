@@ -80,16 +80,5 @@ class LXCVM(VM):
             thd.join(timeout)
         return thd.isAlive()
         
-    def get_submission_vmx_file(self):
-        """Unzip search the bundle_dir and locate the .vmx file, no matter
-        in what sub-folders it is located in. If the unzipped archive has
-        multiple .vmx files, just pick the first.
-
-        """
-        for (root, _, files) in os.walk(bundle_dir):
-            for f in files:
-                if f.endswith(".vmx"):
-                    return os.path.join(root, f)
-        return None
 
     

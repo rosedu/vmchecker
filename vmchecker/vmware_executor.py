@@ -242,7 +242,7 @@ class VmWareVM(VM):
         return None
 
     def test_submission(self, buildcfg = None):
-        self.vmx_path = machinecfg.get_vmx_path()
+        self.vmx_path = self.machinecfg.get_vmx_path()
         if self.vmx_path == None:
             self.vmx_path = self.get_submission_vmx_file()
         if self.vmx_path == None:
