@@ -23,7 +23,7 @@ import signal
 import ConfigParser
 from threading import Thread
 from subprocess import Popen
-
+from vmchecker.generic_executor import VM, Host
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
@@ -84,7 +84,7 @@ class VmWareVM(VM):
         try:
             self.vminstance.waitForToolsInGuest()
         except pyvix.vix.VIXException:
-            pass
+            _logger.exception("_WAIT FOR TOOLS")
 
 
     def wait_for_tools_with_timeout(self, timeout, error_fname):
@@ -99,7 +99,7 @@ class VmWareVM(VM):
             timeout = int(timeout)
             _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
 
-        tools_thd = Thread(target = _wait_for_tools)
+        tools_thd = Thread(target = self._wait_for_tools)
         tools_thd.start()
         # normally the thread will end before the timeout expires, so a high timeout
         tools_thd.join(timeout)
@@ -140,7 +140,7 @@ class VmWareVM(VM):
         
     def try_power_on_vm_and_login(self):
         if self.asscfg.revert_to_snapshot(self.assignment):
-            self.revert()
+            self.revert(self.vminstance.nRootSnapshots - 1)
 
         tools_timeout = self.asscfg.delay_wait_for_tools(self.assignment)
         self.powerOn()
@@ -161,26 +161,6 @@ class VmWareVM(VM):
 
         time.sleep(self.asscfg.delay_between_tools_and_tests(assignment))
         return True
-
-    def hasStarted(self):
-        o = self.host.executeCommand("lxc-info -n "+self.hostname)
-        if "-1" in o:
-            return False
-        if "refused" in self.executeCommand('echo hello'):
-            return False
-        return True
-            
-    
-    def revert(self, number = None):
-        '''
-        TODO:
-        1. replace hardcoded paths with configurable options
-        2. provide a way for starting multiple containters at the same time
-        '''
-        self.host.executeCommand("lxc-stop -n "+self.hostname)
-        self.host.executeCommand("rm -rf /var/lib/lxc/"+self.hostname+"/rootfs")
-        self.host.executeCommand("cp -pr /lxc/rootfs /var/lib/lxc/"+self.hostname)
-        #self.start()
         
         
     def revert(self, number = None):
@@ -197,7 +177,10 @@ class VmWareVM(VM):
                        (number, self.vminstance.nRootSnapshots, self.vminstance.vmxPath))
             raise Exception(err_str)
         snaps = self.vminstance.rootSnapshots
-        self.vminstance.revertToSnapshot(snaps[number])
+	try:
+	        self.vminstance.revertToSnapshot(snaps[number])
+	except:
+	        _logger.error('Could not revert to snapshot')
        
     def copyTo(self, sourceDir, targetDir, files):
         """ Copy files from host(source) to guest(target) """
@@ -255,8 +238,8 @@ class VmWareVM(VM):
             
         self.initialize()
 
-        if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
-            super(VmWareVM,self).test_submission()
+        if self.asscfg.getd(self.assignment, 'assignmentstorage', '').lower() != 'large':
+            VM.test_submission(self)
         else:
             timeout = self.asscfg.get(self.assignment, 'Timeout')
             testcfg = {
