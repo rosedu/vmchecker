@@ -80,7 +80,7 @@ class kvmVM(VM):
             host_path = os.path.join(targetDir, f)
             guest_path = os.path.join(sourceDir, f)
             _logger.info('copy file %s from guest to host at %s' % (guest_path, host_path))
-            self.host.executeCommand("scp -r "self.username+"@"+self.IP+":"+guest_path+" "+host_path)
+            self.host.executeCommand("scp -r "+self.username+"@"+self.IP+":"+guest_path+" "+host_path)
             if not os.path.exists(host_path):
                 _logger.error('host file (received) "%s" does not exist' % host_path)
 
