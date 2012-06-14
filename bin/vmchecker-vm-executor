@@ -54,10 +54,10 @@ class GenericHost():
         if machinecfg.get_type()=='lxc':
             host = LXCHost()
         if machinecfg.get_type()=='vmware':
-            pass #host = VmWareHost()
+            host = VmWareHost()
         if machinecfg.get_type()=='kvm':
             host = kvmHost()
-        
+        print assignment
         vm = host.getVM(bundle_dir, vmcfg, assignment)
         vm.test_submission()
 
