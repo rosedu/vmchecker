@@ -5,7 +5,7 @@ import logging
 from vmchecker.generic_executor import Host,VM
 _logger = logging.getLogger('vm_executor')
 from threading import Thread
-
+import time
 
 class LXCHost(Host):
     def getVM(self, bundle_dir, vmcfg, assignment):
@@ -18,7 +18,7 @@ class LXCVM(VM):
         return self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
     
     def start(self):
-        self.host.executeCommand("lxc-start -n "+self.hostname+" -d")
+        self.host.executeCommand("sudo lxc-start -n "+self.hostname+" -d") #check why sudo is needed
         while True:
             if self.hasStarted():
                 return
@@ -27,13 +27,13 @@ class LXCVM(VM):
         self.host.executeCommand("lxc-stop -n "+self.hostname)
 
     def hasStarted(self):
+        time.sleep(1)
         o = self.host.executeCommand("lxc-info -n "+self.hostname)
         if "-1" in o:
             return False
         if "refused" in self.executeCommand('echo hello'):
             return False
         return True
-            
     
     def revert(self, number = None):
         '''
@@ -44,7 +44,6 @@ class LXCVM(VM):
         self.host.executeCommand("lxc-stop -n "+self.hostname)
         self.host.executeCommand("rm -rf /var/lib/lxc/"+self.hostname+"/rootfs")
         self.host.executeCommand("cp -pr /lxc/rootfs /var/lib/lxc/"+self.hostname)
-        #self.start()
        
     def copyTo(self, sourceDir, targetDir, files):
         """ Copy files from host(source) to guest(target) """

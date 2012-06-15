@@ -25,8 +25,12 @@ from subprocess import Popen, PIPE, STDOUT
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 from vmchecker.lxc_executor import LXCVM, LXCHost
 from vmchecker.kvm_executor import kvmVM, kvmHost
-from vmchecker.vmware_executor import VmWareVM, VmWareHost
-_logger = logging.getLogger('vm_executor')
+
+try:
+	from vmchecker.vmware_executor import VmWareVM, VmWareHost
+except:
+	print "Could not load vmware executor"
+
 
 
 class GenericHost():
@@ -54,7 +58,11 @@ class GenericHost():
         if machinecfg.get_type()=='lxc':
             host = LXCHost()
         if machinecfg.get_type()=='vmware':
-            host = VmWareHost()
+            try:
+                host = VmWareHost()
+            except:
+                _logger.exception("Testing with vmware failed")
+                sys.exit(1)
         if machinecfg.get_type()=='kvm':
             host = kvmHost()
         print assignment
