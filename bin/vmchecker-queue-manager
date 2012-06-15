@@ -25,8 +25,9 @@ import signal
 import tempfile
 import optparse
 import subprocess
+import socket
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
-
+from threading import Thread
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker.paths  import VmcheckerPaths
@@ -55,6 +56,15 @@ def upload_results_to_sender(bundle_dir):
             if fname.endswith('.vmr'):
                 vmrfiles.append(os.path.join(bundle_dir, fname))
         sb_config = os.path.join(bundle_dir, 'submission-config')
+        #
+        '''
+        sb_index = os.path.join(bundle_dir, 'submission-index')
+        with open(sb_index) as handle:
+            index = handle.read()
+            proxy = xmlrpclib.ServerProxy('http://STORER:19999')
+            proxy.notify_results(...)
+        '''
+        #
         callback.run_callback(sb_config, vmrfiles)
     except:
         # XXX: don't know whether to allow exceptions to kill
@@ -274,6 +284,7 @@ def main():
     # fail early if something is not setup corectly, and not at a
     # distant point when we'll need these things.
     check_tester_setup_correctly(vmpaths)
+    
     start_queue(vmpaths)
 
 if __name__ == '__main__':
