@@ -35,7 +35,7 @@ class kvmVM(VM):
     hostname = 'kvm2'
     def executeCommand(self,cmd):
         _logger.info("executeCommand: %s" % cmd)
-        return self.host.executeCommand("ssh "+self.username+"@"+self.IP+" "+cmd)
+        return self.host.executeCommand("ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "+self.username+"@"+self.IP+" "+cmd)
 
     def power_on_kvm(self):
 	    o = self.host.executeCommand("virsh start kvm2")
