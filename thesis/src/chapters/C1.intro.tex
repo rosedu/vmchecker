@@ -75,7 +75,6 @@ receiving them proceeds to powering on a virtual machine, compiling the submitte
 source code, running certain tests and uploading those tests to the storer.
 
 
-
 \subsection{The storer}
 \label{sub-sec:storer}
 
@@ -90,40 +89,183 @@ the accidental overwriting of a submission.
 \fig[scale=.4]{src/img/storer-structure}{img:storer-structure}{Storer structure}
 \end{center}
 
-sdfsdfsdf
+The storer machine may host repositories for multiple courses. The storer
+must insure that only the authorized individuals have access to each repository.
+This is done by creating a separate linux user account to each course, and placing
+the repository inside the user's home. 
+
+Access to the machine is provided by SSH and authorization is done by placing
+the public keys of the account's users in the authorized_keys file.
+
+The course's storer folder contains a config file, which lists the parameters
+for each assignment (such as deadline, title, virtual machine name), the 
+configuration for each available tester (ip or url, username, queue path)
+and the configuration for each virtual machine.
+
+Also in course's storer you may find a tests/ folder, which contains an archive
+with each assignment's tests, several scripts to build and run each assignment,
+a database file, and a repo/ folder.
 
 \begin{center}
 \fig[scale=.4]{src/img/repo-structure}{img:repo-structure}{Repo structure}
 \end{center}
 
-sdsadas
-
-
-
-
-
-
-
-
-
-
+The repo/ folder contains every submission made to this course. It is organized
+by assignment, student name and subission date. A symbolic link is made to the 
+most recent submission. The submission folder holds the original archive uploaded
+by the student,  a git/ folder with the unzipped contents of the archive and a 
+file named submission-config which lists the submission's description, and a
+results folder which holds the output from the testing process.
 
 \subsection{The tester}
 \label{sub-sec:tester}
 
+The tester is a separate Linux running machine which hass, just like the storer,
+a separate user account for each course. A process called queue-manager 
+waits for file system events in the queue/ folder. The storer uploads a new
+archive to the folder which consists of the student's submission, the tests, and
+the necessary scripts to build and run the files. When a new archive is uploaded,
+the queue-manager process extracts the contents to a folder and runs the executor.
+
 \begin{center}
-\fig[scale=.6]{src/img/tester-structure}{img:tester-structure}{Tester structure}
+\fig[scale=.4]{src/img/tester-structure}{img:tester-structure}{Tester structure}
 \end{center}
 
-\todo{abcd}
+The executor is a script that handles the virtual machine specific interactions.
+It powers on the virtual machine, it uploads the files, runs the build script and
+ the necessary tests. The test results are contained in .vmr files.
+The executor then copies the result files to the bundle folder, shuts down the
+virtual machine, then uploads the results to the storer, in the folder designated
+by the submission-config file.
+
+
+\subsection{Storer - Tester interaction}
+\label{sub-sec:interaction}
+
+Communication and file transfer between the storer and the tester is done
+through the SSH protocol. 
+
+Since the archived bundle is uploaded from the storer by the www-data user (which
+runs the apache server) it needs to have permission to read every course's private key. 
+Permission is given by using the Posix ACL file permission system.
+
+After the testing is completed, the queue-manager uploads the results to the storer
+using the path listed in the submission-config file. queue-manager is run by the 
+course's tester account so it uses by default the account's private key to upload
+the files.
+
+\subsection{Installation}
+\label{sub-sec:install}
+
+Installing the vmchecker system is a pretty complicated process.
+On the storer system, one simply needs to run the setup.py script, and then 
+the vmchecker-init-course script, with the parameter storer. The last script
+initializes a new storer folder, with a default config file and an empty database.
+
+The next step is generating the public/private keys and set the appropriate 
+persmissions so that the www-data account can read them. Then add the appropriate 
+settings for the assignments, tester and virtual machines to the config file.
+Keep in mind that the tester and virtual machines have not been set up yet.
+
+The web interface is set up by creating a new user accound called vmchecker,
+setting up a public_html folder in its home and placing all the necessary files
+to this location. The next step is creating a new website configuration at 
+/etc/apache2/sites-available/
+
+Finally, you need to edit the global configuration file at /etc/vmchecker/config.list
+so the course will be listed in the web interface.
+
+To install the tester a few extra steps are needed. vmchecker uses the VMware-VIX
+API to interact with the virtual machines. So you first need to install VMware
+server or WMware wokstation and the VMware-VIX package, then install the pyVix 
+wrapper created by Lucian Grijincu.
+
+The next step is to run the setup.py script, then the vmchecker-init-course script,
+with the parameter tester. The script will initialize the folder with a config file,
+and queue/ and tmpunzip/ folders.
+
+The queue-manager script is then run. 
+
 
 \section{Analysis of the shortcomings of the former architecture}
 \label{sec:vmc-analysis}
 
-\todo{abcd}
+While it is a very useful and powerful tool, vmchecker has its share of drawbacks.
+These are caused by the way it was developed - in an incremental way, tackling 
+each issue as it came up. 
+
+While rebooting the entire project might be the right course of action, 
+backwards compatibility would be lost and the workload would 
+proove monumental. We arrive to the conclusion that for the time being it's best
+to improve upon the existing model, while focusing on the major areas of concern.
+
+\subsection{The virtualization environments}
+\label{sub-sec:vmc-analysis-env}
+
+From its inception the only virtualization environment supported by vmchecker 
+has been VMware. This aspect leads to several flaws within the architecture.
+
+First of all VMware-VIX API is needed to interact with the virtual machines. 
+While there is only official support for the C language, a python wrapper is
+used to allow its integration with vmchecker's modules. It's needless to say
+that any modification to the API might break existing functionality and 
+maintaining the python wrapper becomes an additional concern.
+
+Beside the fact that it's very difficult to install on a Linux operating system
+using VMware-VIX API also has some requirements for the hosted virtual machines:
+VMware tools must be installed and running inside the guest in order to communicate
+with the virtual machine.
+
+Another issue with VMware is the long startup time and the fact that it isn't 
+immediately responsive following the restauration of a snapshot.
+
+\subsection{SSH keys and persmissions}
+\label{sub-sec:vmc-analysis-ssh}
+
+An important issue with vmchecker is the ease of setting up the tester and storer
+for a new course. At the moment the process is impeded by the fact that communication
+is done through the SSH protocol using public key authentication. 
+
+A new pair of keys needs to be generated, for both the storer and the tester account,
+then the appropiate permissions need to be set so that www-data has access to 
+the keys.
+
+
+\subsection{Scalability}
+\label{sub-sec:vmc-analysis-scalability}
+
+The existing support for a distribuited model in vmchecker is limited. While
+you may have multiple testers associated with the same storer, an assignment
+can only use one of those testers. While this is useful, since many courses
+may share the same storer, it also means that at times you'll have machines
+that are sitting idle, and machines that have a queue of over 20 submissions
+to be tested.
+
+Also, in cases where the tester is a multicore machine, multiple virtual
+machines may be run at the same time. However, because of the current architecture 
+of vmchecker, the extra performance of the host goes to waste.
+
+In these cases, a dynamical way of distributing the workload between testers is 
+needed.
 
 \section{Improving the existing model}
 \label{sec:vmc-improving}
 
-\todo{abcd}
+This project aims to improve the performance of vmchecker. 
 
+All of the concerns listed in the previous section will be tackled as follows:
+
+* Support for new virtualization platforms will be added, while keeping support
+for VMware. This will ensure a smooth transition and the new version of vmchecker
+will be backwards compatible.
+
+* In order to eliminate the need for SSH keys for each account the communication
+model will be modified, such that a daemon process running on the storer will
+deal with the communication with the tester machines. The daemon process will also
+be the one to fetch the results from the tester machine, thus eliminating the need
+for the tester to know the storer's public keys.
+
+* The queue-manager service will be able to provide status updates to the daemon,
+so it will be aware of the number and capabilities of all the available virtual
+machines. A load balancing service will be provided by the storer daemon, which
+will be able to properly place the submitted assignment in the least used queue.

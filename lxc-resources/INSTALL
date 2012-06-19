@@ -14,6 +14,17 @@ sudo cp vmchecker/lxc-resources/interfaces /etc/network/interfaces
 10.3.1.13    deb3 deb3.virt deb3.virt.local
 10.3.1.14    deb4 deb4.virt deb4.virt.local
 
+
+# Do the following
+mkdir -p /cgroup
+mount none -t cgroup /cgroup
+
+# In /etc/fstab
+# add the following line
+none /cgroup cgroup defaults 0 0
+
+# restart networking
+
 # create lxc container
 sudo sh vmchecker/lxc-resources/easylxc deb1
 
@@ -25,12 +36,6 @@ sudo cp -pr /var/lib/lxc/deb1/rootfs /lxc
 # If you need web conectivity inside the lxc container:
 #
 sudo vmchecker/lxc-resources/host_iptables.sh
-
-
-
-
-
-
 
 
 
