@@ -247,7 +247,7 @@ echo "$VIRTUSER ALL=(ALL) NOPASSWD: ALL" >> $R/etc/sudoers
 
 # Fix root and su
 #run passwd -l root
-run echo root:student | chpasswd
+#run echo root:student | chpasswd
 
 T=$R/etc/pam.d/su
 mv $T $T.old
