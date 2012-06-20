@@ -18,17 +18,17 @@ class LXCVM(VM):
         return self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
     
     def start(self):
-        self.host.executeCommand("sudo lxc-start -n "+self.hostname+" -d") #check why sudo is needed
+        self.host.executeCommand("sudo lxc-start -n "+self.hostname+" -d")
         while True:
             if self.hasStarted():
                 return
     
     def stop(self):
-        self.host.executeCommand("lxc-stop -n "+self.hostname)
+        self.host.executeCommand("sudo lxc-stop -n "+self.hostname)
 
     def hasStarted(self):
         time.sleep(1)
-        o = self.host.executeCommand("lxc-info -n "+self.hostname)
+        o = self.host.executeCommand("sudo lxc-info -n "+self.hostname)
         if "-1" in o:
             return False
         if "refused" in self.executeCommand('echo hello'):
@@ -41,7 +41,7 @@ class LXCVM(VM):
         1. replace hardcoded paths with configurable options
         2. provide a way for starting multiple containters at the same time
         '''
-        self.host.executeCommand("lxc-stop -n "+self.hostname)
+        self.host.executeCommand("sudo lxc-stop -n "+self.hostname)
         self.host.executeCommand("rm -rf /var/lib/lxc/"+self.hostname+"/rootfs")
         self.host.executeCommand("cp -pr /lxc/rootfs /var/lib/lxc/"+self.hostname)
        

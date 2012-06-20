@@ -246,7 +246,9 @@ echo "root ALL=(ALL) ALL" >> $R/etc/sudoers
 echo "$VIRTUSER ALL=(ALL) NOPASSWD: ALL" >> $R/etc/sudoers
 
 # Fix root and su
-run passwd -l root
+#run passwd -l root
+run echo root:student | chpasswd
+
 T=$R/etc/pam.d/su
 mv $T $T.old
 cat $T.old \
@@ -267,6 +269,9 @@ for u in $LOCALUSERS ; do
 done
 chown $VIRTUSER:$VIRTUSER $R/home/$VIRTUSER/.ssh $T
 chown root:root $R/home/$VIRTUSER/.ssh $T2
+
+
+
  
 ## Start it
 # Use sudo to bypass file descriptor problems
