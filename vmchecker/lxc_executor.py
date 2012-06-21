@@ -42,8 +42,11 @@ class LXCVM(VM):
         2. provide a way for starting multiple containters at the same time
         '''
         self.host.executeCommand("sudo lxc-stop -n "+self.hostname)
-        self.host.executeCommand("rm -rf /var/lib/lxc/"+self.hostname+"/rootfs")
-        self.host.executeCommand("cp -pr /lxc/rootfs /var/lib/lxc/"+self.hostname)
+        #self.host.executeCommand("rm -rf /var/lib/lxc/"+self.hostname+"/rootfs")
+        #self.host.executeCommand("cp -pr /lxc/rootfs /var/lib/lxc/"+self.hostname)
+        self.host.executeCommand("sudo lxc-destroy -n"+self.hostname)
+        self.host.executeCommand("sudo lxc-clone -o temp -n"+self.hostname)
+
        
     def copyTo(self, sourceDir, targetDir, files):
         """ Copy files from host(source) to guest(target) """
