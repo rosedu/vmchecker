@@ -38,8 +38,18 @@ sudo cp -pr /var/lib/lxc/deb1/rootfs /lxc
 sudo vmchecker/lxc-resources/host_iptables.sh
 
 
+Add the following to the hosts /etc/sudoers file:
 
+ALL     ALL=NOPASSWD: /usr/bin/lxc-start *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-stop *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-info *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-clone *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-destroy *
 
+Go to /usr/bin/lxc-clone
+Comment the following lines:
+#cp $lxc_path/$lxc_orig/fstab $lxc_path/$lxc_new/fstab
+#sed -i "s@$lxc_path/$lxc_orig@$lxc_path/$lxc_new@" $lxc_path/$lxc_new/fstab
 
 ###
 ### REFERENCES: http://www.v13.gr/blog/?p=192
