@@ -8,7 +8,7 @@ sudo cp vmchecker/lxc-resources/interfaces /etc/network/interfaces
 # or add it manually
 
 # add the following to /etc/hosts
-10.3.1.1    deb0 deb0.virt deb0.virt.local
+10.3.1.1     deb0 deb0.virt deb0.virt.local
 10.3.1.11    deb1 deb1.virt deb1.virt.local
 10.3.1.12    deb2 deb2.virt deb2.virt.local
 10.3.1.13    deb3 deb3.virt deb3.virt.local
@@ -28,9 +28,8 @@ none /cgroup cgroup defaults 0 0
 # create lxc container
 sudo sh vmchecker/lxc-resources/easylxc deb1
 
-# make backup of rootfs
-sudo mkdir /lxc
-sudo cp -pr /var/lib/lxc/deb1/rootfs /lxc
+# make backup of rootfs 
+sudo cp -pr /var/lib/lxc/deb1/ /var/lib/lxc/temp
 
 #
 # If you need web conectivity inside the lxc container:
