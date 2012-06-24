@@ -323,6 +323,60 @@ Host related methods, guest related methods and main method, that parse the
 bundle's parameters and call the apropriate functions in order to run the tests.
 
 
+Two host class was defined as shown in \labelindexref{listing}{lst:generic-host}.
+Classes that extend Host need to override the getVM method in order to return a
+VMware, LXC or KVM virtual machine object.
+
+
+\lstset{caption=Generic Host implementation, language=python, label=lst:generic-host}
+\begin{lstlisting}
+class Host():
+    def __init__(self):
+        pass
+    def executeCommand(self, cmd):
+        _logger.debug('Running command: %s' % cmd)
+        p = Popen([cmd],stdout=PIPE,stderr=STDOUT,shell=True)
+        output = p.stdout.read()
+        _logger.debug('Command output: %s' % output)
+        return output
+    def getVM(self, bundle_dir, vmcfg, assignment):
+        # vm = VM(self, bundle_dir, vmcfg, assignment)
+        return None
+    def start_host_commands(self, jobs_path, host_command):
+        """Run a command on the tester (host) machine"""
+        _logger.info('%%% -- starting host commands [' + host_command + ']')
+        if len(host_command) == 0:
+            return None
+        outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
+        try:
+            proc = Popen(host_command, stdout=outf, shell=True)
+        except:
+            _logger.exception('HOSTPROC: opening process: ' + host_command)
+        return (proc, outf)
+    def stop_host_commands(self, host_command_data):
+        """Stop previously run host commands"""
+        if host_command_data == None:
+            return
+        (proc, outf) = host_command_data
+        try:
+            os.kill(proc.pid, signal.SIGTERM)
+            outf.close()
+        except:
+            _logger.exception('HOSTPROC: while stopping host cmds')
+        _logger.info("%%% -- stopped host commands")
+\end{lstlisting}
+
+
+The VM class is a collection of methods that define a way to interact with the
+given virtual machine. While some methods are implemented, others that are
+virtual machine dependent are not. These methods, such as \textbf{start}, 
+\textbf{stop} and \textbf{revert}, need to be overriden in the 
+class that extends VM and implements the object that defines the interaction
+with a certain virtualization environment.
+
+\begin{center}
+\fig[scale=.5]{src/img/classes}{img:classes}{The class diagram}
+\end{center}
 
 
 
