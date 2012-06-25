@@ -23,7 +23,7 @@ that LXC is an acceptable choice because of the small effort required to
 deploy, run, and integrate with vmchecker.
 
 
-\subsection {Setting up the environment}
+\subsection {Setting Up the Environment}
 \label{sub-sec:vmc-lxc-env}
 
 In order to enable the usage of LXC as the virtualization type for testing an 
@@ -39,7 +39,7 @@ To avoid using the effective IPs of each container, associations need to be
 added to \textbf{/etc/hosts} as following the example in \labelindexref{hosts file}{lst:etc-hosts}
 
 
-\lstset{caption=Host aliases,label=lst:etc-hosts}
+\lstset{caption=Host Aliases,label=lst:etc-hosts}
 \begin{lstlisting}
 10.3.1.1     deb0 deb0.virt deb0.virt.local # Host alias
 10.3.1.11    deb1 deb1.virt deb1.virt.local # First container alias
@@ -55,7 +55,7 @@ following line to \textbf{/etc/fstab} so the command will be run at startup:
 none /cgroup cgroup defaults 0 0
 \end{lstlisting}
 
-\lstset{caption=Manually mounting cgroup,label=lst:create-cgroup}
+\lstset{caption=Manually Mounting cgroup,label=lst:create-cgroup}
 \begin{lstlisting}
 mkdir -p /cgroup
 mount none -t cgroup /cgroup
@@ -71,7 +71,7 @@ command was unavailable, another way of restoring the container to a previous st
 was needed. So, after creating the container, the sysadmin needs to create a backup
 of the newly generated file system.
 
-\lstset{caption=Creating a backup for the file system,label=lst:create-backup}
+\lstset{caption=Creating a Backup for the File System,label=lst:create-backup}
 \begin{lstlisting}
 sudo lxc-backup deb1 1
 \end{lstlisting}
@@ -81,7 +81,7 @@ run the executor as a regular user the sysadmin should add the lines in
 \labelindexref{listing}{lst:etc-sudoers} to the \textbf{/etc/sudoers} file 
 using the \textbf{visudo} command.
 
-\lstset{caption=Uninteractive sudo permission,label=lst:etc-sudoers}
+\lstset{caption=Uninteractive Sudo Permission,label=lst:etc-sudoers}
 \begin{lstlisting}
 ALL     ALL=NOPASSWD: /usr/bin/lxc-start *
 ALL     ALL=NOPASSWD: /usr/bin/lxc-stop *
@@ -90,7 +90,7 @@ ALL     ALL=NOPASSWD: /usr/bin/lxc-restore *
 \end{lstlisting}
 
 
-\subsection{Implementing the LXC executor}
+\subsection{Implementing the LXC Executor}
 \label{sub-sec:vmc-lxc-executor}
 
 The component of vmchecker which handles interaction with the virtual machine 
@@ -122,7 +122,7 @@ provided by LXC. Running commands inside the container was done by using a
 SSH connection to the container. The python source code is 
 provided in \labelindexref{listing}{lst:lxc-commands}
 
-\lstset{caption=Running commands,language=python,label=lst:lxc-commands}
+\lstset{caption=Running Commands,language=python,label=lst:lxc-commands}
 \begin{lstlisting}
 def guestRun(cmd):
     """ runs the command inside the lxc container """
@@ -146,7 +146,7 @@ LXC container, one could start the container by calling the
 \labelref{powerOn()}{lst:lxc-poweron} method, or run a command inside the container,
 that would return after a given timeout: \labelref{runWithTimeout(cmd, timeout)}{lst:lxc-runtimeout}.
 
-\lstset{caption=Method called to power on the container,language=python,label=lst:lxc-poweron}
+\lstset{caption=Method Called to Power on the Container,language=python,label=lst:lxc-poweron}
 \begin{lstlisting}
 def powerOn():
     hostRun("sudo lxc-start -n deb1 -d")
@@ -157,7 +157,7 @@ def powerOn():
 \end{lstlisting}
 
 
-\lstset{caption=Method that runs a command inside the container,language=python,label=lst:lxc-runtimeout}
+\lstset{caption=Method That Runs a Command Inside the Container,language=python,label=lst:lxc-runtimeout}
 \begin{lstlisting}
 def runWithTimeout(cmd, timeout):
     try:
@@ -177,7 +177,7 @@ restoring the state of the container was required. This was done by using the
 copy \labelref{command}{lst:lxc-restore} of Linux, with the preserve ownership and
 reccursive options.
 
-\lstset{caption=Restoring the contaier to a previous state, language=python, label=lst:lxc-restore}
+\lstset{caption=Restoring the Contaier to a Previous State, language=python, label=lst:lxc-restore}
 \begin{lstlisting}
 hostRun("rm -rf /var/lib/lxc/deb1/rootfs")
 hostRun("cp -pr /lxc/rootfs /var/lib/lxc/deb1")
@@ -189,7 +189,7 @@ two scripts provided by the developers of LXC would come into play.
 The \textbf{lxc-backup} and the \textbf{lxc-restore} scripts essentially create a
 copy of the file system and later restore it.
 
-\lstset{caption=Restoring the container to a previous state, language=python, label=lst:lxc-revert}
+\lstset{caption=Restoring the Container to a Previous State, language=python, label=lst:lxc-revert}
 \begin{lstlisting}
     def revert(self, number = None):
         if number==None:
@@ -198,10 +198,10 @@ copy of the file system and later restore it.
         self.host.executeCommand("sudo lxc-restore "+self.hostname+" "+number)
 \end{lstlisting}
 
-\subsection{Comments upon the implementation}
+\subsection{Comments Upon the Implementation}
 \label{sec:vmc-lxc-comments}
 
-\todo{Short description of the outcome and its strong points}
+\todo{Short Description of the Outcome and its Strong Points}
 
 \section{KVM}
 \label{sec:vmc-kvm}
@@ -218,13 +218,13 @@ integrated with the Linux kernel and that it is able to support basically
 any guest operating system through QEMU make KVM a good addition to vmchecker's 
 executor types.
 
-\subsection{Setting up the environment}
+\subsection{Setting Up the Environment}
 \label{sub-sec:vmc-kvm-setup}
 
 Setting up \textbf{KVM} is an incredibly easy process. Only two packages need
 to be installed.
 
-\lstset{caption=Install the needed packages, label=lst:kvm-deps}
+\lstset{caption=Install the Needed Packages, label=lst:kvm-deps}
 \begin{lstlisting}
 sudo apt-get install virtinst kvm
 \end{lstlisting}
@@ -248,7 +248,7 @@ sudo virt-install --connect qemu:///system --name kvm --hvm --ram 512 --disk pat
 The next step is to create a copy-on-write file with the virtual machine as a base.
 The file will be used restored after each test.
 
-\lstset{caption=Creating the target file, label=lst:kvm-base}
+\lstset{caption=Creating the Target File, label=lst:kvm-base}
 \begin{lstlisting}
 qemu-img create -f qcow2 -b saisp-vm.qcow2 base.qcow2
 cp base.qcow2 run.qcow2
@@ -259,7 +259,7 @@ from the executor. Installation will be done without a graphical interface,
 as it's unneeded.
 
 
-\lstset{caption=Install the KVM domain, label=lst:kvm-install}
+\lstset{caption=Install the KVM Domain, label=lst:kvm-install}
 \begin{lstlisting}
 sudo virt-install --connect qemu:///system --name kvm2 --hvm --ram 512 --disk path=/var/lib/kvm/run.qcow2,format=qcow2 --network network=default --import --graphics none
 virsh destroy kvm2 # stop the VM
@@ -267,7 +267,7 @@ virsh destroy kvm2 # stop the VM
 
 At this point, the KVM domain is installed and available.
 
-\subsection{Implementing the KVM executor}
+\subsection{Implementing the KVM Executor}
 \label{sub-sec:vmc-kvm-executor}
 
 Implementing the KVM executor posed different issues from LXC. While the
@@ -286,7 +286,7 @@ solution we settled on was to run the \textbf{arp} command on the host, in order
 to get the MAC-IP associations. The virtual machine's MAC address can be
 recovered from the guests XML description.
 
-\lstset{caption=Get the KVM guest's IP, label=lst:kvm-ip}
+\lstset{caption=Get the KVM Guest's IP, label=lst:kvm-ip}
 \begin{lstlisting}
 def getMac():
     mac = hostRun("virsh dumpxml kvm2")
@@ -325,45 +325,18 @@ bundle's parameters and call the apropriate functions in order to run the tests.
 
 Two host class was defined as shown in \labelindexref{listing}{lst:generic-host}.
 Classes that extend Host need to override the getVM method in order to return a
-VMware, LXC or KVM virtual machine object.
+VMware, LXC or KVM virtual machine object. The other methods, such as \textbf{executeCommand}
+and \textbf{start_host_commands} are already implemented and can be called
+without modifications in classes that extend Host, or in other classes or methods.
 
-
-\lstset{caption=Generic Host implementation, language=python, label=lst:generic-host}
+\lstset{caption=Generic Host Implementation, language=python, label=lst:generic-host}
 \begin{lstlisting}
 class Host():
-    def __init__(self):
-        pass
-    def executeCommand(self, cmd):
-        _logger.debug('Running command: %s' % cmd)
-        p = Popen([cmd],stdout=PIPE,stderr=STDOUT,shell=True)
-        output = p.stdout.read()
-        _logger.debug('Command output: %s' % output)
-        return output
-    def getVM(self, bundle_dir, vmcfg, assignment):
-        # vm = VM(self, bundle_dir, vmcfg, assignment)
-        return None
-    def start_host_commands(self, jobs_path, host_command):
-        """Run a command on the tester (host) machine"""
-        _logger.info('%%% -- starting host commands [' + host_command + ']')
-        if len(host_command) == 0:
-            return None
-        outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
-        try:
-            proc = Popen(host_command, stdout=outf, shell=True)
-        except:
-            _logger.exception('HOSTPROC: opening process: ' + host_command)
-        return (proc, outf)
-    def stop_host_commands(self, host_command_data):
-        """Stop previously run host commands"""
-        if host_command_data == None:
-            return
-        (proc, outf) = host_command_data
-        try:
-            os.kill(proc.pid, signal.SIGTERM)
-            outf.close()
-        except:
-            _logger.exception('HOSTPROC: while stopping host cmds')
-        _logger.info("%%% -- stopped host commands")
+    def __init__(self): pass
+    def executeCommand(self, cmd): pass
+    def getVM(self, bundle_dir, vmcfg, assignment): pass
+    def start_host_commands(self, jobs_path, host_command): pass
+    def stop_host_commands(self, host_command_data): pass
 \end{lstlisting}
 
 
@@ -377,6 +350,36 @@ with a certain virtualization environment.
 \begin{center}
 \fig[scale=.5]{src/img/classes}{img:classes}{The class diagram}
 \end{center}
+
+
+\lstset{caption=Generic VM Implementation, language=python, label=lst:generic-vm}
+\begin{lstlisting}
+class VM():
+    host 	= None
+    path 	= None
+    username	= None
+    password	= None
+    IP	= None
+    def __init__(self, host, bundle_dir, vmcfg, assignment):    pass
+    def executeCommand(self, cmd):          pass
+    def executeNativeCommand(self, cmd):    pass
+    def hasStarted(self):   pass
+    def start(self):        pass
+    def stop(self):         pass
+    def revert(self, number = None):                    pass
+    def copyTo(self, targetDir, sourceDir, files):      pass
+    def copyFrom(self, targetDir, sourceDir, files):    pass
+    def run(self, shell, executable_file, timeout):     pass
+    def runTest(self, bundle_dir, machinecfg, test):    pass
+    def try_power_on_vm_and_login(self):                pass
+    def test_submission(self, buildcfg = None):         pass
+\end{lstlisting}
+
+
+The new step was to modify the naive scripts implemented for each virtualization
+method into new vmchecker modules. Creating a module for the VMware executor
+was very simple, and only required translation of the existing methods into a new
+class.
 
 
 

@@ -1,7 +1,7 @@
 \chapter{Introduction}
 \label{chapter:intro}
 
-\section{Brief history of vmchecker}
+\section{Brief History of vmchecker}
 \label{sec:vmc-history}
 
 \subsection{Motivation}
@@ -43,17 +43,13 @@ This project aims to improve the performance of the vmchecker automated grading
 system by adding support for multiple virtualization types, simplifying its
 design and by insuring its scalability.
 
-\subsection{Development and support}
-\label{sub-sec:vmc-history-dev}
-
-\todo{Info}
 
 \subsection{Features}
 \label{sub-sec:vmc-history-features}
 
 \todo{Features}
 
-\section{The architecture of vmchecker}
+\section{The Architecture of Vmchecker}
 \label{sec:vmc-architecture}
 
 The vmchecker automated grading system consists of two separate subsystems:
@@ -63,7 +59,7 @@ The vmchecker automated grading system consists of two separate subsystems:
 \end{enumerate}
 
 \begin{center}
-\fig[scale=.6]{src/img/simple-structure}{img:simple-structure}{Simple structure}
+\fig[scale=.6]{src/img/simple-structure}{img:simple-structure}{Simple Structure}
 \end{center}
 
 The storer subsystem runs an webserver that allow the user to upload an archive
@@ -75,7 +71,7 @@ receiving them proceeds to powering on a virtual machine, compiling the submitte
 source code, running certain tests and uploading those tests to the storer.
 
 
-\subsection{The storer}
+\subsection{The Storer}
 \label{sub-sec:storer}
 
 The storer is basically a Linux running machine that runs an Apache webserver
@@ -86,7 +82,7 @@ assignment, student name and submission date. This is done in order to prevent
 the accidental overwriting of a submission.
 
 \begin{center}
-\fig[scale=.4]{src/img/storer-structure}{img:storer-structure}{Storer structure}
+\fig[scale=.4]{src/img/storer-structure}{img:storer-structure}{Storer Structure}
 \end{center}
 
 The storer machine may host repositories for multiple courses. The storer
@@ -102,44 +98,44 @@ for each assignment (such as deadline, title, virtual machine name), the
 configuration for each available tester (ip or url, username, queue path)
 and the configuration for each virtual machine.
 
-Also in course's storer you may find a tests/ folder, which contains an archive
+Also in course's storer you may find a \textit{tests/} folder, which contains an archive
 with each assignment's tests, several scripts to build and run each assignment,
-a database file, and a repo/ folder.
+a database file, and a \textit{repo/} folder.
 
 \begin{center}
-\fig[scale=.4]{src/img/repo-structure}{img:repo-structure}{Repo structure}
+\fig[scale=.4]{src/img/repo-structure}{img:repo-structure}{Repo Structure}
 \end{center}
 
-The repo/ folder contains every submission made to this course. It is organized
+The \textit{repo/} folder contains every submission made to this course. It is organized
 by assignment, student name and subission date. A symbolic link is made to the 
 most recent submission. The submission folder holds the original archive uploaded
-by the student,  a git/ folder with the unzipped contents of the archive and a 
-file named submission-config which lists the submission's description, and a
+by the student, a \textit{git/} folder with the unzipped contents of the archive and a 
+file named \textit{submission-config} which lists the submission's description, and a
 results folder which holds the output from the testing process.
 
-\subsection{The tester}
+\subsection{The Tester}
 \label{sub-sec:tester}
 
 The tester is a separate Linux running machine which hass, just like the storer,
-a separate user account for each course. A process called queue-manager 
-waits for file system events in the queue/ folder. The storer uploads a new
+a separate user account for each course. A process called \textit{queue-manager}
+waits for file system events in the \textit{queue/} folder. The storer uploads a new
 archive to the folder which consists of the student's submission, the tests, and
 the necessary scripts to build and run the files. When a new archive is uploaded,
 the queue-manager process extracts the contents to a folder and runs the executor.
 
 \begin{center}
-\fig[scale=.4]{src/img/tester-structure}{img:tester-structure}{Tester structure}
+\fig[scale=.4]{src/img/tester-structure}{img:tester-structure}{Tester Structure}
 \end{center}
 
 The executor is a script that handles the virtual machine specific interactions.
 It powers on the virtual machine, it uploads the files, runs the build script and
- the necessary tests. The test results are contained in .vmr files.
+ the necessary tests. The test results are contained in \textit{.vmr} files.
 The executor then copies the result files to the bundle folder, shuts down the
 virtual machine, then uploads the results to the storer, in the folder designated
-by the submission-config file.
+by the \textit{submission-config} file.
 
 
-\subsection{Storer - Tester interaction}
+\subsection{Storer - Tester Interaction}
 \label{sub-sec:interaction}
 
 Communication and file transfer between the storer and the tester is done
@@ -158,21 +154,21 @@ the files.
 \label{sub-sec:install}
 
 Installing the vmchecker system is a pretty complicated process.
-On the storer system, one simply needs to run the setup.py script, and then 
-the vmchecker-init-course script, with the parameter storer. The last script
+On the storer system, one simply needs to run the \textit{setup.py} script, and then 
+the \textit{vmchecker-init-course} script, with the parameter \textit{storer}. The last script
 initializes a new storer folder, with a default config file and an empty database.
 
-The next step is generating the public/private keys and set the appropriate 
-persmissions so that the www-data account can read them. Then add the appropriate 
+The next step is generating the public and private keys and set the appropriate 
+permissions so that the \textit{www-data} user account can read them. Then add the appropriate 
 settings for the assignments, tester and virtual machines to the config file.
 Keep in mind that the tester and virtual machines have not been set up yet.
 
 The web interface is set up by creating a new user accound called vmchecker,
-setting up a public_html folder in its home and placing all the necessary files
+setting up a \textit{public_html} folder in its home and placing all the necessary files
 to this location. The next step is creating a new website configuration at 
-/etc/apache2/sites-available/
+\textit{/etc/apache2/sites-available/}
 
-Finally, you need to edit the global configuration file at /etc/vmchecker/config.list
+Finally, you need to edit the global configuration file at \textit{/etc/vmchecker/config.list}
 so the course will be listed in the web interface.
 
 To install the tester a few extra steps are needed. vmchecker uses the VMware-VIX
@@ -180,14 +176,14 @@ API to interact with the virtual machines. So you first need to install VMware
 server or WMware wokstation and the VMware-VIX package, then install the pyVix 
 wrapper created by Lucian Grijincu.
 
-The next step is to run the setup.py script, then the vmchecker-init-course script,
+The next step is to run the \textit{setup.py} script, then the \textit{vmchecker-init-course} script,
 with the parameter tester. The script will initialize the folder with a config file,
-and queue/ and tmpunzip/ folders.
+and \textit{queue/} and \textit{tmpunzip/} folders.
 
 The queue-manager script is then run. 
 
 
-\section{Analysis of the shortcomings of the former architecture}
+\section{Analysis of the Shortcomings of the Former Architecture}
 \label{sec:vmc-analysis}
 
 While it is a very useful and powerful tool, vmchecker has its share of drawbacks.
@@ -199,7 +195,7 @@ backwards compatibility would be lost and the workload would
 proove monumental. We arrive to the conclusion that for the time being it's best
 to improve upon the existing model, while focusing on the major areas of concern.
 
-\subsection{The virtualization environments}
+\subsection{The Virtualization Environments}
 \label{sub-sec:vmc-analysis-env}
 
 From its inception the only virtualization environment supported by vmchecker 
@@ -219,7 +215,7 @@ with the virtual machine.
 Another issue with VMware is the long startup time and the fact that it isn't 
 immediately responsive following the restauration of a snapshot.
 
-\subsection{SSH keys and persmissions}
+\subsection{SSH Keys and Permissions}
 \label{sub-sec:vmc-analysis-ssh}
 
 An important issue with vmchecker is the ease of setting up the tester and storer
@@ -248,7 +244,7 @@ of vmchecker, the extra performance of the host goes to waste.
 In these cases, a dynamical way of distributing the workload between testers is 
 needed.
 
-\section{Improving the existing model}
+\section{Improving the Existing Model}
 \label{sec:vmc-improving}
 
 This project aims to improve the performance of vmchecker. 

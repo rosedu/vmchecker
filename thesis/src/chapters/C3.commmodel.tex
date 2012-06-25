@@ -1,17 +1,144 @@
-\chapter{Redesigning the communication model}
+\chapter{Redesigning the Communication Model}
 \label{chapter:virt-comm-model}
-
-\todo{Write Intro chapter}
 
 \section{Overview}
 \label{sec:vmc-overview}
 
-\section{Authentication and security}
+The communication between the tester and the storer is currently done
+through SSH. Authentication is done through public-private key pairs.
+For example, let's take \textbf{course1}. When setting up the storer
+and tester for the course, the user course1 is created on both the
+storer and the tester. Keys are generated for each of them, and
+the public keys are added to each other's authorized_keys file.
+As one can see in \labelindexref{Figure}{img:ssh-comm} there are two 
+steps to the communication process: Step (1) is triggered by the student
+submitting an assigment. The files are saved in the repository, and a bundle
+is created containing the tests and scripts to build and run the tests.
+The bundle is transferred by the www-data user to the tester using SSH key 1, 
+to the designated location in the course's \textit{config} file.
+
+Step (2) is triggered by the evaluation process being completed. 
+The results are returned to the storer, by the queue-manager 
+process running with course1's permissions, using SSH key 2. 
+The \textit{.vmr} files are saved on the storer to the location 
+set in the \textit{course-config} file.
+
+\begin{center}
+\fig[scale=.5]{src/img/ssh-comm}{img:ssh-comm}{Communication Model}
+\end{center}
+
+\section{Authentication and Security}
 \label{sec:vmc-auth}
 
-\section{Daemon's implementation}
+Even though the communication model between storer and tester is reliable,
+adding a new course to the system involves a great amount of work, mostly 
+because authorization requires generating and deploying SSH keys and setting
+the appropriate permissions.
+
+Another important issue is that by the current model, the tester is the one 
+that copies the results to the appropriate location on the storer. This is 
+a serious security issue. Even though the tester doesn't really host important
+information, an attacker that has access to the tester can potentially access 
+and destroy information located on the storer machine.
+
+In order to eliminate this flaw, ideally the tester would have no access to the
+storer. Instead of the tester pushing the results to the storer, the storer
+would pull the results when notified. Even though this notification will be done
+through a less secure channel, the storer's integrity cannot be compromized.
+
+Our approach was to introduce another element to the storer, that takes care
+of communicating with the tester or testers. This element will run as a separate
+process having permissions to access any of the files in any course's repository.
+We'll call this process the \textbf{daemon}.
+
+Although it introduces some additional complexity to \labelref{the diagram}{img:new-comm}
+having the daemon in the system actually simplifies a large part of the communication.
+First of all, course1's storer no longer needs to hold a SSH key, as the only needed
+key held by the daemon. Secondly, the tester doesn't require each course to have
+it's own user account anymore. Since there is no possibilty to get access to the 
+storer from the tester, any administrator that needs to set up a testing environment
+can simply access it directly.
+
+The newly defined communication model works in the followin way:
+
+The submission of an assignment in the web interface copies the files to the
+repo (1) and calls the queue_task() method of the daemon (2) which in turn
+creates and sends the bundle to the tester (3).
+Upon completion of the evaluation process, the tester calls the notify() 
+method of the daemon (4) which copies the results from the tester (5)
+and places them in the repository (6).
+
+For a secure daemon some restrictions have to be imposed. First of all, the 
+queue_task() method must only be called from the storer and the
+notify() method must only be called from the tester. Calls from any other
+machines should fail. Secondly, when submitting an assignment to the tester,
+the daemon must retain the location in the course's repo, where the results will
+be saved, and issue a random key. This way, the location on the storer can't be
+modified by an attacker with access to the tester.
+
+\begin{center}
+\fig[scale=.5]{src/img/new-comm}{img:new-comm}{New Communication Model}
+\end{center}
+
+
+\section{Daemon's Implementation}
 \label{sec:vmc-daemon}
 
+Implementing the daemon was a rather simple task. The methods located in 
+\textit{submit.py} that were originally called from the web interface when
+a user submitted the assignment, were moved to \textit{storer_daemon.py}.
+In order to provide access to these methods, python's XMLRPC was used.
+The daemon acts as a server and listens on a designated port for requests.
+The callers, which may be the storer itself or the tester machine will
+simply connect to the storer's port and issue a request.
+
+Providing selective access to the methods was done by extending the
+\textbf{SimpleXMLRPCServer} and \textbf{SimpleXMLRPCRequestHandler} classes.
+When a method is called, the dispatcher checks if the function's name is 
+in the restricted_functions dictionary. If it is, it then checks if the
+client IP matches any of the IPs defined in the list. A client that isn't
+in the list is not allowed to call that function, so the request fails.
+
+
+\lstset{caption=SelectiveServer implementation, language=python, label=lst:selective-srv}
+\begin{lstlisting}
+class SelectiveHandler(SimpleXMLRPCRequestHandler):
+    def _dispatch(self, method, params):
+        server = self.server
+        clientIP, clientPORT = self.client_address
+        if method in server.restricted_functions:
+            if not clientIP in server.restricted_functions[method]:
+                raise Exception('Method not supported for this IP')
+        func = None
+        try:
+            func = server.funcs[method]
+        except KeyError:
+            raise Exception('method "%s" is not supported' % method)
+        if func is not None:
+                return func(*params)
+        else:
+            raise Exception('method "%s" is not supported' % method)            
+        
+class SelectiveServer(SimpleXMLRPCServer):
+    restricted_functions = {}
+    def register_function(self, function, name = None, IP = None):
+        if not IP is None:
+            if name is None:
+                name = function.__name__
+            if name in self.restricted_functions:
+                self.restricted_functions[name].append(IP)
+            else:
+                self.restricted_functions[name] = [ IP ]
+        SimpleXMLRPCServer.register_function(self,function, name)
+        
+srv = SelectiveServer(("", RPC_PORT), SelectiveHandler)
+srv.register_function(queue_for_testing, IP='127.0.0.1')
+\end{lstlisting}
+
+Since the daemon needs access to the repositories in order to create the bundle,
+it needs to be run with www-data's permissions or under another dedicated account.
+This account needs to be given full read-write permission to the repository
+by the \textit{vmchecker-init-course} script.
 
 
 

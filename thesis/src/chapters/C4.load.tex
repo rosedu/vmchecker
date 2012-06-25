@@ -1,12 +1,41 @@
-\chapter{Load balancing and self-management}
+\chapter{Load Balancing and Scalability}
 \label{chapter:virt-load}
 
-\todo{Write Intro chapter}
+One of the major drawbacks of the current vmchecker is that at times an entire
+tester may be sitting idle, while another has over a dozen submissions to
+evaluate. The reason for this is that each assignment's tester is statically
+set in the course's \textit{config} file. 
 
-\section{Estimating the evaluation time}
+The first problem to this approach is that testing a certain submission might
+require certain packages to be installed on the host operating system, 
+that certain virtual machines might not exist, or more generally that
+evaluating a submission might fail, even though the submission should
+succeed.
+
+Another problem is the way you assign submissions to each tester queue. 
+While the web interface is able to check how many submissions are in a queue,
+it doesn't have any way of estimating the time an evaluation might take.
+
+In order to tackle these issues, when notifing the storer that it has finished
+evaluating an assignment, the tester will also provide the running time. 
+Failing to contact the tester, to start the virtual machine or no receival of
+the notification will be counted as taking a long time. This means that submissions
+for that assignment will not be directed to that virtual machine.
+
+Determining the compatible virtual machines will be done using the course's official
+implementation. The submission will be added to every available queue, excepting
+those that feature an incompatible operating system or virtualization environment.
+For example, the submission to a Windows assignment will never be added to the
+queue of a Linux virtual machine, also a kernel module will never be tested 
+inside an LXC container.
+
+\section{Estimating the Evaluation Time}
 \label{sec:vmc-estimating}
 
-\section{Choosing the best machine}
+Evaluating the time that evaluating a submission might take is a generally
+straight-forward process. 
+
+\section{Choosing the Best Machine}
 \label{sec:vmc-best}
 
 
