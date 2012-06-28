@@ -36,8 +36,8 @@ on the quality of the submitted code, it could provide the student with immediat
 information regarding the behaviour of his homework given certain input data.
 
 In order to automate the testing process as much as possible, the \project project 
-was initiated by the Computer Science department at the Politehnica 
-University of Bucharest.
+was initiated by the Computer Science and Engineering department at the 
+University POLITEHNICA of Bucharest.
 
 This project aims to improve the performance of the vmchecker automated grading
 system by adding support for multiple virtualization types, simplifying its
@@ -47,9 +47,28 @@ design and by insuring its scalability.
 \subsection{Features}
 \label{sub-sec:vmc-history-features}
 
-\todo{Features}
+{\bf vmchecker} was built with regard to the requirements of active courses. This
+meant that the system has a number of mandatory features:
 
-\section{The Architecture of Vmchecker}
+\begin{itemize}
+\item A submission that potentially crashes the system during testing will not affect
+the overall functionality, as it's sandboxed in a virtual machine.
+\item The system can automatically detect if the student has sent his homework late
+and apply a penalty.
+\item Homeworks can be rechecked at any time, if the grader has concerns regarding
+the functionality of the submission.
+\item The system provides immediate feedback regarding the building and testing 
+process to the students. Faulty or incomplete homeworks may be resubmitted.
+\item Access to the source files and the test output files is given to the grader.
+\item The web interface and submission repository are located on a different system
+from the one doing the actual testing. So even though the testing system might
+be unavailable, students can still submit their homework.
+\item The system is able to evaluate submissions in any programming language,
+and it may even receive an entire virtual machine for testing.
+\end{itemize}
+
+
+\section{The Architecture of vmchecker}
 \label{sec:vmc-architecture}
 
 The vmchecker automated grading system consists of two separate subsystems:
@@ -251,17 +270,17 @@ This project aims to improve the performance of vmchecker.
 
 All of the concerns listed in the previous section will be tackled as follows:
 
-* Support for new virtualization platforms will be added, while keeping support
+\begin{itemize}
+\item Support for new virtualization platforms will be added, while keeping support
 for VMware. This will ensure a smooth transition and the new version of vmchecker
 will be backwards compatible.
-
-* In order to eliminate the need for SSH keys for each account the communication
+\item In order to eliminate the need for SSH keys for each account the communication
 model will be modified, such that a daemon process running on the storer will
 deal with the communication with the tester machines. The daemon process will also
 be the one to fetch the results from the tester machine, thus eliminating the need
 for the tester to know the storer's public keys.
-
-* The queue-manager service will be able to provide status updates to the daemon,
+\item The queue-manager service will be able to provide status updates to the daemon,
 so it will be aware of the number and capabilities of all the available virtual
 machines. A load balancing service will be provided by the storer daemon, which
 will be able to properly place the submitted assignment in the least used queue.
+\end{itemize}

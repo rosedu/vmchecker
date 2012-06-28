@@ -1,5 +1,32 @@
 \chapter{Further development}
 \label{chapter:virt-devel}
 
-\todo{Write Intro chapter}
+Although \project is a perfectly usable system, there is always room for improvement.
+We have identified some of the areas where \project lacks support and intend to
+develop them in the future.
 
+\begin{itemize}
+\item {\bf Web interface for grading the submissions}. Currently this is done by
+remotely connecting to the storer, reviewing the source code and the test results
+and writing the score in a text file. A web interface for grading and administration
+would improve both the usability and security of the system.
+\item {\bf Storer access for students}. Accidents where a student uploads a
+homework in the wrong section happen with increased regularity. This is usually
+fixed by a course administrator. A student's ability to manage his own submissions
+would be a great improvement.
+\item {\bf CLI utility for submitting assignments}. A command line tool for 
+submitting the homework might prove very useful to many students, especially
+those who prefer to work on systems without a graphical user interface.
+\item {\bf Cache for LDAP authentication}. Presently students use their
+LDAP user account and password to authenticate in the web inteface. However,
+if the LDAP server ever fails that means that vmchecker, although running,
+cannot be accessed by students.
+\item {\bf MPI and OpenMP support}. In order to integrate these testing platforms
+into \project, one only needs to extend the generic executor and implement
+the methods needed to interact with the system used for testing the MPI or OpenMP
+assignment.
+\item {\bf Debian installation package}. Installing \project on a new system
+is a difficult task, especially for those who have never used it before. 
+A package that would take care of the installation process would be a great 
+step forward regarding the popularity of \project as an automatic grading system.
+\end{itemize}

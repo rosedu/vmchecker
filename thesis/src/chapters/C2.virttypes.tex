@@ -169,6 +169,8 @@ def runWithTimeout(cmd, timeout):
         return False
 \end{lstlisting}
 
+\todo{lxc-checkpoint is done}
+
 During the implementation of this project, \textbf{LXC} was not yet finalized,
 so the \textbf{lxc-checkpoint} command wasn't available. 
 The immediate solution was to create a backup of the container's filesystem to a 
@@ -198,7 +200,7 @@ copy of the file system and later restore it.
         self.host.executeCommand("sudo lxc-restore "+self.hostname+" "+number)
 \end{lstlisting}
 
-\subsection{Comments Upon the Implementation}
+\subsection{Observations}
 \label{sec:vmc-lxc-comments}
 
 \todo{Short Description of the Outcome and its Strong Points}
