@@ -58,7 +58,7 @@ class VmWareVM(VM):
 
 
     def executeCommand(self,cmd):
-        return self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
+        return self.vminstance.runProgramInGuest('/bin/bash','--login -c "'+cmd+'"')
     
     def start(self):
         self.vminstance.powerOn()
@@ -68,7 +68,7 @@ class VmWareVM(VM):
             self.vminstance.powerOff()
         except pyvix.vix.VIXException:
             _logger.exception('IGNORED EXCEPTION')
-        if self.cfg.vmware_register_and_unregister():
+        if self.vmwarecfg.vmware_register_and_unregister():
             try:
                 self.vmhost.unregisterVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
             except pyvix.vix.VIXException:
@@ -159,7 +159,7 @@ class VmWareVM(VM):
                         'Make sure you have the user accounts properly configured.\n'
                 return False
 
-        time.sleep(self.asscfg.delay_between_tools_and_tests(assignment))
+        time.sleep(self.asscfg.delay_between_tools_and_tests(self.assignment))
         return True
         
         
@@ -191,7 +191,7 @@ class VmWareVM(VM):
                 _logger.error('host file (to send) "%s" does not exist' % host_path)
                 return
             _logger.info('copy file %s from host to guest at %s' % (host_path, guest_path))
-            vm.copyFileFromHostToGuest(host_path, guest_path)
+            self.vminstance.copyFileFromHostToGuest(host_path, guest_path)
         
     def copyFrom(self, sourceDir, targetDir, files):
         """ Copy files from guest(source) to host(target) """
@@ -199,7 +199,7 @@ class VmWareVM(VM):
             host_path = os.path.join(targetDir, f)
             guest_path = os.path.join(sourceDir, f)
             _logger.info('copy file %s from guest to host at %s' % (guest_path, host_path))
-            vm.copyFileFromGuestToHost(guest_path, host_path)
+            self.vminstance.copyFileFromGuestToHost(guest_path, host_path)
             if not os.path.exists(host_path):
                 _logger.error('host file (received) "%s" does not exist' % host_path)
 

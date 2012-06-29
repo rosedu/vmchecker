@@ -25,13 +25,13 @@ from subprocess import Popen, PIPE, STDOUT
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 try:
     from vmchecker.lxc_executor import LXCVM, LXCHost
+    print "Loaded LXC executor"
 except:
     print "Could not load LXC executor"
-    print "Loaded LXC executor"
 try:
     from vmchecker.kvm_executor import kvmVM, kvmHost
+    print "Could not load KVM executor"    
 except:
-    print "Could not load KVM executor"
     print "Loaded KVM executor"
 try:
     from vmchecker.vmware_executor import VmWareVM, VmWareHost
