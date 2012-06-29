@@ -23,13 +23,15 @@ from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
-from vmchecker.lxc_executor import LXCVM, LXCHost
-from vmchecker.kvm_executor import kvmVM, kvmHost
+try:
+    from vmchecker.lxc_executor import LXCVM, LXCHost
+
+try:
+    from vmchecker.kvm_executor import kvmVM, kvmHost
 
 try:
 	from vmchecker.vmware_executor import VmWareVM, VmWareHost
-except:
-	print "Could not load vmware executor"
+
 
 
 
