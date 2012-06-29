@@ -9,7 +9,7 @@ The results are listed below:
 \paragraph {}
 
 Virtualization method: LXC
-
+\begin{center}
 \begin{tabular}{ l | c }
 Total time & Running time \\
 4.292s & 0.4249s  \\
@@ -17,12 +17,12 @@ Total time & Running time \\
 4.250s & 0.4277s  \\
 4.311s & 0.4406s  \\
 \end{tabular}
-
+\end{center}
 \paragraph {}
 
 
 Virtualization method: VMware
-
+\begin{center}
 \begin{tabular}{ l | c }
 Total time & Running time \\
 30.404s & 2.1983s  \\
@@ -30,11 +30,11 @@ Total time & Running time \\
 30.190s & 2.1984s  \\
 30.173s & 2.1973s  \\
 \end{tabular}
-
+\end{center}
 \paragraph {}
 
 Virtualization method: KVM
-
+\begin{center}
 \begin{tabular}{ l | c }
 Total time & Running time \\
 26.320s & 0.2821s  \\
@@ -42,7 +42,7 @@ Total time & Running time \\
 28.629s & 0.2450s  \\
 26.482s & 0.2831s  \\
 \end{tabular}
-
+\end{center}
 
 \paragraph { }
 
@@ -52,7 +52,7 @@ in terms of evaluation time. It is almost 10 times as fast as VMware.
 As profiling the python scripts revealed, a noticeable part of the time
 was occupied by the SSH connection, used for transferring the files in and out
 of the container. However, when using the Linux native copy command, {\bf cp},
-that time was reduced by up to a second. However, SSH is better way to
+that time was reduced by up to a second. Still, SSH is better way to
 copy files to and from the container, as it does not require superuser access.
 
 \paragraph { }
