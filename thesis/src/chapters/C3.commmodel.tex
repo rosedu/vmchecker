@@ -12,7 +12,7 @@ storer and the tester. Keys are generated for each of them, and
 the public keys are added to each other's authorized_keys file.
 As one can see in \labelindexref{Figure}{img:ssh-comm} there are two 
 steps to the communication process: Step (1) is triggered by the student
-submitting an assigment. The files are saved in the repository, and a bundle
+submitting an assignment. The files are saved in the repository, and a bundle
 is created containing the tests and scripts to build and run the tests.
 The bundle is transferred by the www-data user to the tester using SSH key 1, 
 to the designated location in the course's \textit{config} file.
@@ -44,7 +44,7 @@ and destroy information located on the storer machine.
 In order to eliminate this flaw, ideally the tester would have no access to the
 storer. Instead of the tester pushing the results to the storer, the storer
 would pull the results when notified. Even though this notification will be done
-through a less secure channel, the storer's integrity cannot be compromized.
+through a less secure channel, the storer's integrity cannot be compromised.
 
 Our approach was to introduce another element to the storer, that takes care
 of communicating with the tester or testers. This element will run as a separate
@@ -55,11 +55,11 @@ Although it introduces some additional complexity to \labelref{the diagram}{img:
 having the daemon in the system actually simplifies a large part of the communication.
 First of all, course1's storer no longer needs to hold a SSH key, as the only needed
 key held by the daemon. Secondly, the tester doesn't require each course to have
-it's own user account anymore. Since there is no possibilty to get access to the 
+it's own user account anymore. Since there is no possibility to get access to the 
 storer from the tester, any administrator that needs to set up a testing environment
 can simply access it directly.
 
-The newly defined communication model works in the followin way:
+The newly defined communication model works in the following way:
 
 The submission of an assignment in the web interface copies the files to the
 repo (1) and calls the queue_task() method of the daemon (2) which in turn
@@ -133,7 +133,7 @@ class SelectiveServer(SimpleXMLRPCServer):
         SimpleXMLRPCServer.register_function(self,function, name)
         
 srv = SelectiveServer(("", RPC_PORT), SelectiveHandler)
-srv.register_function(queue_for_testing, IP='127.0.0.1')
+srv.register_function(queue_task, IP='127.0.0.1')
 \end{lstlisting}
 
 Since the daemon needs access to the repositories in order to create the bundle,

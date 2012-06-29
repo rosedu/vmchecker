@@ -52,19 +52,20 @@ in terms of evaluation time. It is almost 10 times as fast as VMware.
 As profiling the python scripts revealed, a noticeable part of the time
 was occupied by the SSH connection, used for transferring the files in and out
 of the container. However, when using the Linux native copy command, {\bf cp},
-that time was reduced by up to a second. However, SSH is a much more
-consistent method to achieve this task.
+that time was reduced by up to a second. However, SSH is better way to
+copy files to and from the container, as it does not require superuser access.
 
 \paragraph { }
 
-Another interesting obeservation was that KVM actually has a better running
-time for the actual program than any other virtualization method,
- although the total time is close to that of VMware. 
- However, considering the drawbacks of VMware, that makes it a worthy candidate.
+Another interesting observation was that KVM actually has a better running
+time of the actual program than any other virtualization method,
+ although the total evaluation time is close to that of VMware. 
+ However, considering the drawbacks of VMware, that makes KVM a powerful
+alternative.
 
 \paragraph { } 
 
-The testing was performed on an Intel Core i7-2630QM machine at 2.0 Ghz with 8GB
+The testing was performed on an Intel Core i7-2630QM machine at 2.0 GHz with 8GB
 of RAM, running Ubuntu 11.10. The testing bundle was the same in all cases,
 consisting in a computationally intensive homework for the Operating Systems course.
 

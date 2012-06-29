@@ -25,6 +25,9 @@ Between many operating system-level virtualization methods, we have concluded
 that LXC is an acceptable choice because of the small effort required to 
 deploy, run, and integrate with vmchecker.
 
+LXC is a lightweight virtual system mechanism which builds up from the chroot
+command by adding resource management and isolation mechanism to Linux's 
+existing process infrastructure.
 
 \subsection {Setting Up the Environment}
 \label{sub-sec:vmc-lxc-env}
@@ -67,11 +70,12 @@ mount none -t cgroup /cgroup
 The \textit{lxc-resources/easylxc} script can now be used in order to create
 a new LXC container in which assignments can be tested. The script receives the
 name of the container as its argument. In the first stage of the project, only the
-first container name \textbf{deb1} was created and used.
+first container name, \textbf{deb1}, was created and used.
 
-Because the implementation of LXC was not yet finalized hence the \textbf{lxc-snapshot}
-command was unavailable, another way of restoring the container to a previous state
-was needed. So, after creating the container, the sysadmin needs to create a backup
+Because the implementation of LXC was not yet finalized during the implementation
+process, the \textbf{lxc-snapshot} command was unavailable so
+another way of restoring the container to a previous state
+was needed. After creating the container, the sysadmin needs to create a backup
 of the newly generated file system.
 
 \lstset{caption=Creating a Backup for the File System,label=lst:create-backup}
@@ -172,25 +176,10 @@ def runWithTimeout(cmd, timeout):
         return False
 \end{lstlisting}
 
-During the implementation of this project, the implementation of\textbf{LXC} was 
-not yet finalized, so the \textbf{lxc-checkpoint} command wasn't available. 
-The immediate solution was to create a backup of the container's filesystem to a 
-backup location (\textit{/lxc/rootfs}), and copy it back whenever 
-restoring the state of the container was required. This was done by using the
-copy \labelref{command}{lst:lxc-restore} of Linux, with the preserve ownership and
-reccursive options.
 
-\lstset{caption=Restoring the Contaier to a Previous State, language=python, label=lst:lxc-restore}
-\begin{lstlisting}
-hostRun("rm -rf /var/lib/lxc/deb1/rootfs")
-hostRun("cp -pr /lxc/rootfs /var/lib/lxc/deb1")
-\end{lstlisting}
-
-However, this method proved to be unsatisfactory since it required superuser access to
-the file system, and the executor would generally be run by another user. 
-In order to bypass this limitation,
-two scripts provided by the developers of LXC would come into play. 
-The \textbf{lxc-backup} and the \textbf{lxc-restore} scripts essentially create a
+In order to restore the container to a previous state, and the {\bf lxc-snapshot} 
+command was unavailable, we settled with using the \textbf{lxc-backup} and 
+the \textbf{lxc-restore} scripts that essentially create a
 copy of the file system and later restore it.
 
 \lstset{caption=Restoring the Container to a Previous State, language=python, label=lst:lxc-revert}
@@ -334,7 +323,7 @@ would benefit from a refactoring that uses class inheritance.
 
 From the executor's source code we can identify three major method categories:
 Host related methods, guest related methods and main method, that parse the
-bundle's parameters and call the apropriate functions in order to run the tests.
+bundle's parameters and call the appropriate functions in order to run the tests.
 
 
 Two host class was defined as shown in \labelindexref{listing}{lst:generic-host}.
