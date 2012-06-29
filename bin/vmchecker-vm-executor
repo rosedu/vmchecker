@@ -34,7 +34,7 @@ except:
     print "Could not load KVM executor"
     print "Loaded KVM executor"
 try:
-	from vmchecker.vmware_executor import VmWareVM, VmWareHost
+    from vmchecker.vmware_executor import VmWareVM, VmWareHost
     print "Loaded VMware executor"
 except:
     print "Could not load VMware executor"
