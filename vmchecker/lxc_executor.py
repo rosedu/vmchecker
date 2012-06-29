@@ -15,7 +15,10 @@ class LXCVM(VM):
     hostname = 'deb1'
     #hostpath = '/var/lib/lxc/'+hostname
     def executeCommand(self,cmd):
-        return self.host.executeCommand("ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "+self.username+"@"+self.hostname+" "+cmd)
+        first = time.time()
+        o = self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
+        print "["+cmd+"] TIME: "+str(time.time() - first)
+        return o
     
     def start(self):
         self.host.executeCommand("sudo lxc-start -n "+self.hostname+" -d")
@@ -45,7 +48,7 @@ class LXCVM(VM):
         if number==None:
             number = 1
         self.host.executeCommand("sudo lxc-stop -n "+self.hostname)
-        self.host.executeCommand("sudo lxc-restore "+self.hostname+" "+number)
+        self.host.executeCommand("sudo lxc-restore "+self.hostname+" "+str(number))
 
        
     def copyTo(self, sourceDir, targetDir, files):
@@ -53,19 +56,23 @@ class LXCVM(VM):
         for f in files:
             host_path = os.path.join(sourceDir, f)
             guest_path = os.path.join(targetDir, f)
+            #guest_path = "/var/lib/lxc/"+self.hostname+"/rootfs"+guest_path
             if not os.path.exists(host_path):
                 _logger.error('host file (to send) "%s" does not exist' % host_path)
                 return
             _logger.info('copy file %s from host to guest at %s' % (host_path, guest_path))
-            self.host.executeCommand("scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -r "+host_path+" "+self.username+"@"+self.hostname+":"+guest_path)
+            #self.host.executeCommand("sudo cp %s %s" % (host_path,guest_path))
+            self.host.executeCommand("scp -r "+host_path+" "+self.username+"@"+self.hostname+":"+guest_path)
         
     def copyFrom(self, sourceDir, targetDir, files):
         """ Copy files from guest(source) to host(target) """
         for f in files:
             host_path = os.path.join(targetDir, f)
             guest_path = os.path.join(sourceDir, f)
+            #guest_path = "/var/lib/lxc/"+self.hostname+"/rootfs"+guest_path
             _logger.info('copy file %s from guest to host at %s' % (guest_path, host_path))
-            self.host.executeCommand("scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  -r "+self.username+"@"+self.hostname+":"+guest_path+" "+host_path)
+            #self.host.executeCommand("sudo cp %s %s" % (guest_path,host_path))
+            self.host.executeCommand("scp -r "+self.username+"@"+self.hostname+":"+guest_path+" "+host_path)
             if not os.path.exists(host_path):
                 _logger.error('host file (received) "%s" does not exist' % host_path)
                 

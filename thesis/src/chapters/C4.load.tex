@@ -6,6 +6,10 @@ tester may be sitting idle, while another has over a dozen submissions to
 evaluate. The reason for this is that each assignment's tester is statically
 set in the course's \textit{config} file. 
 
+The answer to this drawback would be to implement a dynamic way of selecting
+the tester with the shortest queue for testing a bundle. There are however a 
+few issues to take into consideration.
+
 The first problem to this approach is that testing a certain submission might
 require certain packages to be installed on the host operating system, 
 that certain virtual machines might not exist, or more generally that
@@ -22,22 +26,63 @@ Failing to contact the tester, to start the virtual machine or no receival of
 the notification will be counted as taking a long time. This means that submissions
 for that assignment will not be directed to that virtual machine.
 
-Determining the compatible virtual machines will be done using the course's official
-implementation. The submission will be added to every available queue, excepting
-those that feature an incompatible operating system or virtualization environment.
-For example, the submission to a Windows assignment will never be added to the
-queue of a Linux virtual machine, also a kernel module will never be tested 
-inside an LXC container.
 
 \section{Estimating the Evaluation Time}
 \label{sec:vmc-estimating}
 
-Evaluating the time that evaluating a submission might take is a generally
-straight-forward process. 
+The purpose of creating a scalable system is to reduce the load on the 
+tester machine when evaluating a homework assignment and to reduce the time necessary
+to test each submission.
 
-\section{Choosing the Best Machine}
-\label{sec:vmc-best}
+The time necessary to evaluate a submission consists of two parts: the running
+time of the actual program and the time waiting for other submissions to be tested.
 
+The running time can be recorded by noting the start and end time of the 
+executor script. The actual running time of the application inside the virtual
+machine can also be noted, by recording the start and end time of the executor commands.
+
+In order to estimate the total waiting time for the submissions, more factors
+need to be taken into consideration:
+\begin{itemize}
+\item How many submissions are in a queue
+\item The estimated time for each of the submissions
+\item The course and assignment number of each submission 
+\end{itemize}
+
+\paragraph{}
+
+We define the estimated time to evaluate a submission for a certain assignment in 
+a certain queue as follows:
+
+$ Et_{q_x}( assignment\_id) $ = $\frac{1}{n} \displaystyle\sum\limits_{i=0}^{n} Time(i)$ , where
+$ Time(i) $ is the time required to evaluate the submission and $assignment\_id$ is the actual 
+assignment_id as listed in the course's config file.
+
+\paragraph{}
+
+So the total time to evaluate all the submissions in a queue ( $ q_x $ ) would be defined as:
+
+$ T_{ q_x} = $ $\displaystyle\sum\limits_{i=0}^{n} E_t(Assignment(i))$ , where $ n $ = number of submissions in  queue $  x $.
+
+\paragraph{}
+
+In conclusion, the time required to evaluate a new submission would be the minimum time
+to test all of the submissions in a queue plus the estimated time to test the given
+submission.
+
+$ T = MIN( T_{q_i} + Et_{q_i}, i \in [0..n) ) $
+
+
+\section{Implementation}
+\label{sec:vmc-load-impl}
+
+The load balancing system will be implemented by modifiying the {\bf storer_daemon}
+and the {\bf queue_manager}. First of all, the daemon will retain the estimated
+time needed to evaluate a submission, grouped by the tester's IP and by
+the assignment's id. Also, after evaluating each submission, the queue_manager
+will notify the daemon with the time it took to evaluate the last submission.
+This way, the daemon will hold the latest information regarding the estimated
+evaluation time.
 
 
 
