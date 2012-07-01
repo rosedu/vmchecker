@@ -30,7 +30,7 @@ main objectives, that feedback often arrives too late. Homework is usually grade
 days or weeks after completion, so what would have been valuable advice during the
 development phase, is now too little too late.
 
-Apart from the code-review stage of assessing a student submission, the process is 
+Apart from the code-review stage of assessing a student's submission, the process is 
 fairly easy to automate. Also, while an automated system may not provide feedback 
 on the quality of the submitted code, it could provide the student with immediate
 information regarding the behaviour of his homework given certain input data.
@@ -48,7 +48,7 @@ design and by insuring its scalability.
 \label{sub-sec:vmc-history-features}
 
 {\bf vmchecker} was built with regard to the requirements of active courses. This
-meant that the system has a number of mandatory features:
+means that the system has a number of mandatory features:
 
 \begin{itemize}
 \item A submission that potentially crashes the system during testing will not affect
@@ -86,7 +86,7 @@ containing the user's homework assignment. This archive is stored in a repositor
 along with the results of the homework's evaluation.
 
 The {\bf tester} runs a {\bf queue manager}, which awaits tasks from the storer and upon
-receiving then proceeds to powering on a virtual machine, compiling the submitted
+receiving them proceeds to powering on a virtual machine, compiling the submitted
 source code, running certain tests and uploading those tests to the storer.
 
 
@@ -96,7 +96,7 @@ source code, running certain tests and uploading those tests to the storer.
 The storer is basically a Linux running machine that runs an Apache web server
 in order to present the student with a web-interface so he can upload his
 assignment. As well as running the said web server, the storer also hosts a 
-repository of containing all of the student submissions, organized by course,
+repository of containing all of the students' submissions, organized by course,
 assignment, student name and submission date. This is done in order to prevent
 the accidental overwriting of a submission.
 
@@ -110,7 +110,7 @@ This is done by creating a separate Linux user account to each course, and placi
 the repository inside the user's home folder.
 
 Access to the machine is provided by SSH and authorization is done by placing
-the public keys of the account's users in the authorized_keys file.
+the public keys of the account's users in the {\it authorized_keys} file.
 
 The course's storer folder contains a {\it config} file, which lists the parameters
 for each assignment (such as deadline, title, virtual machine name), the 
@@ -148,7 +148,7 @@ the queue-manager process extracts the contents to a folder and runs the executo
 
 The executor is a script that handles the virtual machine specific interactions.
 It powers on the virtual machine, it uploads the files, runs the build script and
- the necessary tests. The test results are saved to \textit{.vmr} files.
+ the required tests. The test results are saved to \textit{.vmr} files.
 The executor copies the result files to the bundle folder, shuts down the
 virtual machine, then uploads the results to the storer, in the folder designated
 by the \textit{submission-config} file.
@@ -165,7 +165,7 @@ runs the apache server) it needs to have permission to read every course's priva
 Permission is given by using the Posix ACL file permission system.
 
 After the testing is completed, the queue-manager uploads the results to the storer
-using the path listed in the submission-config file. The queue-manager is run by the 
+using the path listed in the {\it submission-config} file. The queue-manager is run by the 
 course's tester account so it uses by default the account's private key to upload
 the files.
 
@@ -199,7 +199,7 @@ The next step is to run the \textit{setup.py} script, then the \textit{vmchecker
 with the parameter tester. The script will initialize the folder with a {\it config} file,
 and \textit{queue/} and \textit{tmpunzip/} folders.
 
-The queue-manager script is then run. 
+The {\it queue-manager} script is then run. 
 
 \section{Analysis of the Shortcomings of the Former Architecture}
 \label{sec:vmc-analysis}
@@ -225,7 +225,7 @@ used to allow its integration with vmchecker's modules. It's needless to say
 that any modification to the API might break existing functionality and 
 maintaining the python wrapper becomes an additional concern.
 
-Beside the fact that it's very difficult to install on a Linux operating system
+Besides the fact that it's very difficult to install on a Linux operating system,
 using VMware-VIX API also has some requirements for the hosted virtual machines:
 VMware tools must be installed and running inside the guest in order to communicate
 with the virtual machine.

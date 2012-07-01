@@ -56,7 +56,7 @@ a certain queue as follows:
 
 $ Et_{q_x}( assignment\_id) $ = $\frac{1}{n} \displaystyle\sum\limits_{i=0}^{n} Time(i)$ , where
 $ Time(i) $ is the time required to evaluate the submission and $assignment\_id$ is the actual 
-assignment_id as listed in the course's config file.
+assignment_id as listed in the course's {\it config} file.
 
 \paragraph{}
 
@@ -83,7 +83,7 @@ the assignment's id. Also, after evaluating each submission, the queue_manager
 will notify the daemon with the time it took to evaluate the last submission.
 This way, the daemon will hold the latest information regarding the estimated
 evaluation time. As one can see in \labelindexref{Listing}{lst:daemon-notify},
-the notify method provides important information to the storer, and at the same
+the {\bf notify} method provides important information to the storer, and at the same
 time triggers the storer to actively retrieve the result files.
 
 If the daemon is notified of a failed testing process, it applies a time
@@ -127,7 +127,7 @@ def notify(key, status, files, stats):
         logger.INFO('The key [%s] was not found. \n Details: %s %s %s' % (key,status,files,stats))
 \end{lstlisting}
 
-The queue selection process is done in the queue_for_testing method, and it uses
+The queue selection process is done in the {\bf queue_for_testing} method, and it uses
 the same dictionaries to locate the tester with the shortest estimated time
 of evaluation. As one can see in \labelindexref{Diagram}{img:select-tester} 
 the submission is always transmitted to the best tester available.
@@ -149,7 +149,7 @@ that queue is chosen as the optimal solution.
 \begin{lstlisting}
 def select_tester(vmcfg, assignment)
     testers = get_testers(vmcfg, assignment)
-    min_time = 999999
+    min_time = MAX_INT
     chosen = testers[0]
     for tester in testers:
         q = get_queue(tester)

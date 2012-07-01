@@ -25,7 +25,7 @@ Between many operating system-level virtualization methods, we have concluded
 that LXC is an acceptable choice because of the small effort required to 
 deploy, run, and integrate with vmchecker.
 
-LXC is a lightweight virtual system mechanism which builds up from the chroot
+LXC is a lightweight virtual system mechanism which builds up from the {\bf chroot}
 command by adding resource management and isolation mechanism to Linux's 
 existing process infrastructure.
 
@@ -54,7 +54,7 @@ added to \textit{/etc/hosts} as following the example in \labelindexref{hosts fi
 Networking should be restarted following this step.
 
 The sysadmin should proceed to set up the LXC container. First of all, he should 
-run the commands in \labelindexref{listing}{lst:create-cgroup} or add the 
+run the commands in \labelindexref{Listing}{lst:create-cgroup} or add the 
 following line to \textit{/etc/fstab} so the command will be run at startup:
 \lstset{caption=Permanent mounting of cgroup,label=lst:etc-fstab}
 \begin{lstlisting}
@@ -109,7 +109,7 @@ of the received archive have been extracted.
 Upon analysing the source code of the executor, it was fairly obvious that
 only certain sections needed to be modified in order to provide support for
 LXC vitualization. While this fact wasn't necessarily useful at this stage
-of the project, it became very important when trying to provide an common and
+of the project, it became very important when trying to provide a common and
 extensible interface for all the virtualization types.
 
 The original implementation was a collection of functions that passed a 
@@ -127,7 +127,7 @@ to provide a similar structure to both the LXC executor and the VMware executor.
 Control over the container was implemented by using the shell commands
 provided by LXC. Running commands inside the container was done by using a 
 SSH connection to the container. The python source code is 
-provided in \labelindexref{listing}{lst:lxc-commands}
+provided in \labelindexref{Listing}{lst:lxc-commands}
 
 \lstset{caption=Running Commands,language=python,label=lst:lxc-commands}
 \begin{lstlisting}
@@ -177,7 +177,7 @@ def runWithTimeout(cmd, timeout):
 \end{lstlisting}
 
 
-In order to restore the container to a previous state, and the {\bf lxc-snapshot} 
+In order to restore the container to a previous state, and as the {\bf lxc-snapshot} 
 command was unavailable, we settled with using the \textbf{lxc-backup} and 
 the \textbf{lxc-restore} scripts that essentially create a
 copy of the file system and later restore it.
@@ -207,8 +207,8 @@ inside an LXC container.
 
 As we described in the previous chapters, OS-level virtualization can only
 handle user space assignments. As for assignments such as kernel modules,
-we need full system virtualization. This is of course provided by VMware,
-however, as we mentioned, the environment is difficult to deploy on 
+we need full system virtualization. This is of course provided by VMware.
+However, as we mentioned, the environment is difficult to deploy on 
 Linux operating systems and also the virtual machines require VMware Tools
 to be installed for a proper communication with the host.
 
@@ -233,8 +233,8 @@ To achieve this task, we used the \textit{/var/lib/kvm/} folder, to which
 we copied an existing virtual machine, \textit{saisp-vm.qcow2}.
 
 The virtual machine needs to have the ssh daemon installed and the host's
-public key inserted into the authorized_keys file of the guest. To do this,
-the sysadmin should run the command in \labelindexref{listing}{lst:kvm-run}.
+public key inserted into the {\it authorized_keys} file of the guest. To do this,
+the sysadmin should run the command in \labelindexref{Listing}{lst:kvm-run}.
 This powers on and opens a window to interact with the virtual machine.
 
 \lstset{caption=Initial run of the virtual machine, label=lst:kvm-run}
@@ -274,7 +274,7 @@ At this point, the KVM domain is installed and available.
 \label{sub-sec:vmc-kvm-executor}
 
 Implementing the KVM executor posed different issues from LXC. While the
-overall aproach was the same, the general architecture of KVM created other
+overall approach was the same, the general architecture of KVM created other
 challenges. 
 
 Managing the virtual machines was done in a similar way, by using the available
@@ -326,8 +326,8 @@ Host related methods, guest related methods and main method, that parse the
 bundle's parameters and call the appropriate functions in order to run the tests.
 
 
-Two host class was defined as shown in \labelindexref{listing}{lst:generic-host}.
-Classes that extend Host need to override the getVM method in order to return a
+The {\bf Host} class was defined as shown in \labelindexref{Listing}{lst:generic-host}.
+Classes that extend {\bf Host} need to override the {\bf getVM} method in order to return a
 VMware, LXC or KVM virtual machine object. The other methods, such as \textbf{executeCommand}
 and \textbf{start_host_commands} are already implemented and can be called
 without modifications in classes that extend Host, or in other classes or methods.

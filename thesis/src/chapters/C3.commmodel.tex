@@ -54,7 +54,7 @@ We'll call this process the \textbf{daemon}.
 Although it introduces some additional complexity to \labelref{the diagram}{img:new-comm}
 having the daemon in the system actually simplifies a large part of the communication.
 First of all, course1's storer no longer needs to hold a SSH key, as the only needed
-key held by the daemon. Secondly, the tester doesn't require each course to have
+key is held by the daemon. Secondly, the tester doesn't require each course to have
 it's own user account anymore. Since there is no possibility to get access to the 
 storer from the tester, any administrator that needs to set up a testing environment
 can simply access it directly.
@@ -62,15 +62,15 @@ can simply access it directly.
 The newly defined communication model works in the following way:
 
 The submission of an assignment in the web interface copies the files to the
-repo (1) and calls the queue_task() method of the daemon (2) which in turn
+repo (1) and calls the {\bf queue_task()} method of the daemon (2) which in turn
 creates and sends the bundle to the tester (3).
-Upon completion of the evaluation process, the tester calls the notify() 
+Upon completion of the evaluation process, the tester calls the {\bf notify()}
 method of the daemon (4) which copies the results from the tester (5)
 and places them in the repository (6).
 
 For a secure daemon some restrictions have to be imposed. First of all, the 
-queue_task() method must only be called from the storer and the
-notify() method must only be called from the tester. Calls from any other
+{\bf queue_task()} method must only be called from the storer and the
+{\bf notify()} method must only be called from the tester. Calls from any other
 machines should fail. Secondly, when submitting an assignment to the tester,
 the daemon must retain the location in the course's repo, where the results will
 be saved, and issue a random key. This way, the location on the storer can't be
