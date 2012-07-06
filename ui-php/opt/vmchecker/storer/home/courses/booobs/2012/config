@@ -1,0 +1,240 @@
+[vmchecker]
+root = /home/cdidii/public_html/vmchecker/opt/vmchecker/storer/home/courses/booobs/2012
+repository = /home/cdidii/public_html/vmchecker/opt/vmchecker/storer/home/courses/booobs/2012/repo
+CourseName = Sisteme de operare
+
+
+
+Holidays = 1
+
+HolidayStart = 2012.03.31 23:59:00
+HolidayFinish = 2010.04.02 23:59:00
+
+UploadActiveFrom  = 2010.03.01 23:59:00
+UploadActiveUntil = 2010.06.10 23:59:00
+
+
+
+# information about the machine used to store homework submissions,
+# tests and the configuration data for tester systems and virtual
+# machines.
+[storer]
+Hostname = elf.cs.pub.ro
+Username = so
+SSHId = /var/www/.ssh/id_rsa
+KnownHostsFile = /var/www/.ssh/known_hosts
+
+
+
+
+
+########################
+# Tester Configuration #
+########################
+
+# Tester configuration syntax:
+# These first 4 fields are mandatory.
+#     [tester TESTER_NAME]
+#     VmType = VmwareWorkstation        # the type of the VM, see bellow
+#     Hostname = orion.cs.pub.ro        # hostname of the tester
+#     Username = admin                  # user to use to connect with ssh
+#     QueuePath = vmchecker/2010/queue  # where the Queue Manager looks for new submissions
+#     [...]                             # virtual-machine-specific settings
+#
+# VmType:
+#  - VmwareServer
+#  - VmwareWorkstation
+#  - VmwareVIServer
+#  - VirtualBox - [not implemented yet, just as a future hint]
+
+
+[tester sanctuary]
+VmType = VmwareServer
+Hostname = sanctuary.cs.pub.ro
+Username = so
+QueuePath = vmchecker/2010/queue
+
+
+[tester orion]
+# The following arguments are required only for
+# VMWare Server 2.0 with datastore
+#
+# NOTE: Remember to create a datastore which contains the path to the
+# tester home for Server >= 2.0!
+#
+# VmwareUseDatastore  = The virtual machine uses datastores,
+#                       not paths to identify vmx files. Implicit value: 'no'.
+# VmwareHostname      = The hostname of the running VMWare Server
+# VmwarePort          = The port of the running VMWare Server Web
+#                       interface running on SSL (default: 8333)
+# VmwareUsername      = The username used to login to VMWare Server
+# VmwareDatastoreName = The name of the datastore which holds the
+#                       path where the virtual machines will be run
+# VmwareDatastorePath = The path of the datastore
+
+VmType = VmwareServer
+Hostname = orion.cs.pub.ro
+Username = admin
+QueuePath = vmchecker/2010/queue
+VmwareUseDatastore=yes
+VmwareUrl = https://orion.cs.pub.ro:8333/sdk
+VmwareHostname = orion.cs.pub.ro
+VmwarePort = 8333
+VmwareUsername = admin
+VmwarePassword = adminpa$
+VmwareDatastoreName = home
+VmwareDatastorePath = /home
+
+# optional vmware flag:
+# VmwareRegUnreg = yes|y|1|true
+#   - if set to true, vmchecker will register and unregister the vmx
+#     associated with this file.
+#   - if the key is not present it is assumed false (no reg/unreg done).
+VmwareRegUnreg = yes
+
+
+
+############################
+# Assignment Configuration #
+############################
+
+[assignment DEFAULT]
+
+
+# PenaltyWeights = an array of floating point numbers that represent
+#                  the points substracted from the grade for each late
+#                  day. The last element in the list is repeated for
+#                  the remaining days.
+PenaltyWeights = 0.25
+
+# PenaltyLimit = the maximum number of points to substract form the grade.
+PenaltyLimit = 3
+
+# The number of points a student can receive on a normal homework
+TotalPoints=10
+
+# minimum time (in seconds) between two successive
+# submissions by the same student.
+Timedelta = 180
+
+# maximum execution time (in seconds) of a test on the vm
+# it this is exceeded, the test is stopped.
+Timeout = 120
+
+# which files to send to the tester
+# Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
+# Relative paths are relative to the root repo path.
+
+# TODO: include the .sh scripts used to build/run tests on the vm
+
+
+# assignment configuration
+#
+# syntax:
+# [assignment NAME]
+# Deadline      = date
+# Machine       = an id of the machine used in testing
+# timeout       = a timeout for test execution (override the default)
+# AssignmentTitle = a human readable name
+# statementlink = a link to the statement
+# OrderNumber   = the number of the assignment (used for sorting)
+# WaitForVmwareToolsTimeout =
+#
+#       Optional paramter.
+#
+#       If WaitForVmwareToolsTimeout is not set, vmchecker waits
+#       indefinetly (well not really, the queue manager kills the
+#       executor after the global timeout expires).
+#
+#       This setting is useful when the machines are uploaded by the
+#       students and the tools are not preconfigured and we don't want
+#       to wait until the global timeout expires.
+#
+# RevertToSnapshot = [yes|true|y|no]
+#
+#       Optional paramter.
+#
+#       If not specified, defaults to 'yes' and reverts the virtual
+#       machine to it's last snapshot. If the snapshots are not
+#       organized in a straight line (some vmware solutions permit
+#       creating trees of snapshots) behaviour is not specified
+#       (hasn't been tested yet).
+#
+#       Normally machines should have a 'last' snapshot in a state
+#       that is useful for testing. Having a snapshot cuts the bootup
+#       time. Set to 'no' when you really want the machine to boot up
+#       by itself.
+#
+# DelayBetweenToolsAndTests = delay in seconds.
+#
+#       Optional paramter.
+#
+#       If not set defaults to '0'. After Vmware tools are loaded,
+#       there may be some time before the machine is actually usable
+#       (services like apache, mysql, et al. must be started). This
+#       defines an amount of time (in seconds) to wait after tools are
+#       up, but before starting to run the tests.
+#
+# # These are only for Large assignments
+# AssignmentStorage = Large               # this is a MD5Submission.
+# AssignmentStoragePort = 22              # the ssh port to use
+# AssignmentStorageHost = orion.cs.pub.ro # where to look for uploaded vms
+# AssignmentStorageBasepath = /home       # where on that machine to look
+# AssignmentStorageQueryUser = root       # which user to logon with.
+# UnpackArchive = [yes|y|true]            # whether the archive's contents
+                                          # should be expanded. Default: no
+
+
+[assignment 1-minishell-linux]
+Deadline = 2009.03.31 23:59:00
+Machine = so-lin
+Timeout=120
+AssignmentTitle = Minishell (Linux)
+StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
+OrderNumber = 1
+
+
+[assignment 1-minishell-windows]
+Deadline = 2009.03.31 23:59:00
+Machine = so-win
+Timeout=120
+WaitForVmwareToolsTimeout=100
+DelayBetweenToolsAndTests=10
+AssignmentTitle = Minishell (Windows)
+StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
+OrderNumber = 2
+RevertToSnapshot=no
+
+
+
+#################################
+# Virtual Machine Configuration #
+#################################
+
+# test virtual machine configuration
+[so-lin]
+Tester=sanctuary
+# if VMPath is not set, vmchecker will look for it in the student submission
+VMPath=/home/courses/so/vmware/2010/so-vm-linux-ubuntu/so-vm-linux-ubuntu.vmx
+GuestUser=student
+GuestPassword=student
+GuestBasePath=/home/student/
+GuestShellPath=/bin/bash
+GuestHomeInBash=/home/student/
+BuildScript=so-linux_vmchecker_build.sh
+RunScript=so-linux_vmchecker_run.sh
+KernelMessages=netcat -l -u -p6000
+HostCommand=ls
+
+# test virtual machine configuration
+[so-win]
+Tester=sanctuary
+VMPath=/home/courses/so/vmware/2010/so-vm-win2k3/so-vm-win2k3.vmx
+GuestUser=Administrator
+GuestPassword=student
+GuestBasePath=C:\cygwin\home\Administrator\
+GuestShellPath=C:\cygwin\bin\bash.exe
+GuestHomeInBash=/home/Administrator/
+BuildScript=so-win_vmchecker_build.sh
+RunScript=so-win_vmchecker_run.sh
+

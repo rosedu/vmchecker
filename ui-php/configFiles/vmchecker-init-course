@@ -1,0 +1,227 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Initialises the directory path for one course"""
+
+from __future__ import with_statement
+
+import os
+import sys
+import logging
+import string
+import getpass
+import pkg_resources
+from subprocess import check_call, CalledProcessError
+
+from vmchecker.config import AclConfig
+from vmchecker import paths, coursedb
+
+
+_logger = logging.getLogger("vmchecker.initialise_course")
+
+
+def _install_example_config_file(root_path, repo_path, config_path):
+    """Install an example config file to a file named 'config' in the
+    current directory
+
+    Initalize some config file variables to point to the location of:
+        root = the root of a course's data -- the current directory
+        repo = a subdir in the current directory where the git repo
+               will be stored
+    """
+
+    # get the data from the package-provided example config template.
+    template_data = ""
+    with pkg_resources.resource_stream('vmchecker', 'examples/config-template') as template:
+        template_data = template.read()
+
+    # the example is a template that contains some '$var' variables.
+    s = string.Template(template_data)
+
+    # replace the $vars with these values and write the result in the
+    # destination file
+    with open(config_path, 'w') as handle:
+        handle.write(s.substitute(root=root_path,
+                                  repo=repo_path,
+                                  home=os.path.expanduser('~')))
+
+
+
+def _install_if_needed_example_config_file(root_path, repo_path, config_path):
+    """Install config file only is not already existing"""
+    if not os.path.exists(config_path):
+        _install_example_config_file(root_path, repo_path, config_path)
+        print(('A new default vmchecker configuration file was written to %s. '+
+               'Update it before running any vmchecker code.') % config_path)
+    else:
+        print('Configuration file ' + config_path + ' exists. Will not change')
+
+
+
+def _mkdir_if_not_exist(path):
+    """Make the path if it does not exist"""
+    if not(os.path.isdir(path)):
+        os.mkdir(path)
+    else:
+        _logger.info('Skipping existing directory %s' % path)
+
+
+def create_paths(path_list):
+    """ Create all paths in the received 'paths' parameter"""
+    for path in path_list:
+        _mkdir_if_not_exist(path)
+
+
+
+def create_storer_git_repo(abs_repo_path):
+    """Creates the repo for the assignments on the storer."""
+    # first make teh destination directory
+    _mkdir_if_not_exist(abs_repo_path)
+
+    # then, if missing, initialize a git repo in it.
+    repo_path_git = os.path.join(abs_repo_path, '.git')
+    if not(os.path.isdir(repo_path_git)):
+        # no git repo found in the dir.
+        try:
+            env = os.environ
+            env['GIT_DIR'] = repo_path_git
+            check_call(['git', 'init'], env=env)
+        except CalledProcessError:
+            logging.error('cannot create git repo in %s' % repo_path_git)
+
+
+def create_db(db_file):
+    """Create the implicit db if it does not exist."""
+    # check for DB existance
+    if os.path.isfile(db_file):
+        _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
+        return
+
+    # need to create a file without messing with the group persmission
+    # bits to not upset POSIX ACL masks
+    file = open(db_file, 'w')
+    file.write('')
+    file.close()
+    coursedb.create_db_tables(db_file)
+
+
+def create_auth_file(auth_file):
+    """Copy the example auth file to @auth_file"""
+    with pkg_resources.resource_stream('vmchecker', 'examples/auth_file.json') as in_file:
+        msg = in_file.read()
+        with open(auth_file, 'w') as out_file:
+            out_file.write(msg)
+
+
+def create_build_run_scritps(root_path):
+    """Copy build and run example scripts into the root path"""
+    files = ['so-linux_vmchecker_build.sh',
+             'so-win_vmchecker_build.sh',
+             'so-linux_vmchecker_run.sh',
+             'so-win_vmchecker_run.sh']
+    for fname in files:
+        full_path = os.path.join('examples', fname)
+        with pkg_resources.resource_stream('vmchecker', full_path) as in_file:
+            msg = in_file.read()
+            with open(os.path.join(root_path, fname), 'w') as out_file:
+                out_file.write(msg)
+
+
+
+
+def set_default_acls():
+    """Set default POSIX ACLs for the current directory.
+
+    The current user and the user the web browser runs under both need
+    to create/change the same files in the storer root directory.
+
+    One approach is to use the SETGUID bit on the storer root
+    directory (the current directory in which the script is being
+    called) and be carefull about group bits being setup correctly on
+    all files created:
+    * directly by vmchecker
+    * indirectly by any other library used by vmchecker (e.g. zipfile)
+    * indirectly by other binaries called by vmchecker (e.g. by git).
+
+    Also umask must be setup correctly at every point of entry in the
+    vmchecker code (in every script invoked by the user or by the
+    web-services) that can lead to creation of files.
+
+    Managing all these is cumbersome so we opted for a POSIX ACL based
+    solution for now: we add default ACLs for the storer root
+    directory (the current directory) for two users: the current user
+    and www-data (or the user under which the webservices will
+    run). The default ACLs will be inherited by all the files and
+    directories created in this directory giving both users rwx access
+    for all these files.
+
+
+    For more info check:  http://www.suse.de/~agruen/acl/linux-acls/online/
+
+    The section named "Default ACL Example" talks about default groups
+    ACLs. We use default user ACLs.
+    """
+    acl_cfg = AclConfig()
+    users  = [getpass.getuser()] + acl_cfg.users()
+    groups = acl_cfg.groups()
+    def_acl_list =  ['user:'  + user  + ':rwx' for user  in users]
+    def_acl_list += ['group:' + group + ':rwx' for group in groups]
+    _logger.info("Added default and non-default POSIX ACLs: " + str(def_acl_list))
+    for def_acl in def_acl_list:
+        check_call(['setfacl', '-d', '-m', def_acl, '.'])
+        check_call(['setfacl',       '-m', def_acl, '.'])
+    print 'Make sure the ssh key identified in the config file is readable by www-data'
+    print 'Either create the keys somewhere readable by www-data or use setfacl'
+
+
+
+def main_storer(root_path):
+    """Run initialization tasks for the storer machine."""
+    set_default_acls()
+    vmpaths = paths.VmcheckerPaths(root_path)
+    create_paths(vmpaths.storer_paths())
+    create_storer_git_repo(vmpaths.abspath(vmpaths.dir_repository()))
+    create_db(vmpaths.db_file())
+    create_auth_file(vmpaths.auth_file())
+    create_build_run_scritps(root_path)
+    _logger.info(' -- storer init done setting up paths and db file.')
+
+
+def main_tester(root_path):
+    """Run initialization tasks for the tester machine."""
+    vmpaths = paths.VmcheckerPaths(root_path)
+    create_paths(vmpaths.tester_paths())
+    _logger.info(' -- tester init done setting up paths and db file.')
+
+
+def usage():
+    """Print usage for this program."""
+    print("""Usage:
+\t%s storer - initialize storer machine
+\t%s tester - initialize tester machine
+\t%s --help - print this message"""% (sys.argv[0], sys.argv[0], sys.argv[0]))
+
+
+def main():
+    """Initialize course based on sys.argv."""
+    logging.basicConfig(level=logging.DEBUG)
+
+    root_path = os.getcwd()
+    repo_path = os.path.join(root_path, 'repo')
+    config_path = os.path.join(root_path, 'config')
+    if (len(sys.argv) < 2):
+        usage()
+        exit(1)
+    if cmp(sys.argv[1], 'storer') == 0:
+        _install_if_needed_example_config_file(root_path, repo_path, config_path)
+        main_storer(root_path)
+    elif cmp(sys.argv[1], 'tester') == 0:
+        _install_if_needed_example_config_file(root_path, repo_path, config_path)
+        main_tester(root_path)
+    elif cmp(sys.argv[1], '--help') == 0:
+        usage()
+    else:
+        usage()
+        exit(1)
+
+if __name__ == '__main__':
+    main()
