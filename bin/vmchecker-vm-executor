@@ -23,6 +23,7 @@ from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
 from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+
 try:
     from vmchecker.lxc_executor import LXCVM, LXCHost
     print "Loaded LXC executor"
@@ -30,16 +31,16 @@ except:
     print "Could not load LXC executor"
 try:
     from vmchecker.kvm_executor import kvmVM, kvmHost
-    print "Could not load KVM executor"    
+    print "Loaded KVM executor"    
 except:
-    print "Loaded KVM executor"
+    print "Could not load KVM executor"
 try:
     from vmchecker.vmware_executor import VmWareVM, VmWareHost
     print "Loaded VMware executor"
 except:
     print "Could not load VMware executor"
 
-
+_logger = logging.getLogger('vm_executor')
 
 class GenericHost():
     @staticmethod
@@ -66,14 +67,9 @@ class GenericHost():
         if machinecfg.get_type()=='lxc':
             host = LXCHost()
         if machinecfg.get_type()=='vmware':
-            try:
-                host = VmWareHost()
-            except:
-                _logger.exception("Testing with vmware failed")
-                sys.exit(1)
+            host = VmWareHost()
         if machinecfg.get_type()=='kvm':
             host = kvmHost()
-        print assignment
         vm = host.getVM(bundle_dir, vmcfg, assignment)
         vm.test_submission()
 
@@ -107,10 +103,9 @@ def main():
       - course-config
       - build and run scripts.
     """
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     if len(sys.argv) != 2:
-        print len(sys.argv)
         _logger.error('Usage: %s bundle_dir_location' % sys.argv[0])
         sys.exit(1)
 
