@@ -33,6 +33,12 @@ class kvmHost(Host):
 
 class kvmVM(VM):
     hostname = 'kvm2'
+    def __init__(self, host, bundle_dir, vmcfg, assignment):
+        VM.__init__(self, host, bundle_dir, vmcfg, assignment)
+        self.hostname = self.machinecfg.get_vmx_path()
+        self.path = self.getPath()
+        print self.path
+        
     def executeCommand(self,cmd):
         _logger.info("executeCommand: %s" % cmd)
         return self.host.executeCommand("ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "+self.username+"@"+self.IP+" "+cmd)
@@ -53,14 +59,9 @@ class kvmVM(VM):
         self.host.executeCommand("virsh destroy "+self.hostname)
             
     def revert(self, number = None):
-        '''
-        TODO:
-        1. replace hardcoded paths with configurable options
-        2. provide a way for starting multiple containters at the same time
-        '''
         self.stop() # just in case it's on
-        self.host.executeCommand("rm /var/lib/kvm/run.qcow2")
-        self.host.executeCommand("cp /var/lib/kvm/image.qcow2 /var/lib/kvm/run.qcow2")
+        self.host.executeCommand("rm -f "+os.path.join(self.path,"run.qcow2"))
+        self.host.executeCommand("cp "+os.path.join(self.path,"image.qcow2")+" "+os.path.join(self.path,"run.qcow2"))
         
        
     def copyTo(self, sourceDir, targetDir, files):
@@ -100,6 +101,12 @@ class kvmVM(VM):
         mac = mac[mac.find("<mac address=")+14:]
         mac = mac[:mac.find("'/>")]
         return mac.strip()
+
+    def getPath(self):
+        path = self.host.executeCommand("virsh dumpxml "+self.hostname)
+        path = path[path.find("<source file='")+14:]
+        path = path[:path.find("'/>")]
+        return os.path.dirname(path)
 	    
     def getIP(self):
         mac = self.getMac()
