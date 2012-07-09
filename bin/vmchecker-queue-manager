@@ -60,10 +60,10 @@ def upload_results_to_sender(bundle_dir, total_time = None):
         if total_time==None:
             total_time = 45
 
-        _config = ConfigParser.RawConfigParser()
+        my_config = ConfigParser.RawConfigParser()
         with open(sb_config) as handle:
-            _config.readfp(handle)
-        vars = dict(_config.items['Assignment'])
+            my_config.readfp(handle)
+        vars = dict(my_config.items['Assignment'])
         storer = vars['remotehostname']
 
         sb_index = os.path.join(bundle_dir, 'submission-index')
