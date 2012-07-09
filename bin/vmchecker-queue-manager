@@ -175,13 +175,15 @@ def process_job(path, name, vmpaths):
                                 dir=vmpaths.dir_tester_unzip_tmp())
     bundle_archive = os.path.join(path, name)
     try:
+        total_time = time.time()
         ziputil.unzip_safely(bundle_archive, location)
         _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
         launch_external_downloader(location)
         _logger.info('-- QM: finished downloading external dependencies')
         launch_executor(location)
         _logger.info('-- QM: finished testing - sending results')
-        upload_results_to_sender(location)
+        total_time = time.time() - total_time
+        upload_results_to_sender(location, total_time)
     except:
         _logger.exception('Failed to process "%s".' % location)
 
