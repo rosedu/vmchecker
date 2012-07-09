@@ -12,13 +12,12 @@ class LXCHost(Host):
         return LXCVM(self, bundle_dir, vmcfg, assignment)
 
 class LXCVM(VM):
-    hostname = 'deb1'
-    #hostpath = '/var/lib/lxc/'+hostname
+    def __init__(self, host, bundle_dir, vmcfg, assignment):
+        VM.__init__(self, host, bundle_dir, vmcfg, assignment)
+        self.hostname = self.machinecfg.get_vmx_path()
+
     def executeCommand(self,cmd):
-        first = time.time()
-        o = self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
-        print "["+cmd+"] TIME: "+str(time.time() - first)
-        return o
+        return  self.host.executeCommand("ssh "+self.username+"@"+self.hostname+" "+cmd)
     
     def start(self):
         self.host.executeCommand("sudo lxc-start -n "+self.hostname+" -d")
