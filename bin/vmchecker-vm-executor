@@ -103,7 +103,7 @@ def main():
       - course-config
       - build and run scripts.
     """
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) != 2:
         _logger.error('Usage: %s bundle_dir_location' % sys.argv[0])
