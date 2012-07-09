@@ -67,7 +67,7 @@ def upload_results_to_sender(bundle_dir, total_time = None):
         with open(sb_index) as handle:
             index = handle.read()
             proxy = xmlrpclib.ServerProxy('http://'+storer+':19999')
-            proxy.notify_results(index, 0, vmrfiles, {'time':total_time})
+            proxy.notify(index, 0, vmrfiles, {'time':total_time})
 
         #callback.run_callback(sb_config, vmrfiles)
     except:
