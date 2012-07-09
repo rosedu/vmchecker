@@ -35,6 +35,7 @@ from vmchecker import vmlogging
 from vmchecker import callback
 from vmchecker import ziputil
 import ConfigParser
+import xmlrpclib
 
 # The maximum number of seconds each instance of vmchecker-vm-executor
 # is allowed to run. If it runs for more than this ammount of time,
