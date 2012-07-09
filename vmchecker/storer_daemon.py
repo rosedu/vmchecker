@@ -15,7 +15,6 @@ import signal
 import tempfile
 import optparse
 import subprocess
-
 import xmlrpclib
 
 from vmchecker.courselist import CourseList
@@ -40,6 +39,7 @@ from vmchecker import config
 from vmchecker import paths
 from vmchecker import submissions
 from vmchecker import tempfileutil
+import logging
 
 import warnings
 with warnings.catch_warnings():
@@ -93,6 +93,10 @@ def ssh_bundle(bundle_path, vmcfg, assignment):
 submission_path = {}
 submission_index = 1
 
+submitted = {}
+est_time = {}
+# 'key':{'IP':'127.0.0.1', 'user':'so', 'bundle_path':'...'}    
+
 def create_testing_bundle(user, assignment, course_id):
     global submission_path, submission_index
     """Creates a testing bundle.
@@ -120,7 +124,15 @@ def create_testing_bundle(user, assignment, course_id):
     index_file.write("%d" % submission_index)
     index_file.close()
     
-    submission_path[submission_index] = paths.submission_config_file(sbroot)
+    info = {}
+    info['assignment_id'] = assignment 
+    my_conf = callback.get_configuration(paths.submission_config_file(sbroot))
+    info['bundle_path'] = my_conf['resultsdest']
+    tester = vmcfg.get(machine, 'Tester')
+    info['IP'] = vmcfg.testers().hostname(tester)
+    info['user'] = vmcfg.testers().login_username(tester)
+    submitted[str(submission_index)] = info
+    logger.info(str(info))
     submission_index += 1
     rel_file_list = [ ('run.sh',   vmcfg.get(machine, 'RunScript',   '')),
                       ('build.sh', vmcfg.get(machine, 'BuildScript', '')),
@@ -164,8 +176,8 @@ def __queue_for_testing(assignment, user, course_id):
     bundle_path = create_testing_bundle(user, assignment, course_id)
     ssh_bundle(bundle_path, vmcfg, assignment)
     os.remove(bundle_path)
-    print "done sending"
-    print submission_path
+    logger.info("Submission posted to tester")
+    print submitted
 
 def queue_for_testing(assignment, user, course_id):
     #t = Thread(target = __queue_for_testing, args=(assignment, user, course_id))
@@ -174,44 +186,54 @@ def queue_for_testing(assignment, user, course_id):
     __queue_for_testing(assignment, user, course_id)
     
 
-submitted = {}
-est_time = {}
-# 'key':{'IP':'127.0.0.1', 'user':'so', 'bundle_path':'...'}    
-
-
 def receive_files(IP, user, bundle_path, files):
+    logger.debug("Start receiving files")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((IP, _DEFAULT_SSH_PORT))
     t = paramiko.Transport(sock)
     try:
         t.start_client()
-        key = paramiko.RSAKey.from_private_key_file(LOCAL_KEY_PATH)
+        key = paramiko.RSAKey.from_private_key_file(_DEFAULT_KEY_PATH)
         t.auth_publickey(user, key)
         sftp = paramiko.SFTPClient.from_transport(t)
         for filepath in files:
-            sftp.get(filepath, bundle_path+os.path.basename(filepath))
+            sftp.get(filepath, os.path.join(bundle_path,os.path.basename(filepath)))
+        logger.debug("Done receiving files")
+    except:
+	logger.error("Error in receive_files")
     finally:
         t.close()
     
     
-def notify(key, status, files, stats):
+def notify(key, status, files, stats):    
     if key in submitted:
         info = submitted[key]
         del submitted[key]
-        if status==0:
-            # receive results
+        logger.debug("%s %s %s %s" % (key, status, files, stats))
+        
+        # receive results
+	if status==0:
             receive_files(info['IP'], info['user'], info['bundle_path'], files) 
-            # update stats
-            ( et1, no1) = est_time[ (info['user'],info['IP']) ][info['assignment_id']]
-            et2 = et1*no1 + stats['time']
-            et2 = et2/(no1+1)
-            est_time[ (info['user'],info['IP']) ][info['assignment_id']] = (et2, no1+1)       
-        else: # apply a time penalty if the testing fails
-            ( et1, no1) = est_time[ (info['user'],info['IP']) ]
-            et2 = et1*no1 + TIME_PENALTY
-            est_time[ (info['user'],info['IP']) ] = (et2, no1)
+        # update stats
+        try:
+            ( et1, no1 ) = est_time[ (info['user'],info['IP']) ][info['assignment_id']]
+            if status==0:
+                et2 = et1*no1 + stats['time']
+                et2 = et2/(no1+1)	
+            else:
+                et2 = et1+ TIME_PENALTY/no1
+                no1 = no1 - 1
+            est_time[ (info['user'],info['IP']) ][info['assignment_id']] = (et2, no1+1)
+        except:
+            if (info['user'],info['IP']) in est_time:
+                est_time[ (info['user'], info['IP']) ][ info['assignment_id']] = (stats['time'], 1)
+            else:
+                est_time[ (info['user'], info['IP']) ] = {}
+                est_time[ (info['user'], info['IP']) ][ info['assignment_id']] = (stats['time'], 1)
     else:
-        logger.INFO('The key [%s] was not found. \n Details: %s %s %s' % (key,status,files,stats))
+        logger.info( 'The key [%s] was not found. \n Details: %s %s %s' % (key,status,files,stats))
+    logger.info("Notification successful. Evaluation time: %ss" % stats['time'])
+    print est_time
 
 
 class SelectiveHandler(SimpleXMLRPCRequestHandler):
@@ -241,10 +263,10 @@ class SelectiveServer(SimpleXMLRPCServer):
             if name in self.restricted_functions:
                 if not IP in self.restricted_functions[name]:
                     self.restricted_functions[name].append(IP)
-                    print "IP %s is allowed to call function %s" % (IP,name)
+                    logger.info( "IP %s is allowed to call function %s" % (IP,name))
             else:    
                 self.restricted_functions[name] = [ IP ]
-                print "IP %s is allowed to call function %s" % (IP,name)
+                logger.info( "IP %s is allowed to call function %s" % (IP,name))
         SimpleXMLRPCServer.register_function(self,function, name)
 
 def redirect_std_files(stdin_fname=None, stdout_fname=None, stderr_fname=None):
@@ -277,7 +299,7 @@ def main():
                        
     (options, _) = cmdline.parse_args()
     redirect_std_files(options.stdin, options.stdout, options.stderr)
-    
+    logging.basicConfig(level=logging.INFO)		    
     server = SelectiveServer(("", 19999), SelectiveHandler, allow_none=True)
     server.register_function(queue_for_testing, IP='127.0.0.1')
     server.register_function(notify, IP='dummyIP') # so the function is restricted
