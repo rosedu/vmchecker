@@ -18,6 +18,7 @@ import time
 import socket
 import random
 import datetime
+import xmlrpclib
 
 import warnings
 with warnings.catch_warnings():
@@ -196,97 +197,6 @@ def save_submission_in_storer(submission_filename, user, assignment,
             os.unlink(cur_sb)
         os.symlink(new_sb, cur_sb)
 
-
-
-
-def create_testing_bundle(user, assignment, course_id):
-    """Creates a testing bundle.
-
-    This function creates a zip archive (the bundle) with everything
-    needed to run the tests on a submission.
-
-    The bundle contains:
-        submission-config - submission config (eg. name, time of submission etc)
-        course-config     - the whole configuration of the course
-        archive.zip - a zip containing the sources
-        tests.zip   - a zip containing the tests
-        ???         - assignment's extra files (see Assignments.include())
-
-    """
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
-    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    sbroot = vmpaths.dir_cur_submission_root(assignment, user)
-
-    asscfg  = vmcfg.assignments()
-    machine = asscfg.get(assignment, 'Machine')
-
-    rel_file_list = [ ('run.sh',   vmcfg.get(machine, 'RunScript',   '')),
-                      ('build.sh', vmcfg.get(machine, 'BuildScript', '')),
-                      ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                      ('course-config', vmpaths.config_file()),
-                      ('submission-config', paths.submission_config_file(sbroot)) ]
-
-    # Get the assignment submission type (zip archive vs. MD5 Sum).
-    # Large assignments do not have any archive.zip configured.
-    if asscfg.getd(assignment, "AssignmentStorage", "").lower() != "large":
-        rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)) ]
-
-
-    file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list if src != '' ]
-
-    # builds archive with configuration
-    with vmcfg.assignments().lock(vmpaths, assignment):
-        # creates the zip archive with an unique name
-        (bundle_fd, bundle_path) = tempfileutil.mkstemp(
-            suffix='.zip',
-            prefix='%s_%s_%s_' % (course_id, assignment, user),
-            dir=vmpaths.dir_storer_tmp())
-        logger.info('Creating bundle package %s', bundle_path)
-
-        try:
-            with closing(os.fdopen(bundle_fd, 'w+b')) as handler:
-                ziputil.create_zip(handler, file_list)
-        except:
-            logger.error('Failed to create zip archive %s', bundle_path)
-            raise # just cleaned up the bundle. the error still needs
-                  # to be reported.
-
-    return bundle_path
-
-
-def ssh_bundle(bundle_path, vmcfg, assignment):
-    """Sends a bundle over ssh to the tester machine"""
-    machine = vmcfg.assignments().get(assignment, 'Machine')
-    tester = vmcfg.get(machine, 'Tester')
-
-    tstcfg = vmcfg.testers()
-
-    tester_username  = tstcfg.login_username(tester)
-    tester_hostname  = tstcfg.hostname(tester)
-    tester_queuepath = tstcfg.queue_path(tester)
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((tester_hostname, _DEFAULT_SSH_PORT))
-    t = paramiko.Transport(sock)
-    try:
-        t.start_client()
-        # XXX cannot validate remote key, because www-data does not
-        # have $home/.ssh/known_hosts where to store such info. For
-        # now, we'll assume the remote host is the desired one.
-        #remotekey = t.get_remote_server_key()
-        key = paramiko.RSAKey.from_private_key_file(vmcfg.storer_sshid())
-        # todo check DSA keys too
-        # key = paramiko.DSAKey.from_private_key_file(vmcfg.storer_sshid())
-        t.auth_publickey(tester_username, key)
-        sftp = paramiko.SFTPClient.from_transport(t)
-        # XXX os.path.join is not correct here as these are paths on the
-        # remote machine.
-        sftp.put(bundle_path, os.path.join(tester_queuepath, os.path.basename(bundle_path)))
-    finally:
-        t.close()
-
-
-
 def submitted_too_soon(assignment, user, vmcfg, check_eval_queueing_time):
     """Check if the user submitted this assignment very soon after
     another submission.
@@ -314,15 +224,11 @@ def submitted_too_soon(assignment, user, vmcfg, check_eval_queueing_time):
     return remaining > datetime.timedelta()
 
 
-
 def queue_for_testing(assignment, user, course_id):
     """Queue for testing the last submittion for the given assignment,
     course and user."""
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
-    bundle_path = create_testing_bundle(user, assignment, course_id)
-    ssh_bundle(bundle_path, vmcfg, assignment)
-    os.remove(bundle_path)
-
+    proxy = xmlrpclib.ServerProxy("http://127.0.0.1:19999/")
+    proxy.queue_for_testing(assignment, user, course_id)
 
 
 def check_valid_time(course_id, assignment, user,

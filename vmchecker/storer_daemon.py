@@ -62,7 +62,7 @@ EXIT_FAIL = 1
 logger = vmlogging.create_module_logger('submit')
 
 _DEFAULT_SSH_PORT = 22
-
+_DEFAULT_KEY_PATH = '/home/sender/.ssh/id_rsa'
 
 def ssh_bundle(bundle_path, vmcfg, assignment):
     """Sends a bundle over ssh to the tester machine"""
@@ -80,21 +80,17 @@ def ssh_bundle(bundle_path, vmcfg, assignment):
     t = paramiko.Transport(sock)
     try:
         t.start_client()
-        # XXX cannot validate remote key, because www-data does not
-        # have $home/.ssh/known_hosts where to store such info. For
-        # now, we'll assume the remote host is the desired one.
-        #remotekey = t.get_remote_server_key()
-        key = paramiko.RSAKey.from_private_key_file(vmcfg.storer_sshid())
-        # todo check DSA keys too
-        # key = paramiko.DSAKey.from_private_key_file(vmcfg.storer_sshid())
+        key = paramiko.RSAKey.from_private_key_file(_DEFAULT_KEY_PATH)
         t.auth_publickey(tester_username, key)
         sftp = paramiko.SFTPClient.from_transport(t)
-        # XXX os.path.join is not correct here as these are paths on the
-        # remote machine.
         sftp.put(bundle_path, os.path.join(tester_queuepath, os.path.basename(bundle_path)))
+        
+        myip = socket.gethostbyname(tester_hostname)
+        server.register_function(notify, IP=myip)
     finally:
         t.close()
-
+        
+        
 submission_path = {}
 submission_index = 1
 
@@ -173,14 +169,50 @@ def __queue_for_testing(assignment, user, course_id):
     print submission_path
 
 def queue_for_testing(assignment, user, course_id):
-    t = Thread(target = __queue_for_testing, args=(assignment, user, course_id))
-    t.start()
-    print "called queue"
+    #t = Thread(target = __queue_for_testing, args=(assignment, user, course_id))
+    #t.start()
+    #print "called queue"
+    __queue_for_testing(assignment, user, course_id)
+    
+
+submitted = {}
+est_time = {}
+# 'key':{'IP':'127.0.0.1', 'user':'so', 'bundle_path':'...'}    
 
 
-
-
-
+def receive_files(IP, user, bundle_path, files):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((IP, _DEFAULT_SSH_PORT))
+    t = paramiko.Transport(sock)
+    try:
+        t.start_client()
+        key = paramiko.RSAKey.from_private_key_file(LOCAL_KEY_PATH)
+        t.auth_publickey(user, key)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        for filepath in files:
+            sftp.get(filepath, bundle_path+os.path.basename(filepath))
+    finally:
+        t.close()
+    
+    
+def notify(key, status, files, stats):
+    if key in submitted:
+        info = submitted[key]
+        del submitted[key]
+        if status==0:
+            # receive results
+            receive_files(info['IP'], info['user'], info['bundle_path'], files) 
+            # update stats
+            ( et1, no1) = est_time[ (info['user'],info['IP']) ][info['assignment_id']]
+            et2 = et1*no1 + stats['time']
+            et2 = et2/(no1+1)
+            est_time[ (info['user'],info['IP']) ][info['assignment_id']] = (et2, no1+1)       
+        else: # apply a time penalty if the testing fails
+            ( et1, no1) = est_time[ (info['user'],info['IP']) ]
+            et2 = et1*no1 + TIME_PENALTY
+            est_time[ (info['user'],info['IP']) ] = (et2, no1)
+    else:
+        logger.INFO('The key [%s] was not found. \n Details: %s %s %s' % (key,status,files,stats))
 
 
 class SelectiveHandler(SimpleXMLRPCRequestHandler):
@@ -207,15 +239,49 @@ class SelectiveServer(SimpleXMLRPCServer):
         if not IP is None:
             if name is None:
                 name = function.__name__
-            self.restricted_functions[name] = [ IP ]
+            if name in self.restricted_functions:
+                if not IP in self.restricted_functions[name]:
+                    self.restricted_functions[name].append(IP)
+                    print "IP %s is allowed to call function %s" % (IP,name)
+            else:    
+                self.restricted_functions[name] = [ IP ]
+                print "IP %s is allowed to call function %s" % (IP,name)
         SimpleXMLRPCServer.register_function(self,function, name)
+
+def redirect_std_files(stdin_fname=None, stdout_fname=None, stderr_fname=None):
+    """Redirect standard files for the files that are not null"""
+    if stdin_fname != None:
+        stdin = file(stdin_fname, 'r')
+        os.dup2(stdin.fileno(), sys.stdin.fileno())
+
+    if stdout_fname != None:
+        sys.stdout.flush()
+        stdout = file(stdout_fname, 'a+')
+        os.dup2(stdout.fileno(), sys.stdout.fileno())
+
+    if stderr_fname != None:
+        sys.stderr.flush()
+        stderr = file(stderr_fname, 'a+', 0)
+        os.dup2(stderr.fileno(), sys.stderr.fileno())
+
+server = None
         
 def main():
-    server = SelectiveServer(("127.0.0.1", 19999), SelectiveHandler, allow_none=True)
-    server.register_function(queue_for_testing, IP='127.0.0.2')
-    t = Thread(target=wait_for_notification)
-    #t.start()
-    print "done"
+    global server
+    cmdline = optparse.OptionParser()
+    cmdline.add_option('-0', '--stdin',  dest='stdin',  default=None,
+                       help='Redirect stdin to FILE.',  metavar='FILE')
+    cmdline.add_option('-1', '--stdout', dest='stdout', default=None,
+                       help='Redirect stdout to FILE.', metavar='FILE')
+    cmdline.add_option('-2', '--stderr', dest='stderr', default=None,
+                       help='Redirect stderr to FILE.', metavar='FILE')
+                       
+    (options, _) = cmdline.parse_args()
+    redirect_std_files(options.stdin, options.stdout, options.stderr)
+    
+    server = SelectiveServer(("", 19999), SelectiveHandler, allow_none=True)
+    server.register_function(queue_for_testing, IP='127.0.0.1')
+    server.register_function(notify, IP='dummyIP') # so the function is restricted
     server.serve_forever()
     
 if __name__ == '__main__':
