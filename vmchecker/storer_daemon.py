@@ -16,7 +16,6 @@ import tempfile
 import optparse
 import subprocess
 
-from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 import xmlrpclib
 
 from vmchecker.courselist import CourseList
