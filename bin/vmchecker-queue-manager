@@ -47,7 +47,7 @@ EXIT_FAIL = 1
 _logger = vmlogging.create_script_stdout_logger()
 
 
-def upload_results_to_sender(bundle_dir):
+def upload_results_to_sender(bundle_dir, total_time = None):
     """Runs callback script to upload results"""
     try:
         allfiles = os.listdir(bundle_dir)
@@ -56,16 +56,23 @@ def upload_results_to_sender(bundle_dir):
             if fname.endswith('.vmr'):
                 vmrfiles.append(os.path.join(bundle_dir, fname))
         sb_config = os.path.join(bundle_dir, 'submission-config')
-        #
-        '''
+
+        if total_time==None:
+            total_time = 45
+
+        _config = ConfigParser.RawConfigParser()
+        with open(sb_config) as handle:
+            _config.readfp(handle)
+        vars = dict(_config.items['Assignment'])
+        storer = vars['remotehostname']
+
         sb_index = os.path.join(bundle_dir, 'submission-index')
         with open(sb_index) as handle:
             index = handle.read()
-            proxy = xmlrpclib.ServerProxy('http://STORER:19999')
-            proxy.notify_results(...)
-        '''
-        #
-        callback.run_callback(sb_config, vmrfiles)
+            proxy = xmlrpclib.ServerProxy('http://'+storer+':19999')
+            proxy.notify_results(index, 0, vmrfiles, {'time':total_time})
+
+        #callback.run_callback(sb_config, vmrfiles)
     except:
         # XXX: don't know whether to allow exceptions to kill
         # queue-manager or not. Silent exceptions will most certainly
