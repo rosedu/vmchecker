@@ -53,10 +53,10 @@
     if (hasher($password, $hashPass) == true && $i != $len)
     {
         if ($type == "T")   //if the user is a titular and tries to access the adminControlPannel it will be redirected to the titularControlPannel
-            header("Location: /~cdidii/vmchecker/titularControlPannel.php");
+            header("Location: titularControlPannel.php");
     }
     else
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 
     function readConfig($find, $replace)//$find - the line to find , $replace the string to replace the found line
     {
@@ -98,13 +98,8 @@
 
     readConfig('CourseName', $_GET['courseName']);
 
-    $holidayStart = date('Y') + 1;
-    $holidayStart = $holidayStart . '.03.31 23:59:00';
-    readConfig('HolidayStart', $holidayStart);
-
-    $holidayStart = date('Y') + 1;
-    $holidayStart = $holidayStart . '.04.02 23:59:00';
-    readConfig('HolidayFinish', $holidayFinish);
+    $holidays = $_GET['holidays'];
+    readConfig('Holidays', $holidays);
 
     readConfig('UploadActiveFrom', $_GET['uploadActiveFrom']);
 
@@ -113,7 +108,7 @@
    exec('rm -R ./etc');
    exec('rm initialise.php');
    exec('rm username.txt');
-   header("Location: /~cdidii/vmchecker/courseCreate.php");
+   header("Location: ../../../../../../../courseCreate.php");
 
 
 ?>

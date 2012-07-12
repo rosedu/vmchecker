@@ -35,29 +35,29 @@ function hasher($info, $encdata = false)
     $fh = fopen($myFile, 'r') or die("can't open file");
     $jsonCode = fread($fh, filesize($myFile));
 
-   $user = explode(":",$jsonCode);
+    $user = explode(":",$jsonCode);
 
-   $len = count($user);
+    $len = count($user);
 
-   for ($i=0 ; $i<$len; $i++)
-   {
+    for ($i=0 ; $i<$len; $i++)
+    {
         if ( strcmp($user[$i] , $userInput) == 0)
             break;
-   }
-     $password = $user [$i + 1];
-     $type = $user[$i+2];
+    }
+    $password = $user [$i + 1];
+    $type = $user[$i+2];
 
-  
-     $hashPass = hasher($password);
-     if (hasher($passwordInput, $hashPass) == true && $i != $len)
+
+    $hashPass = hasher($password);
+    if (hasher($passwordInput, $hashPass) == true && $i != $len)
     {
         setcookie("userName",$userInput, time()+3600*24);
         setcookie("userPass",$hashPass, time()+3600*24);
         if ($type == "A")
-            header("Location: /~cdidii/vmchecker/adminControlPannel.php");
+            header("Location: adminControlPannel.php");
         if ($type == "T")
-            header("Location: /~cdidii/vmchecker/titularControlPannel.php");
+            header("Location: titularControlPannel.php");
     }
     else
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 ?>

@@ -28,13 +28,13 @@
          }
         }
 
-    $userInput = $_COOKIE['userName'];
-    $hashPass =  $_COOKIE['userPass'];
+   $userInput = $_COOKIE['userName'];
+   $hashPass =  $_COOKIE['userPass'];
 
 
-    $myFile = "username.txt";
-    $fh = fopen($myFile, 'r') or die("can't open file");
-    $jsonCode = fread($fh, filesize($myFile));
+   $myFile = "username.txt";
+   $fh = fopen($myFile, 'r') or die("can't open file");
+   $jsonCode = fread($fh, filesize($myFile));
 
 
    $user = explode(":",$jsonCode);
@@ -51,7 +51,7 @@
      $type = $user[$i+2];
 
     if (hasher($password, $hashPass) != true && $i != $len)
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 ?>
 
 
@@ -65,7 +65,8 @@
     <link rel="stylesheet" href="vmchecker.css">
     <link rel="icon" type="image/gif"  width="16"  height="12" href="img/vmchecker-logo-perfect-fit-16x12.png" />
 
-  <title>Vmchecker titular control pannel</title>
+    <title>Vmchecker titular control pannel</title>
+
 </head>
 
 <body>
@@ -80,11 +81,11 @@
             <ul id="list-nav" >
 
                 <li><a href="https://elf.cs.pub.ro/vmchecker">&#60; &#60;vmchecker</a></li>
-                <li><a href="/~cdidii/vmchecker/adminControlPannel.php">Home</a></li>
-                <li><a href="/~cdidii/vmchecker/search.php">Noteaza</a></li>
-                <p style="text-align: right"><li><a href="/~cdidii/vmchecker/addUser.php">Adauga student</a></li> </p>
-                <li><a href="/~cdidii/vmchecker/addHomework.php">Adauga tema</a></li>
-                <li><a href="/~cdidii/vmchecker/helpTitular.php">Ajutor titular</a></li>
+                <li><a href="adminControlPannel.php">Home</a></li>
+                <li><a href="search.php">Noteaza</a></li>
+                <p style="text-align: right"><li><a href="addUser.php">Adauga student</a></li> </p>
+                <li><a href="addHomework.php">Adauga tema</a></li>
+                <li><a href="helpTitular.php">Ajutor titular</a></li>
 
             </ul>
          </form>
@@ -101,7 +102,7 @@
                   Bine ai venit pe pagina de administrare a cursurilor de pe vmchecker si notare a studentilor .
                   Pentru a naviga in interiorul aplicatiei folosete butoanele de navigare de mai sus.
                 </td>
-                
+
             </tr>
           </table>
 

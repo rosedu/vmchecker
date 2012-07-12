@@ -28,13 +28,13 @@
          }
         }
 
-    $userInput = $_COOKIE['userName'];
-    $hashPass =  $_COOKIE['userPass'];
+   $userInput = $_COOKIE['userName'];
+   $hashPass =  $_COOKIE['userPass'];
 
 
-    $myFile = "username.txt";
-    $fh = fopen($myFile, 'r') or die("can't open file");
-    $jsonCode = fread($fh, filesize($myFile));
+   $myFile = "username.txt";
+   $fh = fopen($myFile, 'r') or die("can't open file");
+   $jsonCode = fread($fh, filesize($myFile));
 
 
    $user = explode(":",$jsonCode);
@@ -51,7 +51,7 @@
      $type = $user[$i+2];
 
     if (hasher($password, $hashPass) != true && $i != $len)
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 ?>
 
 <html>
@@ -158,11 +158,11 @@
             <ul id="list-nav" >
 
                 <li><a href="https://elf.cs.pub.ro/vmchecker">&#60; &#60;vmchecker</a></li>
-                <li><a href="/~cdidii/vmchecker/adminControlPannel.php">Home</a></li>
-                <li><a href="location.href='/~cdidii/vmchecker/grade.php">Noteaza</a></li>
-                <p style="text-align: right"><li><a href="/~cdidii/vmchecker/addUser.php">Adauga student</a></li> </p>
-                <li><a href="/~cdidii/vmchecker/addHomework.php">Adauga tema</a></li>
-                <li><a href="/~cdidii/vmchecker/helpTitular.php">Ajutor titular</a></li>
+                <li><a href="adminControlPannel.php">Home</a></li>
+                <li><a href="search.php">Noteaza</a></li>
+                <p style="text-align: right"><li><a href="addUser.php">Adauga student</a></li> </p>
+                <li><a href="addHomework.php">Adauga tema</a></li>
+                <li><a href="helpTitular.php">Ajutor titular</a></li>
 
             </ul>
          </form>
@@ -178,8 +178,8 @@
         <br />
 
         <script>add(document.forms[0].value)</script>
-        <input type="button"  class = "btn btn-primary" value="Add" onclick="add(document.forms[0].value)"/>
-        <input type="button" class = "btn btn-warning" value="Remove" onclick="remove()"/>
+        <input type="button"  class = "btn btn-success" value="Add" onclick="add(document.forms[0].value)"/>
+        <input type="button" class = "btn btn-success" value="Remove" onclick="remove()"/>
         <!--Finished adding the select and input functions -->
         <br />
         <br />
@@ -188,7 +188,7 @@
         <br />
         <br />
 
-        <input type="submit" class = "btn btn-success" value="Trimite tot" />
+        <input type="submit" class = "btn btn-success" value="Trimite" />
 
     </form>
 
@@ -225,7 +225,7 @@
 
     <form action="grade.php" method="post">
         <input type="hidden" name="Reset" value="Reset" />
-        <input type="submit" class = "btn btn-danger" value="Reseteaza" />
+        <input type="submit" class = "btn btn-success" value="Reseteaza" />
     </form>
 
     <?php
@@ -238,7 +238,7 @@
     ?>
 
     <form>
-        <input type="button" class = "btn btn-info" value="Vizualizare comentarii si punctaje" onclick="View()" />
+        <input type="button" class = "btn btn-success" value="Vizualizare comentarii si punctaje" onclick="View()" />
     </form>
 
 </body>

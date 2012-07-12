@@ -51,7 +51,7 @@
      $type = $user[$i+2];
 
     if (hasher($password, $hashPass) != true && $i != $len)
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 ?>
 
 <html >
@@ -154,11 +154,11 @@
             <ul id="list-nav" >
 
                 <li><a href="https://elf.cs.pub.ro/vmchecker">&#60; &#60;vmchecker</a></li>
-                <li><a href="/~cdidii/vmchecker/adminControlPannel.php">Home</a></li>
-                <li><a href="location.href='/~cdidii/vmchecker/search.php">Noteaza</a></li>
-                <p style="text-align: right"><li><a href="/~cdidii/vmchecker/addUser.php">Adauga student</a></li> </p>
-                <li><a href="/~cdidii/vmchecker/addHomework.php">Adauga tema</a></li>
-                <li><a href="/~cdidii/vmchecker/helpTitular.php">Ajutor titular</a></li>
+                <li><a href="adminControlPannel.php">Home</a></li>
+                <li><a href="location.href='search.php">Noteaza</a></li>
+                <p style="text-align: right"><li><a href="addUser.php">Adauga student</a></li> </p>
+                <li><a href="addHomework.php">Adauga tema</a></li>
+                <li><a href="helpTitular.php">Ajutor titular</a></li>
 
             </ul>
     </form>

@@ -30,13 +30,13 @@
          }
         }
 
-    $userInput = $_COOKIE['userName'];
-    $hashPass =  $_COOKIE['userPass'];
+   $userInput = $_COOKIE['userName'];
+   $hashPass =  $_COOKIE['userPass'];
 
 
-    $myFile = "username.txt";   //The file in which I have the username:pasword:userTy[e
-    $fh = fopen($myFile, 'r') or die("can't open file");
-    $jsonCode = fread($fh, filesize($myFile));
+   $myFile = "username.txt";   //The file in which I have the username:pasword:userTy[e
+   $fh = fopen($myFile, 'r') or die("can't open file");
+   $jsonCode = fread($fh, filesize($myFile));
 
 
    $user = explode(":",$jsonCode);
@@ -56,7 +56,7 @@
 
 
     if (hasher($password, $hashPass) != true && $i != $len)
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -66,7 +66,7 @@
     <link rel="stylesheet" href="vmchecker.css">
     <link rel="icon" type="image/gif"  width="16"  height="12" href="img/vmchecker-logo-perfect-fit-16x12.png" />
 
-  <title>Pagina de ajutor pentru admin</title>
+    <title>Pagina de ajutor pentru admin</title>
 
 </head>
 
@@ -83,11 +83,11 @@
             <ul id="list-nav" >
 
                 <li><a href="https://elf.cs.pub.ro/vmchecker">&#60; &#60;vmchecker</a></li>
-                <li><a href="/~cdidii/vmchecker/adminControlPannel.php">Home</a></li>
-                <li><a href="location.href='/~cdidii/vmchecker/search.php">Noteaza</a></li>
-                <p style="text-align: right"><li><a href="/~cdidii/vmchecker/addUser.php">Adauga student</a></li> </p>
-                <li><a href="/~cdidii/vmchecker/addHomework.php">Adauga tema</a></li>
-                <li><a href="/~cdidii/vmchecker/helpTitular.php">Ajutor titular</a></li>
+                <li><a href="adminControlPannel.php">Home</a></li>
+                <li><a href="search.php">Noteaza</a></li>
+                <p style="text-align: right"><li><a href="addUser.php">Adauga student</a></li> </p>
+                <li><a href="addHomework.php">Adauga tema</a></li>
+                <li><a href="helpTitular.php">Ajutor titular</a></li>
 
             </ul>
          </form>

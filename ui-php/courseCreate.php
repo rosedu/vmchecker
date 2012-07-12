@@ -56,10 +56,10 @@
     if (hasher($password, $hashPass) == true && $i != $len)
     {
         if ($type == "T")   //if the user is a titular and tries to access the adminControlPannel it will be redirected to the titularControlPannel
-            header("Location: /~cdidii/vmchecker/titularControlPannel.php");
+            header("Location: titularControlPannel.php");
     }
     else
-        header("Location: /~cdidii/vmchecker/login.php");
+        header("Location: login.php");
 
     //ending of the security part
 
@@ -93,6 +93,16 @@
                 $createCall = $createCall . $_POST['uploadActiveFrom'];
                 $createCall = $createCall . "&uploadActiveUntil=";
                 $createCall = $createCall . $_POST['uploadActiveUntil'];
+
+                $holidays = $_POST['holidays'];
+                $createCall = $createCall . "&holidays=";
+                $createCall = $createCall . $holidays;
+                for($i = 0; $i < $holidays; $i++)
+                {
+                    $createCall .= "&hStart" . $i . "=" . $_POST['hStart' . $i];
+                    $createCall .= "&hEnd" . $i . "=" . $_POST['hEnd' . $i];
+                }
+
                 header($createCall);
             }
             else
@@ -131,19 +141,53 @@
             copy($src, $dst);
     }
 
-
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 
-<head>
+    <script type="text/javascript">
+        var holidaysOld = 0;
+        function holiday()
+        {
+          var holidays = document.getElementById('holidays').value;
+          var holidayStart = document.getElementById("holidayStart");
+          var holidayFinish = document.getElementById("holidayFinish");
+          if(holidays > this.holidaysOld)
+            for(i = 0; i < holidays; i++)
+            {
 
-    <link rel="stylesheet" href="vmchecker.css">
-    <link rel="icon" type="image/gif"  width="16"  height="12" href="img/vmchecker-logo-perfect-fit-16x12.png" />
+                  var hStart = document.createElement("input");
+                  hStart.setAttribute("type", "text");
+                  hStart.setAttribute("value", "");
+                  hStart.setAttribute("name", "hStart" + i);
+                  hStart.setAttribute("id", "hStart" + i);
+                  hStart.setAttribute("size", 30);
 
-  <title>Vmchecker administration page</title>
 
-</head>
+                  var hEnd = document.createElement("input");
+                  hEnd.setAttribute("type", "text");
+                  hEnd.setAttribute("value", "");
+                  hEnd.setAttribute("name", "hEnd" + i);
+                  hEnd.setAttribute("id", "hEnd" + i);
+                  hEnd.setAttribute("size", 30);
+
+                  holidayFinish.appendChild(hEnd);
+                  holidayStart.appendChild(hStart);
+
+            }
+            this.holidaysOld = this.holidays;
+
+        }
+    </script>
+
+  <head>
+
+      <link rel="stylesheet" href="vmchecker.css">
+      <link rel="icon" type="image/gif"  width="16"  height="12" href="img/vmchecker-logo-perfect-fit-16x12.png" />
+
+    <title>Vmchecker administration page</title>
+
+  </head>
 
 
 <body>
@@ -158,10 +202,10 @@
             <ul id="list-nav" >
 
                 <li><a href="https://elf.cs.pub.ro/vmchecker">&#60; &#60;vmchecker</a></li>
-                <li><a href="/~cdidii/vmchecker/adminControlPannel.php">Home</a></li>
-                <li><a href="/~cdidii/vmchecker/titularControlPannel.php">Titular</a></li>
-                <p style="text-align: right"><li><a href="/~cdidii/vmchecker/courseCreate.php">Adauga Curs</a></li> </p>
-                <li><a href="/~cdidii/vmchecker/helpAdmin.php">Ajutor admin</a></li>
+                <li><a href="adminControlPannel.php">Home</a></li>
+                <li><a href="titularControlPannel.php">Titular</a></li>
+                <p style="text-align: right"><li><a href="courseCreate.php">Adauga Curs</a></li> </p>
+                <li><a href="helpAdmin.php">Ajutor admin</a></li>
             </ul>
          </form>
 
@@ -186,7 +230,7 @@
 
                                 <td>
 
-                                    <input type="text"  tabindex="-1"
+                                    <input type="text"
                                     size="30" maxlength="100" name="courseName"> &nbsp;&nbsp;Ex: Sisteme de operare
 
                                 </td>
@@ -201,7 +245,7 @@
 
                              <td>
 
-                                <input type="text"  tabindex="-1"
+                                <input type="text"
                                 size="30" maxlength="100" name="courseId">&nbsp;&nbsp;Ex: so
 
                              </td>
@@ -216,7 +260,7 @@
 
                              <td>
 
-                                <input type="text"  tabindex="-1"
+                                <input type="text"
                                 size="30" maxlength="100" name="uploadActiveFrom">&nbsp;&nbsp;Ex: 2012.03.31 23:59:00
 
                              </td>
@@ -231,9 +275,51 @@
 
                              <td>
 
-                                <input type="text"  tabindex="-1"
+                                <input type="text"
                                 size="30" maxlength="100" name="uploadActiveUntil">&nbsp;&nbsp;Ex: 2012.03.31 23:59:00
 
+                             </td>
+
+                           </tr>
+
+                           <tr>
+
+                             <td>
+                                Numar de vacante:
+                             </td>
+
+                             <td>
+                                <script>holiday();</script>
+                                <input type="text"  id="holidays" onkeyup="holiday()"
+                                size="30" maxlength="100" name="holidays">&nbsp;&nbsp;Ex: 2
+                             </td>
+
+                           </tr>
+
+                           <tr>
+
+                             <td>
+                                Inceputul vacantei:
+                             </td>
+
+                             <td>
+
+                                <span id="holidayStart"><br /></span>
+                                &nbsp;&nbsp;Ex: 2013.03.27 23:59:00
+                             </td>
+
+                           </tr>
+
+                            <tr>
+
+                             <td>
+                                Sfarsitul vacantei:
+                             </td>
+
+                             <td>
+
+                                <span id="holidayFinish"><br /></span>
+                                  &nbsp;&nbsp;Ex: 2013.03.31 23:59:00
                              </td>
 
                            </tr>
