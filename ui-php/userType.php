@@ -56,7 +56,7 @@ function hasher($info, $encdata = false)
         if ($type == "A")
             header("Location: adminControlPannel.php");
         if ($type == "T")
-            header("Location: titularControlPannel.php");
+            header("Location: teacherControlPannel.php");
     }
     else
         header("Location: login.php");
