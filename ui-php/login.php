@@ -11,13 +11,13 @@
   <title>Vmchecker administration login</title>
 </head>
 
-<body>
+<body bgcolor="#F6F6F6" style="font: Verdana" leftmargin="0px" topmargin="0px" marginwidth="0px" marginheight="0px">
 
         <form class = "well">
 
-            <ul id="list-nav" >
+            <ul id="nav" >
 
-                <p style="text-align: left"><li><a href="https://elf.cs.pub.ro/vmchecker">&#60; &#60;vmchecker</a></li></p>
+                <li><a href="https://elf.cs.pub.ro/vmchecker"><b>&nbsp;Interfa&#539&#259 veche</b></a></li>
 
             </ul>
          </form>
@@ -26,31 +26,35 @@
   <tr>
 
     <td>
-    <img src="img/vmchecker_logo_large.png" width="300" height="50" alt="" /><br /><br /> &nbsp;&nbsp;
-     Aceasta este o pagina de autentificare destinata titularilor si administraorilor cursurilor de pe vmchecker.
-     Introduceti aici contul si parola primite sau cele de pe cs.curs.pub.ro , daca contul dumneavoastra are asemenea drepturi.</td>
+      <img src="img/vmchecker_logo_large.png" width="300" height="50" alt="" /><br /><br />
+
+
+       <b>vmchecker</b> ofer&#259 o infrastructur&#259 de testare automat&#259 si evaluare
+       a temelor de cas&#259. Folosind aceast&#259 interfa&#539&#259, pute&#539i submite
+       teme de cas&#259(studen&#539i) sau pute&#539i evalua temele de cas&#259
+       (cadre didactice). Pentru persoanele cu drept administrativ, interfa&#539a permite
+       gestiunea &#537i configurarea cursurilor &#537i a temelor de cas&#259 aferente.
+    </td>
 
     <td>
     <br />
         <form name="userPass" action="userType.php" method="post">
             <center>
-             <div style="width:400px;height:300px;border:3px solid #DCDCDC;">
-                     <h2>Formular de autentificare</h2>
-                 <br />
-                    <font color="#008000">
-                     <h3>
-                         <p style="text-align: center">Utilizator &nbsp;&nbsp;
-                         <input type="text"  tabindex="-1"  size="30" maxlength="100" name="userName"></p>
-                     </h3>
+
+             <div style="width:400px;height:230px;border:3px solid #DCDCDC;">
+                     <br />
+                     <h3>Acceseaz&#259 interfa&#539a vmchecker</h3>
+                         <br />
+                    <font color="#008000" size="4">
+                        <p style="text-align: center ">Utilizator &nbsp;&nbsp;
+                         <input type="text"  tabindex="-1"  size="20" maxlength="100" name="userName"></p>
+                   </font>
+                    <font color="#008000" size="4">
+                         <p style="text-align: center">Parol&#259 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                         <input type="password" size="20" maxlength="100" name="userPassword"></p>
                    </font>
                    <br />
-                    <font color="#008000">
-                     <h3>
-                         <p style="text-align: center">Parola &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                         <input type="password" size="30" maxlength="100" name="userPassword"></p>
-                     </h3>
-                   </font>
-                   <input class = "btn" type = "submit" value = "Login" />
+                   <input class = "btn" type = "submit" value = "Autentificare" />
 
              </div>
             </center>

@@ -1,0 +1,5 @@
+{
+    "comment1": "in auth put entries of the type username:password",
+    "comment2": "json only accepts DOUBLE QUOTES as string delimiters",
+    "auth" : {}
+}

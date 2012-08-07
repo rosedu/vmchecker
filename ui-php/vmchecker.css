@@ -1,6 +1,6 @@
 body {
 
-font-family: Helvetica;
+font-family: Verdana;
 
 font-size: 13px;
 
@@ -65,75 +65,105 @@ background-color: #00A400;
 }
 
 .well {
-  min-height: 26px;
-  padding: 0px;
-  margin-bottom: 0px;
+  height: 27px;
+  width:100%;
   background-color:#008000;
+  padding: 0px;
  
 }
 
-ul#list-nav {
-list-style:none;
-margin:-15px;
-padding:0px;
-color:#fff;
-width:800px
+/*--- MENU ---*/
+#nav{
+	list-style:none;
+	font-weight:bold;
+	margin:0px;
+	margin-left:-35px;
+	/* Clear floats */
+	float:left
+	width:100%;
+
+
+
+}
+#nav li{
+	float:left;
+	margin-right:10px;
+	position:relative;
+}
+#nav a{
+	display:block;
+	padding:5px;
+	color:#C4C4C4;
+  	background:#008000;
+	text-decoration:none;
+}
+#nav a:hover{
+	color:#fff;
+  	background:#008000;
 }
 
-ul#list-nav li {
-float:left;
-display:inline
+/*--- DROPDOWN ---*/
+#nav ul{
+	background:#fff;
+	background:rgba(255,255,255,0);
+	list-style:none;
+	position:absolute;
+	left:-9999px; 
+}
+#nav ul li{
+	padding-top:0px; 
+	float:none;
+}
+#nav ul a{
+	white-space:nowrap; 
+}
+#nav li:hover ul{ 
+	left:-60px;
+ 
+}
+#nav li:hover a{ 
+  	background:#008000;
+
+}
+#nav li:hover ul a{ 
+	text-decoration:none;
+}
+#nav li:hover ul li a:hover{ 
+  	background:#008000;
 }
 
-ul#list-nav li a {
-text-decoration:none;
-padding:5px 0;
-width:100px;
-background:#008000;
-color:#fff;
-float:left;
-text-align:center;
-border-left:0px solid #fff;
+/*--- MENU - right ---*/
+
+#navy{
+	list-style:none;
+	font-weight:bold;
+	margin-bottom:0px;
+	margin:0px;
+	/* Clear floats */
+	float:right
+	width:100%;
+
+
+
+}
+#navy li{
+	float:right;
+	margin-right:5px;
+	position:relative;
+}
+#navy a{
+	display:block;
+	padding:5px;
+	color:#C4C4C4;
+  	background:#008000;
+	text-decoration:none;
+}
+#navy a:hover{
+	color:#fff;
+  	background:#008000;
 }
 
-ul#list-nav li a:hover {
-background:#00A400;
-color:#fff
-}
-
-
-ul#list-navy {
-list-style:none;
-margin:0px;
-padding:5px 0;
-color:#fff;
-padding:0px;
-float:right;
-text-align:center;
-width:300px
-}
-
-ul#list-navy li {
-float:right;
-display:inline
-}
-
-ul#list-navy li a {
-text-decoration:none;
-padding:5px 0;
-width:130px;
-background:#008000;
-color:#fff;
-float:left;
-text-align:center;
-border-left:0px solid #fff;
-}
-
-ul#list-navy li a:hover {
-background:#00A400;
-color:#fff
-}
-
+/*--- ----- ---*/
 
 .btn {
   display: inline-block;
@@ -141,7 +171,7 @@ color:#fff
   padding: 4px 10px 4px;
   margin-bottom: 0;
   *margin-left: .3em;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 18px;
   *line-height: 20px;
   color: #333333;

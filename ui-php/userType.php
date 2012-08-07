@@ -51,8 +51,8 @@ function hasher($info, $encdata = false)
     $hashPass = hasher($password);
     if (hasher($passwordInput, $hashPass) == true && $i != $len)
     {
-        setcookie("userName",$userInput, time()+3600*24);
-        setcookie("userPass",$hashPass, time()+3600*24);
+        setcookie("userName",$userInput, time()+3600*10);
+        setcookie("userPass",$hashPass, time()+3600*10);
         if ($type == "A")
             header("Location: adminControlPannel.php");
         if ($type == "T")
