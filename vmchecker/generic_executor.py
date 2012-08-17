@@ -88,6 +88,7 @@ class VM():
         self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
         self.vmwarecfg = VmwareConfig(vmcfg.testers(), self.machinecfg.get_tester_id())
         self.error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
+        self.shell = self.machinecfg.guest_shell_path()
 
         self.username = self.machinecfg.guest_user()
         self.password = self.machinecfg.guest_pass()

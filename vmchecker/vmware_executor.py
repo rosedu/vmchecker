@@ -58,7 +58,7 @@ class VmWareVM(VM):
 
 
     def executeCommand(self,cmd):
-        return self.vminstance.runProgramInGuest('/bin/bash','--login -c "'+cmd+'"')
+        return self.vminstance.runProgramInGuest(self.shell,'--login -c "'+cmd+'"')
     
     def start(self):
         self.vminstance.powerOn()
@@ -186,7 +186,7 @@ class VmWareVM(VM):
         """ Copy files from host(source) to guest(target) """
         for f in files:
             host_path = os.path.join(sourceDir, f)
-            guest_path = os.path.join(targetDir, f)
+            guest_path = targetDir + f
             if not os.path.exists(host_path):
                 _logger.error('host file (to send) "%s" does not exist' % host_path)
                 return
@@ -197,7 +197,7 @@ class VmWareVM(VM):
         """ Copy files from guest(source) to host(target) """
         for f in files:
             host_path = os.path.join(targetDir, f)
-            guest_path = os.path.join(sourceDir, f)
+            guest_path = sourceDir + f
             _logger.info('copy file %s from guest to host at %s' % (guest_path, host_path))
             self.vminstance.copyFileFromGuestToHost(guest_path, host_path)
             if not os.path.exists(host_path):
