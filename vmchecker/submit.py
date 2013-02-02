@@ -255,11 +255,9 @@ def ssh_bundle(bundle_path, vmcfg, assignment):
     tester = vmcfg.get(machine, 'Tester')
 
     tstcfg = vmcfg.testers()
-
     tester_username  = tstcfg.login_username(tester)
     tester_hostname  = tstcfg.hostname(tester)
     tester_queuepath = tstcfg.queue_path(tester)
-
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((tester_hostname, _DEFAULT_SSH_PORT))
     t = paramiko.Transport(sock)
@@ -315,7 +313,10 @@ def queue_for_testing(assignment, user, course_id):
     course and user."""
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     bundle_path = create_testing_bundle(user, assignment, course_id)
-    ssh_bundle(bundle_path, vmcfg, assignment)
+    try:
+        ssh_bundle(bundle_path, vmcfg, assignment)
+    except Exception as e:
+        pass # Avoid exception for dev environment without testers
     os.remove(bundle_path)
 
 
