@@ -87,6 +87,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
+        update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -141,6 +142,7 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
+        update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
@@ -219,7 +221,6 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
 ########## @ServiceMethod
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
-
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -267,9 +268,7 @@ def getUserResults(req, courseId, assignmentId, username):
     try:
         result_files = []
         if os.path.isdir(r_path):
-            # XXX should we narrow scope on user & assignment?
-            # TODO: add a routine to update user+asignment+course grade only
-            #update_db.update_grades(courseId)
+            update_db.update_grades(courseId, user=username, assignment=assignmentId)
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
@@ -288,11 +287,14 @@ def getUserResults(req, courseId, assignmentId, username):
 
 
         if len(result_files) == 0:
-            process = subprocess.Popen('/usr/games/fortune',
+            msg = "In the meantime have a fortune cookie: <blockquote>"
+            try:
+                process = subprocess.Popen('/usr/games/fortune',
                                        shell=False,
                                        stdout=subprocess.PIPE)
-            msg = "In the meantime have a fortune cookie: <blockquote>"
-            msg += process.communicate()[0] + "</blockquote>"
+                msg += process.communicate()[0] + "</blockquote>"
+            except:
+                msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
             result_files.append({'queue-contents.vmr' :  websutil.get_test_queue_contents(courseId) })
         result_files.append({'late-submission.vmr' :
@@ -349,9 +351,8 @@ def getAssignments(req, courseId):
     if s.is_new():
         s.invalidate()
         return json.dumps({'errorType':ERR_AUTH,
-                'errorMessage':"",
+                'errorMessage':"Session is new",
                 'errorTrace':""})
-		
 
     # Get username session variable
     strout = websutil.OutputString()
@@ -361,7 +362,7 @@ def getAssignments(req, courseId):
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
+                           'errorMessage' : "Unable to load session",
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
@@ -371,9 +372,9 @@ def getAssignments(req, courseId):
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})  	
-		
+            'errorMessage':"Unable to load course config",
+            'errorTrace':strout.get()})
+
     assignments = vmcfg.assignments()
     sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
                                                    int(assignments.get(y, "OrderNumber")))
@@ -508,7 +509,8 @@ def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'
     try:
-        update_db.update_grades(courseId)
+        # XXX: DON'T DO THIS: performance degrades very much!
+        #update_db.update_grades(courseId)
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
         db_conn = sqlite3.connect(vmpaths.db_file())
@@ -573,7 +575,7 @@ def login(req, username, password):
         return json.dumps({'status':False, 'username':"", 
             'info':'Invalid username/password'})
 
-    s["username"] = username
+    s["username"] = username.lower()
     s.save()
     return json.dumps({'status':True, 'username':user,
             'info':'Succesfully logged in'})
