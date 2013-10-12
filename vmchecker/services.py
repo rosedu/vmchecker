@@ -363,3 +363,11 @@ def logout():
 
 
 
+import xmlrpclib
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+
+server = SimpleXMLRPCServer(("localhost", 9090))
+print "Listening on port 8000..."
+server.register_function(getCourses)
+server.register_function(getAssignments)
+server.serve_forever()
