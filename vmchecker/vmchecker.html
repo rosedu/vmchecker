@@ -36,5 +36,9 @@
 </template>
 
 <template name="assignmentInfo">
-  {{content}}
+  <div>
+    {{#each content}}
+      {{courseId}} {{assignmentId}} {{assignmentTitle}} {{deadline}} {{statementLink}} {{assignmentStorage}}<br/>
+    {{/each}}
+  </div>
 </template>

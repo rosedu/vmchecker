@@ -37,11 +37,14 @@ if (Meteor.isClient) {
       var text = event.currentTarget.innerHTML;
       // TODO this is not actual text, but a html object
       // Fixme!!!
-      Session.set("assignmentId", text);
+      Session.set("assignmentId", String.trim(text));
       console.log(Session.get("assignmentId"));
     }
   });
 
+  Template.assignmentInfo.content = function() {
+    return Assignments.find({courseId: Session.get("courseId"), assignmentId: Session.get("assignmentId")});
+  }
 }
 
 if (Meteor.isServer) {
@@ -52,7 +55,7 @@ if (Meteor.isServer) {
 
 var do_rpc = function(method, args, callback) {
   var xmlrpc = Meteor.require("xmlrpc");
-  var client = new xmlrpc.createClient({ host: 'localhost', port: 9090, path: '/'});
+  var client = new xmlrpc.createClient({ host: 'vmchecker.cs.pub.ro', port: 9090, path: '/'});
   client.methodCall(method, args, Meteor.bindEnvironment(
     callback,
     function(e) {
