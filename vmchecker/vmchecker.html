@@ -1,0 +1,39 @@
+<head>
+  <title>vmchecker</title>
+</head>
+
+<body>
+  {{loginButtons}}
+  {{> hello}}
+  {{> courses}}
+  {{> assignments}}
+</body>
+
+<template name="hello">
+  <h1>vmchecker-ng (now with meteor)</h1>
+  {{greeting}}
+  <input type="button" value="Click" />
+</template>
+
+
+<template name="courses">
+  <select id="myList">
+    {{#each courses}}
+      {{> course}}
+    {{/each}}
+  </select>
+</template>
+
+<template name="course">
+    <option value={{id}}> {{title}} </option>
+</template>
+
+<template name="assignments">
+  {{#each assignments}}
+    {{> assignment}}
+  {{/each}}
+</template>
+
+<template name="assignment">
+  {{assignmentId}}
+</template>
