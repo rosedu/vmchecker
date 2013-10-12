@@ -5,8 +5,9 @@
 <body>
   {{loginButtons}}
   {{> hello}}
-  {{> courses}}
+  {{> courses}} <br/>
   {{> assignments}}
+  {{> assignmentInfo}}
 </body>
 
 <template name="hello">
@@ -19,21 +20,21 @@
 <template name="courses">
   <select id="myList">
     {{#each courses}}
-      {{> course}}
+      <option value={{id}}> {{title}} </option>
     {{/each}}
   </select>
 </template>
 
-<template name="course">
-    <option value={{id}}> {{title}} </option>
-</template>
-
 <template name="assignments">
+  <div>
   {{#each assignments}}
-    {{> assignment}}
+    <div>
+    {{assignmentId}}
+    </div>
   {{/each}}
+  </div>
 </template>
 
-<template name="assignment">
-  {{assignmentId}}
+<template name="assignmentInfo">
+  {{content}}
 </template>

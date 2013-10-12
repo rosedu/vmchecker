@@ -31,6 +31,17 @@ if (Meteor.isClient) {
   Template.assignments.assignments = function() {
     return Assignments.find({courseId: Session.get("courseId")});
   };
+
+  Template.assignments.events({
+    'click': function (event) {
+      var text = event.currentTarget.innerHTML;
+      // TODO this is not actual text, but a html object
+      // Fixme!!!
+      Session.set("assignmentId", text);
+      console.log(Session.get("assignmentId"));
+    }
+  });
+
 }
 
 if (Meteor.isServer) {
