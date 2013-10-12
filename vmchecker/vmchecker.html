@@ -7,7 +7,8 @@
   {{> hello}}
   {{> courses}} <br/>
   {{> assignments}}
-  {{> assignmentInfo}}
+  {{> assignmentInfo}} <br/><br/>
+  {{> grades }}
 </body>
 
 <template name="hello">
@@ -39,6 +40,14 @@
   <div>
     {{#each content}}
       {{courseId}} {{assignmentId}} {{assignmentTitle}} {{deadline}} {{statementLink}} {{assignmentStorage}}<br/>
+    {{/each}}
+  </div>
+</template>
+
+<template name="grades">
+  <div>
+    {{#each grades}}
+      {{courseId}} {{assignmentId}} {{studentId}} {{grade}} <br/>
     {{/each}}
   </div>
 </template>

@@ -1,5 +1,6 @@
 Courses = new Meteor.Collection("courses");
 Assignments = new Meteor.Collection("assignments");
+Grades = new Meteor.Collection("grades");
 
 if (Meteor.isClient) {
 
@@ -25,6 +26,7 @@ if (Meteor.isClient) {
       var elem = event.currentTarget;
       Session.set("courseId", elem.value);
       Meteor.call('getAssignments', Session.get("courseId"));
+      Meteor.call('getAllGrades', Session.get("courseId"));
     }
   });
 
@@ -45,6 +47,10 @@ if (Meteor.isClient) {
   Template.assignmentInfo.content = function() {
     return Assignments.find({courseId: Session.get("courseId"), assignmentId: Session.get("assignmentId")});
   }
+
+  Template.grades.grades = function() {
+    return Grades.find({courseId: Session.get("courseId")}, {sort: {studentId: -1}});
+  }
 }
 
 if (Meteor.isServer) {
@@ -55,7 +61,7 @@ if (Meteor.isServer) {
 
 var do_rpc = function(method, args, callback) {
   var xmlrpc = Meteor.require("xmlrpc");
-  var client = new xmlrpc.createClient({ host: 'vmchecker.cs.pub.ro', port: 9090, path: '/'});
+  var client = new xmlrpc.createClient({ host: 'localhost', port: 9090, path: '/'});
   client.methodCall(method, args, Meteor.bindEnvironment(
     callback,
     function(e) {
@@ -84,6 +90,18 @@ Meteor.methods({
         Assignments.update({ courseId: courseId, assignmentId: assignments[i].assignmentId}, 
                           { courseId: courseId, assignmentId: assignments[i].assignmentId, assignmentTitle: assignments[i].assignmentTitle, deadline: assignments[i].deadline, statementLink: assignments[i].statementLink, assignmentStorage: assignments[i].assignmentStorage}, { upsert: true });
       }
+    });
+  },
+  getAllGrades: function(courseId) {
+    do_rpc('getAllGrades', [courseId], function(error, value) {
+      console.log(courseId);
+      console.log(value);
+      var students = JSON.parse(value);
+      for (var i = 0; i < students.length; i++)
+        for (var assignmentId in students[i].results)
+          Grades.update({courseId: courseId, studentId: students[i].studentId, assignmentId: assignmentId},
+            {courseId: courseId, studentId: students[i].studentId, assignmentId: assignmentId, grade: students[i].results[assignmentId]},
+            { upsert: true });
     });
   }
 });
