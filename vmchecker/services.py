@@ -23,7 +23,7 @@ import tempfile
 import traceback
 import subprocess
 
-from mod_python import Session
+#from mod_python import Session
 
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
@@ -367,7 +367,8 @@ import xmlrpclib
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 server = SimpleXMLRPCServer(("localhost", 9090))
-print "Listening on port 8000..."
+print "Listening on port 9090..."
 server.register_function(getCourses)
 server.register_function(getAssignments)
+server.register_function(getAllGrades)
 server.serve_forever()
