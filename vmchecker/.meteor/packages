@@ -4,10 +4,10 @@
 # but you can also edit it by hand.
 
 standard-app-packages
-autopublish
-insecure
 preserve-inputs
 accounts-ui
-accounts-github
 
 npm
+accounts-base
+accounts-password
+force-ssl

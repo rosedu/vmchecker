@@ -2,6 +2,10 @@ Courses = new Meteor.Collection("courses");
 Assignments = new Meteor.Collection("assignments");
 Grades = new Meteor.Collection("grades");
 
+
+// Restricts creating accounts on the client
+Accounts.config({forbidClientAccountCreation: true});
+
 if (Meteor.isClient) {
 
   Meteor.call('getCourses');
@@ -51,7 +55,49 @@ if (Meteor.isClient) {
   Template.grades.grades = function() {
     return Grades.find({courseId: Session.get("courseId")}, {sort: {studentId: -1}});
   }
+
+Template.login.events({
+    'submit #login-form' : function(e, t){
+      e.preventDefault();
+      // retrieve the input field values
+      var email = t.find('#login-email').value
+        , password = t.find('#login-password').value;
+
+        // Trim and validate your fields here.... 
+        Session.set('loading', true);
+        Meteor.call('validateUser', email, password);
+
+        setTimeout(function() {
+          Meteor.loginWithPassword(email, password, function(err){
+          Session.set('loading', false);
+          if (err)
+            console.log(JSON.stringify(err));
+            // The user might not have been found, or their passwword
+            // could be incorrect. Inform the user that their
+            // login attempt has failed. 
+          else
+            console.log("error");
+            // The user has been logged in.
+          });
+        }, 3000);
+        // If validation passes, supply the appropriate fields to the
+        // Meteor.loginWithPassword() function.
+        
+         return false;
+      }
+  });
+
+Template.circle.display = function (league) {
+  return Session.get("loading") == true;
+};
+
+
+
+
+
+
 }
+
 
 if (Meteor.isServer) {
   Meteor.startup(function () {
@@ -60,8 +106,9 @@ if (Meteor.isServer) {
 /// ===>>> SERVER METHODS
 
 var do_rpc = function(method, args, callback) {
+  console.log("Calling "+method+"("+args+")");
   var xmlrpc = Meteor.require("xmlrpc");
-  var client = new xmlrpc.createClient({ host: 'localhost', port: 9090, path: '/'});
+  var client = new xmlrpc.createClient({ host: 'vmchecker.cs.pub.ro', port: 9090, path: '/'});
   client.methodCall(method, args, Meteor.bindEnvironment(
     callback,
     function(e) {
@@ -70,6 +117,15 @@ var do_rpc = function(method, args, callback) {
 }
 
 Meteor.methods({
+  validateUser: function(user, password) {
+    do_rpc('login', [user, password], function(error, value) {
+      var result = JSON.parse(value);
+      if (result.status)
+        Accounts.createUser({ username: user, password: password });
+      else
+        console.log("Login result: "+value);
+    });
+  },
   getCourses: function() {
     do_rpc('getCourses', [], function(error,value) {
         console.log(value);
