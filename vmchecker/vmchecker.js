@@ -8,6 +8,12 @@ Accounts.config({forbidClientAccountCreation: true});
 
 if (Meteor.isClient) {
 
+  Deps.autorun(function () {
+    Meteor.subscribe("courses");
+    Meteor.subscribe("assignments");
+    Meteor.subscribe("grades");
+  });
+
   Meteor.call('getCourses');
   Template.courses.courses = function () {
     return Courses.find({}, {sort: {id: -1, title: 1}});
@@ -76,7 +82,7 @@ Template.login.events({
             // could be incorrect. Inform the user that their
             // login attempt has failed. 
           else
-            console.log("error");
+            console.log("no error");
             // The user has been logged in.
           });
         }, 3000);
@@ -103,6 +109,16 @@ if (Meteor.isServer) {
   Meteor.startup(function () {
     console.log("Started server");
 
+    Meteor.publish("grades", function () {
+      return Grades.find({});
+    });
+    Meteor.publish("courses", function () {
+      return Courses.find({});
+    });
+    Meteor.publish("assignments", function () {
+      return Assignments.find({});
+    });
+    
 /// ===>>> SERVER METHODS
 
 var do_rpc = function(method, args, callback) {
