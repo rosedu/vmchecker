@@ -4,8 +4,8 @@
 </head>
 
 <body>
-  {{> login}}
   {{> circle}}
+
   {{#if currentUser}}
 
   {{> hello}}
@@ -15,19 +15,22 @@
   {{> grades }}
 
   {{else}}
-    Not logged in
+    {{> login}}
   {{/if}}
 
 </body>
 
 <template name="login">
-  <form id="login-form" action="action">
-    <div>
-      <input type="text" id="login-email" />
-      <input type="password" id="login-password" />
-      <input type="submit" id="login-button" value="Sign in" />
-    </div>
-  </form> 
+  <img src="/vmchecker_logo_ui.png"></img>
+  <div>
+    <form id="login-form" action="action">
+      <div>
+        <input type="text" id="login-email" />
+        <input type="password" id="login-password" />
+        <input type="submit" id="login-button" value="Sign in" />
+      </div>
+    </form>
+  </div>
 </template>
 <template name="hello">
   <h1>vmchecker-ng (now with meteor)</h1>

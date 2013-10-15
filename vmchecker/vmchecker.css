@@ -1,5 +1,12 @@
 /* CSS declarations go here */
 
+.logo {
+   background: url('/vmchecker_logo_ui.png') left top no-repeat;
+   width: 200px;
+   height: 40px;
+   margin-top: 8px;
+}
+
 .loading {
    position:absolute;
    top: 50%;
