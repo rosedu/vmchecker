@@ -100,8 +100,10 @@
 
 <template name="grades">
   <div>
+    {{#if display}}
     {{#each grades}}
       {{courseId}} {{assignmentId}} {{studentId}} {{grade}} <br/>
     {{/each}}
+    {{/if}}
   </div>
 </template>

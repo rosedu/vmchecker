@@ -42,7 +42,7 @@ if (Meteor.isClient) {
     'click': function (event) {
       var text = event.currentTarget.id;
       Session.set("assignmentId", String.trim(text));
-      console.log(Session.get("assignmentId"));
+      console.log("---"+Session.get("assignmentId"));
     }
   });
 
@@ -52,6 +52,10 @@ if (Meteor.isClient) {
 
   Template.grades.grades = function() {
     return Grades.find({courseId: Session.get("courseId")}, {sort: {studentId: -1}});
+  }
+
+  Template.grades.display = function() {
+    return Session.get("assignmentId") == "";
   }
 
 Template.login.events({
