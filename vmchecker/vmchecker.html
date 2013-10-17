@@ -4,11 +4,18 @@
 </head>
 
 <body>
+  <table width="60%" align="center">
+    <tr width="100%">
+      <td> <img src="/vmchecker_logo_ui.png"></img> </td>
+      <td align="right">{{> logout }} </td>
+    </tr>
+  </table>
+
   {{> circle}}
 
   {{#if currentUser}}
 
-  {{> hello}}
+  {{> main}}
   {{> courses}} <br/>
   {{> assignments}}
   {{> assignmentInfo}} <br/><br/>
@@ -18,24 +25,30 @@
     {{> login}}
   {{/if}}
 
+
 </body>
 
+<template name="logout">
+  {{#if currentUser}}
+  {{currentUser.profile.name}} <button onclick="Meteor.logout()"> Logout </button>
+  {{/if}}
+</template>
+
 <template name="login">
-  <img src="/vmchecker_logo_ui.png"></img>
   <div>
+    <section class="container">
     <form id="login-form" action="action">
       <div>
-        <input type="text" id="login-email" />
-        <input type="password" id="login-password" />
-        <input type="submit" id="login-button" value="Sign in" />
+        <p> <input type="text" id="login-email" placeholder="Username" /> </p>
+        <p> <input type="password" id="login-password" placeholder="Password" /> </p>
+        <p class="submit"> <input type="submit" id="login-button" value="Sign in" /> </p>
       </div>
     </form>
+    </section>
   </div>
 </template>
-<template name="hello">
-  <h1>vmchecker-ng (now with meteor)</h1>
-  {{greeting}}
-  <input type="button" value="Click" />
+
+<template name="main">
 </template>
 
 

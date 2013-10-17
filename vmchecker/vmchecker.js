@@ -6,30 +6,20 @@ Grades = new Meteor.Collection("grades");
 // Restricts creating accounts on the client
 Accounts.config({forbidClientAccountCreation: true});
 
+
 if (Meteor.isClient) {
 
   Deps.autorun(function () {
     Meteor.subscribe("courses");
     Meteor.subscribe("assignments");
     Meteor.subscribe("grades");
+    Meteor.subscribe("userData");
   });
 
   Meteor.call('getCourses');
   Template.courses.courses = function () {
     return Courses.find({}, {sort: {id: -1, title: 1}});
   };
-
-
-  Template.hello.greeting = function () {
-    return "Welcome to vmchecker.";
-  };
-
-  Template.hello.events({
-    'click' : function () {
-      // template data, if any, is available in 'this'
-      Meteor.call('getAssignments', Session.get("courseId"));
-    }
-  });
 
   Template.courses.events({
     'change' : function (event) {
@@ -70,6 +60,8 @@ Template.login.events({
         , password = t.find('#login-password').value;
 
         // Trim and validate your fields here.... 
+
+        console.log(JSON.stringify(Meteor.users.find({username: email})));
         Session.set('loading', true);
         Meteor.call('validateUser', email, password);
 
@@ -118,6 +110,9 @@ if (Meteor.isServer) {
     Meteor.publish("assignments", function () {
       return Assignments.find({});
     });
+    Meteor.publish("userData", function () {
+      return Meteor.users.find({});
+    });
     
 /// ===>>> SERVER METHODS
 
@@ -134,15 +129,18 @@ var do_rpc = function(method, args, callback) {
 
 Meteor.methods({
   validateUser: function(user, password) {
+    this.unblock();
     do_rpc('login', [user, password], function(error, value) {
       var result = JSON.parse(value);
-      if (result.status)
-        Accounts.createUser({ username: user, password: password });
-      else
+      if (result.status) {
+        console.log(result);
+        Accounts.createUser({ username: user, password: password, profile: {name: result.username}});
+      } else
         console.log("Login result: "+value);
     });
   },
   getCourses: function() {
+    this.unblock();
     do_rpc('getCourses', [], function(error,value) {
         console.log(value);
         var names = JSON.parse(value);
@@ -154,6 +152,7 @@ Meteor.methods({
       });
   },
   getAssignments: function(courseId) {
+    this.unblock();
     do_rpc('getAssignments', [courseId], function(error, value) {
       console.log(courseId);
       console.log(value);
@@ -165,6 +164,7 @@ Meteor.methods({
     });
   },
   getAllGrades: function(courseId) {
+    this.unblock();
     do_rpc('getAllGrades', [courseId], function(error, value) {
       console.log(courseId);
       console.log(value);
