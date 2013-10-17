@@ -15,11 +15,19 @@
 
   {{#if currentUser}}
 
+  <table align="center" width="70%">
+  <tr>
+  <td rowspan="2" valign="top"> {{> courses}} {{> assignments}}</td><td></td>
+  </tr>
+  <tr>
+  <td>{{> assignmentInfo}} <br/>
+  {{> grades }}</td>
+  </tr>
+  </table>
   {{> main}}
-  {{> courses}} <br/>
-  {{> assignments}}
-  {{> assignmentInfo}} <br/><br/>
-  {{> grades }}
+  <br/>
+  
+   
 
   {{else}}
     {{> login}}
@@ -62,9 +70,12 @@
 
 <template name="assignments">
   <div>
-  {{#each assignments}}
     <div>
-    {{assignmentId}}
+      All Grades
+    </div>
+  {{#each assignments}}
+    <div id={{assignmentId}}>
+    {{assignmentTitle}}
     </div>
   {{/each}}
   </div>

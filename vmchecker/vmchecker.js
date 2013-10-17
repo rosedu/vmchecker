@@ -30,15 +30,17 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.grades.canDisplay = function() {
+    return Session.get("courseId").contains("All Grades");
+  };
+
   Template.assignments.assignments = function() {
     return Assignments.find({courseId: Session.get("courseId")});
   };
 
   Template.assignments.events({
     'click': function (event) {
-      var text = event.currentTarget.innerHTML;
-      // TODO this is not actual text, but a html object
-      // Fixme!!!
+      var text = event.currentTarget.id;
       Session.set("assignmentId", String.trim(text));
       console.log(Session.get("assignmentId"));
     }
