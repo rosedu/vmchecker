@@ -26,8 +26,6 @@
   </table>
   {{> main}}
   <br/>
-  
-   
 
   {{else}}
     {{> login}}
@@ -70,9 +68,11 @@
 
 <template name="assignments">
   <div>
-    <div>
+    <br />
+    <div class="all-grades">
       All Grades
     </div>
+    <br />
   {{#each assignments}}
     <div id={{assignmentId}}>
     {{assignmentTitle}}
