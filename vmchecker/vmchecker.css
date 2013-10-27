@@ -16,6 +16,10 @@
    margin-top:-50px;
 }
 
+.all-grades {
+   color: green;
+}
+
 .spinner {
    height:60px;
    width:60px;
