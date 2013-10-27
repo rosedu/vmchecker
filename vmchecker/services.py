@@ -132,8 +132,6 @@ def beginEvaluation(username, courseId, assignmentId, archiveFileName):
 
 
 ########## @ServiceMethod
-def getResults(username, courseId, assignmentId):
-    return getUserResults(courseId, assignmentId, username)
 
 def getUserResults(courseId, assignmentId, username):
     strout = websutil.OutputString()
@@ -235,13 +233,6 @@ def getAssignments(courseId):
     return json.dumps(ass_arr)
 
 ######### @ServiceMethod
-def getUploadedMd5(username, courseId, assignmentId):
-    """ Returns the md5 file for the current user"""
-    # Get username session variable
-    strout = websutil.OutputString()
-    return getUserUploadedMd5(courseId, assignmentId, username)
-
-
 
 def getUserUploadedMd5(courseId, assignmentId, username):
     """Get the current MD5 sum submitted for a given username on a given assignment"""
@@ -283,10 +274,6 @@ def getUserUploadedMd5(courseId, assignmentId, username):
 
 
 ######### @ServiceMethod
-def getStorageDirContents(username, courseId, assignmentId):
-    return getUserStorageDirContents(courseId, assignmentId, username)
-
-
 
 def getUserStorageDirContents(courseId, assignmentId, username):
     strout = websutil.OutputString()
@@ -371,4 +358,8 @@ print "Listening on port 9090..."
 server.register_function(getCourses)
 server.register_function(getAssignments)
 server.register_function(getAllGrades)
+server.register_function(login)
+server.register_function(getUserResults)
+server.register_function(getUserUploadedMd5)
+server.register_function(getUserStorageDirContents)
 server.serve_forever()
