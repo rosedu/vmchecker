@@ -16,7 +16,12 @@ if (Meteor.isClient) {
     Meteor.subscribe("userData");
   });
 
-  Meteor.call('getCourses');
+  Meteor.call('getCourses', function() {
+    var firstCourse = Courses.findOne({});
+    Session.setDefault("courseId", firstCourse.courseId);
+  });
+
+
   Template.courses.courses = function () {
     return Courses.find({}, {sort: {id: -1, title: 1}});
   };
@@ -51,7 +56,7 @@ if (Meteor.isClient) {
   }
 
   Template.grades.grades = function() {
-    return Grades.find({courseId: Session.get("courseId")}, {sort: {studentId: -1}});
+    return Grades.find({courseId: Session.get("courseId")}, {sort: {studentId: -1}, limit: 10});
   }
 
   Template.grades.display = function() {
@@ -95,11 +100,6 @@ Template.circle.display = function (league) {
   return Session.get("loading") == true;
 };
 
-
-
-
-
-
 }
 
 
@@ -125,7 +125,7 @@ if (Meteor.isServer) {
 var do_rpc = function(method, args, callback) {
   console.log("Calling "+method+"("+args+")");
   var xmlrpc = Meteor.require("xmlrpc");
-  var client = new xmlrpc.createClient({ host: 'vmchecker.cs.pub.ro', port: 9090, path: '/'});
+  var client = new xmlrpc.createClient({ host: 'localhost', port: 9090, path: '/'});
   client.methodCall(method, args, Meteor.bindEnvironment(
     callback,
     function(e) {
