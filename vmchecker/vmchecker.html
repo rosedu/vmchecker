@@ -7,7 +7,7 @@
   <table width="60%" align="center">
     <tr width="100%">
       <td> <img src="/vmchecker_logo_ui.png"></img> </td>
-      <td align="right">{{> logout }} </td>
+      <td align="right">{{> logout }} {{t "Language"}} {{> changeLang }}</td>
     </tr>
   </table>
 
@@ -34,6 +34,15 @@
 
 </body>
 
+<template name="changeLang">
+  <select id="languages">
+    {{#each languages}}
+      <option value={{code}} {{selected}}> {{name}} </option>
+    {{/each}}
+  </select>
+</template>
+
+
 <template name="logout">
   {{#if currentUser}}
   {{currentUser.profile.name}} <button onclick="Meteor.logout()"> Logout </button>
@@ -45,9 +54,9 @@
     <section class="container">
     <form id="login-form" action="action">
       <div>
-        <p> <input type="text" id="login-email" placeholder="Username" /> </p>
-        <p> <input type="password" id="login-password" placeholder="Password" /> </p>
-        <p class="submit"> <input type="submit" id="login-button" value="Sign in" /> </p>
+        <p> <input type="text" id="login-email" placeholder={{tt "Username"}} /> </p>
+        <p> <input type="password" id="login-password" placeholder={{tt "Password"}} /> </p>
+        <p class="submit"> <input type="submit" id="login-button" value={{tt "Sign In"}} /> </p>
       </div>
     </form>
     </section>

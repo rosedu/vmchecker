@@ -11,3 +11,6 @@ npm
 accounts-base
 accounts-password
 force-ssl
+
+i18next-meteor
+cookies

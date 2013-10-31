@@ -2,12 +2,28 @@ Courses = new Meteor.Collection("courses");
 Assignments = new Meteor.Collection("assignments");
 Grades = new Meteor.Collection("grades");
 
-
 // Restricts creating accounts on the client
 Accounts.config({forbidClientAccountCreation: true});
 
 
 if (Meteor.isClient) {
+
+    i18n.init({ lng: Cookie.get("i18next") || "en", debug: true, preload: ['en', 'ro'], fallbackLng: 'en', useLocalStorage: true, load: 'current' }, function(t){
+        console.log("got lng:" + Cookie.get("i18next") || "en");
+
+        Handlebars.registerHelper('t', function(i18n_key) {
+            var result = i18n.t(i18n_key);
+            console.log("---"+result);
+            return new Handlebars.SafeString(result);
+          });
+
+        Handlebars.registerHelper('tt', function(i18n_key) {
+            var result = '"'+i18n.t(i18n_key)+'"';
+            console.log("---"+result);
+            return new Handlebars.SafeString(result);
+          });
+        });
+
 
   Deps.autorun(function () {
     Meteor.subscribe("courses");
@@ -35,6 +51,21 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.changeLang.events({
+    'change' : function (event) {
+      if (Cookie.get("i18next") != event.currentTarget.value) {
+        Cookie.set("i18next",event.currentTarget.value);
+        history.go(0);
+      }
+    }
+  });
+
+  Template.changeLang.languages = function() {
+    // TODO: use database maybe?
+    return [{ "code":"ro", "name":"Romana", "selected": (Cookie.get('i18next')=="ro" ? "selected" : "")},
+            { "code":"en", "name":"Engleza", "selected": (Cookie.get('i18next')=="en" ? "selected" : "")}];
+  }
+
   Template.grades.canDisplay = function() {
     return Session.get("courseId").contains("All Grades");
   };
@@ -50,6 +81,7 @@ if (Meteor.isClient) {
       console.log("---"+Session.get("assignmentId"));
     }
   });
+
 
   Template.assignmentInfo.content = function() {
     return Assignments.find({courseId: Session.get("courseId"), assignmentId: Session.get("assignmentId")});
