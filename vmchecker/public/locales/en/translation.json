@@ -1,7 +1,9 @@
 {
-    "key1": "hello",
-    "key2": "bla2",
     "Username" : "Username",
     "Password" : "Password",
-    "Sign In" : "Sign In"
+    "Sign In" : "Sign In",
+    "Language" : "Language",
+    "Logout" : "Logout",
+    "All Grades" : "All Grades",
+    "Loading" : "Loading"
 }

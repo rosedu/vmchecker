@@ -1,6 +1,7 @@
 Courses = new Meteor.Collection("courses");
 Assignments = new Meteor.Collection("assignments");
 Grades = new Meteor.Collection("grades");
+Results = new Meteor.Collection("results");
 
 // Restricts creating accounts on the client
 Accounts.config({forbidClientAccountCreation: true});
@@ -30,6 +31,7 @@ if (Meteor.isClient) {
     Meteor.subscribe("assignments");
     Meteor.subscribe("grades");
     Meteor.subscribe("userData");
+    Meteor.subscribe("results");
   });
 
   Meteor.call('getCourses', function() {
@@ -66,10 +68,6 @@ if (Meteor.isClient) {
             { "code":"en", "name":"Engleza", "selected": (Cookie.get('i18next')=="en" ? "selected" : "")}];
   }
 
-  Template.grades.canDisplay = function() {
-    return Session.get("courseId").contains("All Grades");
-  };
-
   Template.assignments.assignments = function() {
     return Assignments.find({courseId: Session.get("courseId")});
   };
@@ -78,6 +76,7 @@ if (Meteor.isClient) {
     'click': function (event) {
       var text = event.currentTarget.id;
       Session.set("assignmentId", String.trim(text));
+      Meteor.call('getUserResults', Session.get('courseId'), Session.get('assignmentId'), Meteor.user().username);
       console.log("---"+Session.get("assignmentId"));
     }
   });
@@ -93,6 +92,15 @@ if (Meteor.isClient) {
 
   Template.grades.display = function() {
     return Session.get("assignmentId") == "";
+  }
+
+  Template.result.content = function() {
+    if (Meteor.user()) {
+    var val = Results.findOne({courseId: Session.get('courseId'), assignmentId: Session.get('assignmentId'), userId: Meteor.user().username}).content;
+    console.log(val);
+    return JSON.stringify(val);
+    }
+    return "";
   }
 
 Template.login.events({
@@ -136,6 +144,7 @@ Template.circle.display = function (league) {
 
 
 if (Meteor.isServer) {
+  Meteor.users.remove({});
   Meteor.startup(function () {
     console.log("Started server");
 
@@ -151,17 +160,20 @@ if (Meteor.isServer) {
     Meteor.publish("userData", function () {
       return Meteor.users.find({});
     });
-    
+    Meteor.publish("results", function () {
+      return Results.find({});
+    });
+
 /// ===>>> SERVER METHODS
 
 var do_rpc = function(method, args, callback) {
   console.log("Calling "+method+"("+args+")");
   var xmlrpc = Meteor.require("xmlrpc");
-  var client = new xmlrpc.createClient({ host: 'localhost', port: 9090, path: '/'});
+  var client = new xmlrpc.createClient({ host: 'vmchecker.cs.pub.ro', port: 9090, path: '/'});
   client.methodCall(method, args, Meteor.bindEnvironment(
     callback,
     function(e) {
-      console.log("Error in calling: "+method+"("+args+")");
+      console.log("Error in calling: "+method+"("+args+"):"+e);
     }));
 }
 
@@ -172,6 +184,7 @@ Meteor.methods({
       var result = JSON.parse(value);
       if (result.status) {
         console.log(result);
+        Meteor.users.remove({username: user});
         Accounts.createUser({ username: user, password: password, profile: {name: result.username}});
       } else
         console.log("Login result: "+value);
@@ -212,6 +225,33 @@ Meteor.methods({
           Grades.update({courseId: courseId, studentId: students[i].studentId, assignmentId: assignmentId},
             {courseId: courseId, studentId: students[i].studentId, assignmentId: assignmentId, grade: students[i].results[assignmentId]},
             { upsert: true });
+    });
+  },
+  getUserResults: function(courseId, assignmentId, username) {
+    this.unblock();
+    do_rpc('getUserResults', [courseId, assignmentId, username], function(error, value) {
+      console.log(courseId);
+      console.log(value);
+      Results.upsert({courseId: courseId, assignmentId: assignmentId, userId: username},
+        {courseId: courseId, assignmentId: assignmentId, userId: username, content: value});
+      console.log(Results.find({}).count());
+    });
+  },
+  getUserUploadedMd5: function(courseId, assignmentId, username) {
+    this.unblock();
+    do_rpc('getUserUploadedMd5', [courseId, assignmentId, username], function(error, value) {
+      console.log(courseId);
+      console.log(value);
+      Results.upsert({courseId: courseId, assignmentId: assignmentId, userId: username},
+        {courseId: courseId, assignmentId: assignmentId, userId: username, content: value});
+    });
+  },
+  getUserStorageDirContents: function(courseId, assignmentId, username) {
+    this.unblock();
+    console.log(value);
+    do_rpc('getUserStorageDirContents', [courseId, assignmentId, username], function(error, value) {
+      Results.upsert({courseId: courseId, assignmentId: assignmentId, userId: username},
+        {courseId: courseId, assignmentId: assignmentId, userId: username, content: value});
     });
   }
 });

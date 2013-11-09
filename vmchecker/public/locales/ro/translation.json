@@ -1,7 +1,9 @@
 {
-    "key1": "salut",
-    "key2": "in romana",
     "Username" : "Utilizator",
     "Password" : "Parola",
-    "Sign In" : "Conectare"
+    "Sign In" : "Conectare",
+    "Language" : "Limba",
+    "Logout" : "Deconectare",
+    "All Grades" : "Toate Notele",
+    "Loading" : "Se incarca"
 }

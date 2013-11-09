@@ -1,4 +1,5 @@
 <head>
+  <meta charset="utf-8">
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
   <title>vmchecker</title>
 </head>
@@ -23,6 +24,11 @@
   <td>{{> assignmentInfo}} <br/>
   {{> grades }}</td>
   </tr>
+  <tr>
+    <td>
+    {{> result }}
+  </td>
+  </tr>
   </table>
   {{> main}}
   <br/>
@@ -45,7 +51,7 @@
 
 <template name="logout">
   {{#if currentUser}}
-  {{currentUser.profile.name}} <button onclick="Meteor.logout()"> Logout </button>
+  {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button>
   {{/if}}
 </template>
 
@@ -79,7 +85,7 @@
   <div>
     <br />
     <div class="all-grades">
-      All Grades
+      {{t "All Grades"}}
     </div>
     <br />
   {{#each assignments}}
@@ -93,7 +99,7 @@
 <template name="circle">
   {{#if display}}
     <div class="loading">
-      Loading
+      {{t "Loading"}}
     <div class="spinner"></div>
   </div>
   {{/if}}
@@ -114,5 +120,10 @@
       {{courseId}} {{assignmentId}} {{studentId}} {{grade}} <br/>
     {{/each}}
     {{/if}}
+  </div>
+</template>
+
+<template name="result">
+  <div>
   </div>
 </template>
