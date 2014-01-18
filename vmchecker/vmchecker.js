@@ -75,7 +75,7 @@ if (Meteor.isClient) {
   Template.assignments.events({
     'click': function (event) {
       var text = event.currentTarget.id;
-      Session.set("assignmentId", String.trim(text));
+      Session.set("assignmentId", text.trim());
       Meteor.call('getUserResults', Session.get('courseId'), Session.get('assignmentId'), Meteor.user().username);
       console.log("---"+Session.get("assignmentId"));
     }
