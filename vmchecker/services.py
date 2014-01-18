@@ -340,6 +340,10 @@ def login(username, password):
         return json.dumps({'errorType':ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})
+    if user == None:
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})
     return json.dumps({'status':True, 'username':user,
             'info':'Succesfully logged in'})
 
