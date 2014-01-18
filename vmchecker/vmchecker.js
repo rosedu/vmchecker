@@ -208,7 +208,7 @@ var do_rpc = function(method, args, callback) {
   console.log("Calling "+method+"("+args+")");
   var xmlrpc = Meteor.require("xmlrpc");
   var client = new xmlrpc.createClient({
-    host: 'vmchecker.cs.pub.ro',
+    host: 'localhost',
     port: 9090, path: '/'
   });
   client.methodCall(method, args, Meteor.bindEnvironment(
