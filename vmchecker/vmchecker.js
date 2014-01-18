@@ -11,21 +11,32 @@ Accounts.config({forbidClientAccountCreation: true});
 
 if (Meteor.isClient) {
 
-    i18n.init({ lng: Cookie.get("i18next") || "en", debug: true, preload: ['en', 'ro'], fallbackLng: 'en', useLocalStorage: true, load: 'current', getAsync: false }, function(t){
+    i18n.init(
+      {
+        lng: Cookie.get("i18next") || "en",
+        debug: true,
+        preload: ['en', 'ro'],
+        fallbackLng: 'en',
+        useLocalStorage: true,
+        load: 'current',
+        getAsync: false
+      },
+      function(t) {
         console.log("got lng:" + Cookie.get("i18next") || "en");
 
         Handlebars.registerHelper('t', function(i18n_key) {
-            var result = i18n.t(i18n_key);
-            console.log("---"+result);
-            return new Handlebars.SafeString(result);
-          });
+          var result = i18n.t(i18n_key);
+          console.log("---"+result);
+          return new Handlebars.SafeString(result);
+        });
 
         Handlebars.registerHelper('tt', function(i18n_key) {
-            var result = '"'+i18n.t(i18n_key)+'"';
-            console.log("---"+result);
-            return new Handlebars.SafeString(result);
-          });
+          var result = '"'+i18n.t(i18n_key)+'"';
+          console.log("---"+result);
+          return new Handlebars.SafeString(result);
         });
+      }
+    );
 
 
   Deps.autorun(function () {
@@ -66,8 +77,18 @@ if (Meteor.isClient) {
 
   Template.changeLang.languages = function() {
     // TODO: use database maybe?
-    return [{ "code":"ro", "name":"Romana", "selected": (Cookie.get('i18next')=="ro" ? "selected" : "")},
-            { "code":"en", "name":"Engleza", "selected": (Cookie.get('i18next')=="en" ? "selected" : "")}];
+    return [
+      {
+        "code": "ro",
+        "name": "Romana",
+        "selected": (Cookie.get('i18next')=="ro" ? "selected" : "")
+      },
+      {
+        "code":"en",
+        "name":"Engleza",
+        "selected": (Cookie.get('i18next')=="en" ? "selected" : "")
+      }
+    ];
   }
 
   Template.assignments.assignments = function() {
@@ -78,18 +99,29 @@ if (Meteor.isClient) {
     'click': function (event) {
       var text = event.currentTarget.id;
       Session.set("assignmentId", text.trim());
-      Meteor.call('getUserResults', Session.get('courseId'), Session.get('assignmentId'), Meteor.user().username);
+      Meteor.call(
+        'getUserResults',
+        Session.get('courseId'),
+        Session.get('assignmentId'),
+        Meteor.user().username
+      );
       console.log("---"+Session.get("assignmentId"));
     }
   });
 
 
   Template.assignmentInfo.content = function() {
-    return Assignments.find({courseId: Session.get("courseId"), assignmentId: Session.get("assignmentId")});
+    return Assignments.find({
+      courseId: Session.get("courseId"),
+      assignmentId: Session.get("assignmentId")
+    });
   }
 
   Template.grades.grades = function() {
-    return Grades.find({courseId: Session.get("courseId")}, {sort: {studentId: -1}, limit: 10});
+    return Grades.find(
+      {courseId: Session.get("courseId")},
+      {sort: {studentId: -1}, limit: 10}
+    );
   }
 
   Template.grades.display = function() {
@@ -98,9 +130,13 @@ if (Meteor.isClient) {
 
   Template.result.content = function() {
     if (Meteor.user()) {
-    var val = Results.findOne({courseId: Session.get('courseId'), assignmentId: Session.get('assignmentId'), userId: Meteor.user().username}).content;
-    console.log(val);
-    return JSON.stringify(val);
+      var val = Results.findOne({
+        courseId: Session.get('courseId'),
+        assignmentId: Session.get('assignmentId'),
+        userId: Meteor.user().username
+      }).content;
+      console.log(val);
+      return JSON.stringify(val);
     }
     return "";
   }
@@ -171,7 +207,10 @@ if (Meteor.isServer) {
 var do_rpc = function(method, args, callback) {
   console.log("Calling "+method+"("+args+")");
   var xmlrpc = Meteor.require("xmlrpc");
-  var client = new xmlrpc.createClient({ host: 'vmchecker.cs.pub.ro', port: 9090, path: '/'});
+  var client = new xmlrpc.createClient({
+    host: 'vmchecker.cs.pub.ro',
+    port: 9090, path: '/'
+  });
   client.methodCall(method, args, Meteor.bindEnvironment(
     callback,
     function(e) {
@@ -187,7 +226,11 @@ Meteor.methods({
       if (result.status) {
         console.log(result);
         Meteor.users.remove({username: user});
-        Accounts.createUser({ username: user, password: password, profile: {name: result.username}});
+        Accounts.createUser({
+          username: user,
+          password: password,
+          profile: {name: result.username}
+        });
       } else
         console.log("Login result: "+value);
     });
@@ -199,7 +242,11 @@ Meteor.methods({
         var names = JSON.parse(value);
         // TODO: handle error json
         for (var i = 0; i < names.length; i++) {
-          Courses.update({ id: names[i].id }, { id: names[i].id, title: names[i].title }, { upsert: true });
+          Courses.update(
+            {id: names[i].id},
+            {id: names[i].id, title: names[i].title},
+            {upsert: true}
+          );
           console.log("adding "+names[i].id);
         }
       });
@@ -211,8 +258,23 @@ Meteor.methods({
       console.log(value);
       var assignments = JSON.parse(value);
       for (var i = 0; i < assignments.length; i++) {
-        Assignments.update({ courseId: courseId, assignmentId: assignments[i].assignmentId}, 
-                          { courseId: courseId, assignmentId: assignments[i].assignmentId, assignmentTitle: assignments[i].assignmentTitle, deadline: assignments[i].deadline, statementLink: assignments[i].statementLink, assignmentStorage: assignments[i].assignmentStorage}, { upsert: true });
+        Assignments.update(
+          {
+            courseId: courseId,
+            assignmentId: assignments[i].assignmentId
+          },
+          {
+            courseId: courseId,
+            assignmentId: assignments[i].assignmentId,
+            assignmentTitle: assignments[i].assignmentTitle,
+            deadline: assignments[i].deadline,
+            statementLink: assignments[i].statementLink,
+            assignmentStorage: assignments[i].assignmentStorage
+          },
+          {
+            upsert: true
+          }
+        );
       }
     });
   },
@@ -222,39 +284,97 @@ Meteor.methods({
       console.log(courseId);
       console.log(value);
       var students = JSON.parse(value);
-      for (var i = 0; i < students.length; i++)
-        for (var assignmentId in students[i].results)
-          Grades.update({courseId: courseId, studentId: students[i].studentId, assignmentId: assignmentId},
-            {courseId: courseId, studentId: students[i].studentId, assignmentId: assignmentId, grade: students[i].results[assignmentId]},
-            { upsert: true });
+      for (var i = 0; i < students.length; i++) {
+        for (var assignmentId in students[i].results) {
+          Grades.update(
+            {
+              courseId: courseId,
+              studentId: students[i].studentId,
+              assignmentId: assignmentId
+            },
+            {
+              courseId: courseId,
+              studentId: students[i].studentId,
+              assignmentId: assignmentId,
+              grade: students[i].results[assignmentId]
+            },
+            {
+              upsert: true
+            }
+          );
+        }
+      }
     });
   },
   getUserResults: function(courseId, assignmentId, username) {
     this.unblock();
-    do_rpc('getUserResults', [courseId, assignmentId, username], function(error, value) {
-      console.log(courseId);
-      console.log(value);
-      Results.upsert({courseId: courseId, assignmentId: assignmentId, userId: username},
-        {courseId: courseId, assignmentId: assignmentId, userId: username, content: value});
-      console.log(Results.find({}).count());
+    do_rpc(
+      'getUserResults',
+      [courseId, assignmentId, username],
+      function(error, value) {
+        console.log(courseId);
+        console.log(value);
+        Results.upsert(
+          {
+            courseId: courseId,
+            assignmentId: assignmentId,
+            userId: username
+          },
+          {
+            courseId: courseId,
+            assignmentId: assignmentId,
+            userId: username,
+            content: value
+          }
+        );
+        console.log(Results.find({}).count());
     });
   },
   getUserUploadedMd5: function(courseId, assignmentId, username) {
     this.unblock();
-    do_rpc('getUserUploadedMd5', [courseId, assignmentId, username], function(error, value) {
-      console.log(courseId);
-      console.log(value);
-      Results.upsert({courseId: courseId, assignmentId: assignmentId, userId: username},
-        {courseId: courseId, assignmentId: assignmentId, userId: username, content: value});
+    do_rpc(
+      'getUserUploadedMd5',
+      [courseId, assignmentId, username],
+      function(error, value) {
+        console.log(courseId);
+        console.log(value);
+        Results.upsert(
+          {
+            courseId: courseId,
+            assignmentId: assignmentId,
+            userId: username
+          },
+          {
+            courseId: courseId,
+            assignmentId: assignmentId,
+            userId: username,
+            content: value
+          }
+        );
     });
   },
   getUserStorageDirContents: function(courseId, assignmentId, username) {
     this.unblock();
     console.log(value);
-    do_rpc('getUserStorageDirContents', [courseId, assignmentId, username], function(error, value) {
-      Results.upsert({courseId: courseId, assignmentId: assignmentId, userId: username},
-        {courseId: courseId, assignmentId: assignmentId, userId: username, content: value});
-    });
+    do_rpc(
+      'getUserStorageDirContents',
+      [courseId, assignmentId, username],
+      function(error, value) {
+        Results.upsert(
+          {
+            courseId: courseId,
+            assignmentId: assignmentId,
+            userId: username
+          },
+          {
+            courseId: courseId,
+            assignmentId: assignmentId,
+            userId: username,
+            content: value
+          }
+        );
+      }
+    );
   }
 });
 
