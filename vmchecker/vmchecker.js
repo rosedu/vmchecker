@@ -1,7 +1,9 @@
-Courses = new Meteor.Collection("courses");
-Assignments = new Meteor.Collection("assignments");
-Grades = new Meteor.Collection("grades");
-Results = new Meteor.Collection("results");
+"use strict";
+
+var Courses = new Meteor.Collection("courses");
+var Assignments = new Meteor.Collection("assignments");
+var Grades = new Meteor.Collection("grades");
+var Results = new Meteor.Collection("results");
 
 // Restricts creating accounts on the client
 Accounts.config({forbidClientAccountCreation: true});
