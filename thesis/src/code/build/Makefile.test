@@ -1,0 +1,22 @@
+# Makefile containing targets specific to testing
+
+TEST_CASE_SPEC_FILE=full_test_spec.odt
+API_COVERAGE_FILE=api_coverage.csv
+REQUIREMENTS_COVERAGE_FILE=requirements_coverage.csv
+TEST_REPORT_FILE=test_report.odt
+
+
+# Test Case Specification targets
+
+.PHONY: full_spec
+full_spec: $(TEST_CASE_SPEC_FILE)
+	@echo
+	@echo "Generated full Test Case Specification into \"$^\""
+	@echo "Please remove manually the generated file."
+
+.PHONY: $(TEST_CASE_SPEC_FILE)
+$(TEST_CASE_SPEC_FILE):
+	$(TEST_ROOT)/common/tools/generate_all_spec.py --format=odt -o $@ $(TEST_ROOT)/functional-tests $(TEST_ROOT)/performance-tests $(TEST_ROOT)/robustness-tests
+#
+
+# ...

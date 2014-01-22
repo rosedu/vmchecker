@@ -19,11 +19,15 @@
    rm -rf vmware-vix-distrib
 
 
-3. (only on the tester machine)
-   install pyvix
+3. # (only on the tester machine)
+   # install pyvix
    git clone git://github.com/luciang/pyvix.git
+   sudo apt-get install python2.7-dev
    cd pyvix && python setup.py install
 
+4. # install vmchecker
+   cd vmchecker/
+   python setup.py install
 
 == Configure machines ==
 

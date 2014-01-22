@@ -6,7 +6,12 @@ from __future__ import with_statement
 
 import os
 import socket
-import paramiko
+
+import warnings
+with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        import paramiko # ignore deprecation warnings
+
 import sys
 import ConfigParser
 
@@ -222,7 +227,8 @@ def send_results_and_notify(files, conf_vars):
 def print_usage():
     print 'Usage: %s config_file [files to send to storer]' % sys.argv[0]
 
-
+def get_configuration(config_file):
+    return _config_variables(config_file, 'Assignment')
 
 def run_callback(config_file, files):
     _setup_logging()

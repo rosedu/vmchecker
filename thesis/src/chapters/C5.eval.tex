@@ -1,0 +1,72 @@
+\chapter{Testing and evaluation}
+\label{chapter:virt-testing}
+
+In order to gain a good understanding on how the virtualization methods
+compare to each other, a few tests have been done.
+
+The results are listed below:
+
+\paragraph {}
+
+Virtualization method: LXC
+\begin{center}
+\begin{tabular}{ l | c }
+Total time & Running time \\
+4.292s & 0.4249s  \\
+4.311s & 0.4363s  \\
+4.250s & 0.4277s  \\
+4.311s & 0.4406s  \\
+\end{tabular}
+\end{center}
+\paragraph {}
+
+
+Virtualization method: VMware
+\begin{center}
+\begin{tabular}{ l | c }
+Total time & Running time \\
+30.404s & 2.1983s  \\
+30.056s & 2.1971s  \\
+30.190s & 2.1984s  \\
+30.173s & 2.1973s  \\
+\end{tabular}
+\end{center}
+\paragraph {}
+
+Virtualization method: KVM
+\begin{center}
+\begin{tabular}{ l | c }
+Total time & Running time \\
+26.320s & 0.2821s  \\
+25.453s & 0.2298s  \\
+28.629s & 0.2450s  \\
+26.482s & 0.2831s  \\
+\end{tabular}
+\end{center}
+
+\paragraph { }
+
+There are some interesting observations that can be drawn from the data. First
+of all, it is noticeable that LXC is by far the best virtualization method
+in terms of evaluation time. It is almost 10 times as fast as VMware.
+As profiling the python scripts revealed, a noticeable part of the time
+was occupied by the SSH connection, used for transferring the files in and out
+of the container. However, when using the Linux native copy command, {\bf cp},
+that time was reduced by up to a second. Still, SSH is better way to
+copy files to and from the container, as it does not require superuser access.
+
+\paragraph { }
+
+Another interesting observation was that KVM actually has a better running
+time of the actual program than any other virtualization method,
+ although the total evaluation time is close to that of VMware. 
+ However, considering the drawbacks of VMware, that makes KVM a powerful
+alternative.
+
+\paragraph { } 
+
+The testing was performed on an Intel Core i7-2630QM machine at 2.0 GHz with 8GB
+of RAM, running Ubuntu 11.10. The testing bundle was the same in all cases,
+consisting in a computationally intensive homework for the Operating Systems course.
+
+

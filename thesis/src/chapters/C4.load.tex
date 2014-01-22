@@ -1,0 +1,164 @@
+\chapter{Load Balancing and Scalability}
+\label{chapter:virt-load}
+
+One of the major drawbacks of the current vmchecker is that at times an entire
+tester may be sitting idle, while another has over a dozen submissions to
+evaluate. The reason for this is that each assignment's tester is statically
+set in the course's \textit{config} file. 
+
+The answer to this drawback would be to implement a dynamic way of selecting
+the tester with the shortest queue for testing a bundle. There are however a 
+few issues to take into consideration.
+
+The first problem to this approach is that testing a certain submission might
+require certain packages to be installed on the host operating system, 
+that certain virtual machines might not exist, or more generally that
+evaluating a submission might fail, even though the submission should
+succeed.
+
+Another problem is the way you assign submissions to each tester queue. 
+While the web interface is able to check how many submissions are in a queue,
+it doesn't have any way of estimating the time an evaluation might take.
+
+In order to tackle these issues, when notifying the storer that it has finished
+evaluating an assignment, the tester will also provide the running time. 
+Failing to contact the tester, to start the virtual machine or no receival of
+the notification will be counted as taking a long time. This means that submissions
+for that assignment will not be directed to that virtual machine.
+
+
+\section{Estimating the Evaluation Time}
+\label{sec:vmc-estimating}
+
+The purpose of creating a scalable system is to reduce the load on the 
+tester machine when evaluating a homework assignment and to reduce the time necessary
+to test each submission.
+
+The time necessary to evaluate a submission consists of two parts: the running
+time of the actual program and the time waiting for other submissions to be tested.
+
+The running time can be recorded by recording the start and end time of the 
+executor script. The actual running time of the application inside the virtual
+machine can also be saved, by recording the start and end time of the executor commands.
+
+In order to estimate the total waiting time for the submissions, more factors
+need to be taken into consideration:
+\begin{itemize}
+\item How many submissions are in a queue
+\item The estimated time for each of the submissions
+\item The course and assignment number of each submission 
+\end{itemize}
+
+\paragraph{}
+
+We define the estimated time to evaluate a submission for a certain assignment in 
+a certain queue as follows:
+
+$ Et_{q_x}( assignment\_id) $ = $\frac{1}{n} \displaystyle\sum\limits_{i=0}^{n} Time(i)$ , where
+$ Time(i) $ is the time required to evaluate the submission and $assignment\_id$ is the actual 
+assignment_id as listed in the course's {\it config} file.
+
+\paragraph{}
+
+So the total time to evaluate all the submissions in a queue ( $ q_x $ ) would be defined as:
+
+$ T_{ q_x} = $ $\displaystyle\sum\limits_{i=0}^{n} E_t(Assignment(i))$ , where $ n $ = number of submissions in  queue $  x $.
+
+\paragraph{}
+
+In conclusion, the time required to evaluate a new submission would be the minimum time
+to test all of the submissions in a queue plus the estimated time to test the given
+submission.
+
+$ T = MIN( T_{q_i} + Et_{q_i}, i \in [0..n) ) $
+
+
+\section{Implementation}
+\label{sec:vmc-load-impl}
+
+The load balancing system will be implemented by modifying the {\bf storer_daemon}
+and the {\bf queue_manager}. First of all, the daemon will retain the estimated
+time needed to evaluate a submission, grouped by the tester's IP and by
+the assignment's id. Also, after evaluating each submission, the queue_manager
+will notify the daemon with the time it took to evaluate the last submission.
+This way, the daemon will hold the latest information regarding the estimated
+evaluation time. As one can see in \labelindexref{Listing}{lst:daemon-notify},
+the {\bf notify} method provides important information to the storer, and at the same
+time triggers the storer to actively retrieve the result files.
+
+If the daemon is notified of a failed testing process, it applies a time
+penalty to the estimated time for the assignment. This could mean that 
+the executor was unreachable, and timed out, that it could not start
+the virtual machine or that the configuration files were invalid.
+
+\lstset{caption=Notification process, language=python, label=lst:daemon-notify}
+\begin{lstlisting}
+def receive_files(Host, user, bundle_path, files):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((Host, _DEFAULT_SSH_PORT))
+    t = paramiko.Transport(sock)
+    try:
+        t.start_client()
+        key = paramiko.RSAKey.from_private_key_file(LOCAL_KEY_PATH)
+        t.auth_publickey(user, key)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        for path in files:
+            sftp.get(path, bundle_path+os.path.basename(path))
+    finally:
+        t.close()
+    
+def notify(key, status, files, stats):
+    if key in submitted:
+        info = submitted[key]
+        del submitted[key]
+        if status==0:
+            # receive results
+            receive_files(info['Host'], info['user'], info['bundle_path'], files) 
+            # update stats
+            ( et1, no1) = est_time[ (info['user'],info['Host']) ][info['assignment_id']]
+            et2 = et1*no1 + stats['time']
+            et2 = et2/(no1+1)
+            est_time[ (info['user'],info['Host']) ][info['assignment_id']] = (et2, no1+1)       
+        else: # apply a time penalty if the testing fails
+            ( et1, no1) = est_time[ (info['user'],info['Host']) ][info['assignment_id']]
+            et2 = et1*no1 + TIME_PENALTY
+            est_time[ (info['user'],info['Host']) ][info['assignment_id']] = (et2, no1)
+    else:
+        logger.INFO('The key [%s] was not found. \n Details: %s %s %s' % (key,status,files,stats))
+\end{lstlisting}
+
+The queue selection process is done in the {\bf queue_for_testing} method, and it uses
+the same dictionaries to locate the tester with the shortest estimated time
+of evaluation. As one can see in \labelindexref{Diagram}{img:select-tester} 
+the submission is always transmitted to the best tester available.
+
+\begin{center}
+\fig[scale=.5]{src/img/select-tester}{img:select-tester}{Selecting the best Tester}
+\end{center}
+
+\paragraph {}
+\paragraph {}
+\paragraph {}
+
+\labelindexref{Listing}{lst:tester-select} provides the implementation of the 
+selection process. The first tester is selected. As the list is being processed
+if the estimated time to evaluate the submission in another queue is shorter,
+that queue is chosen as the optimal solution.
+
+\lstset{caption=Selecting the best tester, language=python, label=lst:tester-select}
+\begin{lstlisting}
+def select_tester(vmcfg, assignment)
+    testers = get_testers(vmcfg, assignment)
+    min_time = MAX_INT
+    chosen = testers[0]
+    for tester in testers:
+        q = get_queue(tester)
+        time_left = 0
+        for sub in q:
+            time_left += est_time[ (tester.username() , tester.hostname()) ][sub.asid()]
+        time_left += est_time[ (tester.username(), tester.hostname()) ][assignment]
+        if time_left < min_time:
+            min_time = time_left
+            chosen = tester
+    return tester
+\end{lstlisting}    

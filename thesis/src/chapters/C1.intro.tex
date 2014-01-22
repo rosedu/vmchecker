@@ -1,0 +1,285 @@
+\chapter{Introduction}
+\label{chapter:intro}
+
+\section{Brief Description of vmchecker}
+\label{sec:vmc-history}
+
+\subsection{Motivation}
+\label{sub-sec:vmc-history-motiv}
+
+For students in Computer Science classes, programming assignments are the main
+way in which they gain practical experience regarding certain concepts and 
+technologies. These assignments are also an important opportunity to receive 
+feedback and might also count for the student's final grade.
+
+Student assignments are generally easy to assess. The process consists of 
+downloading the student's submission, running a number of tests to check that 
+it compiles and gives the right output and finally reviewing the source code
+to make sure that no obvious mistakes were made.
+
+While the whole process is not a difficult one, it quickly becomes a tedious task
+when you need to assess more than 20 student assignments. Also, when a large number
+of assignments need to be tested, they are generally divided between teaching 
+assistants who do perform the tasks individually. Considering each of them might
+test the assignments in a different environment, grading fairness and consistency
+is eventually lost.
+
+Another issue with the classical approach to grading programming assignment is that
+while providing the student with feedback upon the work he has done is one of the
+main objectives, that feedback often arrives too late. Homework is usually graded
+days or weeks after completion, so what would have been valuable advice during the
+development phase, is now too little too late.
+
+Apart from the code-review stage of assessing a student's submission, the process is 
+fairly easy to automate. Also, while an automated system may not provide feedback 
+on the quality of the submitted code, it could provide the student with immediate
+information regarding the behaviour of his homework given certain input data.
+
+In order to automate the testing process as much as possible, the \project project 
+was initiated by the Computer Science and Engineering department at the 
+University POLITEHNICA of Bucharest.
+
+This project aims to improve the performance of the vmchecker automated grading
+system by adding support for multiple virtualization types, simplifying its
+design and by insuring its scalability.
+
+
+\subsection{Features}
+\label{sub-sec:vmc-history-features}
+
+{\bf vmchecker} was built with regard to the requirements of active courses. This
+means that the system has a number of mandatory features:
+
+\begin{itemize}
+\item A submission that potentially crashes the system during testing will not affect
+the overall functionality, as it's sandboxed in a virtual machine.
+\item The system can automatically detect if the student has sent his homework late
+and apply a penalty.
+\item Any homework can be rechecked at any time, if the grader has concerns regarding
+the functionality of the submission.
+\item The system provides immediate feedback regarding the building and testing 
+process to the students. Faulty or incomplete submissions may be resubmitted.
+\item Access to the source files and the test output files is given to the grader.
+\item The web interface and submission repository are located on a different system
+from the one doing the actual testing. So even though the testing system might
+be unavailable, students can still submit their homework.
+\item The system is able to evaluate submissions in any programming language,
+and it may even receive an entire virtual machine for testing.
+\end{itemize}
+
+
+\section{The Architecture of vmchecker}
+\label{sec:vmc-architecture}
+
+The vmchecker automated grading system consists of two separate subsystems:
+\begin{enumerate}
+\item \nameref{sub-sec:storer}
+\item \nameref{sub-sec:tester}
+\end{enumerate}
+
+\begin{center}
+\fig[scale=.6]{src/img/simple-structure}{img:simple-structure}{Simple Structure}
+\end{center}
+
+The {\bf storer} subsystem runs a web server that allows the user to upload an archive
+containing the user's homework assignment. This archive is stored in a repository,
+along with the results of the homework's evaluation.
+
+The {\bf tester} runs a {\bf queue manager}, which awaits tasks from the storer and upon
+receiving them proceeds to powering on a virtual machine, compiling the submitted
+source code, running certain tests and uploading those tests to the storer.
+
+
+\subsection{The Storer}
+\label{sub-sec:storer}
+
+The storer is basically a Linux running machine that runs an Apache web server
+in order to present the student with a web-interface so he can upload his
+assignment. As well as running the said web server, the storer also hosts a 
+repository of containing all of the students' submissions, organized by course,
+assignment, student name and submission date. This is done in order to prevent
+the accidental overwriting of a submission.
+
+\begin{center}
+\fig[scale=.4]{src/img/storer-structure}{img:storer-structure}{Storer Structure}
+\end{center}
+
+The storer machine may host repositories for multiple courses. The storer
+must insure that only the authorized individuals have access to each repository.
+This is done by creating a separate Linux user account to each course, and placing
+the repository inside the user's home folder.
+
+Access to the machine is provided by SSH and authorization is done by placing
+the public keys of the account's users in the {\it authorized_keys} file.
+
+The course's storer folder contains a {\it config} file, which lists the parameters
+for each assignment (such as deadline, title, virtual machine name), the 
+configuration for each available tester (IP or URL, username, queue path)
+and the configuration for each virtual machine.
+
+Also in course's storer you may find a \textit{tests/} folder, which contains an archive
+with each assignment's tests, several scripts to build and run each assignment,
+a database file, and a \textit{repo/} folder.
+
+\begin{center}
+\fig[scale=.4]{src/img/repo-structure}{img:repo-structure}{Repo Structure}
+\end{center}
+
+The \textit{repo/} folder contains every submission made to this course. It is organized
+by assignment, student name and submission date. A symbolic link is made to the 
+most recent submission. The {\it submission} folder holds the original archive uploaded
+by the student, a \textit{git/} folder with the unzipped contents of the archive and a 
+file named \textit{submission-config} which lists the submission's description, and a
+{\it results/} folder which holds the output from the testing process.
+
+\subsection{The Tester}
+\label{sub-sec:tester}
+
+The tester is a separate Linux running machine which has, just like the storer,
+a separate user account for each course. A process called \textit{queue-manager}
+waits for file system events in the \textit{queue/} folder. The storer uploads a new
+archive to the folder which consists of the student's submission, the tests, and
+the necessary scripts to build and run the files. When a new archive is uploaded,
+the queue-manager process extracts the contents to a folder and runs the executor.
+
+\begin{center}
+\fig[scale=.4]{src/img/tester-structure}{img:tester-structure}{Tester Structure}
+\end{center}
+
+The executor is a script that handles the virtual machine specific interactions.
+It powers on the virtual machine, it uploads the files, runs the build script and
+ the required tests. The test results are saved to \textit{.vmr} files.
+The executor copies the result files to the bundle folder, shuts down the
+virtual machine, then uploads the results to the storer, in the folder designated
+by the \textit{submission-config} file.
+
+
+\subsection{Storer - Tester Interaction}
+\label{sub-sec:interaction}
+
+Communication and file transfer between the storer and the tester is done
+through the SSH protocol. 
+
+Since the archived bundle is uploaded from the storer by the www-data user (which
+runs the apache server) it needs to have permission to read every course's private key. 
+Permission is given by using the Posix ACL file permission system.
+
+After the testing is completed, the queue-manager uploads the results to the storer
+using the path listed in the {\it submission-config} file. The queue-manager is run by the 
+course's tester account so it uses by default the account's private key to upload
+the files.
+
+\subsection{Installation}
+\label{sub-sec:install}
+
+Installing the vmchecker system is a pretty complicated process.
+On the storer system, one simply needs to run the \textit{setup.py} script, and then 
+the \textit{vmchecker-init-course} script, with the parameter \textit{storer}. The last script
+initializes a new storer folder, with a default config file and an empty database.
+
+The next step is generating the public and private keys and set the appropriate 
+permissions so that the \textit{www-data} user account can read them. Then add the appropriate 
+settings for the assignments, tester and virtual machines to the {\it config} file.
+Keep in mind that the tester and virtual machines have not been set up yet.
+
+The web interface is set up by creating a new user account called vmchecker,
+setting up a \textit{public_html} folder in its home folder and placing all the necessary files
+to run the interface inside. The next step is creating a new website configuration at 
+\textit{/etc/apache2/sites-available/}
+
+Finally, you need to edit the global configuration file at \textit{/etc/vmchecker/config.list}
+so the course will be listed in the web interface.
+
+To install the tester a few extra steps are needed. vmchecker uses the VMware-VIX
+API to interact with the virtual machines. So you first need to install {\bf VMware
+server} or {\bf WMware Wokstation} and the VMware-VIX package, then install the pyVix 
+wrapper created by Lucian Grijincu.
+
+The next step is to run the \textit{setup.py} script, then the \textit{vmchecker-init-course} script,
+with the parameter tester. The script will initialize the folder with a {\it config} file,
+and \textit{queue/} and \textit{tmpunzip/} folders.
+
+The {\it queue-manager} script is then run. 
+
+\section{Analysis of the Shortcomings of the Former Architecture}
+\label{sec:vmc-analysis}
+
+While it is a very useful and powerful tool, vmchecker has its share of drawbacks.
+These are caused by the way it was developed - in an incremental way, tackling 
+each issue as it came up. 
+
+While rebooting the entire project might be the right course of action, 
+backwards compatibility would be lost and the workload would 
+prove monumental. We arrive to the conclusion that for the time being it's best
+to improve upon the existing model, while focusing on the major areas of concern.
+
+\subsection{The Virtualization Environments}
+\label{sub-sec:vmc-analysis-env}
+
+From its inception the only virtualization environment supported by vmchecker 
+has been VMware. This aspect leads to several flaws within the architecture.
+
+First of all VMware-VIX API is needed to interact with the virtual machines. 
+While there is only official support for the C language, a python wrapper is
+used to allow its integration with vmchecker's modules. It's needless to say
+that any modification to the API might break existing functionality and 
+maintaining the python wrapper becomes an additional concern.
+
+Besides the fact that it's very difficult to install on a Linux operating system,
+using VMware-VIX API also has some requirements for the hosted virtual machines:
+VMware tools must be installed and running inside the guest in order to communicate
+with the virtual machine.
+
+Another issue with VMware is the long startup time and the fact that it isn't 
+immediately responsive following the restoration of a snapshot.
+
+\subsection{SSH Keys and Permissions}
+\label{sub-sec:vmc-analysis-ssh}
+
+An important issue with vmchecker is the ease of setting up the tester and storer
+for a new course. At the moment the process is impeded by the fact that communication
+is done through the SSH protocol using public key authentication. 
+
+A new pair of keys needs to be generated, for both the storer and the tester account,
+then the appropriate permissions need to be set so that www-data has access to 
+the keys.
+
+
+\subsection{Scalability}
+\label{sub-sec:vmc-analysis-scalability}
+
+The existing support for a distributed model in vmchecker is limited. While
+you may have multiple testers associated with the same storer, an assignment
+can only use one of those testers. While this is useful, since many courses
+may share the same storer, it also means that at times you'll have machines
+that are sitting idle, and machines that have a queue of over 20 submissions
+to be tested.
+
+Also, in cases where the tester is a multicore machine, multiple virtual
+machines may be run at the same time. However, because of the current architecture 
+of vmchecker, that extra performance of the host goes to waste.
+
+In these cases, a dynamical way of distributing the workload between testers is 
+needed.
+
+\section{Improving the Existing Model}
+\label{sec:vmc-improving}
+
+This project aims to improve the performance of vmchecker. 
+
+All of the concerns listed in the previous section will be tackled as follows:
+
+\begin{itemize}
+\item Support for new virtualization platforms will be added, while keeping support
+for VMware. This will ensure a smooth transition and the new version of vmchecker
+will be backwards compatible.
+\item In order to eliminate the need for SSH keys for each account the communication
+model will be modified, such that a daemon process running on the storer will
+deal with the communication with the tester machines. The daemon process will also
+be the one to fetch the results from the tester machine, thus eliminating the need
+for the tester to know the storer's public keys.
+\item The queue-manager service will be able to provide status updates to the daemon,
+so it will be aware of the number and capabilities of all the available virtual
+machines. A load balancing service will be provided by the storer daemon, which
+will be able to properly place the submitted assignment in the least used queue.
+\end{itemize}

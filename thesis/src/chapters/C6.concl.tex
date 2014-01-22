@@ -1,0 +1,26 @@
+\chapter{Conclusion}
+\label{chapter:virt-concl}
+
+This project represents a big improvement to the overall performance of \project.
+While the system's ability to automatically evaluate and grade an assignment
+has not been affected, its performance has been greatly improved, 
+especially at times of high workload.
+
+
+\begin{itemize}
+\item Extending the virtualization methods to LXC and KVM has reduced the project's 
+dependence on VMware and Vix-API. These are proprietary technologies and 
+the pyvix wrapper is quite difficult to maintain. Also, having all the
+executors extend a generic class makes adding a new virtualization type 
+a very easy task.
+
+\item Redesigning the communication model has facilitated the installation process
+and eased the administrator's job when adding a new course to the system. 
+Keys no longer need to be generated for each course, the permission settings
+that need to be set are in lesser number, and the storer's security has been
+greatly improved.
+
+\item The changes we have made to the {\bf queue-manager} and
+{\bf storer-daemon} modules reduced the time required to evaluate a large
+set of submissions. 
+\end{itemize}

@@ -25,15 +25,17 @@ import signal
 import tempfile
 import optparse
 import subprocess
+import socket
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
-
+from threading import Thread
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker.paths  import VmcheckerPaths
 from vmchecker import vmlogging
 from vmchecker import callback
 from vmchecker import ziputil
-
+import ConfigParser
+import xmlrpclib
 
 # The maximum number of seconds each instance of vmchecker-vm-executor
 # is allowed to run. If it runs for more than this ammount of time,
@@ -46,7 +48,7 @@ EXIT_FAIL = 1
 _logger = vmlogging.create_script_stdout_logger()
 
 
-def upload_results_to_sender(bundle_dir):
+def upload_results_to_sender(bundle_dir, total_time = None):
     """Runs callback script to upload results"""
     try:
         allfiles = os.listdir(bundle_dir)
@@ -55,7 +57,19 @@ def upload_results_to_sender(bundle_dir):
             if fname.endswith('.vmr'):
                 vmrfiles.append(os.path.join(bundle_dir, fname))
         sb_config = os.path.join(bundle_dir, 'submission-config')
-        callback.run_callback(sb_config, vmrfiles)
+
+        if total_time==None:
+            total_time = 45
+        my_conf = callback.get_configuration(sb_config)  
+        storer = my_conf['remotehostname']
+
+        sb_index = os.path.join(bundle_dir, 'submission-index')
+        with open(sb_index) as handle:
+            index = handle.read()
+            proxy = xmlrpclib.ServerProxy('http://'+storer+':19999')
+            proxy.notify(index, 0, vmrfiles, {'time':total_time})
+
+        #callback.run_callback(sb_config, vmrfiles)
     except:
         # XXX: don't know whether to allow exceptions to kill
         # queue-manager or not. Silent exceptions will most certainly
@@ -161,13 +175,15 @@ def process_job(path, name, vmpaths):
                                 dir=vmpaths.dir_tester_unzip_tmp())
     bundle_archive = os.path.join(path, name)
     try:
+        total_time = time.time()
         ziputil.unzip_safely(bundle_archive, location)
         _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
         launch_external_downloader(location)
         _logger.info('-- QM: finished downloading external dependencies')
         launch_executor(location)
         _logger.info('-- QM: finished testing - sending results')
-        upload_results_to_sender(location)
+        total_time = time.time() - total_time
+        upload_results_to_sender(location, total_time)
     except:
         _logger.exception('Failed to process "%s".' % location)
 
@@ -274,6 +290,7 @@ def main():
     # fail early if something is not setup corectly, and not at a
     # distant point when we'll need these things.
     check_tester_setup_correctly(vmpaths)
+    
     start_queue(vmpaths)
 
 if __name__ == '__main__':

@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<project name="thesis" default="build">
+	<description>
+		Ant file for building the thesis
+	</description>
+	
+	<!--
+		pdflatex -interaction=scrollmode \-\-src-specials thesis.tex
+		bibtex thesis
+		pdflatex -interaction=scrollmode \-\-src-specials thesis.tex
+		pdflatex -interaction=scrollmode \-\-src-specials thesis.tex
+	-->
+	
+	<target name="build" description="build thesis">
+		<exec executable="pdflatex">
+			<arg value="-interaction=scrollmode"/>
+			<arg value="--src-specials"/>
+			<arg value="thesis.tex"/>
+		</exec>
+		<exec executable="bibtex">
+			<arg value="thesis"/>
+		</exec>
+		<exec executable="makeindex">
+			<arg value="thesis.nlo"/>
+			<arg value="-s"/>
+			<arg value="nomencl.ist"/>
+			<arg value="-o"/>
+			<arg value="thesis.nls"/>
+		</exec>
+		<exec executable="pdflatex">
+			<arg value="-interaction=scrollmode"/>
+			<arg value="--src-specials"/>
+			<arg value="thesis"/>
+		</exec>
+		<exec executable="makeindex">
+			<arg value="thesis.idx"/>
+		</exec>
+		<exec executable="pdflatex">
+			<arg value="-interaction=scrollmode"/>
+			<arg value="--src-specials"/>
+			<arg value="thesis"/>
+		</exec>
+		<antcall target="build-clean" />
+	</target>
+
+	<target name="linux-preview" depends="build" description="preview thesis">
+		<exec executable="kpdf">
+			<arg value="thesis.pdf"/>
+		</exec>
+	</target>
+
+	<target name="mac-preview" description="preview thesis">
+		<exec executable="/Applications/Preview.app/Contents/MacOS/Preview">
+			<arg value="thesis.pdf"/>
+		</exec>
+	</target>
+
+	<target name="build-clean">
+		<delete dir="." includes="**/*.log,**/*.lot,**/*.lof,**/*.blg,**/*.bbl,**/*.out,**/*.toc,**/*.aux" />
+		<delete dir="." includes="thesis.idx,thesis.ilg,thesis.ind" />
+		<delete dir="." includes="thesis.nlo,thesis.nls" />
+	</target>
+	
+	<target name="clean" depends="build-clean">
+		<delete dir="." includes="thesis.pdf" />
+	</target>
+	
+</project>
