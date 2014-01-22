@@ -10,8 +10,8 @@ Holidays = 1
 HolidayStart = 2010.03.31 23:59:00
 HolidayFinish = 2010.04.02 23:59:00
 
-UploadActiveFrom  = 2010.03.01 23:59:00
-UploadActiveUntil = 2010.06.10 23:59:00
+UploadActiveFrom  = 2013.01.01 23:59:00
+UploadActiveUntil = 2019.12.30 23:59:00
 
 
 
@@ -46,16 +46,19 @@ KnownHostsFile = $home/.ssh/known_hosts
 #  - VmwareWorkstation
 #  - VmwareVIServer
 #  - VirtualBox - [not implemented yet, just as a future hint]
+#
+# IMPORTANT: If you are only developing for the storer/UI,
+#            make sure that the testers are commented out
+#
 
 
-[tester sanctuary]
-VmType = VmwareServer
-Hostname = sanctuary.cs.pub.ro
-Username = so
-QueuePath = vmchecker/2010/queue
+#[tester sanctuary]
+#VmType = VmwareServer
+#Hostname = sanctuary.cs.pub.ro
+#Username = so
+#QueuePath = vmchecker/2010/queue
 
 
-[tester orion]
 # The following arguments are required only for
 # VMWare Server 2.0 with datastore
 #
@@ -72,25 +75,27 @@ QueuePath = vmchecker/2010/queue
 #                       path where the virtual machines will be run
 # VmwareDatastorePath = The path of the datastore
 
-VmType = VmwareServer
-Hostname = orion.cs.pub.ro
-Username = admin
-QueuePath = vmchecker/2010/queue
-VmwareUseDatastore=yes
-VmwareUrl = https://orion.cs.pub.ro:8333/sdk
-VmwareHostname = orion.cs.pub.ro
-VmwarePort = 8333
-VmwareUsername = admin
-VmwarePassword = adminpa$$
-VmwareDatastoreName = home
-VmwareDatastorePath = /home
+#[tester orion]
+#VmType = VmwareServer
+#Hostname = orion.cs.pub.ro
+#Username = admin
+#QueuePath = vmchecker/2010/queue
+#VmwareUseDatastore=yes
+#VmwareUrl = https://orion.cs.pub.ro:8333/sdk
+#VmwareHostname = orion.cs.pub.ro
+#VmwarePort = 8333
+#VmwareUsername = admin
+#VmwarePassword = adminpa$$
+#VmwareDatastoreName = home
+#VmwareDatastorePath = /home
 
 # optional vmware flag:
 # VmwareRegUnreg = yes|y|1|true
 #   - if set to true, vmchecker will register and unregister the vmx
 #     associated with this file.
 #   - if the key is not present it is assumed false (no reg/unreg done).
-VmwareRegUnreg = yes
+
+#VmwareRegUnreg = yes
 
 
 
@@ -100,7 +105,7 @@ VmwareRegUnreg = yes
 
 [assignment DEFAULT]
 
-
+AssignmentStorage=normal
 # PenaltyWeights = an array of floating point numbers that represent
 #                  the points substracted from the grade for each late
 #                  day. The last element in the list is repeated for

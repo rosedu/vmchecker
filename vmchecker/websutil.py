@@ -46,7 +46,11 @@ def get_user(username, password):
     r = get_user_from_auth_files(username, password)
     if not r is None:
         return r
-    return get_ldap_user(username, password)
+    try:
+        r = get_ldap_user(username, password)
+    except:
+        r = None
+    return r
 
 
 def get_user_from_auth_files(username, password):
@@ -227,7 +231,6 @@ def get_test_queue_contents(courseId):
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         tstcfg = vmcfg.testers()
         queue_contents = [] # array of strings
-
         for tester_id in tstcfg:
             # connect to the tester
             client = paramiko.SSHClient()

@@ -221,7 +221,6 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
 ########## @ServiceMethod
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
-
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -288,11 +287,14 @@ def getUserResults(req, courseId, assignmentId, username):
 
 
         if len(result_files) == 0:
-            process = subprocess.Popen('/usr/games/fortune',
+            msg = "In the meantime have a fortune cookie: <blockquote>"
+            try:
+                process = subprocess.Popen('/usr/games/fortune',
                                        shell=False,
                                        stdout=subprocess.PIPE)
-            msg = "In the meantime have a fortune cookie: <blockquote>"
-            msg += process.communicate()[0] + "</blockquote>"
+                msg += process.communicate()[0] + "</blockquote>"
+            except:
+                msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
             result_files.append({'queue-contents.vmr' :  websutil.get_test_queue_contents(courseId) })
         result_files.append({'late-submission.vmr' :
@@ -349,9 +351,8 @@ def getAssignments(req, courseId):
     if s.is_new():
         s.invalidate()
         return json.dumps({'errorType':ERR_AUTH,
-                'errorMessage':"",
+                'errorMessage':"Session is new",
                 'errorTrace':""})
-		
 
     # Get username session variable
     strout = websutil.OutputString()
@@ -361,7 +362,7 @@ def getAssignments(req, courseId):
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
+                           'errorMessage' : "Unable to load session",
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
@@ -371,9 +372,9 @@ def getAssignments(req, courseId):
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})  	
-		
+            'errorMessage':"Unable to load course config",
+            'errorTrace':strout.get()})
+
     assignments = vmcfg.assignments()
     sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
                                                    int(assignments.get(y, "OrderNumber")))

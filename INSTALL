@@ -4,8 +4,6 @@
 1. install needed python modules
    apt-get install python-paramiko python-pyinotify python-json
 
-
-
 2. (only on the tester machine)
    install vmware-vix
    # go to http://www.vmware.com/support/developer/vix-api/
@@ -19,11 +17,15 @@
    rm -rf vmware-vix-distrib
 
 
-3. (only on the tester machine)
-   install pyvix
+3. # (only on the tester machine)
+   # install pyvix
    git clone git://github.com/luciang/pyvix.git
+   sudo apt-get install python2.7-dev
    cd pyvix && python setup.py install
 
+4. # install vmchecker
+   cd vmchecker/
+   python setup.py install
 
 == Configure machines ==
 
@@ -37,3 +39,85 @@
   Don't forget to edit /etc/vmchecker/config.list to add the
   directories in which vmchecker-init-course was invoked and associate
   them a course id.
+  
+== Setting up the LXC/KVM environment ==
+   
+  === LXC ===
+  
+  # Install needed modules
+  sudo sh vmchecker/lxc-resources/deps.sh  
+  
+  # Setup interfaces
+  sudo cp vmchecker/lxc-resources/interfaces /etc/network/interfaces
+  # or copy the settings manually
+  
+  # add the following to /etc/hosts
+    10.3.1.1     deb0 deb0.virt deb0.virt.local
+    10.3.1.11    deb1 deb1.virt deb1.virt.local
+    10.3.1.12    deb2 deb2.virt deb2.virt.local
+    10.3.1.13    deb3 deb3.virt deb3.virt.local
+    10.3.1.14    deb4 deb4.virt deb4.virt.local
+  
+  # Init cgroups
+    mkdir -p /cgroup
+    mount none -t cgroup /cgroup
+  # Add the following line to /etc/fstab
+    none /cgroup cgroup defaults 0 0
+  
+  # restart networking
+  
+  # Add the following to the hosts /etc/sudoers file:
+    ALL     ALL=NOPASSWD: /usr/bin/lxc-start *
+    ALL     ALL=NOPASSWD: /usr/bin/lxc-stop *
+    ALL     ALL=NOPASSWD: /usr/bin/lxc-info *
+    ALL     ALL=NOPASSWD: /usr/bin/lxc-backup *
+    ALL     ALL=NOPASSWD: /usr/bin/lxc-restore *  
+    
+  # If you need web conectivity inside the lxc container:
+    sudo vmchecker/lxc-resources/host_iptables.sh
+  
+== Creating the virtual machines ==
+
+  * VMware
+  
+  Create a vmware virtual machine and install an operating system.
+  Install VMware-tools inside the virtual machine.
+  
+  * LXC  
+  
+  # create lxc container
+    sudo sh vmchecker/lxc-resources/easylxc deb1
+  # check connectivity
+    ssh root@deb1
+  # if SSH fails, or asks for password, 
+  # copy the key ~/.ssh/id_rsa.pub to
+  # /var/lib/lxc/deb1/rootfs/root/.ssh/authorized_keys
+  
+  * KVM
+  
+  sudo apt-get install virtinst kvm
+  
+  sudo virt-install --connect qemu:///system --name kvm2 --hvm --ram 512 --disk path=/home/icecold/kvm/saisp-vm.qcow2,format=qcow2 --network network=default --import --vnc
+  # Install all needed packages
+  # Copy ssh key to /root/.ssh/authorized_keys
+  # Check that ssh works
+  
+  # virsh destroy kvm2
+  # virsh undefine kvm2
+  
+  # Create snapshot image
+  # TODO: improve snapshot creation with libvirt commands
+  qemu-img create -f qcow2 -b saisp-vm.qcow2 image.qcow2
+  cp image.qcow2 run.qcow2
+  
+  # Setup domain for testing assignments
+  sudo virt-install --connect qemu:///system --name kvm2 --hvm --ram 512 --disk path=/var/lib/kvm/run.qcow2,format=qcow2 --network network=default --import --graphics none
+  
+Note:
+  The VMPath param in the course config should be as follows:
+     For VMware: the path to the vmx file
+     For KVM: the name of the virtual domain (Eg. kvm2)
+     For LXC: the name of the container, as listed in /etc/hosts (Eg. deb1)
+
+  
+    

@@ -1,0 +1,55 @@
+### HOW TO INSTALL LXC-tester
+
+# get dependancies
+sudo sh vmchecker/lxc-resources/deps.sh
+
+# setup interfaces 
+sudo cp vmchecker/lxc-resources/interfaces /etc/network/interfaces
+# or add it manually
+
+# add the following to /etc/hosts
+10.3.1.1     deb0 deb0.virt deb0.virt.local
+10.3.1.11    deb1 deb1.virt deb1.virt.local
+10.3.1.12    deb2 deb2.virt deb2.virt.local
+10.3.1.13    deb3 deb3.virt deb3.virt.local
+10.3.1.14    deb4 deb4.virt deb4.virt.local
+
+
+# Do the following
+mkdir -p /cgroup
+mount none -t cgroup /cgroup
+
+# In /etc/fstab
+# add the following line
+none /cgroup cgroup defaults 0 0
+
+# restart networking
+
+# create lxc container
+sudo sh vmchecker/lxc-resources/easylxc deb1
+
+# make backup of rootfs 
+sudo cp -pr /var/lib/lxc/deb1/ /var/lib/lxc/temp
+
+#
+# If you need web conectivity inside the lxc container:
+#
+sudo vmchecker/lxc-resources/host_iptables.sh
+
+
+Add the following to the hosts /etc/sudoers file:
+
+ALL     ALL=NOPASSWD: /usr/bin/lxc-start *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-stop *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-info *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-clone *
+ALL     ALL=NOPASSWD: /usr/bin/lxc-destroy *
+
+Go to /usr/bin/lxc-clone
+Comment the following lines:
+#cp $lxc_path/$lxc_orig/fstab $lxc_path/$lxc_new/fstab
+#sed -i "s@$lxc_path/$lxc_orig@$lxc_path/$lxc_new@" $lxc_path/$lxc_new/fstab
+
+###
+### REFERENCES: http://www.v13.gr/blog/?p=192
+###

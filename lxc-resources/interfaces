@@ -1,0 +1,17 @@
+auto lo
+iface lo inet loopback
+
+auto virtlxc
+iface virtlxc inet manual
+ tunctl_user     root
+ up              ip link set virtlxc up
+ down            ip link set virtlxc down
+ 
+auto brvirt
+iface brvirt inet static
+ bridge_ports            virtlxc
+ bridge_maxwait          0
+ bridge_stp              off
+ address                 10.3.1.1
+ netmask                 255.255.255.0
+ dns-search              virt.local
