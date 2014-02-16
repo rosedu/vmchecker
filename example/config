@@ -1,0 +1,252 @@
+[vmchecker]
+root = /home/so/vmchecker-storer
+repository = /home/so/vmchecker-storer/repo
+CourseName = Sisteme de operare
+
+
+Holidays = 1
+
+HolidayStart = 2013.04.30 23:59:00
+HolidayFinish = 2013.05.07 23:59:00
+
+UploadActiveFrom  = 2013.02.01 00:00:00
+UploadActiveUntil = 2013.12.27 23:59:00
+
+[storer]
+Hostname = elf.cs.pub.ro
+Username = so
+SSHId = /home/so/.ssh/id_rsa
+KnownHostsFile=/home/so/.ssh/known_hosts
+
+
+[tester vmchecker]
+VmType = VmwareNodatastore
+Hostname = checker.cs.pub.ro
+Username = so
+QueuePath = /home/so/2012/queue
+
+[assignment DEFAULT]
+PenaltyWeights = 0.25
+PenaltyLimit = 3
+
+TotalPoints=10
+# minimum time (in seconds) between two successive
+# submissions by the same student.
+Timedelta = 5
+
+# maximum execution time (in seconds) of a test on the vm
+# it this is exceeded, the test is stopped.
+Timeout = 180
+
+AssignmentStorage=normal
+
+# which files to send to the tester
+# Syntax: 'Include name_of_dst_file_in_the_archive = name_of_source_file
+# Relative paths are relative to the root repo path.
+
+# TODO: include the .sh scripts used to build/run tests on the vm
+
+
+# assignment configuration
+#
+# syntax:
+# [assignment NAME]
+# Deadline = date
+# Machine = an id of the machine used in testing
+# timeout = a timeout for test execution (override the default)
+# AssignmentTitle = a human readable name
+# statementlink = a link to the statement
+# OrderNumber = the number of the assignment (used for sorting)
+
+[assignment 0-hash-linux]
+# scade 1 punct pe zi
+PenaltyWeights = 1.0
+# scade maximum 10 puncte
+PenaltyLimit = 10
+Deadline = 2013.03.01 23:59:00
+Machine = so-lin
+Timeout = 120
+AssignmentTitle = HashTable (Linux)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-0
+OrderNumber = 1
+
+[assignment 0-hash-windows]
+PenaltyWeights = 1.0
+PenaltyLimit = 10
+Deadline = 2013.03.01 23:59:00
+Machine = so-win7-cygwin
+Timeout = 120
+AssignmentTitle = HashTable (Windows)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-0
+OrderNumber = 2
+
+[assignment 1-minishell-linux]
+PenaltyWeights = 0.25
+PenaltyLimit = 10
+Deadline = 2013.03.27 23:59:00
+Machine = so-lin
+Timeout = 120
+AssignmentTitle = Mini-shell (Linux)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-1
+OrderNumber = 3
+
+[assignment 1-minishell-windows]
+PenaltyWeights = 0.25
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.03.27 23:59:00
+Machine = so-win7-cygwin
+Timeout = 120
+AssignmentTitle = Mini-shell (Windows)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-1
+OrderNumber = 4
+
+[assignment 2-mpi-linux]
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.04.10 23:59:00
+Machine = so-lin
+Timeout = 120
+AssignmentTitle = MPI (Linux)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-2
+OrderNumber = 5
+
+[assignment 2-mpi-windows]
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.04.10 23:59:00
+Machine = so-win7-cygwin
+Timeout = 300
+AssignmentTitle = MPI (Windows)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-2
+OrderNumber = 6
+
+[assignment 3-virtualmemory-linux]
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.04.24 23:59:00
+Machine = so-lin
+Timeout = 120
+AssignmentTitle = Memorie virtuala (Linux)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-3
+OrderNumber = 7
+
+[assignment 3-virtualmemory-windows]
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.04.24 23:59:00
+Machine = so-win7-cygwin
+Timeout = 300
+AssignmentTitle = Memorie virtuala (Windows)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-3
+OrderNumber = 8
+
+[assignment 4-scheduler-linux]
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.05.10 23:59:00
+Machine = so-lin
+Timeout = 60
+AssignmentTitle = Planificator de Threaduri (Linux)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-4
+OrderNumber = 9
+
+[assignment 4-scheduler-windows]
+PenaltyWeights = 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 0.25 10.0
+PenaltyLimit = 10
+Deadline = 2013.05.10 23:59:00
+Machine = so-win7-cygwin
+Timeout = 120
+AssignmentTitle = Planificator de Threaduri (Windows)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-4
+OrderNumber = 10
+
+[assignment 5-aws-linux]
+PenaltyWeights = 10
+PenaltyLimit = 10
+Deadline = 2013.05.26 23:59:00
+Machine = so-lin
+Timeout = 120
+AssignmentTitle = Server web asincron (Linux)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-5
+OrderNumber = 11
+
+[assignment 5-aws-windows]
+PenaltyWeights = 10
+PenaltyLimit = 10
+Deadline = 2013.05.26 23:59:00
+Machine = so-win7-cygwin
+Timeout=240
+AssignmentTitle = Server web asincron (Windows)
+StatementLink = http://ocw.cs.pub.ro/so/teme/tema-5
+OrderNumber = 12
+
+
+
+#[assignment 6-powershell-windows]
+#PenaltyWeights = 0.25
+#PenaltyLimit = 12
+#Deadline = 2012.03.22 23:59:00
+#Machine = so-win7-powershell
+#Timeout = 120
+#AssignmentTitle = Powershell-test (Windows)
+#StatementLink = http://elf.cs.pub.ro/so/wiki/teme/tema-1
+#OrderNumber = 5
+
+
+
+# test virtual machine configuration
+[so-lin]
+Tester=vmchecker
+VMPath=/home/so/vmware/2012/so-vm-linux-ubuntu/so-vm-linux-ubuntu.vmx
+GuestUser=root
+GuestPassword=student
+GuestBasePath=/root/
+GuestShellPath=/bin/bash
+GuestHomeInBash=/root/
+BuildScript=so-linux_vmchecker_build.sh
+RunScript=so-linux_vmchecker_run.sh
+KernelMessages=
+HostCommand=
+
+# test virtual machine configuration
+[so-lxc]
+Tester=vmchecker
+VMPath=deb1
+GuestUser=root
+GuestPassword=student
+GuestBasePath=/root/
+GuestShellPath=/bin/bash
+GuestHomeInBash=/root/
+BuildScript=so-linux_vmchecker_build.sh
+RunScript=so-linux_vmchecker_run.sh
+KernelMessages=
+HostCommand=
+Type=lxc
+
+# test virtual machine configuration
+[so-win7-cygwin]
+Tester=vmchecker
+VMPath=/home/so/vmware/2012/so-vm-win7-cygwin/so-vm-win7.vmx
+GuestUser=student
+GuestPassword=student
+GuestBasePath=C:\cygwin\home\Student\
+GuestShellPath=C:\cygwin\bin\bash.exe
+GuestHomeInBash=/home/Student
+BuildScript=so-win-cygwin_vmchecker_build.sh
+RunScript=so-win-cygwin_vmchecker_run.sh
+KernelMessages=
+HostCommand=
+
+[so-win7-powershell]
+Tester=vmchecker
+VMPath=/home/so/vmware/2012/so-vm-win7/so-vm-win7.vmx
+GuestUser=student
+GuestPassword=student
+GuestBasePath=C:\
+GuestShellPath=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+GuestHomeInBash=C:\
+BuildScript=so-win-powershell_vmchecker_build.ps1
+RunScript=so-win-powershell_vmchecker_run.ps1
+KernelMessages=
+HostCommand=
