@@ -1,0 +1,129 @@
+<head>
+  <meta charset="utf-8">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+  <title>vmchecker</title>
+</head>
+
+<body>
+  <table width="60%" align="center">
+    <tr width="100%">
+      <td> <img src="/vmchecker_logo_ui.png"></img> </td>
+      <td align="right">{{> logout }} {{t "Language"}} {{> changeLang }}</td>
+    </tr>
+  </table>
+
+  {{> circle}}
+
+  {{#if currentUser}}
+
+  <table align="center" width="70%">
+  <tr>
+  <td rowspan="2" valign="top"> {{> courses}} {{> assignments}}</td><td></td>
+  </tr>
+  <tr>
+  <td>{{> assignmentInfo}} <br/>
+  {{> grades }}</td>
+  </tr>
+  <tr>
+    <td>
+    {{> result }}
+  </td>
+  </tr>
+  </table>
+  {{> main}}
+  <br/>
+
+  {{else}}
+    {{> login}}
+  {{/if}}
+
+
+</body>
+
+<template name="changeLang">
+  <select id="languages">
+    {{#each languages}}
+      <option value={{code}} {{selected}}> {{name}} </option>
+    {{/each}}
+  </select>
+</template>
+
+
+<template name="logout">
+  {{#if currentUser}}
+  {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button>
+  {{/if}}
+</template>
+
+<template name="login">
+  <div>
+    <section class="container">
+    <form id="login-form" action="action">
+      <div>
+        <p> <input type="text" name="email" placeholder={{tt "Username"}} /> </p>
+        <p> <input type="password" name="password" placeholder={{tt "Password"}} /> </p>
+        <p class="submit"> <input type="submit" id="login-button" value={{tt "Sign In"}} /> </p>
+      </div>
+    </form>
+    </section>
+  </div>
+</template>
+
+<template name="main">
+</template>
+
+
+<template name="courses">
+  <select id="myList">
+    {{#each courses}}
+      <option value={{id}}> {{title}} </option>
+    {{/each}}
+  </select>
+</template>
+
+<template name="assignments">
+  <div>
+    <br />
+    <div class="all-grades">
+      {{t "All Grades"}}
+    </div>
+    <br />
+  {{#each assignments}}
+    <div id={{assignmentId}}>
+    {{assignmentTitle}}
+    </div>
+  {{/each}}
+  </div>
+</template>
+
+<template name="circle">
+  {{#if display}}
+    <div class="loading">
+      {{t "Loading"}}
+    <div class="spinner"></div>
+  </div>
+  {{/if}}
+</template>
+
+<template name="assignmentInfo">
+  <div>
+    {{#each content}}
+      {{courseId}} {{assignmentId}} {{assignmentTitle}} {{deadline}} {{statementLink}} {{assignmentStorage}}<br/>
+    {{/each}}
+  </div>
+</template>
+
+<template name="grades">
+  <div>
+    {{#if display}}
+    {{#each grades}}
+      {{courseId}} {{assignmentId}} {{studentId}} {{grade}} <br/>
+    {{/each}}
+    {{/if}}
+  </div>
+</template>
+
+<template name="result">
+  <div>
+  </div>
+</template>

@@ -1,0 +1,27 @@
+{
+  "meteor": {},
+  "dependencies": {
+    "basePackages": {
+      "npm": {},
+      "i18next-meteor": {},
+      "cookies": {}
+    },
+    "packages": {
+      "npm": {
+        "git": "https://github.com/arunoda/meteor-npm.git",
+        "tag": "v0.2.6",
+        "commit": "177ab6118de5bf8cffb19481343d5762ff7a2aaf"
+      },
+      "i18next-meteor": {
+        "git": "https://github.com/ckir/i18next-meteor.git",
+        "tag": "v1.6.0",
+        "commit": "6d922cc0adea92904e51a2a153d26dd66fb2789d"
+      },
+      "cookies": {
+        "git": "https://github.com/subhog/meteor-cookies.git",
+        "tag": "v0.3.0",
+        "commit": "c3d2684cd97dd611652833169b5f628ad23c57f6"
+      }
+    }
+  }
+}
