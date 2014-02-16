@@ -63,6 +63,14 @@ if (Meteor.isClient) {
       Session.set("courseId", elem.value);
       Meteor.call('getAssignments', Session.get("courseId"));
       Meteor.call('getAllGrades', Session.get("courseId"));
+    },
+    'click' : function (event) {
+      var elem = event.currentTarget;
+      if (Session.get("courseId") != elem.value) {
+        Session.set("courseId", elem.value);
+        Meteor.call('getAssignments', Session.get("courseId"));
+        Meteor.call('getAllGrades', Session.get("courseId"));
+      }
     }
   });
 
