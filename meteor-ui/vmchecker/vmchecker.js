@@ -64,7 +64,7 @@ if (Meteor.isClient) {
       "selected": (Cookie.get('i18next') == "ro" ? "selected" : "")
     }, {
       "code": "en",
-      "name": "Engleza",
+      "name": "English",
       "selected": (Cookie.get('i18next') == "en" ? "selected" : "")
     }];
   }
