@@ -40,6 +40,55 @@ ERR_OTHER = 3
 
 
 ########## @ServiceMethod
+def uploadedFile(req, courseId, assignmentId, tmpname):
+    """ Saves a temp file of the uploaded archive and calls
+        vmchecker.submit.submit method to put the homework in
+        the testing queue"""
+
+    # Check permission
+    req.content_type = 'text/html'
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    strout = websutil.OutputString()
+    try:
+        s.load()
+        username = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})     
+    
+    # Reset the timeout
+    s.save()
+
+    # Call submit.py
+    ## Redirect stdout to catch logging messages from submit
+    strout = websutil.OutputString()
+    sys.stdout = strout
+    try:
+        submit.submit(tmpname, assignmentId, username, courseId)
+        update_db.update_grades(courseId, user=username, assignment=assignmentId)
+    except submit.SubmittedTooSoonError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"Tema trimisa prea curand",
+            'errorTrace':strout.get()})
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':ERR_EXCEPTION,
+            'errorMessage':"",
+            'errorTrace':strout.get()})
+    
+    return json.dumps({'status':True,
+                       'dumpLog':strout.get()})
+
+########## @ServiceMethod
 def uploadAssignment(req, courseId, assignmentId, archiveFile):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
@@ -100,7 +149,8 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
             'errorTrace':strout.get()})
 	
     return json.dumps({'status':True,
-                       'dumpLog':strout.get()}) 
+                       'dumpLog':strout.get(),
+                       'file': tmpname}) 
 
 ########## @ServiceMethod
 def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
