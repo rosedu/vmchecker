@@ -144,7 +144,7 @@ if (Meteor.isClient) {
 
 
 if (Meteor.isServer) {
-  Meteor.users.remove({});
+  //Meteor.users.remove({});
   Meteor.startup(function() {
     console.log("Started server");
 

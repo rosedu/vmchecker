@@ -2,42 +2,54 @@
   <meta charset="utf-8">
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
   <title>vmchecker</title>
+
+  <!-- viewport meta to reset iPhone inital scale -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- css3-mediaqueries.js for IE8 or older -->
+  <!--[if lt IE 9]>
+    <script src="http://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"></script>
+  <![endif]-->
 </head>
 
 <body>
-  <table width="60%" align="center">
-    <tr width="100%">
-      <td> <img src="/vmchecker_logo_ui.png"></img> </td>
-      <td align="right">{{> logout }} {{t "Language"}} {{> changeLang }}</td>
-    </tr>
-  </table>
+
+  <div id="pagewrap">
+
+    <div id="header">
+      <div align="right"> {{t "Language"}} {{> changeLang }} </div>
+      <div aligh="left"> <h1><img src="/vmchecker_logo_ui.png"></img></h1> </div>
+      <div align="right"> {{> logout }}  </div>
+    </div>
+
+
+    <div id="sidebar" align="center">
+      {{#if currentUser}}
+        {{> courses}} {{> assignments}}
+      {{else}}
+        {{> login}}
+      {{/if}}
+    </div>
+
+    <div id="content">
+      {{#if currentUser}}
+        {{> assignmentInfo}} <br/>
+        {{> grades }} <br/>
+        {{> result }}
+      {{else}}
+        {{> description }}
+      {{/if}}
+    </div>
+
+    <div id="footer" align="center" >
+      Contribute to <a href="https://github.com/rosedu/vmchecker"> vmchecker </a>
+    </div>
+
+
+  </div>
+
 
   {{> circle}}
-
-  {{#if currentUser}}
-
-  <table align="center" width="70%">
-  <tr>
-  <td rowspan="2" valign="top"> {{> courses}} {{> assignments}}</td><td></td>
-  </tr>
-  <tr>
-  <td>{{> assignmentInfo}} <br/>
-  {{> grades }}</td>
-  </tr>
-  <tr>
-    <td>
-    {{> result }}
-  </td>
-  </tr>
-  </table>
-  {{> main}}
-  <br/>
-
-  {{else}}
-    {{> login}}
-  {{/if}}
-
-
 </body>
 
 <template name="changeLang">
@@ -51,7 +63,7 @@
 
 <template name="logout">
   {{#if currentUser}}
-  {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button>
+    {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button>
   {{/if}}
 </template>
 
@@ -60,7 +72,7 @@
     <section class="container">
     <form id="login-form" action="action">
       <div>
-        <p> <input type="text" name="email" placeholder={{tt "Username"}} /> </p>
+        <p> <input type="text" name="username" placeholder={{tt "Username"}} /> </p>
         <p> <input type="password" name="password" placeholder={{tt "Password"}} /> </p>
         <p class="submit"> <input type="submit" id="login-button" value={{tt "Sign In"}} /> </p>
       </div>
@@ -130,6 +142,10 @@
   </div>
 </template>
 
+<template name="description">
+   <p><b>vmchecker</b> is an automated homework evaluation utility. It is an open-source product created by and for the students of the Computer Science Department - UPB and it is meant to simplify the teaching assistant's grading work while offering students a fair and equal evaluation environment. </p> <h2>Want to contribute?</h2> <p><b>vmchecker</b> is a project begun in 2008 and which evoloved as a result of the contributions of each generation of students. It is mostly written in <a href="http://www.python.org/">Python</a> and bash scripting, the interface being written in Javascript using the <a href="https://www.meteor.com/">Meteor</a> framework.</p> <p> For more details on the project or how to get involved you can access <a href="http://github.com/rosedu/vmchecker">the official Github repository</a> or you can subscribe to <a href="http://lists.rosedu.org/listinfo/vmchecker-dev">the mailing list</a> currently used by the developers.
+</template>
+
 <template name="upload">
-    <input type=file />
+    <input type="file" />
 </template>
