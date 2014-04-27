@@ -101,9 +101,11 @@
     </div>
     <br />
   {{#each assignments}}
-    <div id={{assignmentId}}>
-    {{assignmentTitle}}
-    </div>
+    <p>
+        <button type="button" id={{assignmentId}}>
+        {{assignmentTitle}}
+        </button>
+    </p>
   {{/each}}
   </div>
 </template>
