@@ -28,6 +28,7 @@ from mod_python import Session
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker import submit, config, websutil, update_db, paths, submissions
+from vmchecker.config import DATE_FORMAT
 
 # .vmr files may be very large because of errors in the student's submission.
 MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
@@ -579,6 +580,9 @@ def getAllGrades(req, courseId):
                 'AND assignments.id = grades.assignment_id')
             for row in db_cursor:
                 user, assignment, grade = row
+                deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                deadtime = time.mktime(deadline)
+                if time.time() < deadtime: continue
                 grades.setdefault(user, {})[assignment] = grade
             db_cursor.close()
         finally:
