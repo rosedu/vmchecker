@@ -1,3 +1,4 @@
+
 .logo {
    background: url('/vmchecker_logo_ui.png') left top no-repeat;
    width: 200px;
@@ -167,6 +168,8 @@ input[type=submit]:active {
 
 body {
   font: 1em/150% Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 a {
@@ -193,7 +196,15 @@ STRUCTURE
 }
 
 #header {
-  height: 180px;
+  height: 33px;
+  padding: 0;
+  margin: 0;
+  float: bottom;
+}
+
+#header div {
+   padding: 0;
+   margin: 0;
 }
 
 #content {
@@ -208,6 +219,10 @@ STRUCTURE
 
 #footer {
   clear: both;
+}
+
+#pagewrap {
+   margin-top: 100px;
 }
 
 /************************************************************************************
