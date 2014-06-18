@@ -1,4 +1,12 @@
 
+body {
+   border: 0;
+}
+
+div {
+   border: 0;
+}
+
 .logo {
    background: url('/vmchecker_logo_ui.png') left top no-repeat;
    width: 200px;
@@ -122,6 +130,12 @@
   font-size: 13px;
 }
 
+.language {
+   position: absolute;
+   top: 7px;
+   right: 5px;
+}
+
 input {
   font-family: 'Lucida Grande', Tahoma, Verdana, sans-serif;
   font-size: 14px;
@@ -196,15 +210,49 @@ STRUCTURE
 }
 
 #header {
-  height: 33px;
+  height: 55px;
   padding: 0;
   margin: 0;
   float: bottom;
+  background-color: #F0F0F0;
 }
 
 #header div {
    padding: 0;
    margin: 0;
+}
+
+#header img {
+   height: 34px;
+   position: absolute;
+   left: 5px;
+   top: 13px;
+}
+
+#header div.logout {
+   position: absolute;
+   top: 15px;
+   right: 3px;
+}
+
+#header div.coursesContainer {
+   position: absolute;
+   left: 233px;
+}
+
+#header select {
+   width: 233px;
+}
+
+select#languages {
+   width: 144px;
+}
+
+#header div.coursesContainer p {
+   font-size: 11px;
+   padding: 0;
+   margin: 0;
+   border: 0;
 }
 
 #content {
@@ -222,7 +270,7 @@ STRUCTURE
 }
 
 #pagewrap {
-   margin-top: 100px;
+   margin-top: 89px;
 }
 
 /************************************************************************************

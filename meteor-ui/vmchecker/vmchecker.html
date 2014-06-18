@@ -16,8 +16,17 @@
 
 
     <div id="header">
-      <div align="right"> {{t "Language"}} {{> changeLang }} </div>
-      <div align="right"> {{> logout }}  </div>
+    {{#if currentUser}}
+      <img src="/vmchecker_logo_ui.png"/>
+      <div class="coursesContainer">
+        <!-- TODO: Change for language compatibility -->
+        <p> Selectati Cursul </p>
+        {{> courses }}
+      </div>
+      {{> logout }}
+    {{else}}
+      <div class="language" align="right"> {{t "Language"}} {{> changeLang }} </div>
+    {{/if}}
     </div>
 
   <div id="pagewrap">
@@ -25,8 +34,8 @@
     <div aligh="left"><img src="/vmchecker_logo_ui.png"/> </div>
 
     <div id="sidebar" align="center">
-      {{#if currentUser}}
-        {{> courses}} {{> assignments}}
+      {{#if currentUser}}`
+        {{> assignments}}
       {{else}}
         {{> login}}
       {{/if}}
@@ -53,6 +62,10 @@
   {{> circle}}
 </body>
 
+<template name="logo">
+  <div align="left"><img src="/vmchecker_logo_ui.png"/> </div>
+</template>
+
 <template name="changeLang">
   <select id="languages">
     {{#each languages}}
@@ -64,7 +77,7 @@
 
 <template name="logout">
   {{#if currentUser}}
-    {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button>
+    <div class = "logout"> {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button> </div>
   {{/if}}
 </template>
 
