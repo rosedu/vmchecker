@@ -4,6 +4,7 @@ var Courses = new Meteor.Collection("courses");
 var Assignments = new Meteor.Collection("assignments");
 var Grades = new Meteor.Collection("grades");
 var Results = new Meteor.Collection("results");
+var CourseCursorPosition = new Meteor.Collection(null);
 
 // Restricts creating accounts on the client
 Accounts.config({
@@ -18,6 +19,40 @@ if (Meteor.isClient) {
     Meteor.subscribe("grades");
     Meteor.subscribe("userData");
     Meteor.subscribe("results");
+  });
+
+  var initializedCursor = false;
+
+  Deps.autorun( function() {
+    if ( typeof Session.get("courseCursor") == 'undefined' ) {
+
+      Session.set("courseCursor", CourseCursorPosition.findOne({}, {
+        sort : {
+          id: -1
+        }
+      }));
+
+      if ( typeof Session.get("courseCursor") == 'undefined' ) {
+        Session.set("courseCursor" , Courses.findOne({}, {
+          sort: {
+            id: -1,
+            title: 1
+          }
+        }));
+      }
+
+      if ( typeof Session.get("courseCursor") != 'undefined' ) {
+
+        Session.set("courseId", Session.get("courseCursor").id );
+        Meteor.call('getAssignments', Session.get("courseId"));
+        Meteor.call('getAllGrades', Session.get("courseId"));
+      }
+    } else if ( ! initializedCursor ) {
+      Session.set("courseId", Session.get("courseCursor").id );
+      Meteor.call('getAssignments', Session.get("courseId"));
+      Meteor.call('getAllGrades', Session.get("courseId"));
+      initializedCursor = true;
+    }
   });
 
   Template.courses.courses = function() {
@@ -35,6 +70,7 @@ if (Meteor.isClient) {
       Session.set("courseId", elem.value);
       Meteor.call('getAssignments', Session.get("courseId"));
       Meteor.call('getAllGrades', Session.get("courseId"));
+      Session.set("courseCursor",  Session.get("courseId"));
     },
     'click': function(event) {
       var elem = event.currentTarget;
@@ -43,6 +79,7 @@ if (Meteor.isClient) {
         Session.set("courseId", elem.value);
         Meteor.call('getAssignments', Session.get("courseId"));
         Meteor.call('getAllGrades', Session.get("courseId"));
+        Session.set("courseCursor",  Session.get("courseId"));
       }
     }
   });
@@ -125,8 +162,6 @@ if (Meteor.isClient) {
     return "";
   }
 
-
-
   Template.circle.display = function(league) {
     return Session.get("loading") == true;
   };
@@ -139,7 +174,6 @@ if (Meteor.isClient) {
       });
     }
   });
-
 }
 
 
@@ -166,6 +200,15 @@ if (Meteor.isServer) {
 
     /// ===>>> SERVER METHODS
 
+    // the result from calling getCourses
+    var getCoursesStaticResults;
+
+    // last update time
+    var getCoursesLastUpdateTime = 0;
+
+    /// Time in Miliseconds
+    var getCoursesTimeTreshold = 6000;
+
     Meteor.methods({
       getCourses: function() {
         this.unblock();
@@ -180,17 +223,34 @@ if (Meteor.isServer) {
             Cookie: "pysid=" + key
           }
         }
-        var res = HTTP.get("http://localhost/services/services.py/getCourses?null", options);
-        var names = JSON.parse(res.content);
-        for (var i = 0; i < names.length; i++) {
-          Courses.update({
-            id: names[i].id
-          }, {
-            id: names[i].id,
-            title: names[i].title
-          }, {
-            upsert: true
-          });
+
+        // the code only calls the getCourses method on the server only if an amount of time has elapsed from the last call
+        // the amount of time is specified by the $getCoursesLastUpdateTime variable
+        var currentTime = (new Date()).getTime();
+        console.log("---Current Time:" + currentTime);
+        console.log("---LastTime:" + getCoursesLastUpdateTime);
+        console.log("---Difference:" + (currentTime - getCoursesLastUpdateTime));
+
+        if ( typeof getCoursesStaticResults === 'undefined' || currentTime - getCoursesLastUpdateTime > getCoursesTimeTreshold ) {
+          console.log("Query to Boss");
+          getCoursesStaticResults = HTTP.get("http://localhost/services/services.py/getCourses?null", options);
+          getCoursesLastUpdateTime = currentTime;
+
+          var res = getCoursesStaticResults;
+
+          var names = JSON.parse(res.content);
+          console.log(names);
+          //Courses.remove({});
+          for (var i = 0; i < names.length; i++) {
+            Courses.update({
+              id: names[i].id
+            }, {
+              id: names[i].id,
+              title: names[i].title
+            }, {
+              upsert: true
+            });
+        }
         }
       },
       getAssignments: function(courseId) {

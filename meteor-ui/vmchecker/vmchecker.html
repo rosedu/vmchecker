@@ -60,6 +60,8 @@
 
 
   {{> circle}}
+
+  {{initializer}}
 </body>
 
 <template name="logo">
@@ -100,7 +102,7 @@
 
 
 <template name="courses">
-  <select id="myList">
+  <select id="myList" >
     {{#each courses}}
       <option value={{id}}> {{title}} </option>
     {{/each}}
