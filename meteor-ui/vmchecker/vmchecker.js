@@ -4,7 +4,6 @@ var Courses = new Meteor.Collection("courses");
 var Assignments = new Meteor.Collection("assignments");
 var Grades = new Meteor.Collection("grades");
 var Results = new Meteor.Collection("results");
-var CourseCursorPosition = new Meteor.Collection(null);
 
 // Restricts creating accounts on the client
 Accounts.config({
@@ -26,20 +25,12 @@ if (Meteor.isClient) {
   Deps.autorun( function() {
     if ( typeof Session.get("courseCursor") == 'undefined' ) {
 
-      Session.set("courseCursor", CourseCursorPosition.findOne({}, {
-        sort : {
-          id: -1
+      Session.set("courseCursor" , Courses.findOne({}, {
+        sort: {
+          id: -1,
+          title: 1
         }
       }));
-
-      if ( typeof Session.get("courseCursor") == 'undefined' ) {
-        Session.set("courseCursor" , Courses.findOne({}, {
-          sort: {
-            id: -1,
-            title: 1
-          }
-        }));
-      }
 
       if ( typeof Session.get("courseCursor") != 'undefined' ) {
 
@@ -99,7 +90,7 @@ if (Meteor.isClient) {
       "code": "ro",
       "name": "Romana",
       "selected": (Cookie.get('i18next') == "ro" ? "selected" : "")
-    }, {
+    }, {X
       "code": "en",
       "name": "English",
       "selected": (Cookie.get('i18next') == "en" ? "selected" : "")
