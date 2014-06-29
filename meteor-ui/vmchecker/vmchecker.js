@@ -90,7 +90,7 @@ if (Meteor.isClient) {
       "code": "ro",
       "name": "Romana",
       "selected": (Cookie.get('i18next') == "ro" ? "selected" : "")
-    }, {X
+    }, {
       "code": "en",
       "name": "English",
       "selected": (Cookie.get('i18next') == "en" ? "selected" : "")
