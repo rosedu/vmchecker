@@ -152,6 +152,9 @@ if (Meteor.isClient) {
         userId: Meteor.user().username
       }).content;
 
+      var replaceValue = /\\n/g;
+      val = val.replace( replaceValue, "%%");
+
       var parsed = JSON.parse(val);
       var result = "";
 
@@ -160,6 +163,9 @@ if (Meteor.isClient) {
           result += element + parsed[field][element];
         }
       }
+
+      replaceValue = /%%/g;
+      result = result.replace( replaceValue, "<br />");  
 
       return result;
       return JSON.stringify(parsed);
