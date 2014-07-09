@@ -138,9 +138,9 @@
 <template name="assignmentInfo">
   <div>
     {{#each content}}
-      {{> upload}}
       <br />
       {{courseId}} {{assignmentId}} {{assignmentTitle}} {{deadline}} {{statementLink}} {{assignmentStorage}}<br/>
+      {{> upload}}
     {{/each}}
   </div>
 </template>
@@ -157,6 +157,7 @@
 
 <template name="result">
   <div>
+  {{content}}
   </div>
 </template>
 

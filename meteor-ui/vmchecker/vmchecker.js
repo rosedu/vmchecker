@@ -142,13 +142,27 @@ if (Meteor.isClient) {
 
   Template.result.content = function() {
     if (Meteor.user()) {
+
+      if (! Session.get('courseId') || ! Session.get('assignmentId'))
+        return "";
+
       var val = Results.findOne({
         courseId: Session.get('courseId'),
         assignmentId: Session.get('assignmentId'),
         userId: Meteor.user().username
       }).content;
-      console.log(val);
-      return JSON.stringify(val);
+
+      var parsed = JSON.parse(val);
+      var result = "";
+
+      for ( var field in parsed ) { 
+        for ( var element in parsed[field] ) {
+          result += element + parsed[field][element];
+        }
+      }
+
+      return result;
+      return JSON.stringify(parsed);
     }
     return "";
   }
