@@ -168,7 +168,6 @@ if (Meteor.isClient) {
       result = result.replace( replaceValue, "<br />");  
 
       return result;
-      return JSON.stringify(parsed);
     }
     return "";
   }
