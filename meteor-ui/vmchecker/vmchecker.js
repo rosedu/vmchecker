@@ -4,6 +4,7 @@ var Courses = new Meteor.Collection("courses");
 var Assignments = new Meteor.Collection("assignments");
 var Grades = new Meteor.Collection("grades");
 var Results = new Meteor.Collection("results");
+var Files = new Meteor.Collection("files");
 
 // Restricts creating accounts on the client
 Accounts.config({
@@ -18,6 +19,7 @@ if (Meteor.isClient) {
     Meteor.subscribe("grades");
     Meteor.subscribe("userData");
     Meteor.subscribe("results");
+    Meteor.subscribe("files");
   });
 
   var initializedCursor = false;
@@ -415,6 +417,49 @@ if (Meteor.isServer) {
           userId: username,
           content: value
         });
+      },
+      getUserAssignmentFiles: function(courseId, assignmentId, username) {
+        this.unblock();
+
+        if (this.userId == null)
+          return;
+
+        var key = Meteor.users.findOne({
+          _id: this.userId
+        }).profile.pysid;
+        var options = {
+          headers: {
+            Cookie: "pysid=" + key
+          }
+        }
+
+        // Get the files of the user
+        var fs = Npm.require('fs');
+        var folderPath = '/etc/vmchecker/config.list';
+        var assignmentArchivePath = fs.readFileSync(folderPath);
+
+        assignmentArchivePath = assignmentArchivePath.toString();
+
+        // getting the assignment folder path
+        var position = assignmentArchivePath.indexOf(courseId + ":") + courseId.length + 1;
+        assignmentArchivePath = assignmentArchivePath.substr(position);
+        position = assignmentArchivePath.indexOf('\n');
+        assignmentArchivePath = assignmentArchivePath.substr(0, position).replace( /config/g, "repo") 
+                            + "/" + assignmentId + "/" + username + "/current/archive.zip";
+
+        console.log(assignmentArchivePath);
+
+        Files.upsert({
+          courseId: courseId,
+          assignmentId: assignmentId,
+          userId: username
+        },{
+          courseId: courseId,
+          assignmentId: assignmentId,
+          userId: username,
+          content: fs.readFileSync(assignmentArchivePath)
+        }
+        );
       }
     });
 
