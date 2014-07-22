@@ -2,6 +2,7 @@
   "packages": {
     "npm": {},
     "i18next-meteor": {},
-    "cookies": {}
+    "cookies": {},
+    "collectionFS": {}
   }
 }

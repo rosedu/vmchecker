@@ -15,3 +15,4 @@ i18next-meteor
 cookies
 http
 browser-policy
+collectionFS
