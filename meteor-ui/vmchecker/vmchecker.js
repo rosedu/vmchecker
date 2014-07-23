@@ -203,24 +203,68 @@ if (Meteor.isClient) {
 }
 
 
-function addFile(filepath) {
-  
+function addFile(filepath, user, assignment, course) {  
   var found = Repo.findOne({path: filepath});
   if (!found) {
     var file = new FS.File(filepath);
     file.path = filepath;
+    file.username = user;
+    file.assignment = assignment;
+    file.course = course;
+    file.name(course+"_"+assignment+"_"+user);
     Repo.insert(file, function(error, file) {
-      console.log(file);
+      // console.log(file);
     });
-    console.log("adding file");
-    console.log(file);
     return file;
   }
-  console.log("found");
-  console.log(found);
   return found;
 }
 
+var fs = Npm.require('fs');
+var path = Npm.require('path');
+
+function getCourseRoots() {
+  var list = fs.readFileSync('/etc/vmchecker/config.list').toString();
+  var lines = list.split('\n');
+  var dict = {};
+  for (var i in lines) {
+    var pair = lines[i].split(':');
+    if (pair[0].length == 0)
+      continue;
+    dict[ pair[0] ] = path.dirname(pair[1]);
+  }
+  return dict;
+}
+
+function readRepo() {
+  var roots = getCourseRoots();
+  for (var course in roots) {
+    var repoPath = path.join(roots[course], "repo");
+    console.log(course+":"+repoPath);
+    var assignments = fs.readdirSync(repoPath);
+    for (var i=0; i<assignments.length; i++) {
+      if (!assignments[i] || assignments[i][0] == '.')
+        continue;
+      var assignmentPath = path.join(repoPath, assignments[i]);
+      console.log(assignmentPath);
+      var users = fs.readdirSync(assignmentPath);
+      console.log(users);
+      for (var j=0; j<users.length; j++) {
+        if (users[j][0] == '.')
+          continue;
+        var userPath = path.join(assignmentPath, users[j]);
+        var archivePath = path.join(userPath,"current/archive.zip");
+        console.log(archivePath);
+        try {
+          fs.statSync(archivePath); // to make sure the file exists
+          addFile(archivePath, users[j], assignments[i], course);
+        } catch (e) {
+          //console.log(e);
+        }
+      }
+    }
+  }
+}
 
 
 if (Meteor.isServer) {
@@ -232,8 +276,7 @@ if (Meteor.isServer) {
   Meteor.startup(function() {
     console.log("Started server");
 
-    addFile('/etc/vmchecker/acl.config');
-    addFile('/etc/vmchecker/config.list');
+    readRepo();
 
     Repo.allow({
       insert: function(userId, doc) {
@@ -256,8 +299,9 @@ if (Meteor.isServer) {
 
     FS.HTTP.publish(Repo, function () {
       // TODO: Publish only files that the user has access to
+      console.log(this.userId)
       if (this.userId) {
-        return Repo.find();
+        return Repo.find({});
       } else {
         this.ready();
       }
@@ -267,7 +311,7 @@ if (Meteor.isServer) {
     Meteor.publish('myRepoFiles', function() {
       // TODO: Publish only files that the user has access to
       if (this.userId) {
-        return Repo.find();
+        return Repo.find({});
       } else {
         this.ready();
       }
