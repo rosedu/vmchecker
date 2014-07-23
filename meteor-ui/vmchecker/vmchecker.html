@@ -39,9 +39,11 @@
       {{else}}
         {{> login}}
       {{/if}}
+
     </div>
 
     <div id="content">
+      {{> fileList}}
       {{#if currentUser}}
         {{> assignmentInfo}} <br/>
         {{> grades }} <br/>
@@ -81,6 +83,18 @@
   {{#if currentUser}}
     <div class = "logout"> {{currentUser.profile.name}} <button onclick="Meteor.logout()"> {{t "Logout"}} </button> </div>
   {{/if}}
+</template>
+
+
+<template name="fileList">
+  hello
+  <div class="fileList">
+    {{#each files}}
+      <div class="file">
+        <strong>{{this.name}}</strong> <a href="{{this.url}}" class="btn btn-primary">Download</a>
+      </div>
+    {{/each}}
+  </div>
 </template>
 
 <template name="login">

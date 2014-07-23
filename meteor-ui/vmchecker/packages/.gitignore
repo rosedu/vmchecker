@@ -26,3 +26,6 @@
 /cfs-filesystem
 /reactive-property
 /micro-queue
+/cfs-filesystem-readonly
+/cfs-ui
+/cfs-public-folder

@@ -11,6 +11,11 @@ Accounts.config({
   forbidClientAccountCreation: true
 });
 
+var Repo = new FS.Collection("repo", {
+  stores: [new FS.Store.FileSystemRO("repo")]
+});
+
+
 if (Meteor.isClient) {
 
   Deps.autorun(function() {
@@ -20,6 +25,7 @@ if (Meteor.isClient) {
     Meteor.subscribe("userData");
     Meteor.subscribe("results");
     Meteor.subscribe("files");
+    Meteor.subscribe('myRepoFiles');
   });
 
   var initializedCursor = false;
@@ -56,6 +62,14 @@ if (Meteor.isClient) {
       }
     });
   };
+
+  Template.fileList.helpers({
+    files: function () {
+      // TODO: show download link only for current course/user/assignment
+      return Repo.find();
+    }
+  });
+
 
   Template.courses.events({
     'change': function(event) {
@@ -189,10 +203,75 @@ if (Meteor.isClient) {
 }
 
 
+function addFile(filepath) {
+  
+  var found = Repo.findOne({path: filepath});
+  if (!found) {
+    var file = new FS.File(filepath);
+    file.path = filepath;
+    Repo.insert(file, function(error, file) {
+      console.log(file);
+    });
+    console.log("adding file");
+    console.log(file);
+    return file;
+  }
+  console.log("found");
+  console.log(found);
+  return found;
+}
+
+
+
 if (Meteor.isServer) {
+
+  // We need this to avoid using the cfs-filesystem packages
+  FS.TempStore.Storage = new FS.Store.FileSystemRO('_tempstore', { internal: true });
+
   //Meteor.users.remove({});
   Meteor.startup(function() {
     console.log("Started server");
+
+    addFile('/etc/vmchecker/acl.config');
+    addFile('/etc/vmchecker/config.list');
+
+    Repo.allow({
+      insert: function(userId, doc) {
+        return false;
+      },
+      update: function(userId, doc, fieldNames, modifier) {
+        return false;
+      },
+      remove: function(userId, doc) {
+        return false;
+      },
+      download: function(userId) {
+        // TODO: check that user owns file or user is admin
+        if (userId)
+          return true;
+        else
+          return false;
+      }
+    });
+
+    FS.HTTP.publish(Repo, function () {
+      // TODO: Publish only files that the user has access to
+      if (this.userId) {
+        return Repo.find();
+      } else {
+        this.ready();
+      }
+    });
+
+
+    Meteor.publish('myRepoFiles', function() {
+      // TODO: Publish only files that the user has access to
+      if (this.userId) {
+        return Repo.find();
+      } else {
+        this.ready();
+      }
+    });
 
     Meteor.publish("grades", function() {
       return Grades.find({});

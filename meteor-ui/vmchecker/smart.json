@@ -3,6 +3,11 @@
     "npm": {},
     "i18next-meteor": {},
     "cookies": {},
-    "collectionFS": {}
+    "collectionFS": {},
+    "cfs-filesystem-readonly": {
+      "git": "https://github.com/valenting/Meteor-cfs-filesystem-readonly.git",
+      "tag": "v0.0.29"
+    },
+    "cfs-ui": {}
   }
 }

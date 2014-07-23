@@ -16,3 +16,7 @@ cookies
 http
 browser-policy
 collectionFS
+cfs-filesystem-readonly
+cfs-ui
+cfs-access-point
+http-methods

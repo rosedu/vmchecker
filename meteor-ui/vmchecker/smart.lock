@@ -5,7 +5,12 @@
       "npm": {},
       "i18next-meteor": {},
       "cookies": {},
-      "collectionFS": {}
+      "collectionFS": {},
+      "cfs-filesystem-readonly": {
+        "git": "https://github.com/valenting/Meteor-cfs-filesystem-readonly.git",
+        "tag": "v0.0.29"
+      },
+      "cfs-ui": {}
     },
     "packages": {
       "npm": {
@@ -27,6 +32,16 @@
         "git": "https://github.com/CollectionFS/Meteor-CollectionFS.git",
         "tag": "v0.4.8",
         "commit": "fea890b1e27799ccc9f71046748fb23a84330a16"
+      },
+      "cfs-filesystem-readonly": {
+        "git": "https://github.com/valenting/Meteor-cfs-filesystem-readonly.git",
+        "tag": "v0.0.29",
+        "commit": "6977091b305baefcf3ebc280112069f0ba756207"
+      },
+      "cfs-ui": {
+        "git": "https://github.com/CollectionFS/Meteor-cfs-ui.git",
+        "tag": "v0.1.0",
+        "commit": "41feb979e88cb2cf4c6f2934ba58ae0bb4e3dddb"
       },
       "cfs-base-package": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-base-package.git",
@@ -63,15 +78,15 @@
         "tag": "v0.0.12",
         "commit": "774bf581e0f3da269dc842672ed6c2da09fd2bdf"
       },
-      "cfs-filesaver": {
-        "git": "https://github.com/CollectionFS/Meteor-cfs-filesaver.git",
-        "tag": "v0.0.3",
-        "commit": "29cd7ae4dab138aa5e3792485945e742c46fc330"
-      },
       "cfs-storage-adapter": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-storage-adapter.git",
         "tag": "v0.0.29",
         "commit": "2bcc5c730f7f4d2536af5bd8b0187a60feb1e0e8"
+      },
+      "cfs-filesaver": {
+        "git": "https://github.com/CollectionFS/Meteor-cfs-filesaver.git",
+        "tag": "v0.0.3",
+        "commit": "29cd7ae4dab138aa5e3792485945e742c46fc330"
       },
       "http-methods": {
         "git": "https://github.com/CollectionFS/Meteor-http-methods.git",
