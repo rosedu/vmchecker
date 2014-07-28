@@ -66,6 +66,7 @@ if (Meteor.isClient) {
   Template.fileList.helpers({
     files: function () {
       // TODO: show download link only for current course/user/assignment
+      // REVISED: can it be shown but can't download them?
       return Repo.find();
     }
   });
@@ -288,12 +289,19 @@ if (Meteor.isServer) {
       remove: function(userId, doc) {
         return false;
       },
-      download: function(userId) {
-        // TODO: check that user owns file or user is admin
-        if (userId)
-          return true;
-        else
+      download: function(userId, doc) {
+
+        var username = Meteor.users.findOne({ _id : userId}).username;
+
+        if ( ! userId )
           return false;
+
+        console.log( "File match: " + doc.path.indexOf(username) );
+
+        if ( doc.path.indexOf(username) == -1 )
+          return false;
+
+        return true;
       }
     });
 
