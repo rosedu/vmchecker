@@ -34,8 +34,10 @@
     <div aligh="left"><img src="/vmchecker_logo_ui.png"/> </div>
 
     <div id="sidebar" align="center">
-      {{#if currentUser}}`
-        {{> assignments}}
+      {{#if currentUser}}
+          {{> assignments}}
+          {{> assignmentInfo}}
+          {{> fileList }}
       {{else}}
         {{> login}}
       {{/if}}
@@ -43,12 +45,13 @@
     </div>
 
     <div id="content">
-      {{> fileList}}
       {{#if currentUser}}
-        {{> editor}}
-        {{> assignmentInfo}} <br/>
-        {{> grades }} <br/>
-        {{> result }}
+        {{#if editorActivated}}
+          {{> editor}}
+        {{else}}
+          {{> grades }} <br/>
+          {{> result }}
+        {{/if}}
       {{else}}
         {{> description }}
       {{/if}}
@@ -95,7 +98,7 @@
   <div class="fileList">
     {{#each files}}
       <div class="file">
-        <strong>{{this.name}}</strong> <a href="{{this.url}}" class="btn btn-primary">Download</a>
+        <strong>{{this.name}}</strong> <br> <a href="#" >View</a> <a href="{{this.url}}" class="btn btn-primary">Download</a>
       </div>
     {{/each}}
   </div>
@@ -157,7 +160,8 @@
   <div>
     {{#each content}}
       <br />
-      {{courseId}} {{assignmentId}} {{assignmentTitle}} {{deadline}} {{statementLink}} {{assignmentStorage}}<br/>
+      <!-- {{courseId}} {{assignmentId}} {{assignmentTitle}} {{deadline}} {{statementLink}} {{assignmentStorage}}<br/> -->
+      Upload Assignment <br >
       {{> upload}}
     {{/each}}
   </div>

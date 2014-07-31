@@ -123,6 +123,12 @@ if (Meteor.isClient) {
     });
   };
 
+  Template.editor.events({
+    'render' : function(event) {
+      console.log('salut');
+    }
+  });
+
   Template.assignments.events({
     'click': function(event) {
       var text = event.currentTarget.id;
@@ -198,7 +204,6 @@ if (Meteor.isClient) {
     'change input': function(ev) {
       _.each(ev.target.files, function(file) {
         Meteor.saveFile(file);
-        //Meteor.call('saveFile', file, Session.get('courseId'), Session.get('assignmentId'));
       });
     }
   });
@@ -216,7 +221,6 @@ function addFile(filepath, user, assignment, course) {
     file.course = course;
     file.name(course+"_"+assignment+"_"+user);
     Repo.insert(file, function(error, file) {
-      // console.log(file);
     });
     return file;
   }
