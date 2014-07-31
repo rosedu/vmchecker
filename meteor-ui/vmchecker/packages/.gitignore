@@ -29,3 +29,5 @@
 /cfs-filesystem-readonly
 /cfs-ui
 /cfs-public-folder
+/reactive-ace
+/fast-render

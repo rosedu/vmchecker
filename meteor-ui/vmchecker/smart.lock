@@ -10,7 +10,9 @@
         "git": "https://github.com/valenting/Meteor-cfs-filesystem-readonly.git",
         "tag": "v0.0.29"
       },
-      "cfs-ui": {}
+      "cfs-ui": {},
+      "reactive-ace": {},
+      "fast-render": {}
     },
     "packages": {
       "npm": {
@@ -43,15 +45,25 @@
         "tag": "v0.1.0",
         "commit": "41feb979e88cb2cf4c6f2934ba58ae0bb4e3dddb"
       },
+      "reactive-ace": {
+        "git": "https://github.com/mad-eye/meteor-reactive-ace.git",
+        "tag": "v0.1.2",
+        "commit": "6116d1984d816dc2efbfe9650c467d1a04b95445"
+      },
+      "fast-render": {
+        "git": "https://github.com/arunoda/meteor-fast-render.git",
+        "tag": "v0.2.8",
+        "commit": "149984b1aff3a5642a270aff9bd9006872c8302e"
+      },
       "cfs-base-package": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-base-package.git",
-        "tag": "v0.0.23",
-        "commit": "82bc49b4b8f66572b5551098e674e3a3b6c42ea3"
+        "tag": "v0.0.24",
+        "commit": "edc2f16b48cc1ebcf6ea4d278cbd0c41bb4e67bc"
       },
       "cfs-file": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-file.git",
-        "tag": "v0.1.8",
-        "commit": "0b576c546cc38efad02877d160c9852914574b02"
+        "tag": "v0.1.9",
+        "commit": "2f22329ee524adad18b8a27ed574ac26478b3ebe"
       },
       "cfs-collection": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-collection.git",
@@ -65,8 +77,8 @@
       },
       "cfs-access-point": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-access-point.git",
-        "tag": "v0.0.31",
-        "commit": "e2ccc9cdcfdf1a26d40acaeff3f3a6b5324e1ef6"
+        "tag": "v0.0.32",
+        "commit": "e8f51b804db5163cecda616d07b1286d239e8955"
       },
       "cfs-worker": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-worker.git",
@@ -125,8 +137,8 @@
       },
       "cfs-gridfs": {
         "git": "https://github.com/CollectionFS/Meteor-cfs-gridfs.git",
-        "tag": "v0.0.22",
-        "commit": "2d008d4594e55d07006674b25a7e9cf8d25a3917"
+        "tag": "v0.0.24",
+        "commit": "46be5cbc2339783f59f0b2e38caa0c7bba88eba1"
       },
       "power-queue": {
         "git": "https://github.com/CollectionFS/Meteor-power-queue.git",

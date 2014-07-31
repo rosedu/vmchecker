@@ -45,6 +45,7 @@
     <div id="content">
       {{> fileList}}
       {{#if currentUser}}
+        {{> editor}}
         {{> assignmentInfo}} <br/>
         {{> grades }} <br/>
         {{> result }}
@@ -85,6 +86,10 @@
   {{/if}}
 </template>
 
+<template name="editor">
+  <div id="editor">
+  </div>
+</template>
 
 <template name="fileList">
   <div class="fileList">

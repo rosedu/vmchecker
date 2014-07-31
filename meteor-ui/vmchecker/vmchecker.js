@@ -18,6 +18,7 @@ var Repo = new FS.Collection("repo", {
 
 if (Meteor.isClient) {
 
+  // subscribing to databases
   Deps.autorun(function() {
     Meteor.subscribe("courses");
     Meteor.subscribe("assignments");
@@ -28,8 +29,8 @@ if (Meteor.isClient) {
     Meteor.subscribe('myRepoFiles');
   });
 
+  // get current course
   var initializedCursor = false;
-
   Deps.autorun( function() {
     if ( typeof Session.get("courseCursor") == 'undefined' ) {
 
@@ -54,6 +55,7 @@ if (Meteor.isClient) {
     }
   });
 
+  // courses geter
   Template.courses.courses = function() {
     return Courses.find({}, {
       sort: {
@@ -63,14 +65,15 @@ if (Meteor.isClient) {
     });
   };
 
+  // get archives
   Template.fileList.helpers({
     files: function () {
-      // TODO: show download link only for current course/user/assignment
-      // REVISED: can it be shown but can't download them?
-      return Repo.find();
+      return Repo.find({
+        username: Meteor.user().username,
+        course: Session.get('courseId')
+      });
     }
   });
-
 
   Template.courses.events({
     'change': function(event) {
@@ -175,11 +178,9 @@ if (Meteor.isClient) {
       var parsed = JSON.parse(val);
       var result = "";
 
-      for ( var field in parsed ) { 
-        for ( var element in parsed[field] ) {
+      for ( var field in parsed ) 
+        for ( var element in parsed[field] ) 
           result += element + parsed[field][element];
-        }
-      }
 
       replaceValue = /%%/g;
       result = result.replace( replaceValue, "<br />");  
@@ -201,6 +202,7 @@ if (Meteor.isClient) {
       });
     }
   });
+
 }
 
 

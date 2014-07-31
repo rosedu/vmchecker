@@ -20,3 +20,5 @@ cfs-filesystem-readonly
 cfs-ui
 cfs-access-point
 http-methods
+reactive-ace
+fast-render
