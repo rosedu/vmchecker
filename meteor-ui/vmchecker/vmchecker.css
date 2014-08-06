@@ -7,6 +7,11 @@ div {
    border: 0;
 }
 
+#editor {
+  width: 500px;
+  height: 100px;
+}
+
 .logo {
    background: url('/vmchecker_logo_ui.png') left top no-repeat;
    width: 200px;

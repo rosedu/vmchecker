@@ -18,6 +18,10 @@ var Repo = new FS.Collection("repo", {
 
 if (Meteor.isClient) {
 
+  Meteor.startup(function() {
+    var editor = ace.editor("editor");
+  });
+
   // subscribing to databases
   Deps.autorun(function() {
     Meteor.subscribe("courses");

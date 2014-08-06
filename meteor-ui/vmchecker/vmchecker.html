@@ -3,6 +3,7 @@
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
   <title>vmchecker</title>
 
+  <script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
   <!-- viewport meta to reset iPhone inital scale -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -46,12 +47,9 @@
 
     <div id="content">
       {{#if currentUser}}
-        {{#if editorActivated}}
-          {{> editor}}
-        {{else}}
-          {{> grades }} <br/>
-          {{> result }}
-        {{/if}}
+        {{> editor}}
+        {{> grades }} <br/>
+        {{> result }}
       {{else}}
         {{> description }}
       {{/if}}
@@ -61,13 +59,19 @@
       Contribute to <a href="https://github.com/rosedu/vmchecker"> vmchecker </a>
     </div>
 
-
   </div>
 
 
   {{> circle}}
 
   {{initializer}} 
+
+  <script type="text/javascript">
+  editor = ace.edit("editor");
+  editor.setTheme("ace/theme/github");
+  editor.setReadOnly(false);
+  editor.getSession().setMode("ace/mode/c_cpp");
+</script>
 </body>
 
 <template name="logo">
@@ -91,6 +95,10 @@
 
 <template name="editor">
   <div id="editor">
+int main() {
+  printf("Welcome to VMchecker!");
+  return 0;
+}
   </div>
 </template>
 
