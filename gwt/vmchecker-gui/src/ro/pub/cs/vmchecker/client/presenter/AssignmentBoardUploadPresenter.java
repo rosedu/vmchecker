@@ -341,7 +341,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 		String firstFile = files[0].substring((assignment.storageBasepath + "/").length());
 		String userDir = firstFile.substring(0, firstFile.indexOf('/'));
 		tree.removeItems();
-		treeRoot = tree.addItem(AbstractImagePrototype.create(images.connection()).getHTML() + " " + userDir + "@" + assignment.storageHost);
+		treeRoot = tree.addTextItem(AbstractImagePrototype.create(images.connection()).getHTML() + " " + userDir + "@" + assignment.storageHost);
 
 		for(String s : files) {
 			String file = s.substring((assignment.storageBasepath + "/").length());
@@ -365,17 +365,17 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 					}
 				}
 
-				if(!found) treeBranch = treeBranch.addItem(folderImage + " " +  folderPart);
+				if(!found) treeBranch = treeBranch.addTextItem(folderImage + " " +  folderPart);
 			}
 
 			String fileName = file.trim(); /* Eliminate all trailing end-of-line characters */
 			if(fileName.indexOf('.') != -1)
 				if(fileName.substring(fileName.indexOf('.') + 1).equals("zip"))
-					treeBranch.addItem(zipImage + " " + fileName);
+					treeBranch.addTextItem(zipImage + " " + fileName);
 				else
-					treeBranch.addItem(fileImage + " " + fileName);
+					treeBranch.addTextItem(fileImage + " " + fileName);
 			else
-				treeBranch.addItem(fileImage + " " + fileName);
+				treeBranch.addTextItem(fileImage + " " + fileName);
 		}
 	}
 
