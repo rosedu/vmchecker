@@ -1,0 +1,20 @@
+To deploy Vmchecker UI:
+
+1. Link in services backend
+
+VMCHECKER_SRC=~/vmchecker
+WEBROOT=~/public_html
+GWT_PATH=~/gwt-2.6.1
+
+mkdir -p $WEBROOT/services
+ln -s $VMCHECKER_SRC/web_services/services.py $WEBROOT/services/services.py
+
+2. Build Vmchecker web-app (war):
+
+java -cp $VMCHECKER_SRC/gwt/src:$GWT_PATH/gwt-dev.jar:$GWT_PATH/gwt-user.jar:$GWT_PATH/validation-api-1.0.0.GA.jar:$GWT_PATH/validation-api-1.0.0.GA-sources.jar com.google.gwt.dev.Compiler ro.pub.cs.vmchecker.Vmchecker
+
+3. Copy compiled app in place:
+
+mkdir -p $WEBROOT/ui
+cp -r $VMCHECKER_SRC/gwt/vmchecker-gui/war/* $WEBROOT/ui
+cp -r $VMCHECKER_SRC/gwt/src/war/vmchecker $WEBROOT/ui
