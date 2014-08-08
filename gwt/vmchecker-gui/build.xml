@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="Vmchecker" default="build" basedir=".">
+  <!-- Arguments to gwtc and devmode targets -->
+  <property name="gwt.args" value="" />
+
+  <!-- Configure path to GWT SDK -->
+  <property environment="env" />
+  <property name="gwt.sdk" location="${env.GWT_PATH}" />
+
+  <path id="project.class.path">
+    <pathelement location="war/WEB-INF/classes"/>
+    <pathelement location="${gwt.sdk}/gwt-user.jar"/>
+    <fileset dir="${gwt.sdk}" includes="gwt-dev*.jar"/>
+  </path>
+
+  <target name="gwtc" description="GWT compile to JavaScript (production mode)">
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+      <classpath>
+        <pathelement location="src"/>
+        <path refid="project.class.path"/>
+	<pathelement location="${gwt.sdk}/validation-api-1.0.0.GA.jar" />
+	<pathelement location="${gwt.sdk}/validation-api-1.0.0.GA-sources.jar" />
+      </classpath>
+      <!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
+      <jvmarg value="-Xmx256M"/>
+      <arg line="-war"/>
+      <arg value="war"/>
+      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+      <arg line="${gwt.args}"/>
+      <arg value="ro.pub.cs.vmchecker.Vmchecker"/>
+    </java>
+  </target>
+
+  <target name="build" depends="gwtc" description="Build this project" />
+
+  <!--
+  <target name="war" depends="build" description="Create a war file">
+    <zip destfile="Vmchecker.war" basedir="war"/>
+  </target>
+  -->
+
+  <target name="clean" description="Cleans this project">
+    <delete dir="gwt-unitCache" failonerror="false" />
+    <delete dir="war/WEB-INF" failonerror="false" />
+    <delete dir="war/vmchecker" failonerror="false" />
+  </target>
+
+</project>
