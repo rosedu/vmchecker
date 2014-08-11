@@ -138,7 +138,8 @@ public class LoginPresenter implements Presenter, KeyPressHandler {
 
 	@Override
 	public void onKeyPress(KeyPressEvent event) {
-		if (event.getCharCode() == KeyCodes.KEY_ENTER) {
+		if (KeyCodes.KEY_ENTER == event.getCharCode() ||
+			KeyCodes.KEY_ENTER == event.getNativeEvent().getKeyCode()) {
 			/* enter was pressed, send the request */
 			if (validateFields()) {
 				sendAuthenticationRequest();
