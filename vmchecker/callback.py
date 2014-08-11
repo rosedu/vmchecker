@@ -20,7 +20,7 @@ def _setup_logging():
     """Instruct paramiko to log stuff.
     Should be disabled in production?
     """
-    paramiko.util.log_to_file('callback_sftp.log')
+    paramiko.util.log_to_file('/tmp/callback_sftp.log')
 
 
 def get_default_remote_host_keys():
