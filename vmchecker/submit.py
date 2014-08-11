@@ -27,6 +27,8 @@ from . import ziputil
 from . import submissions
 from . import vmlogging
 from . import tempfileutil
+from . import callback
+
 from .courselist import CourseList
 
 logger = vmlogging.create_module_logger('submit')
@@ -190,6 +192,8 @@ def save_submission_in_storer(submission_filename, user, assignment,
         if os.path.exists(cur_sb):
             os.unlink(cur_sb)
         os.symlink(new_sb, cur_sb)
+
+    return sbcfg
 
 
 
@@ -385,8 +389,41 @@ def submit(submission_filename, assignment, user, course_id,
 
     check_valid_time(course_id, assignment, user,
                      upload_time_str, skip_toosoon_check, False)
-    save_submission_in_storer(submission_filename, user, assignment,
+    sbcfg = save_submission_in_storer(submission_filename, user, assignment,
                               course_id, upload_time_str)
+
+    if vmcfg.assignments().submit_only(assignment):
+        conf_vars = dict(sbcfg.items('Assignment'))
+
+        try:
+            t = callback.connect_to_host(conf_vars)
+        except Exception as e:
+            # this fails if HOME env var is not defined
+            # there's hack available
+            raise Exception("unable to connect to remote host %s" % (e))
+
+        try:
+            # prepare sftp connection
+            sftp = paramiko.SFTPClient.from_transport(t)
+            callback._setup_logging()
+
+            # create a dummy results grade.vmr
+            callback.sftp_mkdir_if_not_exits(sftp, conf_vars['resultsdest'])
+            cmdline = "/bin/echo TODO > '%s'" % \
+                    os.path.join(conf_vars['resultsdest'], 'grade.vmr')
+            callback.call_remote_program(t, cmdline)
+
+            # update results
+            cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
+                ' --user=' + conf_vars['user'] + ' --assignment=' + conf_vars['assignment']
+            callback.call_remote_program(t, cmdline)
+        except Exception as e:
+            logger.exception("exception while transfering the results: %s" % str(e))
+        finally:
+            t.close()
+
+        return
+
     storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
     if storage_type.lower() != "large":
         queue_for_testing(assignment, user, course_id)

@@ -180,6 +180,14 @@ Timeout = 120
 #       defines an amount of time (in seconds) to wait after tools are
 #       up, but before starting to run the tests.
 #
+# SubmitOnly = [yes|true|y|no]
+#
+#      Optional parameter.
+#
+#      Default is 'no'. If true, then this assignment is used only as a
+#      versioning system -- i.e. there is no testing involved, what is submited
+#      is saved in the storer.
+#
 # # These are only for Large assignments
 # AssignmentStorage = Large               # this is a MD5Submission.
 # AssignmentStoragePort = 22              # the ssh port to use
