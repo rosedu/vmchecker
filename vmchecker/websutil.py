@@ -20,6 +20,13 @@ except ImportError:
     import json
 
 
+# define ERROR_MESSAGES
+ERR_AUTH = 1
+ERR_EXCEPTION = 2
+ERR_OTHER = 3
+
+
+
 class OutputString():
     def __init__(self):
         self.st = ""
@@ -364,4 +371,58 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
 
 
     return "ok" # no problemo
+
+# Service method helpers
+def getUserUploadedMd5(req, courseId, assignmentId, username):
+    """Get the current MD5 sum submitted for a given username on a given assignment"""
+    req.content_type = 'text/html'
+    strout = OutputString()
+    try:
+        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+    md5_fpath = paths.submission_md5_file(submission_dir)
+
+    strout = OutputString()
+
+    md5_result = {}
+    try:
+        if os.path.exists(paths.submission_config_file(submission_dir)) and os.path.isfile(md5_fpath):
+            sss = submissions.Submissions(vmpaths)
+            upload_time_str = sss.get_upload_time_str(assignmentId, username)
+            md5_result['fileExists'] = True
+
+            with open(md5_fpath, 'r') as f:
+                md5_result['md5Sum'] = f.read(32)
+
+            md5_result['uploadTime'] = upload_time_str
+        else:
+            md5_result['fileExists'] = False
+
+        return json.dumps(md5_result)
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+def getUserStorageDirContents(req, courseId, assignmentId, username):
+    """Get the current files in the home directory on the storage host for a given username"""
+    req.content_type = 'text/html'
+    strout = OutputString()
+    try:
+        result = get_storagedir_contents(courseId, assignmentId, username)
+        return result
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
 
