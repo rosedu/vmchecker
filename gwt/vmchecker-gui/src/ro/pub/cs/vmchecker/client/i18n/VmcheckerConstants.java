@@ -8,7 +8,11 @@ public interface VmcheckerConstants extends Constants,
 				HeaderConstants, UploadConstants {
 
 	String serviceError();
+	String serviceErrorUrl();
+	String serviceErrorContent();
+	String serviceErrorStatusCode();
 	String unknownFormat();
+	String badServerStatusCode();
 	String popupCloseButton();
 
 	String statisticsTitle();

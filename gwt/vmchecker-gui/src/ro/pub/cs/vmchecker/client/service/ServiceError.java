@@ -23,6 +23,13 @@ public class ServiceError {
 		this.URL = URL;
 	}
 
+	public void serverError(int statusCode, String statusMessage, String text) {
+		eventBus.fireEvent(new ErrorDisplayEvent(constants.serviceError() + " " + constants.badServerStatusCode(),
+				"<b>" + constants.serviceErrorUrl() + "</b>: " + URL + "<br/>" +
+				"<b>" + constants.serviceErrorStatusCode() + "</b>: " + statusCode + " (" + statusMessage + ")<br/>" +
+				"<b>" + constants.serviceErrorContent() + "</b>:<br/>" + text));
+	}
+
 	public void parseError(String text) {
 		try {
 			ErrorResponseDecoder decoder = new ErrorResponseDecoder();
@@ -36,7 +43,7 @@ public class ServiceError {
 			GWT.log("[parseError()]", e);
 			/* unexpected format */
 			eventBus.fireEvent(new ErrorDisplayEvent(constants.serviceError() + " " + constants.unknownFormat(),
-					"<b>Service URL</b>: " + URL + "<br/><b>Content</b>:<br/>" + text));
+					"<b>" + constants.serviceErrorUrl() + "</b>: " + URL + "<br/><b>" + constants.serviceErrorContent() + "</b>:<br/>" + text));
 		}
 	}
 
