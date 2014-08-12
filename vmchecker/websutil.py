@@ -9,6 +9,7 @@ import ldap
 import time
 import paramiko
 import traceback
+import codecs
 
 from vmchecker import paths, update_db, penalty, submissions
 from vmchecker.courselist import CourseList
@@ -19,6 +20,8 @@ try:
 except ImportError:
     import json
 
+# .vmr files may be very large because of errors in the student's submission.
+MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
 
 # define ERROR_MESSAGES
 ERR_AUTH = 1
@@ -406,6 +409,66 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
             md5_result['fileExists'] = False
 
         return json.dumps(md5_result)
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+def getUserResultsHelper(req, courseId, assignmentId, username):
+    # assume that the session was already checked
+
+    strout = OutputString()
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+    r_path = paths.dir_submission_results(submission_dir)
+
+
+    strout = OutputString()
+    try:
+        result_files = []
+        if os.path.isdir(r_path):
+            update_db.update_grades(courseId, user=username, assignment=assignmentId)
+            for fname in os.listdir(r_path):
+                # skill all files not ending in '.vmr'
+                if not fname.endswith('.vmr'):
+                    continue
+                f_path = os.path.join(r_path, fname)
+                if os.path.isfile(f_path):
+                    overflow_msg = ''
+                    f_size = os.path.getsize(f_path)
+                    if f_size > MAX_VMR_FILE_SIZE:
+                        overflow_msg = '\n\n<b>File truncated! Actual size: ' + str(f_size) + ' bytes</b>\n'
+                    # decode as utf-8 and ignore any errors, because
+                    # characters will be badly encoded as json.
+                    with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        result_files.append({fname  : (f.read(MAX_VMR_FILE_SIZE) + overflow_msg) })
+
+
+
+        if len(result_files) == 0:
+            msg = "In the meantime have a fortune cookie: <blockquote>"
+            try:
+                process = subprocess.Popen('/usr/games/fortune',
+                                       shell=False,
+                                       stdout=subprocess.PIPE)
+                msg += process.communicate()[0] + "</blockquote>"
+            except:
+                msg += "Knock knock. Who's there? [Silence] </blockquote>"
+            result_files = [ {'fortune.vmr' :  msg } ]
+            result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
+        result_files.append({'late-submission.vmr' :
+                             submission_upload_info(courseId, username, assignmentId)})
+        result_files = sortResultFiles(result_files)
+        return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
