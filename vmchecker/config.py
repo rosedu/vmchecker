@@ -190,6 +190,13 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         val = val.strip().lower()
         return (val == 'yes') or (val == 'y') or (val == 'true')
 
+    def show_grades_before_deadline(self, assignment):
+        """This returns True, when we want to show the grades, in the general
+        view before the deadline. Default is 'no'.
+        """
+        val = self.getd(assignment, 'ShowGradesBeforeDeadline', 'no')
+        val = val.strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
 
     def delay_between_tools_and_tests(self, assignment):
         """After Vmware tools are loaded, there may be some time
