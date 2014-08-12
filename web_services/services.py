@@ -303,7 +303,6 @@ def getUserResults(req, courseId, assignmentId, username):
     s.save()
     return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
 
-
 ######### @ServiceMethod
 def getCourses(req):
     """ Returns a JSON object containing the list of available courses """

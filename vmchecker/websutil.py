@@ -187,29 +187,45 @@ def submission_upload_info(courseId, user, assignment):
     upload_time_str = sss.get_upload_time_str(assignment, user)
     upload_time_struct = sss.get_upload_time_struct(assignment, user)
 
-    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
+    # XXX hack, we should move this
+    language = 'ro'
+    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct, language)
 
     ret = ""
-    ret += "Data trimiterii temei : " + upload_time_str + "\n"
-    ret += "Deadline temă         : " + deadline_str    + "\n"
-    ret += deadline_explanation + "\n"
-    ret += "\n"
-    ret += "Depunctare întârziere : " + str(late_penalty) + "\n"
-    ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
-    ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
-    ret += "-----------------------\n"
-    ret += "Nota                  : " + str(total_points + ta_penalty + late_penalty) + "\n"
+
+    if language is 'ro':
+        ret += "Data trimiterii temei : " + upload_time_str + "\n"
+        ret += "Deadline temă         : " + deadline_str    + "\n"
+        ret += deadline_explanation + "\n"
+        ret += "\n"
+        ret += "Depunctare întârziere : " + str(late_penalty) + "\n"
+        ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
+        ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
+        ret += "-----------------------\n"
+        ret += "Nota                  : " + str(total_points + ta_penalty + late_penalty) + "\n"
+    else:
+        # another language
+        ret += "Submision date           : " + upload_time_str + "\n"
+        ret += "Assignment deadline      : " + deadline_str    + "\n"
+        ret += deadline_explanation + "\n"
+        ret += "\n"
+        ret += "Penalty (late submission): " + str(late_penalty) + "\n"
+        ret += "Penalty (grading)        : " + str(ta_penalty)   + "\n"
+        ret += "Penalty (total)          : " + str(ta_penalty + late_penalty) + "\n"
+        ret += "---------------------------\n"
+        ret += "Grade                    : " + str(total_points + ta_penalty + late_penalty) + "\n"
+
     ret += "\n"
 
     return ret
 
 
 
-def sortResultFiles(rfiles):
+def sortResultFiles(rfiles, language='ro'):
     """Sort the vector of result files and change keys with human
     readable descriptions"""
 
-    file_descriptions = [
+    file_descriptions_ro = [
         {'fortune.vmr'          : 'Rezultatele nu sunt încă disponibile'},
         {'grade.vmr'            : 'Nota și observații'},
         {'late-submission.vmr'  : 'Date și depunctări'},
@@ -221,8 +237,24 @@ def sortResultFiles(rfiles):
         {'run-km.vmr'           : 'Mesaje kernel (netconsole)'},
         {'queue-contents.vmr'   : 'Coada temelor ce urmează să fie testate'},
         ]
+    file_descriptions_en = [
+        {'fortune.vmr'          : 'Results not yet available'},
+        {'grade.vmr'            : 'Grade'},
+        {'late-submission.vmr'  : 'Penalty points'},
+        {'vmchecker-stderr.vmr' : 'Errors'},
+        {'build-stdout.vmr'     : 'Compilation (stdout)'},
+        {'build-stderr.vmr'     : 'Compilation (stderr)'},
+        {'run-stdout.vmr'       : 'Testing (stdout)'},
+        {'run-stderr.vmr'       : 'Testing (stderr)'},
+        {'run-km.vmr'           : 'Kernel messages(netconsole)'},
+        {'queue-contents.vmr'   : 'Testing queue'},
+        ]
+    file_descriptions = {
+            'ro' : file_descriptions_ro,
+            'en' : file_descriptions_en,
+            }
     ret = []
-    for f_des in file_descriptions:
+    for f_des in file_descriptions[language]:
         key = f_des.keys()[0] # there is only one key:value pair in each dict
         rfile = _find_file(key, rfiles)
         if rfile == None:
@@ -467,7 +499,7 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
         result_files.append({'late-submission.vmr' :
                              submission_upload_info(courseId, username, assignmentId)})
-        result_files = sortResultFiles(result_files)
+        result_files = sortResultFiles(result_files, 'en')
         return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)

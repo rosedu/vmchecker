@@ -119,23 +119,37 @@ def compute_penalty_weighted(upload_time, deadline):
     return compute_penalty(upload_time, deadline, 1, [1, 2, 3, 4, 0], 10)
 
 
-def verbose_time_difference(upload_time, deadline):
+def verbose_time_difference(upload_time, deadline, language='ro'):
     """Returns an intuitive human-readable representation of the
     difference between two dates"""
     interval = time.mktime(upload_time) - time.mktime(deadline)
 
     if interval < 0:
-        msg = 'Temă trimisă înainte de termenul limită cu'
+        if language is 'ro':
+            msg = 'Temă trimisă înainte de termenul limită cu'
+        else:
+            msg = 'The assignment was submitted before the deadline,\n\t'
+
         interval = - interval
     else:
-        msg = 'Temă trimisă după termenul limită cu'
+        if language is 'ro':
+            msg = 'Temă trimisă după termenul limită cu'
+        else:
+            msg = 'The was submitted after the deadline,\n\t'
 
     diff = datetime.timedelta(seconds = interval)
-    return msg + ' %d %s %d %s %d %s %d %s.' % (diff.days,
-                  ['zile', 'zi'][diff.days == 1], diff.seconds / 3600,
-                  ['ore', 'oră'][(diff.seconds / 3600) == 1], diff.seconds % 3600 / 60,
-                  ['minute', 'minut'][(diff.seconds % 3600 / 60) == 1], diff.seconds % 60,
-                  ['secunde', 'secundă'][(diff.seconds % 60) == 1])
+    if language is 'ro':
+        return msg + ' %d %s %d %s %d %s %d %s.' % (diff.days,
+                ['zile', 'zi'][diff.days == 1], diff.seconds / 3600,
+                ['ore', 'oră'][(diff.seconds / 3600) == 1], diff.seconds % 3600 / 60,
+                ['minute', 'minut'][(diff.seconds % 3600 / 60) == 1], diff.seconds % 60,
+                ['secunde', 'secundă'][(diff.seconds % 60) == 1])
+    else:
+        return msg + ' %d %s %d %s %d %s %d %s.' % (diff.days,
+                ['days', 'day'][diff.days == 1], diff.seconds / 3600,
+                ['hours', 'hour'][(diff.seconds / 3600) == 1], diff.seconds % 3600 / 60,
+                ['minutes', 'minute'][(diff.seconds % 3600 / 60) == 1], diff.seconds % 60,
+                ['seconds', 'second'][(diff.seconds % 60) == 1])
 
 
 def _test():
