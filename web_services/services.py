@@ -30,10 +30,6 @@ from vmchecker.config import CourseConfig
 from vmchecker import submit, config, websutil, update_db, paths, submissions
 from vmchecker.config import DATE_FORMAT
 
-# .vmr files may be very large because of errors in the student's submission.
-MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
-
-
 ########## @ServiceMethod
 def uploadedFile(req, courseId, assignmentId, tmpname):
     """ Saves a temp file of the uploaded archive and calls
@@ -263,6 +259,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
                        'dumpLog':strout.get()})
 
 
+
 ########## @ServiceMethod
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
@@ -287,7 +284,7 @@ def getResults(req, courseId, assignmentId):
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return getUserResults(req, courseId, assignmentId, username)
+    return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
 
 ########## @ServiceMethod
 def getUserResults(req, courseId, assignmentId, username):
@@ -304,63 +301,7 @@ def getUserResults(req, courseId, assignmentId, username):
 
     # Reset the timeout
     s.save()
-
-    strout = websutil.OutputString()
-    try:
-        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
-
-    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
-    r_path = paths.dir_submission_results(submission_dir)
-
-
-    strout = websutil.OutputString()
-    try:
-        result_files = []
-        if os.path.isdir(r_path):
-            update_db.update_grades(courseId, user=username, assignment=assignmentId)
-            for fname in os.listdir(r_path):
-                # skill all files not ending in '.vmr'
-                if not fname.endswith('.vmr'):
-                    continue
-                f_path = os.path.join(r_path, fname)
-                if os.path.isfile(f_path):
-                    overflow_msg = ''
-                    f_size = os.path.getsize(f_path)
-                    if f_size > MAX_VMR_FILE_SIZE:
-                        overflow_msg = '\n\n<b>File truncated! Actual size: ' + str(f_size) + ' bytes</b>\n'
-                    # decode as utf-8 and ignore any errors, because
-                    # characters will be badly encoded as json.
-                    with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        result_files.append({fname  : (f.read(MAX_VMR_FILE_SIZE) + overflow_msg) })
-
-
-
-        if len(result_files) == 0:
-            msg = "In the meantime have a fortune cookie: <blockquote>"
-            try:
-                process = subprocess.Popen('/usr/games/fortune',
-                                       shell=False,
-                                       stdout=subprocess.PIPE)
-                msg += process.communicate()[0] + "</blockquote>"
-            except:
-                msg += "Knock knock. Who's there? [Silence] </blockquote>"
-            result_files = [ {'fortune.vmr' :  msg } ]
-            result_files.append({'queue-contents.vmr' :  websutil.get_test_queue_contents(courseId) })
-        result_files.append({'late-submission.vmr' :
-                             websutil.submission_upload_info(courseId, username, assignmentId)})
-        result_files = websutil.sortResultFiles(result_files)
-        return json.dumps(result_files)
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
+    return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
 
 
 ######### @ServiceMethod
