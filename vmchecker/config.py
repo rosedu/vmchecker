@@ -181,6 +181,15 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         val = val.strip().lower()
         return (val == 'yes') or (val == 'y') or (val == 'true')
 
+    def submit_only(self, assignment):
+        """This returns True, when there are no tests defined for this assignment.
+        This is useful when we want to use VMChecker only as a submission
+        system. Default is 'no.
+        """
+        val = self.getd(assignment, 'SubmitOnly', 'no')
+        val = val.strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
+
 
     def delay_between_tools_and_tests(self, assignment):
         """After Vmware tools are loaded, there may be some time
