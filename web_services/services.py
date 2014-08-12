@@ -33,12 +33,6 @@ from vmchecker.config import DATE_FORMAT
 # .vmr files may be very large because of errors in the student's submission.
 MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
 
-# define ERROR_MESSAGES
-ERR_AUTH = 1
-ERR_EXCEPTION = 2 
-ERR_OTHER = 3
-
-
 
 ########## @ServiceMethod
 def uploadedFile(req, courseId, assignmentId, tmpname):
@@ -51,7 +45,7 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
 
@@ -61,7 +55,7 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})     
     
@@ -77,12 +71,12 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
         update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"Tema trimisa prea curand",
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})
     
@@ -100,7 +94,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
 
@@ -110,7 +104,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})  	
 	
@@ -118,7 +112,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     s.save()
 
     if archiveFile.filename == None:
-        return  json.dumps({'errorType':ERR_OTHER,
+        return  json.dumps({'errorType':websutil.ERR_OTHER,
                     'errorMessage':"File not uploaded.",
                     'errorTrace':""})
 
@@ -140,12 +134,12 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
         update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"Tema trimisa prea curand",
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})
 	
@@ -164,7 +158,7 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                            'errorMessage':"",
                            'errorTrace':""})
 
@@ -174,7 +168,7 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
                            'errorMessage':"",
                            'errorTrace':strout.get()})
 
@@ -196,13 +190,13 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
         update_db.update_grades(courseId, user=username, assignment=assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
                            'errorMessage':"Tema trimisa prea curand",
                            'errorTrace':strout.get()})
 
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
                            'errorMessage':"",
                            'errorTrace':strout.get()})
 
@@ -222,7 +216,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
 
@@ -232,7 +226,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})
 
@@ -252,13 +246,13 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
         submit.evaluate_large_submission(archiveFileName, assignmentId, username, courseId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"Tema trimisa prea curand",
             'errorTrace':strout.get()})
 
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})
 
@@ -277,7 +271,7 @@ def getResults(req, courseId, assignmentId):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
 
@@ -288,25 +282,35 @@ def getResults(req, courseId, assignmentId):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
     return getUserResults(req, courseId, assignmentId, username)
 
-
-
-
+########## @ServiceMethod
 def getUserResults(req, courseId, assignmentId, username):
     """Get the results for a given username"""
     req.content_type = 'text/html'
+
+    # Check permission
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':websutil.ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    # Reset the timeout
+    s.save()
+
     strout = websutil.OutputString()
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
@@ -367,7 +371,7 @@ def getCourses(req):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
 		
@@ -386,7 +390,7 @@ def getCourses(req):
                                'title' : course_title})
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
              'errorMessage':"",
              'errorTrace':strout.get()})  	
 				
@@ -401,7 +405,7 @@ def getAssignments(req, courseId):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"Session is new",
                 'errorTrace':""})
 
@@ -412,7 +416,7 @@ def getAssignments(req, courseId):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "Unable to load session",
                            'errorTrace' : strout.get()})
     # Reset the timeout
@@ -422,7 +426,7 @@ def getAssignments(req, courseId):
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"Unable to load course config",
             'errorTrace':strout.get()})
 
@@ -453,7 +457,7 @@ def getUploadedMd5(req, courseId, assignmentId):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
 
@@ -464,53 +468,12 @@ def getUploadedMd5(req, courseId, assignmentId):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return getUserUploadedMd5(req, courseId, assignmentId, username)
-
-
-
-def getUserUploadedMd5(req, courseId, assignmentId, username):
-    """Get the current MD5 sum submitted for a given username on a given assignment"""
-    req.content_type = 'text/html'
-    strout = websutil.OutputString()
-    try:
-        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
-
-    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
-    md5_fpath = paths.submission_md5_file(submission_dir)
-
-    strout = websutil.OutputString()
-
-    md5_result = {}
-    try:
-        if os.path.exists(paths.submission_config_file(submission_dir)) and os.path.isfile(md5_fpath):
-            sss = submissions.Submissions(vmpaths)
-            upload_time_str = sss.get_upload_time_str(assignmentId, username)
-            md5_result['fileExists'] = True
-
-            with open(md5_fpath, 'r') as f:
-                md5_result['md5Sum'] = f.read(32)
-
-            md5_result['uploadTime'] = upload_time_str
-        else:
-            md5_result['fileExists'] = False
-
-        return json.dumps(md5_result)
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
+    return websutil.getUserUploadedMd5(req, courseId, assignmentId, username)
 
 
 ######### @ServiceMethod
@@ -522,7 +485,7 @@ def getStorageDirContents(req, courseId, assignmentId):
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
-        return json.dumps({'errorType':ERR_AUTH,
+        return json.dumps({'errorType':websutil.ERR_AUTH,
                            'errorMessage':"",
                            'errorTrace':""})
 
@@ -533,32 +496,30 @@ def getStorageDirContents(req, courseId, assignmentId):
         username = s['username']
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return getUserStorageDirContents(req, courseId, assignmentId, username)
+    return websutil.getUserStorageDirContents(req, courseId, assignmentId, username)
 
 
-
-def getUserStorageDirContents(req, courseId, assignmentId, username):
-    """Get the current files in the home directory on the storage host for a given username"""
-    req.content_type = 'text/html'
-    strout = websutil.OutputString()
-    try:
-        result = websutil.get_storagedir_contents(courseId, assignmentId, username)
-        return result
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
-
-
+######### @ServiceMethod
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'
+
+    # Check permission
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':websutil.ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    # Reset the timeout
+    s.save()
+
     try:
         # XXX: DON'T DO THIS: performance degrades very much!
         #update_db.update_grades(courseId)
@@ -597,14 +558,29 @@ def getAllGrades(req, courseId):
     except:
         strout = websutil.OutputString()
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
 
-
 ######### @ServiceMethod
 def login(req, username, password):
+
+    #### BIG FAT WARNING: ####
+    # If you ever try to use Vmchecker on a UserDir-type environment
+    # (i.e., ~/public_html), **DON'T**.
+    # It appears that mod_python tries to set a cookie with the path
+    # determined by DocumentRoot. This means that the path itself
+    # gets mangled and the browser doesn't send the cookie back.
+    #
+    # This results in the app never logging in, simply coming back
+    # to the login screen.
+    #
+    # If you have access to the browser config, you can try and
+    # manually set 'ApplicationPath' to '/' in order to circumvent
+    # this.
+    #### / BIG FAT WARNING ####
+
     req.content_type = 'text/html'
     # don't permit brute force password guessing:
     time.sleep(1)
@@ -620,7 +596,7 @@ def login(req, username, password):
         user = websutil.get_user(username, password)
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':ERR_EXCEPTION,
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"",
             'errorTrace':strout.get()})  	
 

@@ -34,30 +34,21 @@ public class HeaderPresenter implements Presenter {
 	
 	private HashMap<String, Integer> idToIndex = new HashMap<String, Integer>();
 	private ArrayList<String> coursesIds = new ArrayList<String>(); 
-	private String statusDetails = ""; 
 	
 	public interface HeaderWidget {
-		HasText getStatusLabel();
 		HasText getUsernameLabel(); 
-		HasClickHandlers getStatusDetailsButton();
-		void setStatusVisible(boolean visible);
-		void setStatusDetailsButtonVisible(boolean visible);
-		void showStatusDetails(String details); 
 		HasClickHandlers getLogoutButton();
 		HasChangeHandlers getCoursesList(); 
 		void addCourse(String name, String id);
 		void clearCourses();
 		void selectCourse(int courseIndex);
 		int getSelectedCourseIndex();
-		void setStatusType(StatusChangedEvent.StatusType type);
 	}
 	
 	public HeaderPresenter(HandlerManager eventBus, HTTPService service, HeaderWidget widget) {
 		this.eventBus = eventBus; 
 		this.service = service; 
 		bindWidget(widget);
-		listenStatusChange();
-		listenStatusDetails(); 
 	}
 	
 	public void setCourses(ArrayList<Course> courses) {
@@ -103,42 +94,6 @@ public class HeaderPresenter implements Presenter {
 				performLogout(); 
 			}
 			
-		}); 
-	}
-	
-	private void listenStatusDetails() {
-		widget.getStatusDetailsButton().addClickHandler(new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				widget.showStatusDetails(statusDetails); 
-			}
-			
-		}); 
-	}
-	
-	private void displayError(ErrorDisplayEvent event) {
-		widget.setStatusType(event.getType());
-		widget.getStatusLabel().setText(event.getText());
-		statusDetails = event.getDetails(); 
-		widget.setStatusDetailsButtonVisible(true); 
-		widget.setStatusVisible(true); 		
-	}
-	
-	private void listenStatusChange() {
-		this.eventBus.addHandler(StatusChangedEvent.TYPE, new StatusChangedEventHandler() {
-			public void onChange(StatusChangedEvent event) {
-				if (event.getType() == StatusChangedEvent.StatusType.RESET) {
-					widget.setStatusVisible(false); 
-				} else if (event instanceof ErrorDisplayEvent){
-					displayError((ErrorDisplayEvent)event); 
-				} else {
-					widget.getStatusLabel().setText(event.getText());
-					widget.setStatusType(event.getType()); 
-					widget.setStatusDetailsButtonVisible(false); 
-					widget.setStatusVisible(true);
-				}
-			}
 		}); 
 	}
 	

@@ -12,11 +12,13 @@ import ro.pub.cs.vmchecker.client.event.CourseSelectedEventHandler;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
+import ro.pub.cs.vmchecker.client.presenter.StatusPresenter;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
 import ro.pub.cs.vmchecker.client.presenter.LoginPresenter;
 import ro.pub.cs.vmchecker.client.presenter.Presenter;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.ui.AssignmentWidget;
+import ro.pub.cs.vmchecker.client.ui.StatusWidget;
 import ro.pub.cs.vmchecker.client.ui.HeaderWidget;
 import ro.pub.cs.vmchecker.client.ui.LoginWidget;
 
@@ -42,6 +44,7 @@ public class AppController implements HistoryListener {
 	private Presenter mainPresenter = null; 
 	private HeaderPresenter headerPresenter = null; 
 	private LoginPresenter loginPresenter = null; 
+	private StatusPresenter statusPresenter = null;
 	
 	private ArrayList<Course> courses; 
 	private HashSet<String> coursesTags;
@@ -82,19 +85,33 @@ public class AppController implements HistoryListener {
 	
 	public void go(final HasWidgets container) {
 		this.container = container;
+		/* initialize status presenter */
+		statusPresenter = new StatusPresenter(eventBus, service, 
+					new StatusWidget());
+		/*
+		 * Assume user's already logged in. If that's not the case,
+		 * the HTTPService will return an Authenthication Error
+		 * prompting the login page.
+		 */
 		displayContent(); 
+	}
+
+	private void clearContainer() {
+		/* The status bar should be present even after clearing the container. */
+		container.clear();
+		statusPresenter.go(container);
 	}
 	
 	private void displayLogin() {
 		loginPresenter = new LoginPresenter(eventBus, service, new LoginWidget());
-		container.clear();
+		clearContainer();
 		History.newItem("", false); 
 		loginPresenter.go(container); 
 	}
 	
 	private void displayContent() {
 		GWT.log("[displayContent()] entering in function", null); 
-		container.clear(); 
+		clearContainer();
 		service.getCourses(new AsyncCallback<Course[]>() {
 
 			@Override

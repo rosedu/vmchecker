@@ -66,18 +66,24 @@ public class Delegate<T> {
 			}
 
 			public void onResponseReceived(Request request, Response response) {
+				ServiceError se = new ServiceError(eventBus, url);
+
+				if (response.getStatusCode() != Response.SC_OK) {
+					GWT.log("Wrong response returned by server.", null);
+					se.serverError(response.getStatusCode(), response.getStatusText(), response.getText());
+					return;
+				}
+
 				try {
 					T result = decoder.decode(response.getText());
 					if (result != null) {
 						callback.onSuccess(result);
 					} else {
 						GWT.log("Null result from Decoder: ", new NullPointerException());
-						ServiceError se = new ServiceError(eventBus, url);
 						se.parseError(response.getText());
 					}
 				} catch (Exception e) {
-					GWT.log("Decoder did not parse correctly", e);
-					ServiceError se = new ServiceError(eventBus, url);
+					GWT.log("Decoder could not parse response.", e);
 					se.parseError(response.getText());
 				}
 			}

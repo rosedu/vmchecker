@@ -1,0 +1,61 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+			 xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+	<ui:style type='ro.pub.cs.vmchecker.client.ui.StatusWidget.StatusStyle'>
+		.statusPanel {
+			top: 15px;
+			left: 50%;
+			height: 16px;
+			position: absolute;
+			font-family: Verdana, Arial, sans serif;
+			font-size: 12px;
+			padding: 5px 2px 5px 2px;
+		}
+
+		.statusPanel a, .statusPanel a:hover, .statusPanel a:visited {
+			color: white;
+			text-decoration: underline;
+			font-size: 11px;
+			cursor: pointer;
+		}
+
+		.statusLabel {
+			display: inline;
+			font-weight: bold;
+			padding: 2px;
+			margin-top: 3px;
+		}
+
+		.statusDetail {
+			padding-left: 5px;
+		}
+
+		.info {
+			background-color: #E2E2E2;
+			color: #000;
+		}
+
+		.error {
+			background-color: #9B0000;
+			color: #FFF;
+		}
+
+		.success {
+			background-color: #7CBB6C;
+			color: #FFF;
+		}
+
+		.action {
+			background-color: #FFCC66;
+		}
+
+		.clear {
+			clear: both;
+		}
+
+	</ui:style>
+	<g:FlowPanel ui:field="statusPanel" styleName="{style.statusPanel}">
+		<g:Label ui:field="statusLabel" styleName="{style.statusLabel}"></g:Label>
+		<g:Anchor ui:field="statusDetailButton" styleName="{style.statusDetail}">detalii</g:Anchor>
+	</g:FlowPanel>
+</ui:UiBinder>
