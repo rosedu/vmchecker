@@ -504,7 +504,7 @@ def getStorageDirContents(req, courseId, assignmentId):
     return websutil.getUserStorageDirContents(req, courseId, assignmentId, username)
 
 
-
+######### @ServiceMethod
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
     req.content_type = 'text/html'
@@ -563,9 +563,24 @@ def getAllGrades(req, courseId):
                            'errorTrace' : strout.get()})
 
 
-
 ######### @ServiceMethod
 def login(req, username, password):
+
+    #### BIG FAT WARNING: ####
+    # If you ever try to use Vmchecker on a UserDir-type environment
+    # (i.e., ~/public_html), **DON'T**.
+    # It appears that mod_python tries to set a cookie with the path
+    # determined by DocumentRoot. This means that the path itself
+    # gets mangled and the browser doesn't send the cookie back.
+    #
+    # This results in the app never logging in, simply coming back
+    # to the login screen.
+    #
+    # If you have access to the browser config, you can try and
+    # manually set 'ApplicationPath' to '/' in order to circumvent
+    # this.
+    #### / BIG FAT WARNING ####
+
     req.content_type = 'text/html'
     # don't permit brute force password guessing:
     time.sleep(1)
