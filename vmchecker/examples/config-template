@@ -188,6 +188,15 @@ Timeout = 120
 #      versioning system -- i.e. there is no testing involved, what is submited
 #      is saved in the storer.
 #
+# ShowGradesBeforeDeadline = [yes|true|y|no]
+#
+#      Optional parameter.
+#
+#      Default is 'no'. If true, then the grades are showed (in the general
+#      view) before the deadline is reached. Meaning that all the students
+#      (even the ones that are not registered), can view other's grades.
+#
+#
 # # These are only for Large assignments
 # AssignmentStorage = Large               # this is a MD5Submission.
 # AssignmentStoragePort = 22              # the ssh port to use

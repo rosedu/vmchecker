@@ -541,9 +541,11 @@ def getAllGrades(req, courseId):
                 'AND assignments.id = grades.assignment_id')
             for row in db_cursor:
                 user, assignment, grade = row
-                deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
-                deadtime = time.mktime(deadline)
-                if time.time() < deadtime: continue
+                if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                    deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                    deadtime = time.mktime(deadline)
+                    if time.time() < deadtime:
+                        continue
                 grades.setdefault(user, {})[assignment] = grade
             db_cursor.close()
         finally:
