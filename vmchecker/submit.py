@@ -393,35 +393,21 @@ def submit(submission_filename, assignment, user, course_id,
                               course_id, upload_time_str)
 
     if vmcfg.assignments().submit_only(assignment):
+        # XXX this assumes that the storer machine and the vmchecker machine
+        # are the same. There's no way to connect to storer machines. This
+        # process runs as www-data.
         conf_vars = dict(sbcfg.items('Assignment'))
 
         try:
-            t = callback.connect_to_host(conf_vars)
-        except Exception as e:
-            # this fails if HOME env var is not defined
-            # there's hack available
-            raise Exception("unable to connect to remote host %s" % (e))
-
-        try:
-            # prepare sftp connection
-            sftp = paramiko.SFTPClient.from_transport(t)
-            callback._setup_logging()
+            # create dir
+            os.makedirs(conf_vars['resultsdest'])
 
             # create a dummy results grade.vmr
-            callback.sftp_mkdir_if_not_exits(sftp, conf_vars['resultsdest'])
-            cmdline = "/bin/echo TODO > '%s'" % \
-                    os.path.join(conf_vars['resultsdest'], 'grade.vmr')
-            callback.call_remote_program(t, cmdline)
-
-            # update results
-            cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
-                ' --user=' + conf_vars['user'] + ' --assignment=' + conf_vars['assignment']
-            callback.call_remote_program(t, cmdline)
+            with open(os.path.join(conf_vars['resultsdest'], 'grade.vmr'), 'wt') as f:
+                f.write("TODO\n")
         except Exception as e:
-            logger.exception("exception while transfering the results: %s" % str(e))
-        finally:
-            t.close()
-
+            logger.error("Failed to save assignment: %s" % (str(e)))
+            raise
         return
 
     storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
