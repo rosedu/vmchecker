@@ -68,7 +68,7 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"Tema trimisa prea curand",
+            'errorMessage':"Sent too fast",
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
@@ -131,7 +131,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"Tema trimisa prea curand",
+            'errorMessage':"The assignment was submitted too soon",
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
@@ -187,7 +187,7 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-                           'errorMessage':"Tema trimisa prea curand",
+                           'errorMessage':"The assignment was submitted too soon",
                            'errorTrace':strout.get()})
 
     except:
@@ -243,7 +243,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"Tema trimisa prea curand",
+            'errorMessage':"The assignment was submitted too soon",
             'errorTrace':strout.get()})
 
     except:
