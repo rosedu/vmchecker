@@ -36,6 +36,11 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
 
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+    # TODO a better check is needed for tmpname
+    websutil.sanityCheckDotDot(tmpname)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -85,6 +90,9 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
 	
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -149,6 +157,9 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
 
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -207,6 +218,11 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
 
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+    # TODO archiveFileName
+    websutil.sanityCheckDotDot(archiveFileName)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -263,6 +279,9 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
 ########## @ServiceMethod
 def getResults(req, courseId, assignmentId):
     """ Returns the result for the current user"""
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -289,6 +308,11 @@ def getResults(req, courseId, assignmentId):
 ########## @ServiceMethod
 def getUserResults(req, courseId, assignmentId, username):
     """Get the results for a given username"""
+
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+    websutil.sanityCheckUsername(username)
+
     req.content_type = 'text/html'
 
     # Check permission
@@ -341,6 +365,8 @@ def getCourses(req):
 def getAssignments(req, courseId): 
     """ Returns the list of assignments for a given course """
 
+    websutil.sanityCheckCourseId(courseId)
+
     req.content_type = 'text/html'
     s = Session.Session(req)
     if s.is_new():
@@ -392,6 +418,9 @@ def getAssignments(req, courseId):
 def getUploadedMd5(req, courseId, assignmentId):
     """ Returns the md5 file for the current user"""
 
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -420,6 +449,9 @@ def getUploadedMd5(req, courseId, assignmentId):
 def getStorageDirContents(req, courseId, assignmentId):
     """ Returns the file list from the storage host for the current user"""
 
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+
     # Check permission
     req.content_type = 'text/html'
     s = Session.Session(req)
@@ -447,6 +479,9 @@ def getStorageDirContents(req, courseId, assignmentId):
 ######### @ServiceMethod
 def getAllGrades(req, courseId):
     """Returns a table with all the grades of all students for a given course"""
+
+    websutil.sanityCheckCourseId(courseId)
+
     req.content_type = 'text/html'
 
     # Check permission
@@ -508,6 +543,7 @@ def getAllGrades(req, courseId):
 ######### @ServiceMethod
 def login(req, username, password):
 
+
     #### BIG FAT WARNING: ####
     # If you ever try to use Vmchecker on a UserDir-type environment
     # (i.e., ~/public_html), **DON'T**.
@@ -527,6 +563,8 @@ def login(req, username, password):
     # don't permit brute force password guessing:
     time.sleep(1)
     s = Session.Session(req)
+
+    websutil.sanityCheckUsername(username)
 
     if not s.is_new():
 	#TODO take the username from session
@@ -557,6 +595,9 @@ def autologin(req, username):
     req.content_type = 'text/html'
     # don't permit brute force password guessing:
     time.sleep(1)
+
+    websutil.sanityCheckUsername(username)
+
     s = Session.Session(req)
 
     if not s.is_new():

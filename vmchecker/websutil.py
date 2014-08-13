@@ -521,3 +521,33 @@ def getUserStorageDirContents(req, courseId, assignmentId, username):
                            'errorTrace' : strout.get()})
 
 
+class InvalidDataException(Exception):
+    pass
+
+import re
+
+courseIdRegex = re.compile('^[a-zA-Z]+$')
+def sanityCheckCourseId(courseId):
+    if courseIdRegex.match(courseId) is None:
+        raise InvalidDataException
+    return courseId
+
+assignmentIdRegex = re.compile('^[0-9a-zA-Z-_]+$')
+def sanityCheckAssignmentId(assignmentId):
+    if assignmentIdRegex.match(assignmentId) is None:
+        raise InvalidDataException
+    return assignmentId
+
+
+dotdotRegexp = re.compile('\.\.')
+def sanityCheckDotDot(param):
+    if len(dotdotRegexp.findall(param)) != 0:
+        raise InvalidDataException
+    return param
+
+usernameRegexWhiteList = re.compile('^[a-zA-Z0-9-_.]+$')
+def sanityCheckUsername(username):
+    if usernameRegexWhiteList.match(username) is None:
+        raise InvalidDataException
+    sanityCheckDotDot(username)
+    return username
