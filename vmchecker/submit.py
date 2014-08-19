@@ -319,9 +319,8 @@ def queue_for_testing(assignment, user, course_id):
     bundle_path = create_testing_bundle(user, assignment, course_id)
     try:
         ssh_bundle(bundle_path, vmcfg, assignment)
-    except Exception as e:
-        pass # Avoid exception for dev environment without testers
-    os.remove(bundle_path)
+    finally:
+        os.remove(bundle_path)
 
 
 
