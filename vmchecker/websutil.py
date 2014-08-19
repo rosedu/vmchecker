@@ -276,6 +276,7 @@ def get_test_queue_contents(courseId):
         for tester_id in tstcfg:
             # connect to the tester
             client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             try:
                 client.load_system_host_keys(vmcfg.known_hosts_file())
                 client.connect(tstcfg.hostname(tester_id),
