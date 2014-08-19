@@ -460,3 +460,16 @@ class VmwareMachineConfig(object):
            Default is vmware """
         vmtype = self.config.get(self.machine_id, 'Type', default='vmware')
         return vmtype
+
+class OneMachineConfig(VmwareMachineConfig):
+    def get_one_credentials(self):
+        return self.config.get(self.machine_id, 'OneCredentials', None)
+
+    def get_one_server(self):
+        return self.config.get(self.machine_id, 'OneServer', None)
+
+    def get_one_vm_hostname(self):
+        return self.config.get(self.machine_id, 'OneVMHostName', None)
+
+    def get_one_vm_id(self):
+        return self.config.get(self.machine_id, 'OneVMID', None)

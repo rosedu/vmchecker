@@ -37,6 +37,11 @@ try:
     from vmchecker.vmware_executor import VmWareVM, VmWareHost
 except:
     _logger.error("Could not load VMware executor")
+try:
+    from vmchecker.one_executor import OneVM, OneHost
+except:
+    _logger.error("Could not load OpenNebula executor")
+    raise
 
 
 class GenericHost():
@@ -68,6 +73,8 @@ class GenericHost():
             host = VmWareHost()
         if machinecfg.get_type()=='kvm':
             host = kvmHost()
+        if machinecfg.get_type() == 'open-nebula':
+            host = OneHost()
         vm = host.getVM(bundle_dir, vmcfg, assignment)
         vm.test_submission()
 
