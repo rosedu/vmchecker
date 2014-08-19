@@ -152,7 +152,8 @@ class OneVM(VM):
 
     def _create_sftp_connection_to_vm(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.one_vm_hostname, 22))
+        ip = socket.gethostbyname(self.one_vm_hostname)
+        sock.connect((ip, 22))
         t = paramiko.Transport(sock)
         try:
             t.start_client()
