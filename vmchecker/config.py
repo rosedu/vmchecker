@@ -48,6 +48,13 @@ class CourseConfig:
         """Get the root path for this course"""
         return self.config.get('vmchecker', 'root')
 
+    def root_path_queue_manager(self):
+        """Get the root path for the queue for this course (if any)"""
+        try:
+            return self.config.get('vmchecker', 'root_queue')
+        except ConfigParser.NoOptionError:
+            return self.root_path()
+
     def storer_username(self):
         """The username to use when logging in with ssh to the storer machine"""
         return self.config.get('storer', 'username')
