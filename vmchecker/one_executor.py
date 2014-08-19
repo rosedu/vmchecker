@@ -74,7 +74,11 @@ class OneVM(VM):
         client = self._create_ssh_connection()
 
         try:
-            client.exec_command(cmd)
+            # this doesn't waits for the commands (I think)
+            stdin, stdout, stderr = client.exec_command(cmd)
+            stdin.close()
+            stdout.close()
+            stderr.close()
         finally:
             client.close()
 
@@ -119,7 +123,20 @@ class OneVM(VM):
 
         cmd = shell+' '+executable_file+' '+str(timeout)
 
-        self.executeCommand(cmd)
+        client = self._create_ssh_connection()
+        try:
+            stdin, stdout, stderr = client.exec_command(cmd)
+
+            while timeout > 0 and not stdout.channel.exit_status_ready():
+                time.sleep(1)
+                timeout -= 1
+                _logger.debug('wait for cmd to finish: [%s]' % cmd)
+
+            stdin.close()
+            stdout.close()
+            stderr.close()
+        finally:
+            client.close()
 
     def _create_ssh_connection(self):
         client = paramiko.SSHClient()
