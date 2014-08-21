@@ -57,6 +57,7 @@ if (Meteor.isClient) {
   });
 
   Meteor.startup(function() {
+    Notifications.emit('start');
     //var editor = ace.editor("editor");
   });
 
