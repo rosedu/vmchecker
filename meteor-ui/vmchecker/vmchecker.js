@@ -6,6 +6,8 @@ var Grades = new Meteor.Collection("grades");
 var Results = new Meteor.Collection("results");
 var Files = new Meteor.Collection("files");
 
+var Notifications = new Meteor.Stream('notifications');
+
 // Restricts creating accounts on the client
 Accounts.config({
   forbidClientAccountCreation: true
@@ -18,8 +20,44 @@ var Repo = new FS.Collection("repo", {
 
 if (Meteor.isClient) {
 
+  var NotificationCollection = new Meteor.Collection(null);
+  var CurrentTree = "";
+
+  Notifications.on( 'message', function(message, path) {
+    var editor = ace.edit("editor");
+    editor.setReadOnly(false);
+    editor.setValue(message);
+    editor.setReadOnly(true);
+    NotificationCollection.upsert(
+    {path:path},
+    {
+      message: message,
+      path: path
+    });
+  });
+
+  Notifications.on( 'filetree', function(serial_tree) {
+    $('#jstree_demo_div').jstree("destroy");
+    $('#jstree_demo_div').jstree({ 'core' : {
+    'data' : JSON.parse(serial_tree)
+    } });
+    $('#jstree_demo_div').on('select_node.jstree', function(e,object) {
+      console.log(object.node.id);
+      var found = NotificationCollection.findOne({path:object.node.id});
+      if (found) {
+        console.log("found");
+        var editor = ace.edit("editor");
+        editor.setReadOnly(false);
+        editor.setValue(found.message);
+        editor.setReadOnly(true);
+      } else {
+        Notifications.emit('getfile', object.node.id);
+      }
+    });
+  });
+
   Meteor.startup(function() {
-    var editor = ace.editor("editor");
+    //var editor = ace.editor("editor");
   });
 
   // subscribing to databases
@@ -277,6 +315,27 @@ function readRepo() {
   }
 }
 
+var folder_path = '/tmp';
+
+function readDir(dirpath) {
+  var fs = Meteor.require('fs');
+  var path = Meteor.require('path');
+
+  var allFiles = [dirpath];
+
+  try {
+    var files = fs.readdirSync(dirpath);
+  } catch (e) {
+    return allFiles;
+  }
+
+  for (var i=0; i<files.length; i++) {
+    var newpath = path.join(dirpath, files[i]);
+    var res = readDir(newpath);
+    allFiles = allFiles.concat(res);
+  }
+  return allFiles;
+}
 
 if (Meteor.isServer) {
 
@@ -349,6 +408,44 @@ if (Meteor.isServer) {
     // });
     Meteor.publish("results", function() {
       return Results.find({});
+    });
+
+    fs = Meteor.require('fs');
+    var path = Meteor.require('path');
+
+    var fileList = readDir('/tmp');
+
+    var tree = [];
+    for (var i=0;i<fileList.length;i++) {
+      var file_path = fileList[i];
+      var file_dir = path.dirname(file_path);
+      if (file_dir == "/")
+        file_dir = "#";
+      var file_name = path.basename(file_path);
+      tree.push({"id":file_path, "parent":file_dir, "text":file_name, state: {"opened": true}});
+    }
+
+    //allow any connected client to listen on the stream
+    Notifications.permissions.read(function(userId, eventName) {
+      return true;
+    });
+
+    Notifications.permissions.write(function(userId, eventName) {
+      return true;
+    });
+
+    Notifications.on('start', function() {
+      Notifications.emit('filetree', JSON.stringify(tree));
+    });
+
+    Notifications.on('getfile', function(filename) {
+      fs.readFile(filename, function (err, data) {
+        if (err) {
+          console.log(err)
+          return;
+        }
+        Notifications.emit('message', data.toString(), filename);
+      });
     });
 
     /// ===>>> SERVER METHODS

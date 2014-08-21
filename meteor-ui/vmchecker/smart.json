@@ -10,6 +10,7 @@
     },
     "cfs-ui": {},
     "reactive-ace": {},
-    "fast-render": {}
+    "fast-render": {},
+    "streams": {}
   }
 }

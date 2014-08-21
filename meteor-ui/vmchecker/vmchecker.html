@@ -3,9 +3,15 @@
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
   <title>vmchecker</title>
 
+  <link rel="stylesheet" href="dist/themes/default/style.min.css" />
+
   <script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
   <!-- viewport meta to reset iPhone inital scale -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Jstree -->
+  <script src="dist/libs/jquery.js"></script>
+  <script src="dist/jstree.min.js"></script>
 
   <!-- css3-mediaqueries.js for IE8 or older -->
   <!--[if lt IE 9]>
@@ -39,6 +45,7 @@
           {{> assignments}}
           {{> assignmentInfo}}
           {{> fileList }}
+          {{> tree}}
       {{else}}
         {{> login}}
       {{/if}}
@@ -48,8 +55,6 @@
     <div id="content">
       {{#if currentUser}}
         {{> editor}}
-        {{> grades }} <br/>
-        {{> result }}
       {{else}}
         {{> description }}
       {{/if}}
@@ -74,6 +79,19 @@
 </script>
 </body>
 
+<template name='tree'>
+  <div class='container'>
+    <hr/>
+    <button id='clear-messages' class='btn btn-small btn-danger'>Clear Messages</button><br><br>
+    <div id="jstree_demo_div">
+        <ul>
+            <li>Root node 1</li>
+            <li>Root node 2</li>
+        </ul>
+    </div>
+  </div>
+</template>
+
 <template name="logo">
   <div align="left"><img src="/vmchecker_logo_ui.png"/> </div>
 </template>
@@ -96,9 +114,13 @@
 <template name="editor">
   <div id="editor">
 int main() {
-  printf("Welcome to VMchecker!");
+  printf("Welcome to VMchecker!\n");
+  printf("The place where you do fun things!");
+  printf(" Like Homework and stuff!\n");
   return 0;
 }
+
+
   </div>
 </template>
 
