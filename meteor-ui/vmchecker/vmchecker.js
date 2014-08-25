@@ -38,6 +38,7 @@ if (Meteor.isClient) {
 
   Notifications.on( 'filetree', function(serial_tree) {
     $('#jstree_demo_div').jstree("destroy");
+    console.log(JSON.parse(serial_tree));
     $('#jstree_demo_div').jstree({ 'core' : {
     'data' : JSON.parse(serial_tree)
     } });
@@ -316,32 +317,55 @@ function readRepo() {
   }
 }
 
-var folder_path = '/tmp';
+//var folder_path = '/home/vmchecker/vmchecker';
 
 function readDir(dirpath) {
   var fs = Meteor.require('fs');
   var path = Meteor.require('path');
-
   var allFiles = [dirpath];
-
   try {
     var files = fs.readdirSync(dirpath);
   } catch (e) {
+    console.log(e);
     return allFiles;
   }
-
   for (var i=0; i<files.length; i++) {
     var newpath = path.join(dirpath, files[i]);
     var res = readDir(newpath);
     allFiles = allFiles.concat(res);
   }
+  console.log("--- Files Lenght: " + files.length);
   return allFiles;
+}
+
+function GetFileTree( node_path ) {
+  fs = Meteor.require('fs');
+  var path = Meteor.require('path');
+
+  //console.log("PATH: " + path.toString())
+  var fileList = readDir(node_path);
+  //console.log(fileList);
+
+  var tree = [];
+  console.log("Lenght = " + fileList.length);
+  for (var i=0;i<fileList.length;i++) {
+    var file_path = fileList[i];
+    var file_dir = path.dirname(file_path);
+    if (file_dir == "/")
+      file_dir = "#";
+    var file_name = path.basename(file_path);
+    tree.push({"id":file_path, "parent":file_dir, "text":file_name, state: {"opened": true}});
+  }
+
+  return JSON.stringify(tree);
 }
 
 if (Meteor.isServer) {
 
   // We need this to avoid using the cfs-filesystem packages
   FS.TempStore.Storage = new FS.Store.FileSystemRO('_tempstore', { internal: true });
+
+  var dir_path = "/home/vmchecker/Desktop";
 
   //Meteor.users.remove({});
   Meteor.startup(function() {
@@ -411,21 +435,6 @@ if (Meteor.isServer) {
       return Results.find({});
     });
 
-    fs = Meteor.require('fs');
-    var path = Meteor.require('path');
-
-    var fileList = readDir('/tmp');
-
-    var tree = [];
-    for (var i=0;i<fileList.length;i++) {
-      var file_path = fileList[i];
-      var file_dir = path.dirname(file_path);
-      if (file_dir == "/")
-        file_dir = "#";
-      var file_name = path.basename(file_path);
-      tree.push({"id":file_path, "parent":file_dir, "text":file_name, state: {"opened": true}});
-    }
-
     //allow any connected client to listen on the stream
     Notifications.permissions.read(function(userId, eventName) {
       return true;
@@ -436,7 +445,9 @@ if (Meteor.isServer) {
     });
 
     Notifications.on('start', function() {
-      Notifications.emit('filetree', JSON.stringify(tree));
+      var tree = GetFileTree(dir_path);
+      //console.log( " FileTree : \n" + tree);
+      Notifications.emit('filetree', tree);
     });
 
     Notifications.on('getfile', function(filename) {
@@ -448,6 +459,12 @@ if (Meteor.isServer) {
         Notifications.emit('message', data.toString(), filename);
       });
     });
+
+    Meteor.autorun( function() {
+      var tree = GetFileTree(dir_path);
+      //console.log( " FileTree : \n" + tree);
+      Notifications.emit('filetree', tree);
+    })
 
     /// ===>>> SERVER METHODS
 
@@ -699,6 +716,15 @@ if (Meteor.isServer) {
           content: fs.readFileSync(assignmentArchivePath)
         }
         );
+      },
+      getUserRepo : function ( userID, courseID, assignmentID) {
+        this.unblock();
+
+        var username = Meteor.users.find( {
+          _id: this.userId
+        }).profile.name;
+
+        console.log(username);
       }
     });
 
