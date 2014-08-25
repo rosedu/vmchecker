@@ -351,7 +351,7 @@ function GetFileTree( node_path ) {
   for (var i=0;i<fileList.length;i++) {
     var file_path = fileList[i];
     var file_dir = path.dirname(file_path);
-    if (file_dir == "/")
+    if (file_dir == path.dirname(node_path))
       file_dir = "#";
     var file_name = path.basename(file_path);
     tree.push({"id":file_path, "parent":file_dir, "text":file_name, state: {"opened": true}});
