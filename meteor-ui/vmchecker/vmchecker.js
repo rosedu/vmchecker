@@ -5,6 +5,7 @@ var Assignments = new Meteor.Collection("assignments");
 var Grades = new Meteor.Collection("grades");
 var Results = new Meteor.Collection("results");
 var Files = new Meteor.Collection("files");
+var AdminRights = new Meteor.Collection("admins");
 
 var Notifications = new Meteor.Stream('notifications');
 
@@ -58,7 +59,6 @@ if (Meteor.isClient) {
 
   Meteor.startup(function() {
     Notifications.emit('start');
-    //var editor = ace.editor("editor");
   });
 
   // subscribing to databases
@@ -150,7 +150,7 @@ if (Meteor.isClient) {
         Meteor.user().username
       );
       console.log("---" + Session.get("assignmentId"));
-      Notifications.emit('changetree', Meteor.user().username, Session.get('courseId'), Session.get('assignmentId'));
+      Notifications.emit('changetree', Meteor.user()._id, Session.get('courseId'), Session.get('assignmentId'));
     },
     'click': function(event) {
       var text = event.currentTarget.value;
@@ -162,7 +162,7 @@ if (Meteor.isClient) {
         Meteor.user().username
       );
       console.log("---" + Session.get("assignmentId"));
-      Notifications.emit('changetree', Meteor.user().username, Session.get('courseId'), Session.get('assignmentId'));
+      Notifications.emit('changetree', Meteor.user()._id, Session.get('courseId'), Session.get('assignmentId'));
     }
   });
 
@@ -388,6 +388,35 @@ function GetAssignmentPath( username, courseId, assignmentId ) {
   return assignmentArchivePath;
 }
 
+function GetAssignmentAdminPath(courseId, assignmentId ) {
+  var fs = Npm.require('fs');
+  var folderPath = '/etc/vmchecker/config.list';
+  var assignmentArchivePath = fs.readFileSync(folderPath);
+
+  assignmentArchivePath = assignmentArchivePath.toString();
+
+  // getting the assignment folder path
+  var position = assignmentArchivePath.indexOf(courseId + ":") + courseId.length + 1;
+  assignmentArchivePath = assignmentArchivePath.substr(position);
+  position = assignmentArchivePath.indexOf('\n');
+  assignmentArchivePath = assignmentArchivePath.substr(0, position).replace( /config/g, "repo") 
+                      + "/" + assignmentId;
+
+  return assignmentArchivePath;
+}
+
+function CheckIfAdmin( username, courseId, assignmentId ) {
+  var allowed = AdminRights.findOne({ 
+    username : username, 
+    courseId : courseId, 
+    assignmentId : assignmentId
+  });
+
+  if ( allowed != null ) 
+    return true;
+  return false;
+}
+
 if (Meteor.isServer) {
 
   // We need this to avoid using the cfs-filesystem packages
@@ -488,8 +517,13 @@ if (Meteor.isServer) {
       });
     });
 
-    Notifications.on('changetree', function(username, courseId, assignmentId) {
-      var path = GetAssignmentPath( username, courseId, assignmentId );
+    Notifications.on('changetree', function(userId, courseId, assignmentId) {
+      var username = Meteor.users.findOne({ _id : userId}).username;
+      var path = "";
+      if ( CheckIfAdmin( username, courseId, assignmentId) )
+        path = GetAssignmentPath( username, courseId, assignmentId );
+      else
+        path = GetAssignmentAdminPath(courseId, assignmentId );
       var tree = GetFileTree(path);
       Notifications.emit('filetree', tree);
     });
