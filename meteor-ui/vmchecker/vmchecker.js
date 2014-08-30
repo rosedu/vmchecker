@@ -38,7 +38,6 @@ if (Meteor.isClient) {
 
   Notifications.on( 'filetree', function(serial_tree) {
     $('#jstree_demo_div').jstree("destroy");
-    console.log(JSON.parse(serial_tree));
     $('#jstree_demo_div').jstree({ 'core' : {
     'data' : JSON.parse(serial_tree)
     } });
@@ -139,6 +138,34 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.assignments.events({
+    'change': function(event) {
+      var text = event.currentTarget.value;
+      console.log(text);
+      Session.set("assignmentId", text.trim());
+      Meteor.call(
+        'getUserResults',
+        Session.get('courseId'),
+        Session.get('assignmentId'),
+        Meteor.user().username
+      );
+      console.log("---" + Session.get("assignmentId"));
+      Notifications.emit('changetree', Meteor.user().username, Session.get('courseId'), Session.get('assignmentId'));
+    },
+    'click': function(event) {
+      var text = event.currentTarget.value;
+      Session.set("assignmentId", text.trim());
+      Meteor.call(
+        'getUserResults',
+        Session.get('courseId'),
+        Session.get('assignmentId'),
+        Meteor.user().username
+      );
+      console.log("---" + Session.get("assignmentId"));
+      Notifications.emit('changetree', Meteor.user().username, Session.get('courseId'), Session.get('assignmentId'));
+    }
+  });
+
   Template.changeLang.events({
     'change': function(event) {
       if (Cookie.get("i18next") != event.currentTarget.value) {
@@ -170,20 +197,6 @@ if (Meteor.isClient) {
   Template.editor.events({
     'render' : function(event) {
       console.log('salut');
-    }
-  });
-
-  Template.assignments.events({
-    'click': function(event) {
-      var text = event.currentTarget.id;
-      Session.set("assignmentId", text.trim());
-      Meteor.call(
-        'getUserResults',
-        Session.get('courseId'),
-        Session.get('assignmentId'),
-        Meteor.user().username
-      );
-      console.log("---" + Session.get("assignmentId"));
     }
   });
 
@@ -341,10 +354,7 @@ function readDir(dirpath) {
 function GetFileTree( node_path ) {
   fs = Meteor.require('fs');
   var path = Meteor.require('path');
-
-  //console.log("PATH: " + path.toString())
   var fileList = readDir(node_path);
-  //console.log(fileList);
 
   var tree = [];
   console.log("Lenght = " + fileList.length);
@@ -358,6 +368,24 @@ function GetFileTree( node_path ) {
   }
 
   return JSON.stringify(tree);
+}
+
+function GetAssignmentPath( username, courseId, assignmentId ) {
+
+  var fs = Npm.require('fs');
+  var folderPath = '/etc/vmchecker/config.list';
+  var assignmentArchivePath = fs.readFileSync(folderPath);
+
+  assignmentArchivePath = assignmentArchivePath.toString();
+
+  // getting the assignment folder path
+  var position = assignmentArchivePath.indexOf(courseId + ":") + courseId.length + 1;
+  assignmentArchivePath = assignmentArchivePath.substr(position);
+  position = assignmentArchivePath.indexOf('\n');
+  assignmentArchivePath = assignmentArchivePath.substr(0, position).replace( /config/g, "repo") 
+                      + "/" + assignmentId + "/" + username + "/current";
+
+  return assignmentArchivePath;
 }
 
 if (Meteor.isServer) {
@@ -458,6 +486,12 @@ if (Meteor.isServer) {
         }
         Notifications.emit('message', data.toString(), filename);
       });
+    });
+
+    Notifications.on('changetree', function(username, courseId, assignmentId) {
+      var path = GetAssignmentPath( username, courseId, assignmentId );
+      var tree = GetFileTree(path);
+      Notifications.emit('filetree', tree);
     });
 
     Meteor.autorun( function() {

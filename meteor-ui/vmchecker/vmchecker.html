@@ -159,20 +159,13 @@ int main() {
 </template>
 
 <template name="assignments">
-  <div>
-    <br />
-    <div class="all-grades">
-      {{t "All Grades"}}
-    </div>
-    <br />
+  <select id="assignmentSelect">
   {{#each assignments}}
-    <p>
-        <button type="button" id={{assignmentId}}>
+        <option value={{assignmentId}}>
         {{assignmentTitle}}
-        </button>
-    </p>
+        </option>
   {{/each}}
-  </div>
+  </select>
 </template>
 
 <template name="circle">
