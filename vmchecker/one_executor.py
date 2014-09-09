@@ -87,6 +87,16 @@ class OneVM(VM):
             number = self.snapshot_id
         _logger.info("doing revert to snapshot id %d" % number)
 
+        REVERT_TIMEOUT = 10
+        cnt = 0
+        while not self.hasStarted() and cnt < REVERT_TIMEOUT:
+            cnt += 1
+            time.sleep(1)
+            _logger.info("revert wait for %d" % self.vm_id)
+
+        if cnt == REVERT_TIMEOUT:
+            _logger.warning("probably failing")
+
         self._rpc('one.vm.snapshotrevert', self.vm_id, number)
 
     def copyTo(self, sourceDir, targetDir, files):
