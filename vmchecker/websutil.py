@@ -10,6 +10,7 @@ import time
 import paramiko
 import traceback
 import codecs
+from cgi import escape
 
 from vmchecker import paths, update_db, penalty, submissions
 from vmchecker.courselist import CourseList
@@ -40,6 +41,9 @@ class OutputString():
     def get(self):
         return self.st
 
+def xssescape(text):
+    """Gets rid of < and > and & and, for good measure, :"""
+    return escape(text, quote=True).replace(':','&#58;')
 
 def get_user(username, password):
     """Find the username for a user based on username/password.
@@ -483,9 +487,9 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                     # decode as utf-8 and ignore any errors, because
                     # characters will be badly encoded as json.
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        result_files.append({fname  : (f.read(MAX_VMR_FILE_SIZE) + overflow_msg) })
-
-
+                        content = f.read(MAX_VMR_FILE_SIZE) + overflow_msg
+                        content = xssescape(content)
+                        result_files.append({fname : content})
 
         if len(result_files) == 0:
             msg = "In the meantime have a fortune cookie: <blockquote>"
