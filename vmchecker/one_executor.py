@@ -87,7 +87,7 @@ class OneVM(VM):
             number = self.snapshot_id
         _logger.info("doing revert to snapshot id %d" % number)
 
-        REVERT_TIMEOUT = 10
+        REVERT_TIMEOUT = 300
         cnt = 0
         while not self.hasStarted() and cnt < REVERT_TIMEOUT:
             cnt += 1
