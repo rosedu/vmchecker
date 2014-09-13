@@ -75,6 +75,11 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"Sent too fast",
             'errorTrace':strout.get()})
+    except submit.SubmittedTooLateError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+            'errorMessage':"The assignment was submitted too late",
+            'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -141,6 +146,11 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"The assignment was submitted too soon",
             'errorTrace':strout.get()})
+    except submit.SubmittedTooLateError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+            'errorMessage':"The assignment was submitted too late",
+            'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -200,7 +210,11 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
                            'errorMessage':"The assignment was submitted too soon",
                            'errorTrace':strout.get()})
-
+    except submit.SubmittedTooLateError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+            'errorMessage':"The assignment was submitted too late",
+            'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -261,7 +275,11 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
             'errorMessage':"The assignment was submitted too soon",
             'errorTrace':strout.get()})
-
+    except submit.SubmittedTooLateError:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+            'errorMessage':"The assignment was submitted too late",
+            'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,

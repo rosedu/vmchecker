@@ -217,6 +217,15 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         # get all *.vmr names
         return re.findall(r"([\w\-]+\.vmr)", vals)
 
+    def is_deadline_hard(self, assignment):
+        """Return true if the deadline is hard, i.e. disable upload after
+        the deadline.
+        Default is 'no'.
+        """
+        val = self.getd(assignment, 'DeadlineIsHard', 'no')
+        val = val.strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
+
     def delay_between_tools_and_tests(self, assignment):
         """After Vmware tools are loaded, there may be some time
         before the machine is actually usable (services like apache,

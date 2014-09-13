@@ -207,6 +207,13 @@ Timeout = 120
 #     A good default is:
 #       vmchecker-stderr.vmr grade.vmr late-submission.vmr run-km.vmr
 #
+# DeadlineIsHard
+#
+#    Optional parameter
+#
+#    Set to true if you want to disable upload after the deadline of the
+#    assignment. Default is 'no'
+#
 #
 # # These are only for Large assignments
 # AssignmentStorage = Large               # this is a MD5Submission.
