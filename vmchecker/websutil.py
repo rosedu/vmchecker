@@ -469,7 +469,8 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     r_path = paths.dir_submission_results(submission_dir)
 
-
+    assignments = vmcfg.assignments()
+    ignored_vmrs = assignments.ignored_vmrs(assignmentId)
     strout = OutputString()
     try:
         result_files = []
@@ -478,6 +479,8 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
+                    continue
+                if fname in ignored_vmrs:
                     continue
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
@@ -503,8 +506,9 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                 msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
-        result_files.append({'late-submission.vmr' :
-                             submission_upload_info(courseId, username, assignmentId)})
+        if 'late-submission.vmr' not in ignored_vmrs:
+            result_files.append({'late-submission.vmr' :
+                                 submission_upload_info(courseId, username, assignmentId)})
         result_files = sortResultFiles(result_files, 'en')
         return json.dumps(result_files)
     except:

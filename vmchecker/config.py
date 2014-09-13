@@ -9,6 +9,7 @@ import os
 import time
 import datetime
 import ConfigParser
+import re
 
 from . import dirlocking
 from . import confdefaults
@@ -204,6 +205,17 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         val = self.getd(assignment, 'ShowGradesBeforeDeadline', 'no')
         val = val.strip().lower()
         return (val == 'yes') or (val == 'y') or (val == 'true')
+
+    def ignored_vmrs(self, assignment):
+        """This returns a list of the *.vmr files that are not displayed in
+        the report that the student sees. Viewing all the details can be
+        confusing for a student. The most simple way is to display
+        compiling (stdout and stderr) and testing (stdout and stderr).
+        Default is an empty list.
+        """
+        vals = self.getd(assignment, 'IgnoredVmrs', "")
+        # get all *.vmr names
+        return re.findall(r"([\w\-]+\.vmr)", vals)
 
     def delay_between_tools_and_tests(self, assignment):
         """After Vmware tools are loaded, there may be some time

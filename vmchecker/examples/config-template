@@ -1,3 +1,4 @@
+# vim: set ft=dosini:
 [vmchecker]
 root = $root
 repository = $repo
@@ -195,6 +196,16 @@ Timeout = 120
 #      Default is 'no'. If true, then the grades are showed (in the general
 #      view) before the deadline is reached. Meaning that all the students
 #      (even the ones that are not registered), can view other's grades.
+#
+# IgnoredVmrs = grade.vmr, late-submission.vmr etc.
+#
+#     Optional parameter.
+#
+#     Default is a an empty list. Viewing all the details can be
+#     confusing for a student. The most simple way is to display
+#     compiling (stdout and stderr) and testing (stdout and stderr).
+#     A good default is:
+#       vmchecker-stderr.vmr grade.vmr late-submission.vmr run-km.vmr
 #
 #
 # # These are only for Large assignments
