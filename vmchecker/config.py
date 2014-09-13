@@ -226,6 +226,24 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         val = val.strip().lower()
         return (val == 'yes') or (val == 'y') or (val == 'true')
 
+    def max_submission_size(self, assignment):
+        """Return the maximum size of the unpacked contents.
+        Useful for avoiding a DoS.
+
+        Default is '10M'
+        """
+        val = self.getd(assignment, 'MaxSubmissionSize', '10M')
+        val = val.strip().lower()
+        try:
+            sz = int(re.findall(r"^[0-9]+", val)[0])
+            if 'k' in val:
+                return sz * (2 ** 10)
+            if 'm' in val:
+                return sz * (2 ** 20)
+            return sz
+        except:
+            return 10*(2 ** 20)
+
     def delay_between_tools_and_tests(self, assignment):
         """After Vmware tools are loaded, there may be some time
         before the machine is actually usable (services like apache,

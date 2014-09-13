@@ -31,6 +31,7 @@ from . import callback
 
 from penalty import str_to_time
 from ziputil import check_archive_for_file_override
+from ziputil import check_archive_size
 
 from .courselist import CourseList
 
@@ -420,6 +421,11 @@ def submit(submission_filename, assignment, user, course_id,
 
     check_valid_time(course_id, assignment, user,
                      upload_time_str, skip_toosoon_check, False)
+    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
+    if storage_type.lower() != "large":
+        max_submission_size = vmcfg.assignments().max_submission_size(assignment)
+        check_archive_size(submission_filename, max_submission_size)
+
     sbcfg = save_submission_in_storer(submission_filename, user, assignment,
                               course_id, upload_time_str)
 
@@ -441,7 +447,6 @@ def submit(submission_filename, assignment, user, course_id,
             raise
         return
 
-    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
     if storage_type.lower() != "large":
         queue_for_testing(assignment, user, course_id)
 

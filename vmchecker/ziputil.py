@@ -52,6 +52,21 @@ def check_archive_for_file_override(archive_filename, \
     finally:
         z.close()
 
+def check_archive_size(archive_filename, max_file_size=10*1024*1024):
+    """Sanity check for the unpacked archive file.
+
+    We are checking without unpacking the archive.
+    """
+    z = zipfile.ZipFile(archive_filename)
+    size = 0
+    try:
+        for zinfo in z.filelist:
+            size += zinfo.file_size
+        if size > max_file_size:
+            raise zipfile.LargeZipFile
+    finally:
+        z.close()
+
 
 def create_zip(file_handler, file_list):
     """Create a zip into the opened file_handler. The zip is comprised

@@ -214,6 +214,14 @@ Timeout = 120
 #    Set to true if you want to disable upload after the deadline of the
 #    assignment. Default is 'no'
 #
+# MaxSubmissionSize
+#
+#    Optional parameter
+#
+#    Specify the maximum number of bytes that the unpacked archive can
+#    have. Example: 10MB, 23k
+#
+#    Default: 10MB
 #
 # # These are only for Large assignments
 # AssignmentStorage = Large               # this is a MD5Submission.
