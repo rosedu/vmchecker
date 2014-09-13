@@ -37,6 +37,21 @@ def unzip_safely(archive_filename, destination):
     finally:
         z.close()
 
+def check_archive_for_file_override(archive_filename, \
+        should_not_contain=['tests.zip', 'archive.zip', 'run.sh', 'build.sh', 'course-config', 'submission-config']):
+    """Sanyity check for archive contents file names.
+    We do not want to override certain file names.
+    """
+    z = zipfile.ZipFile(archive_filename)
+    try:
+        for raw_name in z.namelist():
+            name = os.path.normpath(raw_name)
+            # UTF8 safe?
+            if name in should_not_contain:
+                raise zipfile.BadZipfile
+    finally:
+        z.close()
+
 
 def create_zip(file_handler, file_list):
     """Create a zip into the opened file_handler. The zip is comprised

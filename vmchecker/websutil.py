@@ -10,6 +10,8 @@ import time
 import paramiko
 import traceback
 import codecs
+import subprocess
+from cgi import escape
 
 from vmchecker import paths, update_db, penalty, submissions
 from vmchecker.courselist import CourseList
@@ -40,6 +42,9 @@ class OutputString():
     def get(self):
         return self.st
 
+def xssescape(text):
+    """Gets rid of < and > and & and, for good measure, :"""
+    return escape(text, quote=True).replace(':','&#58;')
 
 def get_user(username, password):
     """Find the username for a user based on username/password.
@@ -187,29 +192,45 @@ def submission_upload_info(courseId, user, assignment):
     upload_time_str = sss.get_upload_time_str(assignment, user)
     upload_time_struct = sss.get_upload_time_struct(assignment, user)
 
-    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
+    # XXX hack, we should move this
+    language = 'ro'
+    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct, language)
 
     ret = ""
-    ret += "Data trimiterii temei : " + upload_time_str + "\n"
-    ret += "Deadline temă         : " + deadline_str    + "\n"
-    ret += deadline_explanation + "\n"
-    ret += "\n"
-    ret += "Depunctare întârziere : " + str(late_penalty) + "\n"
-    ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
-    ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
-    ret += "-----------------------\n"
-    ret += "Nota                  : " + str(total_points + ta_penalty + late_penalty) + "\n"
+
+    if language is 'ro':
+        ret += "Data trimiterii temei : " + upload_time_str + "\n"
+        ret += "Deadline temă         : " + deadline_str    + "\n"
+        ret += deadline_explanation + "\n"
+        ret += "\n"
+        ret += "Depunctare întârziere : " + str(late_penalty) + "\n"
+        ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
+        ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
+        ret += "-----------------------\n"
+        ret += "Nota                  : " + str(total_points + ta_penalty + late_penalty) + "\n"
+    else:
+        # another language
+        ret += "Submision date           : " + upload_time_str + "\n"
+        ret += "Assignment deadline      : " + deadline_str    + "\n"
+        ret += deadline_explanation + "\n"
+        ret += "\n"
+        ret += "Penalty (late submission): " + str(late_penalty) + "\n"
+        ret += "Penalty (grading)        : " + str(ta_penalty)   + "\n"
+        ret += "Penalty (total)          : " + str(ta_penalty + late_penalty) + "\n"
+        ret += "---------------------------\n"
+        ret += "Grade                    : " + str(total_points + ta_penalty + late_penalty) + "\n"
+
     ret += "\n"
 
     return ret
 
 
 
-def sortResultFiles(rfiles):
+def sortResultFiles(rfiles, language='ro'):
     """Sort the vector of result files and change keys with human
     readable descriptions"""
 
-    file_descriptions = [
+    file_descriptions_ro = [
         {'fortune.vmr'          : 'Rezultatele nu sunt încă disponibile'},
         {'grade.vmr'            : 'Nota și observații'},
         {'late-submission.vmr'  : 'Date și depunctări'},
@@ -221,8 +242,24 @@ def sortResultFiles(rfiles):
         {'run-km.vmr'           : 'Mesaje kernel (netconsole)'},
         {'queue-contents.vmr'   : 'Coada temelor ce urmează să fie testate'},
         ]
+    file_descriptions_en = [
+        {'fortune.vmr'          : 'Results not yet available'},
+        {'grade.vmr'            : 'Grade'},
+        {'late-submission.vmr'  : 'Penalty points'},
+        {'build-stdout.vmr'     : 'Compilation (stdout)'},
+        {'build-stderr.vmr'     : 'Compilation (stderr)'},
+        {'run-stdout.vmr'       : 'Testing (stdout)'},
+        {'run-stderr.vmr'       : 'Testing (stderr)'},
+        {'run-km.vmr'           : 'Kernel messages(netconsole)'},
+        {'queue-contents.vmr'   : 'Testing queue'},
+        {'vmchecker-stderr.vmr' : 'Errors'},
+        ]
+    file_descriptions = {
+            'ro' : file_descriptions_ro,
+            'en' : file_descriptions_en,
+            }
     ret = []
-    for f_des in file_descriptions:
+    for f_des in file_descriptions[language]:
         key = f_des.keys()[0] # there is only one key:value pair in each dict
         rfile = _find_file(key, rfiles)
         if rfile == None:
@@ -244,6 +281,7 @@ def get_test_queue_contents(courseId):
         for tester_id in tstcfg:
             # connect to the tester
             client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             try:
                 client.load_system_host_keys(vmcfg.known_hosts_file())
                 client.connect(tstcfg.hostname(tester_id),
@@ -431,7 +469,8 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     r_path = paths.dir_submission_results(submission_dir)
 
-
+    assignments = vmcfg.assignments()
+    ignored_vmrs = assignments.ignored_vmrs(assignmentId)
     strout = OutputString()
     try:
         result_files = []
@@ -440,6 +479,8 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
+                    continue
+                if fname in ignored_vmrs:
                     continue
                 f_path = os.path.join(r_path, fname)
                 if os.path.isfile(f_path):
@@ -450,9 +491,9 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                     # decode as utf-8 and ignore any errors, because
                     # characters will be badly encoded as json.
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        result_files.append({fname  : (f.read(MAX_VMR_FILE_SIZE) + overflow_msg) })
-
-
+                        content = f.read(MAX_VMR_FILE_SIZE) + overflow_msg
+                        content = xssescape(content)
+                        result_files.append({fname : content})
 
         if len(result_files) == 0:
             msg = "In the meantime have a fortune cookie: <blockquote>"
@@ -465,9 +506,10 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                 msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
-        result_files.append({'late-submission.vmr' :
-                             submission_upload_info(courseId, username, assignmentId)})
-        result_files = sortResultFiles(result_files)
+        if 'late-submission.vmr' not in ignored_vmrs:
+            result_files.append({'late-submission.vmr' :
+                                 submission_upload_info(courseId, username, assignmentId)})
+        result_files = sortResultFiles(result_files, 'en')
         return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)
@@ -489,3 +531,33 @@ def getUserStorageDirContents(req, courseId, assignmentId, username):
                            'errorTrace' : strout.get()})
 
 
+class InvalidDataException(Exception):
+    pass
+
+import re
+
+courseIdRegex = re.compile('^[a-zA-Z]+$')
+def sanityCheckCourseId(courseId):
+    if courseIdRegex.match(courseId) is None:
+        raise InvalidDataException
+    return courseId
+
+assignmentIdRegex = re.compile('^[0-9a-zA-Z-_]+$')
+def sanityCheckAssignmentId(assignmentId):
+    if assignmentIdRegex.match(assignmentId) is None:
+        raise InvalidDataException
+    return assignmentId
+
+
+dotdotRegexp = re.compile('\.\.')
+def sanityCheckDotDot(param):
+    if len(dotdotRegexp.findall(param)) != 0:
+        raise InvalidDataException
+    return param
+
+usernameRegexWhiteList = re.compile('^[a-zA-Z0-9-_.]+$')
+def sanityCheckUsername(username):
+    if usernameRegexWhiteList.match(username) is None:
+        raise InvalidDataException
+    sanityCheckDotDot(username)
+    return username

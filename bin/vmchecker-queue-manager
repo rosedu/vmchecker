@@ -268,9 +268,9 @@ def main():
     redirect_std_files(options.stdin, options.stdout, options.stderr)
 
     vmcfg = CourseConfig(CourseList().course_config(course_id))
-    vmpaths = VmcheckerPaths(vmcfg.root_path())
+    vmpaths = VmcheckerPaths(vmcfg.root_path_queue_manager())
 
-    os.chdir(vmcfg.root_path())
+    os.chdir(vmcfg.root_path_queue_manager())
     # fail early if something is not setup corectly, and not at a
     # distant point when we'll need these things.
     check_tester_setup_correctly(vmpaths)

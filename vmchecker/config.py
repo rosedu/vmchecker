@@ -9,6 +9,7 @@ import os
 import time
 import datetime
 import ConfigParser
+import re
 
 from . import dirlocking
 from . import confdefaults
@@ -47,6 +48,13 @@ class CourseConfig:
     def root_path(self):
         """Get the root path for this course"""
         return self.config.get('vmchecker', 'root')
+
+    def root_path_queue_manager(self):
+        """Get the root path for the queue for this course (if any)"""
+        try:
+            return self.config.get('vmchecker', 'root_queue')
+        except ConfigParser.NoOptionError:
+            return self.root_path()
 
     def storer_username(self):
         """The username to use when logging in with ssh to the storer machine"""
@@ -195,6 +203,26 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         view before the deadline. Default is 'no'.
         """
         val = self.getd(assignment, 'ShowGradesBeforeDeadline', 'no')
+        val = val.strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
+
+    def ignored_vmrs(self, assignment):
+        """This returns a list of the *.vmr files that are not displayed in
+        the report that the student sees. Viewing all the details can be
+        confusing for a student. The most simple way is to display
+        compiling (stdout and stderr) and testing (stdout and stderr).
+        Default is an empty list.
+        """
+        vals = self.getd(assignment, 'IgnoredVmrs', "")
+        # get all *.vmr names
+        return re.findall(r"([\w\-]+\.vmr)", vals)
+
+    def is_deadline_hard(self, assignment):
+        """Return true if the deadline is hard, i.e. disable upload after
+        the deadline.
+        Default is 'no'.
+        """
+        val = self.getd(assignment, 'DeadlineIsHard', 'no')
         val = val.strip().lower()
         return (val == 'yes') or (val == 'y') or (val == 'true')
 
@@ -460,3 +488,16 @@ class VmwareMachineConfig(object):
            Default is vmware """
         vmtype = self.config.get(self.machine_id, 'Type', default='vmware')
         return vmtype
+
+class OneMachineConfig(VmwareMachineConfig):
+    def get_one_credentials(self):
+        return self.config.get(self.machine_id, 'OneCredentials', None)
+
+    def get_one_server(self):
+        return self.config.get(self.machine_id, 'OneServer', None)
+
+    def get_one_vm_hostname(self):
+        return self.config.get(self.machine_id, 'OneVMHostName', None)
+
+    def get_one_vm_id(self):
+        return self.config.get(self.machine_id, 'OneVMID', None)
