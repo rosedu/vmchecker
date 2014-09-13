@@ -30,6 +30,7 @@ from . import tempfileutil
 from . import callback
 
 from penalty import str_to_time
+from ziputil import check_archive_for_file_override
 
 from .courselist import CourseList
 
@@ -238,8 +239,17 @@ def create_testing_bundle(user, assignment, course_id):
     # Get the assignment submission type (zip archive vs. MD5 Sum).
     # Large assignments do not have any archive.zip configured.
     if asscfg.getd(assignment, "AssignmentStorage", "").lower() != "large":
-        rel_file_list += [ ('archive.zip', paths.submission_archive_file(sbroot)) ]
+        rel_file_list += [ ('archive.zip', \
+                paths.submission_archive_file(sbroot)) ]
 
+        # check if the archive does not contain some weird paths that might
+        # lead to file override
+        # at this point, we already override tests.zip, because we are
+        # doing safely_unzip when storing the backup
+        arch_path = paths.submission_archive_file(sbroot)
+        arch_path = vmpaths.abspath(arch_path)
+        should_not_contain = map(lambda f: f[0], rel_file_list)
+        check_archive_for_file_override(arch_path, should_not_contain)
 
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list if src != '' ]
 
