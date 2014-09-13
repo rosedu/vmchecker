@@ -245,13 +245,13 @@ def sortResultFiles(rfiles, language='ro'):
         {'fortune.vmr'          : 'Results not yet available'},
         {'grade.vmr'            : 'Grade'},
         {'late-submission.vmr'  : 'Penalty points'},
-        {'vmchecker-stderr.vmr' : 'Errors'},
         {'build-stdout.vmr'     : 'Compilation (stdout)'},
         {'build-stderr.vmr'     : 'Compilation (stderr)'},
         {'run-stdout.vmr'       : 'Testing (stdout)'},
         {'run-stderr.vmr'       : 'Testing (stderr)'},
         {'run-km.vmr'           : 'Kernel messages(netconsole)'},
         {'queue-contents.vmr'   : 'Testing queue'},
+        {'vmchecker-stderr.vmr' : 'Errors'},
         ]
     file_descriptions = {
             'ro' : file_descriptions_ro,
