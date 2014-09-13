@@ -10,6 +10,7 @@ import time
 import paramiko
 import traceback
 import codecs
+import subprocess
 from cgi import escape
 
 from vmchecker import paths, update_db, penalty, submissions
