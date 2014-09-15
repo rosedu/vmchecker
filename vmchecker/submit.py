@@ -378,8 +378,8 @@ def check_valid_time(course_id, assignment, user,
         assert(deadline_str)
         deadline_ts = str_to_time(deadline_str)
         upload_ts = str_to_time(upload_time_str)
-        # feeling genereous: extra minute delay
-        if upload_ts > 3600+deadline_ts:
+        # extra minute grace time
+        if upload_ts > 60+deadline_ts:
             msg = 'You submited too late '
             msg += 'Deadline was ' + deadline_str + ' and '
             msg += 'you submited at ' + upload_time_str + '.'
