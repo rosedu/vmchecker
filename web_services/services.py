@@ -534,7 +534,7 @@ def getAllGrades(req, courseId):
                 'AND assignments.id = grades.assignment_id')
             for row in db_cursor:
                 user, assignment, grade = row
-                if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                if assignment in vmcfg.assignments() and not vmcfg.assignments().show_grades_before_deadline(assignment):
                     deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
                     deadtime = time.mktime(deadline)
                     if time.time() < deadtime:
@@ -610,6 +610,7 @@ def login(req, username, password):
 
 ######### @ServiceMethod
 def autologin(req, username):
+    return json.dumps({})
     req.content_type = 'text/html'
     # don't permit brute force password guessing:
     time.sleep(1)
