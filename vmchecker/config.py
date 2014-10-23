@@ -200,9 +200,9 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
 
     def show_grades_before_deadline(self, assignment):
         """This returns True, when we want to show the grades, in the general
-        view before the deadline. Default is 'no'.
+        view before the deadline. Default is 'yes'.
         """
-        val = self.getd(assignment, 'ShowGradesBeforeDeadline', 'no')
+        val = self.getd(assignment, 'ShowGradesBeforeDeadline', 'yes')
         val = val.strip().lower()
         return (val == 'yes') or (val == 'y') or (val == 'true')
 
