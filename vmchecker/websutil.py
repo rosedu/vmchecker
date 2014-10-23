@@ -536,7 +536,7 @@ class InvalidDataException(Exception):
 
 import re
 
-courseIdRegex = re.compile('^[a-zA-Z]+$')
+courseIdRegex = re.compile('^[a-zA-Z0-9]+$')
 def sanityCheckCourseId(courseId):
     if courseIdRegex.match(courseId) is None:
         raise InvalidDataException
