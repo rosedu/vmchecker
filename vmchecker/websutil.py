@@ -102,8 +102,9 @@ def get_ldap_user(username, password):
     """
     ldap_cfg = LdapConfig()
     con = ldap.initialize(ldap_cfg.server())
-    con.simple_bind_s(ldap_cfg.bind_user(),
-                        ldap_cfg.bind_pass())
+    if not ldap_cfg.bind_anonymous():
+        con.simple_bind_s(ldap_cfg.bind_user(),
+                            ldap_cfg.bind_pass())
 
     baseDN = ldap_cfg.root_search()
     searchScope = ldap.SCOPE_SUBTREE
@@ -138,7 +139,8 @@ def get_ldap_user(username, password):
         raise
 
     user_dn, entry = result_set[0][0]
-    con.unbind_s()
+    if not ldap_cfg.bind_anonymous():
+        con.unbind_s()
 
     # check the password
     try:
