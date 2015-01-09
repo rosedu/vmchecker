@@ -2,7 +2,7 @@
 == Dependencies ==
 
 1. install needed python modules
-   apt-get install python-paramiko python-pyinotify python-json
+   apt-get install python-paramiko python-pyinotify python-simplejson python-ldap
 
 2. (only on the tester machine)
    install vmware-vix
