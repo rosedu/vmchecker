@@ -92,12 +92,12 @@
 				<g:HTML ui:field="loginDescription" styleName="{style.description} loginDescription"></g:HTML>
 				<g:FlowPanel styleName="{style.formContainer}">
 					<g:Label ui:field="formLabel" styleName="{style.formTitle}"></g:Label>
-					<g:HorizontalPanel styleName="{style.inputLine}">
+					<g:HorizontalPanel verticalAlignment="ALIGN_MIDDLE" styleName="{style.inputLine}">
 						<g:Label ui:field="usernameLabel" styleName="{style.fieldLabel}"></g:Label>
 						<g:TextBox ui:field="usernameField" styleName="{style.inputField}"></g:TextBox>
 					</g:HorizontalPanel>
 					<g:Label ui:field="usernameComment" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
-					<g:HorizontalPanel styleName="{style.inputLine}">
+					<g:HorizontalPanel verticalAlignment="ALIGN_MIDDLE" styleName="{style.inputLine}">
 						<g:Label ui:field="passwordLabel" styleName="{style.fieldLabel}"></g:Label>
 						<g:PasswordTextBox ui:field="passwordField" styleName="{style.inputField}"></g:PasswordTextBox>
 					</g:HorizontalPanel>

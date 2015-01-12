@@ -21,6 +21,7 @@
   <!-- Internationalization support. -->
   <extend-property name="locale" values="en"/>
   <extend-property name="locale" values="ro"/>
+  <extend-property name="locale" values="fr"/>
   <!-- Uncomment next line when testing, it reduces the number of permutations -->
   <!-- <set-property name="locale" value="en"/> -->
   <set-property-fallback name="locale" value="en"/>
