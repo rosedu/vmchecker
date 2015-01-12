@@ -50,6 +50,9 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 	Label title;
 
 	@UiField
+	Label noSubmissionAvailableMessage;
+
+	@UiField
 	Style style;
 
 	private Grid table = new Grid();
@@ -58,6 +61,7 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 	public StatisticsWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
 		title.setText(constants.statisticsTitle());
+		noSubmissionAvailableMessage.setText(constants.statisticsNoSubmissionAvailable());
 		resultDetailsPopup = new VmcheckerPopup();
 		resultDetailsPopup.setStyleName("resultsPopup");
 	}
@@ -106,8 +110,13 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 				table.getRowFormatter().addStyleName(i, (i % 2 == 0) ? style.evenrow() : style.oddrow());
 			}
 		}
-		/* add the table */
-		tablePanel.add(table);
+		/* if there are no submissions to show, display the appropriate message. */
+		if (studentInfo.length == 0) {
+			tablePanel.add(noSubmissionAvailableMessage);
+		} else {
+			/* add the table */
+			tablePanel.add(table);
+		}
 	}
 
 	@Override

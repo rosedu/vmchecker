@@ -16,4 +16,5 @@ public interface VmcheckerConstants extends Constants,
 	String popupCloseButton();
 
 	String statisticsTitle();
+	String statisticsNoSubmissionAvailable();
 }
