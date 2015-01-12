@@ -22,8 +22,8 @@
   <extend-property name="locale" values="en"/>
   <extend-property name="locale" values="ro"/>
   <!-- Uncomment next line when testing, it reduces the number of permutations -->
-  <!-- <set-property name="locale" value="ro"/> -->
-  <set-property-fallback name="locale" value="ro"/>
+  <!-- <set-property name="locale" value="en"/> -->
+  <set-property-fallback name="locale" value="en"/>
 
   <!-- Specify the paths for translatable code                    -->
   <source path='client'/>
