@@ -17,6 +17,17 @@
 		padding-bottom: 20px;
 	}
 
+	.noSubmissionText {
+		font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+		font-size: 16px;
+		line-height: 24px;
+		text-align: center;
+		width: 100%;
+		padding-top: 20px;
+		padding-bottom: 20px;
+		color: green;
+	}
+
 	.table {
 		border: 3px solid #CCC;
 		background-color: #FFFFFF;
@@ -61,7 +72,9 @@
 
 	</ui:style>
 	<g:FlowPanel ui:field="panel" styleName="{style.panel}">
-		<g:Label ui:field="title" styleName="{style.title}">Rezultate generale</g:Label>
-		<g:FlowPanel ui:field="tablePanel"></g:FlowPanel>
+		<g:Label ui:field="title" styleName="{style.title}"></g:Label>
+		<g:FlowPanel ui:field="tablePanel">
+			<g:Label ui:field="noSubmissionAvailableMessage" styleName="{style.noSubmissionText}"></g:Label>
+		</g:FlowPanel>
 	</g:FlowPanel>
 </ui:UiBinder>

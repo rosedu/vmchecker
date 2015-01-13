@@ -87,41 +87,10 @@ public class LoginWidget extends Composite
 	@UiField
 	HorizontalPanel localeContainer;
 
+
 	public LoginWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
-		
-		/* Setup the locale selection box */
-		String[] locales = { "en", "ro" };
-
-		localeContainer.getElement().setAttribute("align", "right");
-		localeContainer.getElement().getFirstChildElement().getFirstChildElement().getFirstChildElement().setAttribute("style", "vertical-align: top; padding: 2px 5px;"); /* Center and align image */
-		((Element)localeContainer.getElement().getFirstChildElement().getFirstChildElement().getLastChild()).setAttribute("style", "vertical-align: top; padding: 0px 20px 0px 0px;"); /* Center and align ListBox */
-		localeImage.setResource(images.locale());
-		localeBox.setWidth("200px");
-		
-		String currentLocale = LocaleInfo.getCurrentLocale().getLocaleName();
-		if(currentLocale.equals("default"))
-			currentLocale = "ro";
-		
-		for(String localeName : locales) {
-			String nativeName = LocaleInfo.getLocaleNativeDisplayName(localeName);
-			nativeName = (Character.toUpperCase(nativeName.charAt(0)) + nativeName.substring(1));
-			localeBox.addItem(nativeName + " (" + localeName + ")", localeName);
-			if(localeName.equals(currentLocale))
-				localeBox.setSelectedIndex(localeBox.getItemCount() - 1);
-		}
-		
-		localeBox.addChangeHandler(new ChangeHandler() {
-			public void onChange(ChangeEvent event) {
-				String localeName = localeBox.getValue(localeBox.getSelectedIndex());
-				UrlBuilder builder = Location.createUrlBuilder().setParameter("locale",
-					localeName);
-				Window.Location.replace(builder.buildString());
-			}
-		});
-		
-		/* End locale selection box setup */
-		
+		setupLocaleBox();
 		loginDescription.setHTML(constants.loginDescription());
 		formComment.setText(constants.formComment());
 		formLabel.setText(constants.loginFormLabel());
@@ -194,6 +163,36 @@ public class LoginWidget extends Composite
 	public HasKeyPressHandlers[] getEnterSources() {
 		HasKeyPressHandlers[] enterSources = {usernameField, passwordField, loginButton};
 		return enterSources;
+	}
+
+	private void setupLocaleBox() {
+		/* Setup the locale selection box */
+		localeContainer.getElement().setAttribute("align", "right");
+		localeContainer.getElement().getFirstChildElement().getFirstChildElement().getFirstChildElement().setAttribute("style", "vertical-align: top; padding: 2px 5px;"); /* Center and align image */
+		((Element)localeContainer.getElement().getFirstChildElement().getFirstChildElement().getLastChild()).setAttribute("style", "vertical-align: top; padding: 0px 20px 0px 0px;"); /* Center and align ListBox */
+		localeImage.setResource(images.locale());
+		localeBox.setWidth("200px");
+
+		String currentLocale = LocaleInfo.getCurrentLocale().getLocaleName();
+		for (String localeName : LocaleInfo.getAvailableLocaleNames()) {
+			if (localeName.equals("default"))
+				continue;
+			String nativeName = LocaleInfo.getLocaleNativeDisplayName(localeName);
+			nativeName = (Character.toUpperCase(nativeName.charAt(0)) + nativeName.substring(1));
+			localeBox.addItem(nativeName + " (" + localeName + ")", localeName);
+			if (localeName.equals(currentLocale))
+				localeBox.setSelectedIndex(localeBox.getItemCount() - 1);
+		}
+
+		localeBox.addChangeHandler(new ChangeHandler() {
+			public void onChange(ChangeEvent event) {
+				String localeName = localeBox.getValue(localeBox.getSelectedIndex());
+				UrlBuilder builder = Location.createUrlBuilder().setParameter("locale",
+					localeName);
+				Window.Location.replace(builder.buildString());
+			}
+		});
+
 	}
 
 }

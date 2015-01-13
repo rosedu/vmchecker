@@ -19,6 +19,7 @@ import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.http.client.URL;
+import com.google.gwt.i18n.client.LocaleInfo;
 
 public class Delegate<T> {
 
@@ -26,12 +27,13 @@ public class Delegate<T> {
 
 	private HandlerManager eventBus;
 	private RequestBuilder rb;
-	private boolean isGet;
+	private boolean isGet, attachLocale;
 	private String url;
 
-	public Delegate(HandlerManager eventBus, String url, boolean isGet) {
+	public Delegate(HandlerManager eventBus, String url, boolean isGet, boolean attachLocale) {
 		this.eventBus = eventBus;
 		this.isGet = isGet;
+		this.attachLocale = attachLocale;
 		this.url = url;
 		/**
 		 * We reconstruct the entire RequestBuilder for GET requests when
@@ -54,6 +56,13 @@ public class Delegate<T> {
 				result.append('&');
 			}
 		}
+
+		if (attachLocale) {
+			result.append('&');
+			result.append(URL.encodeComponent("locale", true) + "=" +
+				URL.encodeComponent(LocaleInfo.getCurrentLocale().getLocaleName(), true));
+		}
+
 		return result.toString();
 	}
 

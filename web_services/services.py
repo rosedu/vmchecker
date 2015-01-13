@@ -31,10 +31,12 @@ from vmchecker import submit, config, websutil, update_db, paths, submissions
 from vmchecker.config import DATE_FORMAT
 
 ########## @ServiceMethod
-def uploadedFile(req, courseId, assignmentId, tmpname):
+def uploadedFile(req, courseId, assignmentId, tmpname, locale=websutil.DEFAULT_LOCALE):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -73,12 +75,12 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"Sent too fast",
+            'errorMessage':_("Sent too fast"),
             'errorTrace':strout.get()})
     except submit.SubmittedTooLateError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"The assignment was submitted too late",
+            'errorMessage':_("The assignment was submitted too late"),
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
@@ -90,10 +92,12 @@ def uploadedFile(req, courseId, assignmentId, tmpname):
                        'dumpLog':strout.get()})
 
 ########## @ServiceMethod
-def uploadAssignment(req, courseId, assignmentId, archiveFile):
+def uploadAssignment(req, courseId, assignmentId, archiveFile, locale=websutil.DEFAULT_LOCALE):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 	
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -122,7 +126,7 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
 
     if archiveFile.filename == None:
         return  json.dumps({'errorType':websutil.ERR_OTHER,
-                    'errorMessage':"File not uploaded.",
+                    'errorMessage':_("File not uploaded."),
                     'errorTrace':""})
 
     #  Save file in a temp
@@ -144,12 +148,12 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"The assignment was submitted too soon",
+            'errorMessage':_("The assignment was submitted too soon"),
             'errorTrace':strout.get()})
     except submit.SubmittedTooLateError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"The assignment was submitted too late",
+            'errorMessage':_("The assignment was submitted too late"),
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
@@ -162,10 +166,12 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile):
                        'file': tmpname}) 
 
 ########## @ServiceMethod
-def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
+def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum, locale=websutil.DEFAULT_LOCALE):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -208,12 +214,12 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-                           'errorMessage':"The assignment was submitted too soon",
+                           'errorMessage':_("The assignment was submitted too soon"),
                            'errorTrace':strout.get()})
     except submit.SubmittedTooLateError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"The assignment was submitted too late",
+            'errorMessage':_("The assignment was submitted too late"),
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
@@ -227,10 +233,12 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum):
 
 
 ########## @ServiceMethod
-def beginEvaluation(req, courseId, assignmentId, archiveFileName):
+def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websutil.DEFAULT_LOCALE):
     """ Saves a temp file of the uploaded archive and calls
         vmchecker.submit.submit method to put the homework in
         the testing queue"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -273,12 +281,12 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"The assignment was submitted too soon",
+            'errorMessage':_("The assignment was submitted too soon"),
             'errorTrace':strout.get()})
     except submit.SubmittedTooLateError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"The assignment was submitted too late",
+            'errorMessage':_("The assignment was submitted too late"),
             'errorTrace':strout.get()})
     except:
         traceback.print_exc(file = strout)
@@ -295,8 +303,11 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName):
 
 
 ########## @ServiceMethod
-def getResults(req, courseId, assignmentId):
+def getResults(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
     """ Returns the result for the current user"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
+
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
 
@@ -324,8 +335,10 @@ def getResults(req, courseId, assignmentId):
     return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
 
 ########## @ServiceMethod
-def getUserResults(req, courseId, assignmentId, username):
+def getUserResults(req, courseId, assignmentId, username, locale=websutil.DEFAULT_LOCALE):
     """Get the results for a given username"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -380,8 +393,10 @@ def getCourses(req):
 
 
 ######### @ServiceMethod
-def getAssignments(req, courseId): 
+def getAssignments(req, courseId, locale=websutil.DEFAULT_LOCALE):
     """ Returns the list of assignments for a given course """
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckCourseId(courseId)
 
@@ -433,8 +448,10 @@ def getAssignments(req, courseId):
     return json.dumps(ass_arr)
 
 ######### @ServiceMethod
-def getUploadedMd5(req, courseId, assignmentId):
+def getUploadedMd5(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
     """ Returns the md5 file for the current user"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -464,8 +481,10 @@ def getUploadedMd5(req, courseId, assignmentId):
 
 
 ######### @ServiceMethod
-def getStorageDirContents(req, courseId, assignmentId):
+def getStorageDirContents(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
     """ Returns the file list from the storage host for the current user"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
@@ -495,8 +514,10 @@ def getStorageDirContents(req, courseId, assignmentId):
 
 
 ######### @ServiceMethod
-def getAllGrades(req, courseId):
+def getAllGrades(req, courseId, locale=websutil.DEFAULT_LOCALE):
     """Returns a table with all the grades of all students for a given course"""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckCourseId(courseId)
 
@@ -561,8 +582,9 @@ def getAllGrades(req, courseId):
 
 
 ######### @ServiceMethod
-def login(req, username, password):
+def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
 
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     #### BIG FAT WARNING: ####
     # If you ever try to use Vmchecker on a UserDir-type environment
@@ -603,7 +625,7 @@ def login(req, username, password):
     if user is None:
         s.invalidate()
         return json.dumps({'status':False, 'username':"", 
-            'info':'Invalid username/password'})
+            'info':_('Invalid username/password')})
 
     s["username"] = username.lower()
     s.save()

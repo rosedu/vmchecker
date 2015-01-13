@@ -31,6 +31,27 @@ ERR_EXCEPTION = 2
 ERR_OTHER = 3
 
 
+# I18N support
+import gettext
+# NOTE: This is where the locale files are installed by default.
+# Ideally this shouldn't be hardcoded, but it will do for now.
+DEFAULT_LOCALE_PATH="/usr/local/share/locale"
+DEFAULT_LOCALE="en"
+lang_en = gettext.translation("vmchecker", DEFAULT_LOCALE_PATH, languages=["en"])
+lang_fr = gettext.translation("vmchecker", DEFAULT_LOCALE_PATH, languages=["fr"])
+lang_ro = gettext.translation("vmchecker", DEFAULT_LOCALE_PATH, languages=["ro"])
+
+def install_i18n(lang):
+    if lang == "en":
+        lang_en.install()
+    elif lang == "ro":
+        lang_ro.install()
+    elif lang == "fr":
+        lang_fr.install()
+    else:
+        lang_en.install()
+# End I18N support
+
 
 class OutputString():
     def __init__(self):
@@ -102,8 +123,9 @@ def get_ldap_user(username, password):
     """
     ldap_cfg = LdapConfig()
     con = ldap.initialize(ldap_cfg.server())
-    con.simple_bind_s(ldap_cfg.bind_user(),
-                        ldap_cfg.bind_pass())
+    if not ldap_cfg.bind_anonymous():
+        con.simple_bind_s(ldap_cfg.bind_user(),
+                            ldap_cfg.bind_pass())
 
     baseDN = ldap_cfg.root_search()
     searchScope = ldap.SCOPE_SUBTREE
@@ -138,7 +160,8 @@ def get_ldap_user(username, password):
         raise
 
     user_dn, entry = result_set[0][0]
-    con.unbind_s()
+    if not ldap_cfg.bind_anonymous():
+        con.unbind_s()
 
     # check the password
     try:
@@ -180,7 +203,7 @@ def submission_upload_info(courseId, user, assignment):
     grade_file = paths.submission_results_grade(sbroot)
     sbcfg = paths.submission_config_file(sbroot)
     if not os.path.exists(sbcfg):
-        return "Tema nu a fost încă trimisă"
+        return _("No submission exists for this assignment")
 
     late_penalty = update_db.compute_late_penalty(assignment, user, vmcfg)
     ta_penalty   = update_db.compute_TA_penalty(grade_file)
@@ -192,74 +215,42 @@ def submission_upload_info(courseId, user, assignment):
     upload_time_str = sss.get_upload_time_str(assignment, user)
     upload_time_struct = sss.get_upload_time_struct(assignment, user)
 
-    # XXX hack, we should move this
-    language = 'ro'
-    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct, language)
+    deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
 
     ret = ""
-
-    if language is 'ro':
-        ret += "Data trimiterii temei : " + upload_time_str + "\n"
-        ret += "Deadline temă         : " + deadline_str    + "\n"
-        ret += deadline_explanation + "\n"
-        ret += "\n"
-        ret += "Depunctare întârziere : " + str(late_penalty) + "\n"
-        ret += "Depunctare corectare  : " + str(ta_penalty)   + "\n"
-        ret += "Total depunctări      : " + str(ta_penalty + late_penalty) + "\n"
-        ret += "-----------------------\n"
-        ret += "Nota                  : " + str(total_points + ta_penalty + late_penalty) + "\n"
-    else:
-        # another language
-        ret += "Submision date           : " + upload_time_str + "\n"
-        ret += "Assignment deadline      : " + deadline_str    + "\n"
-        ret += deadline_explanation + "\n"
-        ret += "\n"
-        ret += "Penalty (late submission): " + str(late_penalty) + "\n"
-        ret += "Penalty (grading)        : " + str(ta_penalty)   + "\n"
-        ret += "Penalty (total)          : " + str(ta_penalty + late_penalty) + "\n"
-        ret += "---------------------------\n"
-        ret += "Grade                    : " + str(total_points + ta_penalty + late_penalty) + "\n"
-
+    ret += _("Submission date") + "          : " + upload_time_str + "\n"
+    ret += _("Assignment deadline") + "      : " + deadline_str    + "\n"
+    ret += deadline_explanation + "\n"
+    ret += "\n"
+    ret += _("Penalty (late submission)") + " : " + str(late_penalty) + "\n"
+    ret += _("Penalty (grading)") + "        : " + str(ta_penalty)   + "\n"
+    ret += _("Penalty (total)") + "          : " + str(ta_penalty + late_penalty) + "\n"
+    ret += "---------------------------\n"
+    ret += _("Grade") + "                    : " + str(total_points + ta_penalty + late_penalty) + "\n"
     ret += "\n"
 
     return ret
 
 
 
-def sortResultFiles(rfiles, language='ro'):
+def sortResultFiles(rfiles):
     """Sort the vector of result files and change keys with human
     readable descriptions"""
 
-    file_descriptions_ro = [
-        {'fortune.vmr'          : 'Rezultatele nu sunt încă disponibile'},
-        {'grade.vmr'            : 'Nota și observații'},
-        {'late-submission.vmr'  : 'Date și depunctări'},
-        {'vmchecker-stderr.vmr' : 'Erori vmchecker'},
-        {'build-stdout.vmr'     : 'Compilarea temei și a testelor (stdout)'},
-        {'build-stderr.vmr'     : 'Compilarea temei și a testelor (stderr)'},
-        {'run-stdout.vmr'       : 'Execuția testelor (stdout)'},
-        {'run-stderr.vmr'       : 'Execuția testelor (stderr)'},
-        {'run-km.vmr'           : 'Mesaje kernel (netconsole)'},
-        {'queue-contents.vmr'   : 'Coada temelor ce urmează să fie testate'},
+    file_descriptions = [
+        {'fortune.vmr'          : _('Results not yet available')},
+        {'grade.vmr'            : _('Grade')},
+        {'late-submission.vmr'  : _('Penalty points')},
+        {'build-stdout.vmr'     : _('Compilation (stdout)')},
+        {'build-stderr.vmr'     : _('Compilation (stderr)')},
+        {'run-stdout.vmr'       : _('Testing (stdout)')},
+        {'run-stderr.vmr'       : _('Testing (stderr)')},
+        {'run-km.vmr'           : _('Kernel messages(netconsole)')},
+        {'queue-contents.vmr'   : _('Testing queue')},
+        {'vmchecker-stderr.vmr' : _('Errors')},
         ]
-    file_descriptions_en = [
-        {'fortune.vmr'          : 'Results not yet available'},
-        {'grade.vmr'            : 'Grade'},
-        {'late-submission.vmr'  : 'Penalty points'},
-        {'build-stdout.vmr'     : 'Compilation (stdout)'},
-        {'build-stderr.vmr'     : 'Compilation (stderr)'},
-        {'run-stdout.vmr'       : 'Testing (stdout)'},
-        {'run-stderr.vmr'       : 'Testing (stderr)'},
-        {'run-km.vmr'           : 'Kernel messages(netconsole)'},
-        {'queue-contents.vmr'   : 'Testing queue'},
-        {'vmchecker-stderr.vmr' : 'Errors'},
-        ]
-    file_descriptions = {
-            'ro' : file_descriptions_ro,
-            'en' : file_descriptions_en,
-            }
     ret = []
-    for f_des in file_descriptions[language]:
+    for f_des in file_descriptions:
         key = f_des.keys()[0] # there is only one key:value pair in each dict
         rfile = _find_file(key, rfiles)
         if rfile == None:
@@ -487,7 +478,7 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                     overflow_msg = ''
                     f_size = os.path.getsize(f_path)
                     if f_size > MAX_VMR_FILE_SIZE:
-                        overflow_msg = '\n\n<b>File truncated! Actual size: ' + str(f_size) + ' bytes</b>\n'
+                        overflow_msg = '\n\n<b>' + _('File truncated! Actual size') + ': ' + str(f_size) + ' ' + _('bytes') + '</b>\n'
                     # decode as utf-8 and ignore any errors, because
                     # characters will be badly encoded as json.
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -496,7 +487,7 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                         result_files.append({fname : content})
 
         if len(result_files) == 0:
-            msg = "In the meantime have a fortune cookie: <blockquote>"
+            msg = _("In the meantime have a fortune cookie") + ": <blockquote>"
             try:
                 process = subprocess.Popen('/usr/games/fortune',
                                        shell=False,
@@ -509,7 +500,7 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
         if 'late-submission.vmr' not in ignored_vmrs:
             result_files.append({'late-submission.vmr' :
                                  submission_upload_info(courseId, username, assignmentId)})
-        result_files = sortResultFiles(result_files, 'en')
+        result_files = sortResultFiles(result_files)
         return json.dumps(result_files)
     except:
         traceback.print_exc(file = strout)
@@ -561,3 +552,9 @@ def sanityCheckUsername(username):
         raise InvalidDataException
     sanityCheckDotDot(username)
     return username
+
+localeRegexWhiteList = re.compile('^[a-z]{2}$')
+def sanityCheckLocale(locale):
+    if localeRegexWhiteList.match(locale) is None:
+        raise InvalidDataException
+    return locale

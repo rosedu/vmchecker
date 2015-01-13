@@ -1,0 +1,157 @@
+# Romanian translations for PACKAGE package.
+# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Calin Iorgulescu <calin.iorgulescu@gmail.com>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-12 18:18+0100\n"
+"PO-Revision-Date: 2015-01-12 18:19+0100\n"
+"Last-Translator: Calin Iorgulescu <calin.iorgulescu@gmail.com>\n"
+"Language-Team: Romanian\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2;\n"
+
+#: websutil.py:184
+msgid "No submission exists for this assignment"
+msgstr "Tema nu a fost încă trimisă"
+
+#: websutil.py:214
+msgid "Submission date"
+msgstr "Data trimiterii temei"
+
+#: websutil.py:215
+msgid "Assignment deadline"
+msgstr "Deadline temă"
+
+#: websutil.py:218
+msgid "Penalty (late submission)"
+msgstr "Depunctare întârziere"
+
+#: websutil.py:219
+msgid "Penalty (grading)"
+msgstr "Depunctare corectare"
+
+#: websutil.py:220
+msgid "Penalty (total)"
+msgstr "Total depunctări"
+
+#: websutil.py:222 websutil.py:248
+msgid "Grade"
+msgstr "Nota"
+
+#: websutil.py:247
+msgid "Results not yet available"
+msgstr "Rezultatele nu sunt încă disponibile"
+
+#: websutil.py:249
+msgid "Penalty points"
+msgstr "Nota și observații"
+
+#: websutil.py:250
+msgid "Compilation (stdout)"
+msgstr "Compilarea temei și a testelor (stdout)"
+
+#: websutil.py:251
+msgid "Compilation (stderr)"
+msgstr "Compilarea temei și a testelor (stderr)"
+
+#: websutil.py:252
+msgid "Testing (stdout)"
+msgstr "Execuția testelor (stdout)"
+
+#: websutil.py:253
+msgid "Testing (stderr)"
+msgstr "Execuția testelor (stderr)"
+
+#: websutil.py:254
+msgid "Kernel messages(netconsole)"
+msgstr "Mesaje kernel (netconsole)"
+
+#: websutil.py:255
+msgid "Testing queue"
+msgstr "Coada temelor ce urmează să fie testate"
+
+#: websutil.py:256
+msgid "Errors"
+msgstr "Erori"
+
+#: websutil.py:491
+msgid "File truncated! Actual size"
+msgstr "Fișierul a fost truncat! Dimensiunea sa este de"
+
+#: websutil.py:491
+msgid "bytes"
+msgstr "octeți"
+
+#: websutil.py:500
+msgid "In the meantime have a fortune cookie"
+msgstr "Cât așteptați, vă oferim un răvaș"
+
+#: penalty.py:131
+msgid "The assignment was submitted before the deadline by"
+msgstr "Temă trimisă înainte de termenul limită cu"
+
+#: penalty.py:138
+msgid "The assignment was submitted after the deadline by"
+msgstr "Temă trimisă după termenul limită cu"
+
+#: penalty.py:149
+msgid "days"
+msgstr "zile"
+
+#: penalty.py:149
+msgid "day"
+msgstr "zi"
+
+#: penalty.py:150
+msgid "hours"
+msgstr "ore"
+
+#: penalty.py:150
+msgid "hour"
+msgstr "oră"
+
+#: penalty.py:151
+msgid "minutes"
+msgstr "minute"
+
+#: penalty.py:151
+msgid "minute"
+msgstr "minut"
+
+#: penalty.py:152
+msgid "seconds"
+msgstr "secunde"
+
+#: penalty.py:152
+msgid "second"
+msgstr "secundă"
+
+#: ../web_services/services.py:76
+msgid "Sent too fast"
+msgstr "Trimis prea repede"
+
+#: ../web_services/services.py:81 ../web_services/services.py:152
+#: ../web_services/services.py:216 ../web_services/services.py:281
+msgid "The assignment was submitted too late"
+msgstr "Tema a fost trimisă prea târziu"
+
+#: ../web_services/services.py:125
+msgid "File not uploaded."
+msgstr "Fișierul nu a putut fi încărcat."
+
+#: ../web_services/services.py:147 ../web_services/services.py:211
+#: ../web_services/services.py:276
+msgid "The assignment was submitted too soon"
+msgstr "Tema a fost trimisă prea devreme"
+
+#: ../web_services/services.py:606
+msgid "Invalid username/password"
+msgstr "Combinație utilizator/parolă invalidă"

@@ -112,6 +112,12 @@ class LdapConfig():
         """Get LDAP server"""
         return self.config.get('DEFAULT', 'LDAP_SERVER')
 
+    def bind_anonymous(self):
+        """Get LDAP anonymous bind flag"""
+        val = self.config.get('DEFAULT', 'LDAP_BIND_ANONYMOUS')
+        val = val.strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
+
     def bind_user(self):
         """Get LDAP bind user"""
         return self.config.get('DEFAULT', 'LDAP_BIND_USER')
