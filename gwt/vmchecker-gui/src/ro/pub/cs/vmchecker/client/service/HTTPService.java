@@ -60,13 +60,13 @@ public class HTTPService {
 	}
 
 	public void getCourses(final AsyncCallback<Course[]> callback) {
-		Delegate<Course[]> delegate = new Delegate<Course[]>(eventBus, GET_COURSES_URL, true);
+		Delegate<Course[]> delegate = new Delegate<Course[]>(eventBus, GET_COURSES_URL, true, false);
 		delegate.sendRequest(callback, new CoursesListDecoder(), null);
 	}
 
 	public void getAssignments(String courseId, final AsyncCallback<Assignment[]> callback) {
 		Delegate<Assignment[]> delegate =
-			new Delegate<Assignment[]>(eventBus, GET_ASSIGNMENTS_URL, true);
+			new Delegate<Assignment[]>(eventBus, GET_ASSIGNMENTS_URL, true, false);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		delegate.sendRequest(callback, new AssignmentsListDecoder(), params);
@@ -75,7 +75,7 @@ public class HTTPService {
 	public void getResults(String courseId, String assignmentId,
 			final AsyncCallback<EvaluationResult[]> callback) {
 		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_RESULTS_URL, true);
+			new Delegate<EvaluationResult[]>(eventBus, GET_RESULTS_URL, true, true);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -85,7 +85,7 @@ public class HTTPService {
 	public void getUploadedMd5(String courseId, String assignmentId,
 			final AsyncCallback<Md5Status> callback) {
 		Delegate<Md5Status> delegate =
-			new Delegate<Md5Status>(eventBus, GET_UPLOADED_MD5_URL, true);
+			new Delegate<Md5Status>(eventBus, GET_UPLOADED_MD5_URL, true, false);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -95,7 +95,7 @@ public class HTTPService {
 	public void getStorageDirContents(String courseId, String assignmentId,
 			final AsyncCallback<FileList> callback) {
 		Delegate<FileList> delegate =
-			new Delegate<FileList>(eventBus, GET_STORAGE_FILE_LIST_URL, true);
+			new Delegate<FileList>(eventBus, GET_STORAGE_FILE_LIST_URL, true, false);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -105,7 +105,7 @@ public class HTTPService {
 	public void getUserResults(String courseId, String assignmentId, String username,
 			final AsyncCallback<EvaluationResult[]> callback) {
 		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true);
+			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -115,7 +115,7 @@ public class HTTPService {
 
 	public void getAllResults(String courseId, final AsyncCallback<StudentInfo[]> callback) {
 		Delegate<StudentInfo[]> delegate =
-			new Delegate<StudentInfo[]>(eventBus, GET_ALL_RESULTS_URL, true);
+			new Delegate<StudentInfo[]>(eventBus, GET_ALL_RESULTS_URL, true, false);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		delegate.sendRequest(callback, new StatisticsDecoder(), params);
@@ -124,7 +124,7 @@ public class HTTPService {
 	public void performAuthentication(String username, String password,
 			final AsyncCallback<AuthenticationResponse> callback) {
 		Delegate<AuthenticationResponse> delegate =
-			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false);
+			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false, true);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
@@ -132,7 +132,7 @@ public class HTTPService {
 	}
 
 	public void sendLogoutRequest(final AsyncCallback<Boolean> callback) {
-		Delegate<Boolean> delegate = new Delegate<Boolean>(eventBus, LOGOUT_URL, true);
+		Delegate<Boolean> delegate = new Delegate<Boolean>(eventBus, LOGOUT_URL, true, false);
 		delegate.sendRequest(callback, new NullDecoder(), null);
 	}
 
