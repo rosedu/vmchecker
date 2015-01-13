@@ -1,0 +1,156 @@
+# French translations for PACKAGE package.
+# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Laurent Bindschaedler <laurent.bindschaedler@epfl.ch>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-12 18:18+0100\n"
+"PO-Revision-Date: 2015-01-12 18:19+0100\n"
+"Last-Translator: Laurent Bindschaedler <laurent.bindschaedler@epfl.ch>\n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: websutil.py:184
+msgid "No submission exists for this assignment"
+msgstr "Aucune solution n'existe pour ce projet"
+
+#: websutil.py:214
+msgid "Submission date"
+msgstr "Date de rendu"
+
+#: websutil.py:215
+msgid "Assignment deadline"
+msgstr "Date limite pour le rendu"
+
+#: websutil.py:218
+msgid "Penalty (late submission)"
+msgstr "Pénalité (rendu tardif)"
+
+#: websutil.py:219
+msgid "Penalty (grading)"
+msgstr "Pénalité (note)"
+
+#: websutil.py:220
+msgid "Penalty (total)"
+msgstr "Pénalité (total)"
+
+#: websutil.py:222 websutil.py:248
+msgid "Grade"
+msgstr "Note"
+
+#: websutil.py:247
+msgid "Results not yet available"
+msgstr "Résultats pas encore disponibles"
+
+#: websutil.py:249
+msgid "Penalty points"
+msgstr "Points de pénalité"
+
+#: websutil.py:250
+msgid "Compilation (stdout)"
+msgstr "Compilation (stdout)"
+
+#: websutil.py:251
+msgid "Compilation (stderr)"
+msgstr "Compilation (stderr)"
+
+#: websutil.py:252
+msgid "Testing (stdout)"
+msgstr "Test (stdout)"
+
+#: websutil.py:253
+msgid "Testing (stderr)"
+msgstr "Test (stderr)"
+
+#: websutil.py:254
+msgid "Kernel messages(netconsole)"
+msgstr "Messages du kernel (netconsole)"
+
+#: websutil.py:255
+msgid "Testing queue"
+msgstr "File d'attente de test"
+
+#: websutil.py:256
+msgid "Errors"
+msgstr "Erreurs"
+
+#: websutil.py:491
+msgid "File truncated! Actual size"
+msgstr "Fichier tronqué! Taille réelle"
+
+#: websutil.py:491
+msgid "bytes"
+msgstr "octets"
+
+#: websutil.py:500
+msgid "In the meantime have a fortune cookie"
+msgstr "En attendant, mangez un cookie"
+
+#: penalty.py:131
+msgid "The assignment was submitted before the deadline by"
+msgstr "Ce projet a été rendu avant la date limite par"
+
+#: penalty.py:138
+msgid "The assignment was submitted after the deadline by"
+msgstr "Ce projet a été rendu après la date limite par"
+
+#: penalty.py:149
+msgid "days"
+msgstr "jours"
+
+#: penalty.py:149
+msgid "day"
+msgstr "jour"
+
+#: penalty.py:150
+msgid "hours"
+msgstr "heures"
+
+#: penalty.py:150
+msgid "hour"
+msgstr "heure"
+
+#: penalty.py:151
+msgid "minutes"
+msgstr "minutes"
+
+#: penalty.py:151
+msgid "minute"
+msgstr "minute"
+
+#: penalty.py:152
+msgid "seconds"
+msgstr "secondes"
+
+#: penalty.py:152
+msgid "second"
+msgstr "seconde"
+
+#: ../web_services/services.py:76
+msgid "Sent too fast"
+msgstr "Envoyé trop vite"
+
+#: ../web_services/services.py:81 ../web_services/services.py:152
+#: ../web_services/services.py:216 ../web_services/services.py:281
+msgid "The assignment was submitted too late"
+msgstr "Le projet a été rendu trop tard"
+
+#: ../web_services/services.py:125
+msgid "File not uploaded."
+msgstr "Le fichier n'a pas été envoyé."
+
+#: ../web_services/services.py:147 ../web_services/services.py:211
+#: ../web_services/services.py:276
+msgid "The assignment was submitted too soon"
+msgstr "Le projet a été rendu trop vite"
+
+#: ../web_services/services.py:606
+msgid "Invalid username/password"
+msgstr "Nom d'utilisateur/password incorrect"
