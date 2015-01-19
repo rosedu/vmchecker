@@ -1,26 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Defines a class able to use configuration files with per-section defaults
 
-Permits writing of config files like this:
 
-    [section_prefix DEFAULT]
-    A = 0
-    B = 0
 
-    [section_prefix sect_id1]
-    A = 1
-
-    [section_prefix sect_id2]
-    B = 2
-
-In sect_id1 (A=1, B=0), in sect_id2 (A=0, B=2).
-""" 
 
 
 class ConfigWithDefaults(object):
-    """Provides functions to access assignments options"""
+    """Defines a class able to use configuration files with per-section defaults"""
     def __init__(self, config, section_prefix):
         """Parses the assignments from the RawConfigParser object, `config'
 
@@ -88,7 +75,7 @@ class ConfigWithDefaults(object):
 
 
     def getd(self, section_id, option, default):
-        """Returns value of `option' for `section_id'. If no values is
+        """Returns value of `option' for `section_id'. If no values are
         present """
         if not self.has(section_id, option):
             return default
