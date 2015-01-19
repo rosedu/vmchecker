@@ -68,6 +68,10 @@ public class AppController implements HistoryListener {
 					CookieManager.saveUsername(event.getUsername()); 
 					displayContent(); 
 				} else if (event.getType() == AuthenticationEvent.EventType.ERROR) {
+					/*
+					 * Reset status bar when the user is logged out.
+					 */
+					eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
 					displayLogin(); 
 				}
 			}
