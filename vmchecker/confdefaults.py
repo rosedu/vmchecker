@@ -1,12 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import ConfigParser
+import os
+
+LIST_SEPARATOR = ' '
+
+class Config:
+    """An object that encapsulates parsing of the config file of a course"""
+    def __init__(self, config_file_):
+        self.config_file = config_file_
+        self.config = ConfigParser.RawConfigParser()
+        with open(os.path.expanduser(config_file_)) as handle:
+            self.config.readfp(handle)
+
+    def get(self, section, option, default=None):
+        """A convenient wrapper for config.get()"""
+        if default != None and not self.config.has_option(section, option):
+            return default
+        return self.config.get(section, option)
+
+    def get_boolean(self, section, option, default=None):
+        val = self.get(section, option, default).strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
+
+    def get_int(self, section, option, default=None):
+        return int(self.get(section, option, default))
+
+    def get_list(self, section, option, default=None):
+        return self.get(section, option, default).split(LIST_SEPARATOR)
 
 
-
-
-
-class ConfigWithDefaults(object):
+class ConfigWithDefaults(Config):
     """Defines a class able to use configuration files with per-section defaults"""
     def __init__(self, config, section_prefix):
         """Parses the assignments from the RawConfigParser object, `config'
@@ -68,8 +93,10 @@ class ConfigWithDefaults(object):
             raise KeyError, 'No such section ID %s' % repr(section_id)
 
 
-    def get(self, section_id, option):
+    def get(self, section_id, option, default=None):
         """Returns value of `option' for `section_id'. """
+        if default != None and not self.has(section_id, option):
+            return default
         self._check_valid(section_id)
         return self.section_ids[section_id][option.lower()]
 
