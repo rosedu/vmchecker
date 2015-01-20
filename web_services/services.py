@@ -67,7 +67,6 @@ def uploadedFile(req, courseId, assignmentId, tmpname, locale=websutil.DEFAULT_L
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
@@ -140,7 +139,6 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile, locale=websutil.D
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
@@ -206,7 +204,6 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum, locale=websutil.DEF
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
@@ -273,7 +270,6 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
 
     try:
@@ -313,6 +309,7 @@ def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.D
         websutil.sanityCheckUsername(username)
 
     req.content_type = 'text/html'
+    strout = websutil.OutputString()
 
     # Check permission
     s = Session.Session(req)
@@ -334,7 +331,7 @@ def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.D
 
     # Reset the timeout
     s.save()
-    return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
+    return websutil.getUserResultsHelper(courseId, assignmentId, username, strout)
 
 ######### @ServiceMethod
 def getCourses(req):
@@ -455,7 +452,7 @@ def getUploadedMd5(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return websutil.getUserUploadedMd5(req, courseId, assignmentId, username)
+    return websutil.getUserUploadedMd5Helper(courseId, assignmentId, username, strout)
 
 
 ######### @ServiceMethod
@@ -488,7 +485,7 @@ def getStorageDirContents(req, courseId, assignmentId, locale=websutil.DEFAULT_L
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return websutil.getUserStorageDirContents(req, courseId, assignmentId, username)
+    return websutil.getUserStorageDirContentsHelper(courseId, assignmentId, username, strout)
 
 
 ######### @ServiceMethod

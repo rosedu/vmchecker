@@ -405,10 +405,8 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
     return "ok" # no problemo
 
 # Service method helpers
-def getUserUploadedMd5(req, courseId, assignmentId, username):
+def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
     """Get the current MD5 sum submitted for a given username on a given assignment"""
-    req.content_type = 'text/html'
-    strout = OutputString()
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
@@ -420,8 +418,6 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     md5_fpath = paths.submission_md5_file(submission_dir)
-
-    strout = OutputString()
 
     md5_result = {}
     try:
@@ -444,10 +440,9 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserResultsHelper(req, courseId, assignmentId, username):
+def getUserResultsHelper(courseId, assignmentId, username, strout):
     # assume that the session was already checked
 
-    strout = OutputString()
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
     except:
@@ -462,7 +457,6 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
 
     assignments = vmcfg.assignments()
     ignored_vmrs = assignments.ignored_vmrs(assignmentId)
-    strout = OutputString()
     try:
         result_files = []
         if os.path.isdir(r_path):
@@ -508,10 +502,8 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserStorageDirContents(req, courseId, assignmentId, username):
+def getUserStorageDirContentsHelper(courseId, assignmentId, username, strout):
     """Get the current files in the home directory on the storage host for a given username"""
-    req.content_type = 'text/html'
-    strout = OutputString()
     try:
         result = get_storagedir_contents(courseId, assignmentId, username)
         return result
