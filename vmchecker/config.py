@@ -38,6 +38,14 @@ class CourseConfig(Config):
         """Get the root path for the queue for this course (if any)"""
         return self.get('vmchecker', 'root_queue', self.root_path())
 
+    def students_can_view_all_results(self):
+        """Get whether a student can view all the other students' results"""
+        return self.get_boolean('vmchecker', 'StudentsCanViewAllResults', 'yes')
+
+    def view_all_results_user_list(self):
+        """Get configured list of users that can always view all results."""
+        return self.get_list('vmchecker', 'ViewAllResultsUserList', '')
+
     def storer_username(self):
         """The username to use when logging in with ssh to the storer machine"""
         return self.get('storer', 'username')

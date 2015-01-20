@@ -452,6 +452,16 @@ def getUserResultsHelper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+    # Check if the current user is allowed to view all the grades
+    # TODO: This should be implemented neater using some group
+    # and permission model.
+
+    if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "User is not authorized to view results.",
+                           'errorTrace' : strout.get()})
+
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     r_path = paths.dir_submission_results(submission_dir)
@@ -514,15 +524,29 @@ def getAllGradesHelper(courseId, username, strout):
         sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
                                                        int(assignments.get(y, "OrderNumber")))
 
+        # Check if the current user is allowed to view all the grades
+        # TODO: This should be implemented neater using some group
+        # and permission model.
+
+        user_can_view_all = False
+        if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
+            user_can_view_all = True
+
+        query_string = (
+            'SELECT users.name, assignments.name, grades.grade '
+            'FROM users, assignments, grades '
+            'WHERE 1 '
+            'AND users.id = grades.user_id '
+            'AND assignments.id = grades.assignment_id'
+        )
+
+        if not user_can_view_all:
+            query_string += ' AND users.name = "' + username + '"'
+
         grades = {}
         try:
             db_cursor = db_conn.cursor()
-            db_cursor.execute(
-                'SELECT users.name, assignments.name, grades.grade '
-                'FROM users, assignments, grades '
-                'WHERE 1 '
-                'AND users.id = grades.user_id '
-                'AND assignments.id = grades.assignment_id')
+            db_cursor.execute(query_string)
             for row in db_cursor:
                 user, assignment, grade = row
                 if not assignment in vmcfg.assignments():
