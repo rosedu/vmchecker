@@ -116,7 +116,7 @@ public class LoginPresenter implements Presenter, KeyPressHandler {
 					public void onSuccess(AuthenticationResponse result) {
 						if (result.status) {
 							/* send authentication event */
-							AuthenticationEvent authEvent = new AuthenticationEvent(result.username);
+							AuthenticationEvent authEvent = new AuthenticationEvent(result.user);
 							eventBus.fireEvent(authEvent);
 						} else {
 							widget.getLoginCommentLabel().setText(result.info);

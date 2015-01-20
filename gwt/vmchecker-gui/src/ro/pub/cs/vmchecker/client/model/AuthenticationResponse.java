@@ -3,12 +3,12 @@ package ro.pub.cs.vmchecker.client.model;
 public class AuthenticationResponse {
 	
 	public boolean status; 
-	public String username; 
+	public User user;
 	public String info; 
 	
-	public AuthenticationResponse(boolean status, String username, String info) {
+	public AuthenticationResponse(boolean status, User user, String info) {
 		this.status = status; 
-		this.username = username; 
+		this.user = user;
 		this.info = info; 
 	}
 }
