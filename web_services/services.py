@@ -569,7 +569,7 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
 
     s["username"] = username.lower()
     s.save()
-    return json.dumps({'status':True, 'username':user,
+    return json.dumps({'status':True, 'username':user, 'userid':username,
             'info':'Succesfully logged in'})
 
 ######### @ServiceMethod
