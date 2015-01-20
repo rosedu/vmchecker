@@ -301,48 +301,16 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
                        'dumpLog':strout.get()})
 
 
-
 ########## @ServiceMethod
-def getResults(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
-    """ Returns the result for the current user"""
-
-    websutil.install_i18n(websutil.sanityCheckLocale(locale))
-
-    websutil.sanityCheckAssignmentId(assignmentId)
-    websutil.sanityCheckCourseId(courseId)
-
-    # Check permission
-    req.content_type = 'text/html'
-    s = Session.Session(req)
-    if s.is_new():
-        s.invalidate()
-        return json.dumps({'errorType':websutil.ERR_AUTH,
-                'errorMessage':"",
-                'errorTrace':""})
-
-    # Get username session variable
-    strout = websutil.OutputString()
-    try:
-        s.load()
-        username = s['username']
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
-    # Reset the timeout
-    s.save()
-    return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
-
-########## @ServiceMethod
-def getUserResults(req, courseId, assignmentId, username, locale=websutil.DEFAULT_LOCALE):
+def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.DEFAULT_LOCALE):
     """Get the results for a given username"""
 
     websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
-    websutil.sanityCheckUsername(username)
+    if username != None:
+        websutil.sanityCheckUsername(username)
 
     req.content_type = 'text/html'
 
@@ -353,6 +321,16 @@ def getUserResults(req, courseId, assignmentId, username, locale=websutil.DEFAUL
         return json.dumps({'errorType':websutil.ERR_AUTH,
                 'errorMessage':"",
                 'errorTrace':""})
+
+    if username == None:
+        try:
+            s.load()
+            username = s['username']
+        except:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                               'errorMessage' : "",
+                               'errorTrace' : strout.get()})
 
     # Reset the timeout
     s.save()
