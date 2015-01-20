@@ -218,16 +218,33 @@ def submission_upload_info(courseId, user, assignment):
 
     deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
 
-    ret = ""
-    ret += _("Submission date") + "          : " + upload_time_str + "\n"
-    ret += _("Assignment deadline") + "      : " + deadline_str    + "\n"
-    ret += deadline_explanation + "\n"
-    ret += "\n"
-    ret += _("Penalty (late submission)") + " : " + str(late_penalty) + "\n"
-    ret += _("Penalty (grading)") + "        : " + str(ta_penalty)   + "\n"
-    ret += _("Penalty (total)") + "          : " + str(ta_penalty + late_penalty) + "\n"
-    ret += "---------------------------\n"
-    ret += _("Grade") + "                    : " + str(total_points + ta_penalty + late_penalty) + "\n"
+    max_line_width = 0
+    rows_to_print = [
+        [ _("Submission date"), upload_time_str ],
+        [ _("Assignment deadline"), deadline_str ],
+        [ deadline_explanation ],
+        [ '' ],
+        [ _("Penalty (late submission)"), str(late_penalty) ],
+        [ _("Penalty (grading)"), str(ta_penalty) ],
+        [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
+        [ '' ],
+        [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
+    ]
+
+    for row in rows_to_print:
+        row[0] = row[0].decode("utf-8")
+        if len(row) == 2 and len(row[0]) > max_line_width:
+            max_line_width = len(row[0])
+
+    rows_to_print[7][0] = '-' * max_line_width
+
+    ret = u""
+    for row in rows_to_print:
+        if len(row) == 1:
+            ret += row[0] + "\n"
+        elif len(row) == 2:
+            ret += unicode("{0[0]:<" + str(max_line_width) + "} : {0[1]}\n").format(row)
+
     ret += "\n"
 
     return ret
