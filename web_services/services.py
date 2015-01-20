@@ -18,7 +18,6 @@ import os
 import sys
 import time
 import codecs
-import sqlite3
 import tempfile
 import traceback
 import subprocess
@@ -506,55 +505,21 @@ def getAllGrades(req, courseId, locale=websutil.DEFAULT_LOCALE):
                 'errorMessage':"",
                 'errorTrace':""})
 
-    # Reset the timeout
-    s.save()
-
+    # Get username session variable
+    strout = websutil.OutputString()
     try:
-        # XXX: DON'T DO THIS: performance degrades very much!
-        #update_db.update_grades(courseId)
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
-        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        db_conn = sqlite3.connect(vmpaths.db_file())
-        assignments = vmcfg.assignments()
-        sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
-                                                       int(assignments.get(y, "OrderNumber")))
-
-        grades = {}
-        try:
-            db_cursor = db_conn.cursor()
-            db_cursor.execute(
-                'SELECT users.name, assignments.name, grades.grade '
-                'FROM users, assignments, grades '
-                'WHERE 1 '
-                'AND users.id = grades.user_id '
-                'AND assignments.id = grades.assignment_id')
-            for row in db_cursor:
-                user, assignment, grade = row
-                if not assignment in vmcfg.assignments():
-                    continue
-                if not vmcfg.assignments().show_grades_before_deadline(assignment):
-                    deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
-                    deadtime = time.mktime(deadline)
-                    if time.time() < deadtime:
-                        continue
-                grades.setdefault(user, {})[assignment] = grade
-            db_cursor.close()
-        finally:
-            db_conn.close()
-
-        ret = []
-        for user in sorted(grades.keys()):
-            ret.append({'studentName' : user,
-                        'studentId'   : user,
-                        'results'     : grades.get(user)})
-        return json.dumps(ret)
+        s.load()
+        username = s['username']
     except:
-        strout = websutil.OutputString()
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+    # Reset the timeout
+    s.save()
+
+    return websutil.getAllGradesHelper(courseId, username, strout)
 
 ######### @ServiceMethod
 def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
