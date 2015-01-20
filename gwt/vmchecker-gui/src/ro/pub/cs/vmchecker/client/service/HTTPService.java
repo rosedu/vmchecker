@@ -31,7 +31,6 @@ public class HTTPService {
 	public static String GET_USER_RESULTS_URL = VMCHECKER_SERVICES_URL + "getUserResults";
 	public static String GET_UPLOADED_MD5_URL = VMCHECKER_SERVICES_URL + "getUploadedMd5";
 	public static String GET_ALL_RESULTS_URL = VMCHECKER_SERVICES_URL + "getAllGrades";
-	public static String GET_RESULTS_URL = VMCHECKER_SERVICES_URL + "getResults";
 	public static String GET_STORAGE_FILE_LIST_URL = VMCHECKER_SERVICES_URL + "getStorageDirContents";
 	public static String PERFORM_AUTHENTICATION_URL = VMCHECKER_SERVICES_URL + "login";
 	public static String LOGOUT_URL = VMCHECKER_SERVICES_URL + "logout";
@@ -72,16 +71,6 @@ public class HTTPService {
 		delegate.sendRequest(callback, new AssignmentsListDecoder(), params);
 	}
 
-	public void getResults(String courseId, String assignmentId,
-			final AsyncCallback<EvaluationResult[]> callback) {
-		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_RESULTS_URL, true, true);
-		HashMap<String, String> params = new HashMap<String, String>();
-		params.put("courseId", courseId);
-		params.put("assignmentId", assignmentId);
-		delegate.sendRequest(callback, new ResultDecoder(), params);
-	}
-
 	public void getUploadedMd5(String courseId, String assignmentId,
 			final AsyncCallback<Md5Status> callback) {
 		Delegate<Md5Status> delegate =
@@ -100,6 +89,21 @@ public class HTTPService {
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
 		delegate.sendRequest(callback, new FileListDecoder(), params);
+	}
+
+	/*
+	 * getResults() and getUserResults() call the same service: GET_USER_RESULTS.
+	 * However, getResults() doesn't send the user as a parameter, thus getting information
+	 * about the current user.
+	 */
+	public void getResults(String courseId, String assignmentId,
+			final AsyncCallback<EvaluationResult[]> callback) {
+		Delegate<EvaluationResult[]> delegate =
+			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true);
+		HashMap<String, String> params = new HashMap<String, String>();
+		params.put("courseId", courseId);
+		params.put("assignmentId", assignmentId);
+		delegate.sendRequest(callback, new ResultDecoder(), params);
 	}
 
 	public void getUserResults(String courseId, String assignmentId, String username,

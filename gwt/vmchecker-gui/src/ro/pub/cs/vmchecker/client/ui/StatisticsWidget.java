@@ -15,6 +15,7 @@ import com.google.gwt.user.client.ui.Widget;
 import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.model.StudentInfo;
+import ro.pub.cs.vmchecker.client.model.User;
 import ro.pub.cs.vmchecker.client.presenter.StatisticsPresenter;
 
 public class StatisticsWidget extends Composite implements StatisticsPresenter.Widget {
@@ -72,7 +73,7 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 	}
 
 	@Override
-	public void displayInfo(String username, Assignment[] assignments, StudentInfo[] studentInfo) {
+	public void displayInfo(User user, Assignment[] assignments, StudentInfo[] studentInfo) {
 		tablePanel.clear();
 		table.resize(studentInfo.length + 1, assignments.length + 1);
 		table.setCellPadding(5);
@@ -104,7 +105,7 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 				}
 			}
 
-			if (username.equals(student.name)) {
+			if (user.name.equals(student.name) || user.id.equals(student.name)) {
 				table.getRowFormatter().addStyleName(i, style.itself());
 			} else {
 				table.getRowFormatter().addStyleName(i, (i % 2 == 0) ? style.evenrow() : style.oddrow());

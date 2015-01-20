@@ -18,7 +18,6 @@ import os
 import sys
 import time
 import codecs
-import sqlite3
 import tempfile
 import traceback
 import subprocess
@@ -67,7 +66,6 @@ def uploadedFile(req, courseId, assignmentId, tmpname, locale=websutil.DEFAULT_L
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
@@ -140,7 +138,6 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile, locale=websutil.D
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
@@ -206,7 +203,6 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum, locale=websutil.DEF
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
     try:
         submit.submit(tmpname, assignmentId, username, courseId)
@@ -273,7 +269,6 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
-    strout = websutil.OutputString()
     sys.stdout = strout
 
     try:
@@ -301,18 +296,22 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
                        'dumpLog':strout.get()})
 
 
-
 ########## @ServiceMethod
-def getResults(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
-    """ Returns the result for the current user"""
+def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.DEFAULT_LOCALE):
+    """Get the results for a given username.
+       If the username is empty, get the results of the current user."""
 
     websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
     websutil.sanityCheckAssignmentId(assignmentId)
     websutil.sanityCheckCourseId(courseId)
+    if username != None:
+        websutil.sanityCheckUsername(username)
+
+    req.content_type = 'text/html'
+    strout = websutil.OutputString()
 
     # Check permission
-    req.content_type = 'text/html'
     s = Session.Session(req)
     if s.is_new():
         s.invalidate()
@@ -320,43 +319,21 @@ def getResults(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
                 'errorMessage':"",
                 'errorTrace':""})
 
-    # Get username session variable
-    strout = websutil.OutputString()
     try:
         s.load()
-        username = s['username']
+        current_user = s['username']
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
-    # Reset the timeout
-    s.save()
-    return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
 
-########## @ServiceMethod
-def getUserResults(req, courseId, assignmentId, username, locale=websutil.DEFAULT_LOCALE):
-    """Get the results for a given username"""
-
-    websutil.install_i18n(websutil.sanityCheckLocale(locale))
-
-    websutil.sanityCheckAssignmentId(assignmentId)
-    websutil.sanityCheckCourseId(courseId)
-    websutil.sanityCheckUsername(username)
-
-    req.content_type = 'text/html'
-
-    # Check permission
-    s = Session.Session(req)
-    if s.is_new():
-        s.invalidate()
-        return json.dumps({'errorType':websutil.ERR_AUTH,
-                'errorMessage':"",
-                'errorTrace':""})
+    if username == None:
+        username = current_user
 
     # Reset the timeout
     s.save()
-    return websutil.getUserResultsHelper(req, courseId, assignmentId, username)
+    return websutil.getUserResultsHelper(courseId, assignmentId, username, current_user, strout)
 
 ######### @ServiceMethod
 def getCourses(req):
@@ -477,7 +454,7 @@ def getUploadedMd5(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return websutil.getUserUploadedMd5(req, courseId, assignmentId, username)
+    return websutil.getUserUploadedMd5Helper(courseId, assignmentId, username, strout)
 
 
 ######### @ServiceMethod
@@ -510,7 +487,7 @@ def getStorageDirContents(req, courseId, assignmentId, locale=websutil.DEFAULT_L
                            'errorTrace' : strout.get()})
     # Reset the timeout
     s.save()
-    return websutil.getUserStorageDirContents(req, courseId, assignmentId, username)
+    return websutil.getUserStorageDirContentsHelper(courseId, assignmentId, username, strout)
 
 
 ######### @ServiceMethod
@@ -531,55 +508,21 @@ def getAllGrades(req, courseId, locale=websutil.DEFAULT_LOCALE):
                 'errorMessage':"",
                 'errorTrace':""})
 
-    # Reset the timeout
-    s.save()
-
+    # Get username session variable
+    strout = websutil.OutputString()
     try:
-        # XXX: DON'T DO THIS: performance degrades very much!
-        #update_db.update_grades(courseId)
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
-        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        db_conn = sqlite3.connect(vmpaths.db_file())
-        assignments = vmcfg.assignments()
-        sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
-                                                       int(assignments.get(y, "OrderNumber")))
-
-        grades = {}
-        try:
-            db_cursor = db_conn.cursor()
-            db_cursor.execute(
-                'SELECT users.name, assignments.name, grades.grade '
-                'FROM users, assignments, grades '
-                'WHERE 1 '
-                'AND users.id = grades.user_id '
-                'AND assignments.id = grades.assignment_id')
-            for row in db_cursor:
-                user, assignment, grade = row
-                if not assignment in vmcfg.assignments():
-                    continue
-                if not vmcfg.assignments().show_grades_before_deadline(assignment):
-                    deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
-                    deadtime = time.mktime(deadline)
-                    if time.time() < deadtime:
-                        continue
-                grades.setdefault(user, {})[assignment] = grade
-            db_cursor.close()
-        finally:
-            db_conn.close()
-
-        ret = []
-        for user in sorted(grades.keys()):
-            ret.append({'studentName' : user,
-                        'studentId'   : user,
-                        'results'     : grades.get(user)})
-        return json.dumps(ret)
+        s.load()
+        username = s['username']
     except:
-        strout = websutil.OutputString()
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+    # Reset the timeout
+    s.save()
+
+    return websutil.getAllGradesHelper(courseId, username, strout)
 
 ######### @ServiceMethod
 def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
@@ -629,7 +572,7 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
 
     s["username"] = username.lower()
     s.save()
-    return json.dumps({'status':True, 'username':user,
+    return json.dumps({'status':True, 'username':user, 'userid':username,
             'info':'Succesfully logged in'})
 
 ######### @ServiceMethod

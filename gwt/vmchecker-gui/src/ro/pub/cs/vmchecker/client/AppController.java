@@ -65,9 +65,13 @@ public class AppController implements HistoryListener {
 			public void onAuthenticationChange(AuthenticationEvent event) {
 				GWT.log("Authentication event received", null); 
 				if (event.getType() == AuthenticationEvent.EventType.SUCCESS) {
-					CookieManager.saveUsername(event.getUsername()); 
+					CookieManager.saveUser(event.getUser());
 					displayContent(); 
 				} else if (event.getType() == AuthenticationEvent.EventType.ERROR) {
+					/*
+					 * Reset status bar when the user is logged out.
+					 */
+					eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
 					displayLogin(); 
 				}
 			}
@@ -135,7 +139,7 @@ public class AppController implements HistoryListener {
 				
 				/* initialize header presenter */
 				headerPresenter = new HeaderPresenter(eventBus, service, 
-						new HeaderWidget(CookieManager.getUsername()));
+						new HeaderWidget(CookieManager.getUser()));
 				headerPresenter.setCourses(courses); 
 				 
 				headerPresenter.go(container); 
@@ -168,7 +172,7 @@ public class AppController implements HistoryListener {
 				if (mainPresenter != null) {
 					mainPresenter.clearEventHandlers(); 
 				}
-				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, CookieManager.getUsername(), new AssignmentWidget());
+				mainPresenter = new AssignmentPresenter(eventBus, service, idToCourse.get(token).id, CookieManager.getUser(), new AssignmentWidget());
 				headerPresenter.selectCourse(idToCourse.get(token).id); 
 			} else {
 				token = courses.get(0).id;

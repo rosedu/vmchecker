@@ -95,8 +95,7 @@ class VmWareVM(VM):
         `error_fname`.
         """
 
-        if timeout != None:
-            timeout = int(timeout)
+        if timeout > 0:
             _logger.info('Waiting for VMWare Tools with a timeout of %d seconds' % timeout)
 
         tools_thd = Thread(target = self._wait_for_tools)
@@ -145,7 +144,7 @@ class VmWareVM(VM):
         tools_timeout = self.asscfg.delay_wait_for_tools(self.assignment)
         self.powerOn()
         
-        if not self.wait_for_tools_with_timeout( tools_timeout, self.error_fname):
+        if not self.wait_for_tools_with_timeout(tools_timeout, self.error_fname):
             # no tools, nothing to do.
             return False
 

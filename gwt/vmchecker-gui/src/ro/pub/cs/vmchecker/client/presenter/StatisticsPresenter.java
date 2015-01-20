@@ -5,6 +5,7 @@ import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.model.StudentInfo;
+import ro.pub.cs.vmchecker.client.model.User;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 
 import com.google.gwt.core.client.GWT;
@@ -19,7 +20,7 @@ public class StatisticsPresenter implements Presenter {
 
 	public interface Widget {
 		HTMLTable getTable();
-		void displayInfo(String username, Assignment[] assignments, StudentInfo[] studentInfo);
+		void displayInfo(User user, Assignment[] assignments, StudentInfo[] studentInfo);
 		void displayResultDetails(String htmlDetails);
 	}
 
@@ -31,17 +32,17 @@ public class StatisticsPresenter implements Presenter {
 	private StatisticsPresenter.Widget widget;
 
 	private String courseId;
-	private String username;
+	private User user;
 	private Assignment[] assignments;
 	private StudentInfo[] studentsInfo;
 
 	public StatisticsPresenter(HandlerManager eventBus, HTTPService service,
-			String courseId, String username, Assignment[] assignments, StatisticsPresenter.Widget widget) {
+			String courseId, User user, Assignment[] assignments, StatisticsPresenter.Widget widget) {
 		this.eventBus = eventBus;
 		this.service = service;
 		this.courseId = courseId;
 		this.assignments = assignments;
-		this.username = username;
+		this.user = user;
 		bindWidget(widget);
 		listenTableEvents();
 	}
@@ -112,7 +113,7 @@ public class StatisticsPresenter implements Presenter {
 			public void onSuccess(StudentInfo[] result) {
 				container.clear();
 				studentsInfo = result;
-				widget.displayInfo(username, assignments, result);
+				widget.displayInfo(user, assignments, result);
 				container.add((com.google.gwt.user.client.ui.Widget) widget);
 				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
 			}

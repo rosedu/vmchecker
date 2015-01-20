@@ -4,6 +4,8 @@ import java.util.Date;
 
 import com.google.gwt.user.client.Cookies;
 
+import ro.pub.cs.vmchecker.client.model.User;
+
 /**
  * @author claudiugh
  *
@@ -12,20 +14,34 @@ import com.google.gwt.user.client.Cookies;
  */
 public class CookieManager {
 	public static final String COURSE_COOKIE = "VMCHK-COURSE"; 
-	public static final String USERNAME_COOKIE = "VMCHK-USER"; 
+	public static final String USERNAME_COOKIE = "VMCHK-USER-NAME";
+	public static final String USERID_COOKIE = "VMCHK-USER-ID";
 	
 	/**
-	 * the username is stored as cookie because it is obtained only 
+	 * the user name and id are stored as cookie because it is obtained only
 	 * when login is successfully performed 
 	 * @param username
 	 */
-	public static void saveUsername(String username) {
+	public static void saveUser(User user) {
 		Date now = new Date(); 
-		Cookies.setCookie(USERNAME_COOKIE, username, new Date(now.getYear() + 1, now.getMonth(), now.getDay())); 		
+		Cookies.setCookie(USERNAME_COOKIE, user.name, new Date(now.getYear() + 1, now.getMonth(), now.getDay())); 
+		Cookies.setCookie(USERID_COOKIE, user.id, new Date(now.getYear() + 1, now.getMonth(), now.getDay())); 
 	}
 	
-	public static String getUsername() {
-		return Cookies.getCookie(USERNAME_COOKIE); 
+	public static User getUser() {
+		String userId = Cookies.getCookie(USERID_COOKIE);
+		String userName = Cookies.getCookie(USERNAME_COOKIE);
+
+		/*
+		 * A user must have a valid id.
+		 */
+		if (userId == null)
+			return null;
+
+		if (userName == null)
+			userName = "";
+
+		return new User(userId, userName);
 	}
 	
 	/**

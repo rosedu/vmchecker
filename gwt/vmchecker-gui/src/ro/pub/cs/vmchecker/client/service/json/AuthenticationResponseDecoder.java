@@ -1,6 +1,7 @@
 package ro.pub.cs.vmchecker.client.service.json;
 
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
+import ro.pub.cs.vmchecker.client.model.User;
 
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
@@ -10,6 +11,7 @@ public class AuthenticationResponseDecoder implements JSONDecoder<Authentication
 
 	public static final String statusKey = "status"; 
 	public static final String usernameKey = "username"; 
+	public static final String useridKey = "userid";
 	public static final String infoKey = "info"; 
 	
 	@Override
@@ -19,8 +21,9 @@ public class AuthenticationResponseDecoder implements JSONDecoder<Authentication
 
 		boolean status = jsonObj.get(statusKey).isBoolean().booleanValue();
 		String username = jsonObj.get(usernameKey).isString().stringValue();
+		String userid = jsonObj.get(useridKey).isString().stringValue();
 		String info = jsonObj.get(infoKey).isString().stringValue();
-		return new AuthenticationResponse(status, username, info);
+		return new AuthenticationResponse(status, new User(userid, username), info);
 	}
 
 }

@@ -2,6 +2,8 @@ package ro.pub.cs.vmchecker.client.event;
 
 import com.google.gwt.event.shared.GwtEvent;
 
+import ro.pub.cs.vmchecker.client.model.User;
+
 public class AuthenticationEvent extends GwtEvent<AuthenticationEventHandler> {
 
 	public static final GwtEvent.Type<AuthenticationEventHandler> TYPE
@@ -11,24 +13,24 @@ public class AuthenticationEvent extends GwtEvent<AuthenticationEventHandler> {
 		SUCCESS, ERROR
 	}
 	
-	private String username; 
+	private User user;
 	private EventType type; 
 	
 	public AuthenticationEvent(EventType type) {
 		this.type = type; 
 	}
 	
-	public AuthenticationEvent(String username) {
+	public AuthenticationEvent(User user) {
 		this.type = EventType.SUCCESS; 
-		this.username = username; 
+		this.user = user;
 	}
 	
 	public EventType getType() {
 		return type; 
 	}
 	
-	public String getUsername() {
-		return username; 
+	public User getUser() {
+		return user;
 	}
 	
 	@Override

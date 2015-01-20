@@ -8,36 +8,21 @@ from __future__ import with_statement
 import os
 import time
 import datetime
-import ConfigParser
 import re
 
 from . import dirlocking
-from . import confdefaults
+from confdefaults import Config
+from confdefaults import ConfigWithDefaults
 
 
 DATE_FORMAT = '%Y.%m.%d %H:%M:%S'
 DEFAULT_LDAP_CONFIG = '/etc/vmchecker/ldap.config'
 DEFAULT_ACL_CONFIG = '/etc/vmchecker/acl.config'
 
-
-class CourseConfig:
-    """An object that encapsulates parsing of the config file of a course"""
-    def __init__(self, config_file_):
-        self.config_file = config_file_
-        self.config = ConfigParser.RawConfigParser()
-        with open(os.path.expanduser(config_file_)) as handle:
-            self.config.readfp(handle)
-
-    def get(self, section, option, default=None):
-        """A convenient wrapper for config.get()"""
-        if default != None and not self.config.has_option(section, option):
-            return default
-        return self.config.get(section, option)
-
-
+class CourseConfig(Config):
     def repository_path(self):
         """Get the submission (git) repository path for this course."""
-        return self.config.get('vmchecker', 'repository')
+        return self.get('vmchecker', 'repository')
 
     def sections(self):
         """Give access to the underlining config's sections"""
@@ -47,26 +32,31 @@ class CourseConfig:
 
     def root_path(self):
         """Get the root path for this course"""
-        return self.config.get('vmchecker', 'root')
+        return self.get('vmchecker', 'root')
 
     def root_path_queue_manager(self):
         """Get the root path for the queue for this course (if any)"""
-        try:
-            return self.config.get('vmchecker', 'root_queue')
-        except ConfigParser.NoOptionError:
-            return self.root_path()
+        return self.get('vmchecker', 'root_queue', self.root_path())
+
+    def students_can_view_all_results(self):
+        """Get whether a student can view all the other students' results"""
+        return self.get_boolean('vmchecker', 'StudentsCanViewAllResults', 'yes')
+
+    def view_all_results_user_list(self):
+        """Get configured list of users that can always view all results."""
+        return self.get_list('vmchecker', 'ViewAllResultsUserList', '')
 
     def storer_username(self):
         """The username to use when logging in with ssh to the storer machine"""
-        return self.config.get('storer', 'username')
+        return self.get('storer', 'username')
 
     def storer_hostname(self):
         """The hostname to use when logging in with ssh to the storer machine"""
-        return self.config.get('storer', 'hostname')
+        return self.get('storer', 'hostname')
 
     def storer_sshid(self):
         """The ssh id used to communicate from the storer to the testers"""
-        return self.config.get('storer', 'sshid')
+        return self.get('storer', 'sshid')
 
     def known_hosts_file(self):
         """The path on the storer machine where the known_hosts file to
@@ -75,7 +65,7 @@ class CourseConfig:
 
     def course_name(self):
         """Return a human readable name for the course"""
-        return self.config.get('vmchecker', 'coursename')
+        return self.get('vmchecker', 'coursename')
 
     def upload_active_interval(self):
         """Time interval when upload is active.
@@ -84,8 +74,8 @@ class CourseConfig:
         period in which howework upload is active in vmchecker for
         this course.
         """
-        start = self.config.get('vmchecker', 'UploadActiveFrom')
-        stop  = self.config.get('vmchecker', 'UploadActiveUntil')
+        start = self.get('vmchecker', 'UploadActiveFrom')
+        stop  = self.get('vmchecker', 'UploadActiveUntil')
         return (time.strptime(start, DATE_FORMAT),
                 time.strptime(stop, DATE_FORMAT))
 
@@ -101,56 +91,51 @@ class CourseConfig:
 
 
 
-class LdapConfig():
+class LdapConfig(Config):
     """Info for interaction with LDAP for student/teaching
     assistent authentication"""
     def __init__(self, ldap_cfg_fname=DEFAULT_LDAP_CONFIG):
-        self.config = ConfigParser.RawConfigParser()
-        with open(os.path.expanduser(ldap_cfg_fname)) as handle:
-            self.config.readfp(handle)
+        Config.__init__(self, config_file_=ldap_cfg_fname)
+
     def server(self):
         """Get LDAP server"""
-        return self.config.get('DEFAULT', 'LDAP_SERVER')
+        return self.get('DEFAULT', 'LDAP_SERVER')
 
     def bind_anonymous(self):
         """Get LDAP anonymous bind flag"""
-        val = self.config.get('DEFAULT', 'LDAP_BIND_ANONYMOUS')
-        val = val.strip().lower()
-        return (val == 'yes') or (val == 'y') or (val == 'true')
+        return self.get_boolean('DEFAULT', 'LDAP_BIND_ANONYMOUS', 'no')
 
     def bind_user(self):
         """Get LDAP bind user"""
-        return self.config.get('DEFAULT', 'LDAP_BIND_USER')
+        return self.get('DEFAULT', 'LDAP_BIND_USER')
 
     def bind_pass(self):
         """Get LDAP bind pass"""
-        return self.config.get('DEFAULT', 'LDAP_BIND_PASS')
+        return self.get('DEFAULT', 'LDAP_BIND_PASS')
 
     def root_search(self):
         """Get LDAP root search"""
-        return self.config.get('DEFAULT', 'LDAP_ROOT_SEARCH')
+        return self.get('DEFAULT', 'LDAP_ROOT_SEARCH')
 
 
 
-class AclConfig():
+class AclConfig(Config):
     """Configuration for the users and groups that will implicitly
     receive default ACLs for all storer root folders"""
-    def __init__(self, acl_cfg_fname=DEFAULT_ACL_CONFIG):
-        self.config = ConfigParser.RawConfigParser()
-        with open(acl_cfg_fname) as handle:
-            self.config.readfp(handle)
+    def __init__(self, acl_cfg_fname=DEFAULT_LDAP_CONFIG):
+        Config.__init__(self, config_file_=acl_cfg_fname)
 
     def users(self):
         """The list of users that will receive default ACLs"""
-        return self.config.get('DEFAULT', 'users').split(' ')
+        return self.get_list('DEFAULT', 'users')
 
     def groups(self):
         """The list of groups that will receive default ACLs"""
-        return self.config.get('DEFAULT', 'groups').split(' ')
+        return self.get_list('DEFAULT', 'groups')
 
 
 
-class AssignmentsConfig(confdefaults.ConfigWithDefaults):
+class AssignmentsConfig(ConfigWithDefaults):
     """Obtain information about assignments from a config file.
 
         [assignment DEFAULT]
@@ -164,7 +149,7 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
     """
 
     def __init__(self, config):
-        confdefaults.ConfigWithDefaults.__init__(self, config, 'assignment ')
+        ConfigWithDefaults.__init__(self, config, 'assignment ')
 
 
     def lock(self, vmpaths, assignment):
@@ -186,31 +171,24 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
 
     def timedelta(self, assignment):
         """Returns a timedelta object with minimum delay between submissions"""
-        return datetime.timedelta(seconds=int(
-                self.get(assignment, 'timedelta')))
+        return datetime.timedelta(seconds=self.get_int(assignment, 'timedelta'))
 
     def revert_to_snapshot(self, assignment):
         """Should the machine be reverted to it's last snapshot?"""
-        val = self.getd(assignment, 'RevertToSnapshot', 'yes')
-        val = val.strip().lower()
-        return (val == 'yes') or (val == 'y') or (val == 'true')
+        return self.get_boolean(assignment, 'RevertToSnapshot', 'yes')
 
     def submit_only(self, assignment):
         """This returns True, when there are no tests defined for this assignment.
         This is useful when we want to use VMChecker only as a submission
         system. Default is 'no.
         """
-        val = self.getd(assignment, 'SubmitOnly', 'no')
-        val = val.strip().lower()
-        return (val == 'yes') or (val == 'y') or (val == 'true')
+        return self.get_boolean(assignment, 'SubmitOnly', 'no')
 
     def show_grades_before_deadline(self, assignment):
         """This returns True, when we want to show the grades, in the general
         view before the deadline. Default is 'yes'.
         """
-        val = self.getd(assignment, 'ShowGradesBeforeDeadline', 'yes')
-        val = val.strip().lower()
-        return (val == 'yes') or (val == 'y') or (val == 'true')
+        return self.get_boolean(assignment, 'ShowGradesBeforeDeadline', 'yes')
 
     def ignored_vmrs(self, assignment):
         """This returns a list of the *.vmr files that are not displayed in
@@ -228,9 +206,7 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         the deadline.
         Default is 'no'.
         """
-        val = self.getd(assignment, 'DeadlineIsHard', 'no')
-        val = val.strip().lower()
-        return (val == 'yes') or (val == 'y') or (val == 'true')
+        return self.get_boolean(assignment, 'DeadlineIsHard', 'no')
 
     def max_submission_size(self, assignment):
         """Return the maximum size of the unpacked contents.
@@ -261,16 +237,12 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
         defaults to 0.
 
         """
-        val = self.getd(assignment, 'DelayBetweenToolsAndTests', '0')
-        return int(val)
+        return self.get_int(assignment, 'DelayBetweenToolsAndTests', '0')
 
 
     def delay_wait_for_tools(self, assignment):
         """How much time (in seconds) to wait for vmware tools to load."""
-        tools_timeout = self.getd(assignment, 'WaitForVmwareToolsTimeout', None)
-        if tools_timeout == None:
-            return None
-        return int(tools_timeout)
+        return self.get_int(assignment, 'WaitForVmwareToolsTimeout', '0')
 
     def storage_basepath(self, assignment, username):
         """When using an external storage server (for Large assignments).
@@ -300,7 +272,7 @@ class AssignmentsConfig(confdefaults.ConfigWithDefaults):
 
         return result
 
-class TestersConfig(confdefaults.ConfigWithDefaults):
+class TestersConfig(ConfigWithDefaults):
     """Obtain information about assignments from a config file.
 
         [tester DEFAULT]
@@ -314,7 +286,7 @@ class TestersConfig(confdefaults.ConfigWithDefaults):
     """
 
     def __init__(self, config):
-        confdefaults.ConfigWithDefaults.__init__(self, config, 'tester ')
+        ConfigWithDefaults.__init__(self, config, 'tester ')
 
 
     def login_username(self, tester):
@@ -345,12 +317,7 @@ class VmwareConfig():
 
     def vmware_register_and_unregister(self):
         """Should the vmx be unregistered at shutdown?"""
-        if not self.tstcfg.has(self.tester_id, 'VmwareRegUnreg'):
-            return False # if key not present, don't reg/unreg
-
-        val = self.tstcfg.get(self.tester_id, 'VmwareRegUnreg')
-        val = val.strip().lower()
-        return val == "1" or val == "yes" or val == "y" or val == "true"
+        self.tstcfg.get_boolean(self.tester_id, 'VmwareRegUnreg', 'no')
 
 
     def vmware_type(self):

@@ -1,26 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Defines a class able to use configuration files with per-section defaults
+import ConfigParser
+import os
 
-Permits writing of config files like this:
+LIST_SEPARATOR = ' '
 
-    [section_prefix DEFAULT]
-    A = 0
-    B = 0
+class Config:
+    """An object that encapsulates parsing of the config file of a course"""
+    def __init__(self, config_file_):
+        self.config_file = config_file_
+        self.config = ConfigParser.RawConfigParser()
+        with open(os.path.expanduser(config_file_)) as handle:
+            self.config.readfp(handle)
 
-    [section_prefix sect_id1]
-    A = 1
+    def get(self, section, option, default=None):
+        """A convenient wrapper for config.get()"""
+        if default != None and not self.config.has_option(section, option):
+            return default
+        return self.config.get(section, option)
 
-    [section_prefix sect_id2]
-    B = 2
+    def get_boolean(self, section, option, default=None):
+        val = self.get(section, option, default).strip().lower()
+        return (val == 'yes') or (val == 'y') or (val == 'true')
 
-In sect_id1 (A=1, B=0), in sect_id2 (A=0, B=2).
-""" 
+    def get_int(self, section, option, default=None):
+        return int(self.get(section, option, default))
+
+    def get_list(self, section, option, default=None):
+        return self.get(section, option, default).split(LIST_SEPARATOR)
 
 
-class ConfigWithDefaults(object):
-    """Provides functions to access assignments options"""
+class ConfigWithDefaults(Config):
+    """Defines a class able to use configuration files with per-section defaults"""
     def __init__(self, config, section_prefix):
         """Parses the assignments from the RawConfigParser object, `config'
 
@@ -81,14 +93,16 @@ class ConfigWithDefaults(object):
             raise KeyError, 'No such section ID %s' % repr(section_id)
 
 
-    def get(self, section_id, option):
+    def get(self, section_id, option, default=None):
         """Returns value of `option' for `section_id'. """
+        if default != None and not self.has(section_id, option):
+            return default
         self._check_valid(section_id)
         return self.section_ids[section_id][option.lower()]
 
 
     def getd(self, section_id, option, default):
-        """Returns value of `option' for `section_id'. If no values is
+        """Returns value of `option' for `section_id'. If no values are
         present """
         if not self.has(section_id, option):
             return default

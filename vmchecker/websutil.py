@@ -9,6 +9,7 @@ import ldap
 import time
 import paramiko
 import traceback
+import sqlite3
 import codecs
 import subprocess
 from cgi import escape
@@ -217,16 +218,33 @@ def submission_upload_info(courseId, user, assignment):
 
     deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
 
-    ret = ""
-    ret += _("Submission date") + "          : " + upload_time_str + "\n"
-    ret += _("Assignment deadline") + "      : " + deadline_str    + "\n"
-    ret += deadline_explanation + "\n"
-    ret += "\n"
-    ret += _("Penalty (late submission)") + " : " + str(late_penalty) + "\n"
-    ret += _("Penalty (grading)") + "        : " + str(ta_penalty)   + "\n"
-    ret += _("Penalty (total)") + "          : " + str(ta_penalty + late_penalty) + "\n"
-    ret += "---------------------------\n"
-    ret += _("Grade") + "                    : " + str(total_points + ta_penalty + late_penalty) + "\n"
+    max_line_width = 0
+    rows_to_print = [
+        [ _("Submission date"), upload_time_str ],
+        [ _("Assignment deadline"), deadline_str ],
+        [ deadline_explanation ],
+        [ '' ],
+        [ _("Penalty (late submission)"), str(late_penalty) ],
+        [ _("Penalty (grading)"), str(ta_penalty) ],
+        [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
+        [ '' ],
+        [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
+    ]
+
+    for row in rows_to_print:
+        row[0] = row[0].decode("utf-8")
+        if len(row) == 2 and len(row[0]) > max_line_width:
+            max_line_width = len(row[0])
+
+    rows_to_print[7][0] = '-' * max_line_width
+
+    ret = u""
+    for row in rows_to_print:
+        if len(row) == 1:
+            ret += row[0] + "\n"
+        elif len(row) == 2:
+            ret += unicode("{0[0]:<" + str(max_line_width) + "} : {0[1]}\n").format(row)
+
     ret += "\n"
 
     return ret
@@ -405,10 +423,8 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
     return "ok" # no problemo
 
 # Service method helpers
-def getUserUploadedMd5(req, courseId, assignmentId, username):
+def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
     """Get the current MD5 sum submitted for a given username on a given assignment"""
-    req.content_type = 'text/html'
-    strout = OutputString()
     try:
         vmcfg = config.CourseConfig(CourseList().course_config(courseId))
     except:
@@ -420,8 +436,6 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     md5_fpath = paths.submission_md5_file(submission_dir)
-
-    strout = OutputString()
 
     md5_result = {}
     try:
@@ -444,10 +458,9 @@ def getUserUploadedMd5(req, courseId, assignmentId, username):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserResultsHelper(req, courseId, assignmentId, username):
+def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
     # assume that the session was already checked
 
-    strout = OutputString()
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
     except:
@@ -456,13 +469,24 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+    # Check if the current user is allowed to view all the grades
+    # TODO: This should be implemented neater using some group
+    # and permission model.
+
+    is_authorized = vmcfg.students_can_view_all_results() or currentUser in vmcfg.view_all_results_user_list() or username == currentUser
+
+    if not is_authorized:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "User is not authorized to view results.",
+                           'errorTrace' : strout.get()})
+
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
     r_path = paths.dir_submission_results(submission_dir)
 
     assignments = vmcfg.assignments()
     ignored_vmrs = assignments.ignored_vmrs(assignmentId)
-    strout = OutputString()
     try:
         result_files = []
         if os.path.isdir(r_path):
@@ -508,10 +532,68 @@ def getUserResultsHelper(req, courseId, assignmentId, username):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserStorageDirContents(req, courseId, assignmentId, username):
+def getAllGradesHelper(courseId, username, strout):
+    try:
+        # XXX: DON'T DO THIS: performance degrades very much!
+        #update_db.update_grades(courseId)
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+        db_conn = sqlite3.connect(vmpaths.db_file())
+        assignments = vmcfg.assignments()
+        sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
+                                                       int(assignments.get(y, "OrderNumber")))
+
+        # Check if the current user is allowed to view all the grades
+        # TODO: This should be implemented neater using some group
+        # and permission model.
+
+        user_can_view_all = False
+        if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
+            user_can_view_all = True
+
+        query_string = (
+            'SELECT users.name, assignments.name, grades.grade '
+            'FROM users, assignments, grades '
+            'WHERE 1 '
+            'AND users.id = grades.user_id '
+            'AND assignments.id = grades.assignment_id'
+        )
+
+        if not user_can_view_all:
+            query_string += ' AND users.name = "' + username + '"'
+
+        grades = {}
+        try:
+            db_cursor = db_conn.cursor()
+            db_cursor.execute(query_string)
+            for row in db_cursor:
+                user, assignment, grade = row
+                if not assignment in vmcfg.assignments():
+                    continue
+                if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                    deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                    deadtime = time.mktime(deadline)
+                    if time.time() < deadtime:
+                        continue
+                grades.setdefault(user, {})[assignment] = grade
+            db_cursor.close()
+        finally:
+            db_conn.close()
+
+        ret = []
+        for user in sorted(grades.keys()):
+            ret.append({'studentName' : user,
+                        'studentId'   : user,
+                        'results'     : grades.get(user)})
+        return json.dumps(ret)
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+def getUserStorageDirContentsHelper(courseId, assignmentId, username, strout):
     """Get the current files in the home directory on the storage host for a given username"""
-    req.content_type = 'text/html'
-    strout = OutputString()
     try:
         result = get_storagedir_contents(courseId, assignmentId, username)
         return result

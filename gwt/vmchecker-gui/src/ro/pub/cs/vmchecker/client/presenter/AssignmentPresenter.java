@@ -9,6 +9,7 @@ import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.ui.AssignmentBoardWidget;
 import ro.pub.cs.vmchecker.client.ui.NumberedMenu;
 import ro.pub.cs.vmchecker.client.ui.StatisticsWidget;
+import ro.pub.cs.vmchecker.client.model.User;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -27,7 +28,7 @@ public class AssignmentPresenter implements Presenter {
 
 	private Assignment[] assignments;
 	private String courseId;
-	private String username;
+	private User user;
 
 	private MenuPresenter menuPresenter = null;
 	private AssignmentBoardPresenter boardPresenter = null;
@@ -42,12 +43,12 @@ public class AssignmentPresenter implements Presenter {
 	}
 
 	public AssignmentPresenter(HandlerManager eventBus, HTTPService service, String courseId,
-			String username, AssignmentWidget widget) {
+			User user, AssignmentWidget widget) {
 		this.eventBus = eventBus;
 		this.service = service;
 		this.courseId = courseId;
 		this.widget = widget;
-		this.username = username;
+		this.user = user;
 	}
 
 	private void bindWidget(final AssignmentWidget widget) {
@@ -99,7 +100,7 @@ public class AssignmentPresenter implements Presenter {
 
 				menuPresenter = new MenuPresenter(eventBus, new NumberedMenu(titles));
 				boardPresenter = new AssignmentBoardPresenter(eventBus, service, courseId, new AssignmentBoardWidget());
-				statsPresenter = new StatisticsPresenter(eventBus, service, courseId, username, result, new StatisticsWidget());
+				statsPresenter = new StatisticsPresenter(eventBus, service, courseId, user, result, new StatisticsWidget());
 
 				bindWidget(widget);
 				widget.getMenuPanel().clear();

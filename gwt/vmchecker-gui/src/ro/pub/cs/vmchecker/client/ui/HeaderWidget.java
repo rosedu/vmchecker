@@ -17,6 +17,7 @@ import com.google.gwt.user.client.ui.Widget;
 import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent.StatusType;
 import ro.pub.cs.vmchecker.client.presenter.HeaderPresenter;
+import ro.pub.cs.vmchecker.client.model.User;
 
 public class HeaderWidget extends Composite
 	implements HeaderPresenter.HeaderWidget {
@@ -39,11 +40,11 @@ public class HeaderWidget extends Composite
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 
-	public HeaderWidget(String username) {
+	public HeaderWidget(User user) {
 		initWidget(uiBinder.createAndBindUi(this));
 		courseSelection.setText(constants.courseSelection());
 		logoutButton.setText(constants.logoutButton());
-		usernameLabel.setText(username);
+		usernameLabel.setText(user.name + " (" + user.id + ")");
 	}
 
 	@Override
