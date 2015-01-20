@@ -298,7 +298,8 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
 
 ########## @ServiceMethod
 def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.DEFAULT_LOCALE):
-    """Get the results for a given username"""
+    """Get the results for a given username.
+       If the username is empty, get the results of the current user."""
 
     websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
@@ -318,19 +319,21 @@ def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.D
                 'errorMessage':"",
                 'errorTrace':""})
 
+    try:
+        s.load()
+        current_user = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
     if username == None:
-        try:
-            s.load()
-            username = s['username']
-        except:
-            traceback.print_exc(file = strout)
-            return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
-                               'errorMessage' : "",
-                               'errorTrace' : strout.get()})
+        username = current_user
 
     # Reset the timeout
     s.save()
-    return websutil.getUserResultsHelper(courseId, assignmentId, username, strout)
+    return websutil.getUserResultsHelper(courseId, assignmentId, username, current_user, strout)
 
 ######### @ServiceMethod
 def getCourses(req):

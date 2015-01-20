@@ -458,7 +458,7 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserResultsHelper(courseId, assignmentId, username, strout):
+def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
     # assume that the session was already checked
 
     try:
@@ -473,7 +473,9 @@ def getUserResultsHelper(courseId, assignmentId, username, strout):
     # TODO: This should be implemented neater using some group
     # and permission model.
 
-    if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
+    is_authorized = vmcfg.students_can_view_all_results() or currentUser in vmcfg.view_all_results_user_list() or username == currentUser
+
+    if not is_authorized:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
                            'errorMessage' : "User is not authorized to view results.",
