@@ -561,19 +561,22 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
         user = websutil.get_user(username, password)
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})  	
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
 
     if user is None:
         s.invalidate()
-        return json.dumps({'status':False, 'username':"", 
-            'info':_('Invalid username/password')})
+        return json.dumps({'status' : False,
+                           'username' : "",
+                           'info':_('Invalid username/password')})
 
     s["username"] = username.lower()
     s.save()
-    return json.dumps({'status':True, 'username':user, 'userid':username,
-            'info':'Succesfully logged in'})
+    return json.dumps({'status' : True,
+                       'username' : user,
+                       'userid' : username,
+                       'info' : 'Succesfully logged in'})
 
 ######### @ServiceMethod
 def autologin(req, username):
