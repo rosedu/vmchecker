@@ -20,9 +20,16 @@ public class AuthenticationResponseDecoder implements JSONDecoder<Authentication
 		JSONObject jsonObj = jsonValue.isObject();
 
 		boolean status = jsonObj.get(statusKey).isBoolean().booleanValue();
+		String info = jsonObj.get(infoKey).isString().stringValue();
+		if (!status) {
+			/*
+			 * Authentication failed.
+			 */
+			return new AuthenticationResponse(status, null, info);
+		}
+
 		String username = jsonObj.get(usernameKey).isString().stringValue();
 		String userid = jsonObj.get(useridKey).isString().stringValue();
-		String info = jsonObj.get(infoKey).isString().stringValue();
 		return new AuthenticationResponse(status, new User(userid, username), info);
 	}
 
