@@ -566,6 +566,7 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
 
         return json.dumps({'status' : True,
                            'username' : username,
+                           'fullname' : fullname,
                            'info' : 'Already logged in'})
 
     try:
@@ -580,13 +581,17 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
         s.invalidate()
         return json.dumps({'status' : False,
                            'username' : "",
+                           'fullname' : "",
                            'info':_('Invalid username/password')})
 
-    s["username"] = username.lower()
+
+    username = username.lower()
+    s["username"] = username
+    s["fullname"] = user
     s.save()
     return json.dumps({'status' : True,
-                       'username' : user,
-                       'userid' : username,
+                       'username' : username,
+                       'fullname' : user,
                        'info' : 'Succesfully logged in'})
 
 ######### @ServiceMethod
