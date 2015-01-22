@@ -282,7 +282,11 @@ GuestShellPath=/bin/bash
 GuestHomeInBash=/home/student/
 BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
+# KernelMessages = netcat -l -u -p6000
+#	This defines what to be run on the Host machine _before_ the VM starts booting.
 KernelMessages=netcat -l -u -p6000
+# HostCommand = ls
+# 	This defines what to be run on the Host machine _after_ the VM has finished booting.
 HostCommand=ls
 
 # test virtual machine configuration

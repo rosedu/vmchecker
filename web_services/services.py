@@ -551,29 +551,48 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
 
     websutil.sanityCheckUsername(username)
 
-    if not s.is_new():
-	#TODO take the username from session
-        return json.dumps({'status':True, 'username':username,
-            'info':'Already logged in'})
-
     strout = websutil.OutputString()
+
+    if not s.is_new():
+        try:
+            s.load()
+            username = s['username']
+            fullname = s['fullname']
+        except:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                               'errorMessage' : "Getting user info from existing session failed",
+                               'errorTrace' : strout.get()})
+
+        return json.dumps({'status' : True,
+                           'username' : username,
+                           'fullname' : fullname,
+                           'info' : 'Already logged in'})
+
     try:
         user = websutil.get_user(username, password)
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})  	
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
 
     if user is None:
         s.invalidate()
-        return json.dumps({'status':False, 'username':"", 
-            'info':_('Invalid username/password')})
+        return json.dumps({'status' : False,
+                           'username' : "",
+                           'fullname' : "",
+                           'info':_('Invalid username/password')})
 
-    s["username"] = username.lower()
+
+    username = username.lower()
+    s["username"] = username
+    s["fullname"] = user
     s.save()
-    return json.dumps({'status':True, 'username':user, 'userid':username,
-            'info':'Succesfully logged in'})
+    return json.dumps({'status' : True,
+                       'username' : username,
+                       'fullname' : user,
+                       'info' : 'Succesfully logged in'})
 
 ######### @ServiceMethod
 def autologin(req, username):

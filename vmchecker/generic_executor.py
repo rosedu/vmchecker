@@ -149,6 +149,10 @@ class VM():
         return True
         
     def test_submission(self, buildcfg = None):
+        # start host kernel message intercepting commands (including boot-up)
+        kernel_messages = self.vmcfg.get(self.machine, 'KernelMessages', default='')
+        kernel_messages_data = self.host.start_host_commands(self.bundle_dir, kernel_messages)
+
         success = self.try_power_on_vm_and_login()
         if not success:
             _logger.error('Could not power on or login on the VM')

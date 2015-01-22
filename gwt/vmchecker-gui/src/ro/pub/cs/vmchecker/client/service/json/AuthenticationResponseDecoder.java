@@ -10,8 +10,8 @@ import com.google.gwt.json.client.JSONValue;
 public class AuthenticationResponseDecoder implements JSONDecoder<AuthenticationResponse> {
 
 	public static final String statusKey = "status"; 
-	public static final String usernameKey = "username"; 
-	public static final String useridKey = "userid";
+	public static final String fullnameKey = "fullname";
+	public static final String usernameKey = "username";
 	public static final String infoKey = "info"; 
 	
 	@Override
@@ -20,10 +20,17 @@ public class AuthenticationResponseDecoder implements JSONDecoder<Authentication
 		JSONObject jsonObj = jsonValue.isObject();
 
 		boolean status = jsonObj.get(statusKey).isBoolean().booleanValue();
-		String username = jsonObj.get(usernameKey).isString().stringValue();
-		String userid = jsonObj.get(useridKey).isString().stringValue();
 		String info = jsonObj.get(infoKey).isString().stringValue();
-		return new AuthenticationResponse(status, new User(userid, username), info);
+		if (!status) {
+			/*
+			 * Authentication failed.
+			 */
+			return new AuthenticationResponse(status, null, info);
+		}
+
+		String username = jsonObj.get(usernameKey).isString().stringValue();
+		String fullname = jsonObj.get(fullnameKey).isString().stringValue();
+		return new AuthenticationResponse(status, new User(username, fullname), info);
 	}
 
 }
