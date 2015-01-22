@@ -551,12 +551,23 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
 
     websutil.sanityCheckUsername(username)
 
-    if not s.is_new():
-	#TODO take the username from session
-        return json.dumps({'status':True, 'username':username,
-            'info':'Already logged in'})
-
     strout = websutil.OutputString()
+
+    if not s.is_new():
+        try:
+            s.load()
+            username = s['username']
+            fullname = s['fullname']
+        except:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                               'errorMessage' : "Getting user info from existing session failed",
+                               'errorTrace' : strout.get()})
+
+        return json.dumps({'status' : True,
+                           'username' : username,
+                           'info' : 'Already logged in'})
+
     try:
         user = websutil.get_user(username, password)
     except:
