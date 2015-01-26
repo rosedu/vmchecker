@@ -83,17 +83,13 @@ public class Delegate<T> {
 					return;
 				}
 
-				try {
-					T result = decoder.decode(response.getText());
-					if (result != null) {
-						callback.onSuccess(result);
-					} else {
-						GWT.log("Null result from Decoder: ", new NullPointerException());
-						se.parseError(response.getText());
-					}
-				} catch (Exception e) {
-					GWT.log("Decoder could not parse response.", e);
+				decoder.parse(response.getText());
+				if (decoder.errorsEncountered()) {
+					GWT.log("Decoder could not parse response.", null);
 					se.parseError(response.getText());
+				} else {
+					T result = decoder.getResult();
+					callback.onSuccess(result);
 				}
 			}
 		};

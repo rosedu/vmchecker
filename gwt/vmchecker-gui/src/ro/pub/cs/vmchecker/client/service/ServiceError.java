@@ -30,20 +30,23 @@ public class ServiceError {
 	}
 
 	public void parseError(String text) {
-		try {
-			ErrorResponseDecoder decoder = new ErrorResponseDecoder();
-			ErrorResponse serviceError = decoder.decode(text);
+		ErrorResponseDecoder decoder = new ErrorResponseDecoder();
+		decoder.parse(text);
+		if (!decoder.errorsEncountered()) {
+			ErrorResponse serviceError = decoder.getResult();
 			if (serviceError.isAuthError()) {
 				eventBus.fireEvent(new AuthenticationEvent(AuthenticationEvent.EventType.ERROR));
 			} else {
 				eventBus.fireEvent(new ErrorDisplayEvent(constants.serviceError() + " " + serviceError.message, serviceError.trace));
 			}
-		} catch (Exception e) {
-			GWT.log("[parseError()]", e);
+		} else {
+			GWT.log("[parseError()]", null);
 			/* unexpected format */
 			eventBus.fireEvent(new ErrorDisplayEvent(constants.serviceError() + " " + constants.unknownFormat(),
-					"<b>" + constants.serviceErrorUrl() + "</b>: " + URL + "<br/><b>" + constants.serviceErrorContent() + "</b>:<br/>" + text));
+					"<b>" + constants.serviceErrorUrl() + "</b>: " + URL + "<br/>" +
+					"<b>" + constants.serviceErrorContent() + "</b>:<br/>"));
 		}
 	}
+
 
 }

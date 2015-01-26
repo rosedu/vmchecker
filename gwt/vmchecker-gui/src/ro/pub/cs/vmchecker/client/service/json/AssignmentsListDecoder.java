@@ -7,34 +7,30 @@ import com.google.gwt.json.client.JSONValue;
 
 import ro.pub.cs.vmchecker.client.model.Assignment;
 
-public class AssignmentsListDecoder implements JSONDecoder<Assignment[]> {
+public final class AssignmentsListDecoder extends JSONDecoder<Assignment[]> {
 
-	public static final String idKey = "assignmentId";
-	public static final String titleKey = "assignmentTitle";
-	public static final String storageTypeKey = "assignmentStorage";
-	public static final String storageHostKey = "assignmentStorageHost";
-	public static final String storageBasepathKey = "assignmentStorageBasepath";
-	public static final String deadlineKey = "deadline";
-	public static final String statementLinkKey = "statementLink";
+	private static final String idKey = "assignmentId";
+	private static final String titleKey = "assignmentTitle";
+	private static final String storageTypeKey = "assignmentStorage";
+	private static final String storageHostKey = "assignmentStorageHost";
+	private static final String storageBasepathKey = "assignmentStorageBasepath";
+	private static final String deadlineKey = "deadline";
+	private static final String statementLinkKey = "statementLink";
 
 	@Override
-	public Assignment[] decode(String text) throws Exception {
+	protected Assignment[] decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
-		JSONArray jsonArray;
+		JSONArray jsonArray = jsonValue.isArray();
 		Assignment[] assignments = null;
 
-		if ((jsonArray = jsonValue.isArray()) != null) {
-			assignments = new Assignment[jsonArray.size()];
-			for (int i = 0; i < jsonArray.size(); i++) {
-				assignments[i] = parseAssignment(jsonArray.get(i).isObject());
-			}
+		assignments = new Assignment[jsonArray.size()];
+		for (int i = 0; i < jsonArray.size(); i++) {
+			assignments[i] = parseAssignment(jsonArray.get(i).isObject());
 		}
 		return assignments;
 	}
 
 	private Assignment parseAssignment(JSONObject jsonObj) {
-		if (jsonObj == null)
-			return null;
 		String id = jsonObj.get(idKey).isString().stringValue();
 		String title = jsonObj.get(titleKey).isString().stringValue();
 		String storageType = jsonObj.get(storageTypeKey).isString().stringValue().toLowerCase();

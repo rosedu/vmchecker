@@ -9,14 +9,14 @@ import com.google.gwt.json.client.JSONValue;
 
 import ro.pub.cs.vmchecker.client.model.StudentInfo;
 
-public class StatisticsDecoder implements JSONDecoder<StudentInfo[]> {
+public final class StatisticsDecoder extends JSONDecoder<StudentInfo[]> {
 
-	public static final String nameKey = "studentName"; 
-	public static final String idKey = "studentId"; 
-	public static final String resultsKey = "results"; 
+	private static final String nameKey = "studentName";
+	private static final String idKey = "studentId";
+	private static final String resultsKey = "results";
 	
 	@Override
-	public StudentInfo[] decode(String text) throws Exception {
+	protected StudentInfo[] decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text); 
 		JSONArray jsonArray = jsonValue.isArray(); 
 		StudentInfo[] result = new StudentInfo[jsonArray.size()];

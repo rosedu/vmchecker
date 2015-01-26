@@ -109,14 +109,14 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 		 * changed.
 		 */
 
-		if(event.getSource() == uploadNormalWidget.getUploadForm()) {
+		if (event.getSource() == uploadNormalWidget.getUploadForm()) {
 
 			/* Normal assignment file submission response */
 
 			UploadResponseDecoder responseDecoder = new UploadResponseDecoder();
-			UploadStatus response;
-			try {
-				response = responseDecoder.decode(event.getResults());
+			responseDecoder.parse(event.getResults());
+			if (!responseDecoder.errorsEncountered()) {
+				UploadStatus response = responseDecoder.getResult();
 				StatusChangedEvent statusChangeEvent = null;
 				if (response.status) {
 					statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.SUCCESS,
@@ -126,20 +126,20 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 								constants.uploadFileFail());
 				}
 				eventBus.fireEvent(statusChangeEvent);
-			} catch (Exception e) {
+			} else {
 				ServiceError se = new ServiceError(eventBus, HTTPService.UPLOAD_URL);
 				se.parseError(event.getResults());
 			}
 		}
 
-		if(event.getSource() == uploadLargeWidget.getMd5UploadForm()) {
+		if (event.getSource() == uploadLargeWidget.getMd5UploadForm()) {
 
 			/* Large assignment md5 submission response */
 
 			UploadResponseDecoder responseDecoder = new UploadResponseDecoder();
-			UploadStatus response;
-			try {
-				response = responseDecoder.decode(event.getResults());
+			responseDecoder.parse(event.getResults());
+			if (!responseDecoder.errorsEncountered()) {
+				UploadStatus response = responseDecoder.getResult();
 				StatusChangedEvent statusChangeEvent = null;
 				if (response.status) {
 					statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.SUCCESS,
@@ -150,37 +150,37 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 				}
 				loadAndDisplayUpload();
 				eventBus.fireEvent(statusChangeEvent);
-			} catch (Exception e) {
+			} else {
 				ServiceError se = new ServiceError(eventBus, HTTPService.UPLOAD_MD5_URL);
 				se.parseError(event.getResults());
 			}
 
 		}
 
-		if(event.getSource() == uploadLargeWidget.getEvaluationForm()) {
+		if (event.getSource() == uploadLargeWidget.getEvaluationForm()) {
 
 			/* Large assignment evaluation request response */
 
 			LargeEvaluationResponseDecoder responseDecoder = new LargeEvaluationResponseDecoder();
-			LargeEvaluationResponse response;
-			try {
-				response = responseDecoder.decode(event.getResults());
+			responseDecoder.parse(event.getResults());
+			if (!responseDecoder.errorsEncountered()) {
+				LargeEvaluationResponse response = responseDecoder.getResult();
 				StatusChangedEvent statusChangeEvent = null;
-				if(response.status) {
+				if (response.status) {
 					statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.SUCCESS,
-						constants.evaluateSuccess());
+								constants.evaluateSuccess());
 				} else {
 					statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.ERROR,
 						response.error);
-					if(response.error.equals("md5"))
+					if (response.error.equals("md5"))
 						statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.ERROR,
 							constants.evaluateFailMd5());
-					if(response.error.equals("zip"))
+					if (response.error.equals("zip"))
 						statusChangeEvent = new StatusChangedEvent(StatusChangedEvent.StatusType.ERROR,
 							constants.evaluateFailZip());
 				}
 				eventBus.fireEvent(statusChangeEvent);
-			} catch (Exception e) {
+			} else {
 				ServiceError se = new ServiceError(eventBus, HTTPService.BEGIN_EVALUATION_URL);
 				se.parseError(event.getResults());
 			}

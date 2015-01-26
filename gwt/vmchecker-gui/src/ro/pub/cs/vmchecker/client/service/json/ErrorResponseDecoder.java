@@ -6,14 +6,14 @@ import com.google.gwt.json.client.JSONValue;
 
 import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 
-public class ErrorResponseDecoder implements JSONDecoder<ErrorResponse> {
+public final class ErrorResponseDecoder extends JSONDecoder<ErrorResponse> {
 
-	public static final String errorTypeKey = "errorType"; 
-	public static final String errorMessageKey = "errorMessage"; 
-	public static final String errorTraceKey = "errorTrace"; 
+	private static final String errorTypeKey = "errorType";
+	private static final String errorMessageKey = "errorMessage"; 
+	private static final String errorTraceKey = "errorTrace";
 	
 	@Override
-	public ErrorResponse decode(String text) throws Exception {
+	protected ErrorResponse decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONObject jsonObj = jsonValue.isObject();
 

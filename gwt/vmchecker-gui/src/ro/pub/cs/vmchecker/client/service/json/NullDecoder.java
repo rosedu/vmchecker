@@ -1,9 +1,9 @@
 package ro.pub.cs.vmchecker.client.service.json;
 
-public class NullDecoder implements JSONDecoder<Boolean> {
+public final class NullDecoder extends JSONDecoder<Boolean> {
 
 	@Override
-	public Boolean decode(String text) throws Exception {
+	protected Boolean decode(String text) {
 		return new Boolean(true); 
 	}
 

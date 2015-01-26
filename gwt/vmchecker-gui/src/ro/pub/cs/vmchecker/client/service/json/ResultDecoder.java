@@ -7,10 +7,10 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
-public class ResultDecoder implements JSONDecoder<EvaluationResult[]> {
+public final class ResultDecoder extends JSONDecoder<EvaluationResult[]> {
 	
 	@Override
-	public EvaluationResult[] decode(String text) throws Exception {
+	protected EvaluationResult[] decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONArray jsonArray = jsonValue.isArray(); 
 		

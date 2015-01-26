@@ -7,15 +7,15 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
-public class AuthenticationResponseDecoder implements JSONDecoder<AuthenticationResponse> {
+public final class AuthenticationResponseDecoder extends JSONDecoder<AuthenticationResponse> {
 
-	public static final String statusKey = "status"; 
-	public static final String fullnameKey = "fullname";
-	public static final String usernameKey = "username";
-	public static final String infoKey = "info"; 
+	private static final String statusKey = "status";
+	private static final String fullnameKey = "fullname";
+	private static final String usernameKey = "username";
+	private static final String infoKey = "info";
 	
 	@Override
-	public AuthenticationResponse decode(String text) throws Exception {
+	protected AuthenticationResponse decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONObject jsonObj = jsonValue.isObject();
 

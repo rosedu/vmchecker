@@ -14,6 +14,9 @@ public interface VmcheckerConstants extends Constants,
 	String unknownFormat();
 	String badServerStatusCode();
 	String popupCloseButton();
+	String exceptionError();
+	String exceptionErrorText();
+	String exceptionErrorContent();
 
 	String statisticsTitle();
 	String statisticsNoSubmissionAvailable();
