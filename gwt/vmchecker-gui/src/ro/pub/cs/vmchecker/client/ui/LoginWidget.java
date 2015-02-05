@@ -1,6 +1,7 @@
 package ro.pub.cs.vmchecker.client.ui;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.http.client.UrlBuilder;
@@ -14,8 +15,10 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasText;
+import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
@@ -56,7 +59,10 @@ public class LoginWidget extends Composite
 	
 	@UiField
 	PasswordTextBox passwordField;
-	
+
+	@UiField
+	CheckBox extendSessionField;
+
 	@UiField
 	Label passwordComment;
 	
@@ -94,8 +100,17 @@ public class LoginWidget extends Composite
 		loginDescription.setHTML(constants.loginDescription());
 		formComment.setText(constants.formComment());
 		formLabel.setText(constants.loginFormLabel());
+		formLabel.setWordWrap(false);
+		/* Dynamically adjust formLabel width based on client rendering width of the string. */
+		Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+			@Override
+			public void execute() {
+				formLabel.setWidth(Integer.toString(formLabel.getElement().getOffsetWidth()) + "px");
+			}
+		});
 		usernameLabel.setText(constants.usernameLabel());
 		passwordLabel.setText(constants.passwordLabel());
+		extendSessionField.setText(constants.extendSessionLabel());
 		usernameComment.setVisible(false);
 		passwordComment.setVisible(false);
 		loginComment.setVisible(false);
@@ -107,6 +122,11 @@ public class LoginWidget extends Composite
 	}
 	
 	
+	@Override
+	public HasValue<Boolean> getExtendSessionField() {
+		return extendSessionField;
+	}
+
 	@Override
 	public HasClickHandlers getLoginButton() {
 		return loginButton;

@@ -10,6 +10,7 @@ public interface LoginConstants extends Constants {
 	String formComment();
 	String usernameLabel();
 	String passwordLabel();
+	String extendSessionLabel();
 	String usernameEmpty();
 	String passwordEmpty();
 
