@@ -16,6 +16,7 @@ public class CookieManager {
 	public static final String COURSE_COOKIE = "VMCHK-COURSE"; 
 	public static final String USERNAME_COOKIE = "VMCHK-USER-NAME";
 	public static final String USERID_COOKIE = "VMCHK-USER-ID";
+	public static final String[] cookies = { COURSE_COOKIE, USERNAME_COOKIE, USERID_COOKIE };
 	
 	/**
 	 * the user name and id are stored as cookie because it is obtained only
@@ -56,6 +57,12 @@ public class CookieManager {
 
 	public static String getLastCourse() {
 		return Cookies.getCookie(COURSE_COOKIE);
+	}
+
+	public static void clearCookies() {
+		for (String cookie : cookies) {
+			Cookies.removeCookie(cookie);
+		}
 	}
 	
 }

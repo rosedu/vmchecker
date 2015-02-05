@@ -125,13 +125,14 @@ public class HTTPService {
 		delegate.sendRequest(callback, new StatisticsDecoder(), params);
 	}
 
-	public void performAuthentication(String username, String password,
+	public void performAuthentication(String username, String password, Boolean extendSession,
 			final AsyncCallback<AuthenticationResponse> callback) {
 		Delegate<AuthenticationResponse> delegate =
 			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false, true);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
+		params.put("remember_me", extendSession.toString());
 		delegate.sendRequest(callback, new AuthenticationResponseDecoder(), params);
 	}
 

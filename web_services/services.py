@@ -21,8 +21,9 @@ import codecs
 import tempfile
 import traceback
 import subprocess
+import datetime
 
-from mod_python import Session
+from mod_python import Session, Cookie
 
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
@@ -525,7 +526,7 @@ def getAllGrades(req, courseId, locale=websutil.DEFAULT_LOCALE):
     return websutil.getAllGradesHelper(courseId, username, strout)
 
 ######### @ServiceMethod
-def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
+def login(req, username, password, remember_me=False, locale=websutil.DEFAULT_LOCALE):
 
     websutil.install_i18n(websutil.sanityCheckLocale(locale))
 
@@ -584,6 +585,15 @@ def login(req, username, password, locale=websutil.DEFAULT_LOCALE):
                            'fullname' : "",
                            'info':_('Invalid username/password')})
 
+    # Use extended session timeout if requested
+    if remember_me == True or remember_me == "true":
+        c = s.make_cookie()
+        c.expires = (datetime.datetime.now() + datetime.timedelta(seconds=websutil.EXTENDED_SESSION_TIMEOUT)).strftime("%a, %d-%b-%Y %H:%M:%S GMT")
+
+        req.headers_out.clear()
+        Cookie.add_cookie(req, c)
+
+        s.set_timeout(websutil.EXTENDED_SESSION_TIMEOUT)
 
     username = username.lower()
     s["username"] = username

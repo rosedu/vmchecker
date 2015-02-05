@@ -19,7 +19,6 @@ public class ServiceError {
 
 	public ServiceError(HandlerManager eventBus, String URL) {
 		this.eventBus = eventBus;
-		this.constants = constants;
 		this.URL = URL;
 	}
 

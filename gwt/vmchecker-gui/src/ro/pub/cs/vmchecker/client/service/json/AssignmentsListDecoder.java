@@ -40,9 +40,9 @@ public class AssignmentsListDecoder implements JSONDecoder<Assignment[]> {
 		String storageType = jsonObj.get(storageTypeKey).isString().stringValue().toLowerCase();
 		String deadline = jsonObj.get(deadlineKey).isString().stringValue();
 		String statementLink = jsonObj.get(statementLinkKey).isString().stringValue();
-		if(storageType.toLowerCase().equals("normal"))
+		if (storageType.toLowerCase().equals("normal")) {
 			return new Assignment(id, title, storageType, null, null, deadline, statementLink);
-		else {
+		} else {
 			String storageHost = jsonObj.get(storageHostKey).isString().stringValue();
 			String storageBasepath = jsonObj.get(storageBasepathKey).isString().stringValue();
 			return new Assignment(id, title, storageType, storageHost, storageBasepath, deadline, statementLink);

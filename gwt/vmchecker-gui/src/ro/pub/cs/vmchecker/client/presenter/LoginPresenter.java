@@ -17,6 +17,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
+import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.HasWidgets;
 
 public class LoginPresenter implements Presenter, KeyPressHandler {
@@ -28,6 +29,7 @@ public class LoginPresenter implements Presenter, KeyPressHandler {
 		HasText getPasswordField();
 		HasText getPasswordCommentLabel();
 		void setPasswordCommentVisible(boolean visible);
+		HasValue<Boolean> getExtendSessionField();
 		HasClickHandlers getLoginButton();
 		HasText getLoginCommentLabel();
 		void setLoginCommentVisible(boolean visible);
@@ -104,7 +106,9 @@ public class LoginPresenter implements Presenter, KeyPressHandler {
 	private void sendAuthenticationRequest() {
 		widget.setInputsEnabled(false);
 		service.performAuthentication(this.widget.getUsernameField().getText(),
-				this.widget.getPasswordField().getText(), new AsyncCallback<AuthenticationResponse>() {
+									  this.widget.getPasswordField().getText(),
+									  this.widget.getExtendSessionField().getValue(),
+									  new AsyncCallback<AuthenticationResponse>() {
 
 					@Override
 					public void onFailure(Throwable caught) {
