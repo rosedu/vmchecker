@@ -23,6 +23,9 @@ try:
 except ImportError:
     import json
 
+# If requested, remember user for up to two weeks
+EXTENDED_SESSION_TIMEOUT = 60 * 60 * 24 * 14;
+
 # .vmr files may be very large because of errors in the student's submission.
 MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
 
