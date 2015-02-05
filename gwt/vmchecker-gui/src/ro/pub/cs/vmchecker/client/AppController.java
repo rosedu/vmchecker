@@ -72,6 +72,7 @@ public class AppController implements HistoryListener {
 					 * Reset status bar when the user is logged out.
 					 */
 					eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
+					CookieManager.clearCookies();
 					displayLogin(); 
 				}
 			}
