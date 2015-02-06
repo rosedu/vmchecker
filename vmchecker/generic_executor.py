@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A script that starts a vm, reverts it to a known snapshot, tests a
-submission bundle (submission + tests), and closes the vm"""
+"""The definition of the base classes Host and VM which
+provide the necessary primitives to interact with a vm and
+test a submission bundle."""
 
 from __future__ import with_statement
 
