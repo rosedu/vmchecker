@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A script that starts a vm, reverts it to a known snapshot, tests a
-submission bundle (submission + tests), and closes the vm"""
+"""The definition of the base classes Host and VM which
+provide the necessary primitives to interact with a vm and
+test a submission bundle."""
 
 from __future__ import with_statement
 
@@ -23,7 +24,7 @@ import shlex
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VirtualMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
@@ -85,8 +86,7 @@ class VM():
 
         self.asscfg  = vmcfg.assignments()
         self.machine = self.asscfg.get(assignment, 'Machine')
-        self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
-        self.vmwarecfg = VmwareConfig(vmcfg.testers(), self.machinecfg.get_tester_id())
+        self.machinecfg = VirtualMachineConfig(vmcfg, self.machine)
         self.error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
         self.shell = self.machinecfg.guest_shell_path()
 
@@ -102,6 +102,9 @@ class VM():
         return self.executeCommand(cmd)
 
     def hasStarted(self):
+        return False
+
+    def hasStopped(self):
         return False
 
     def start(self):
@@ -141,53 +144,10 @@ class VM():
         finally:
             return True
         
-    def try_power_on_vm_and_login(self):
-        if self.asscfg.revert_to_snapshot(self.assignment):
+    def try_power_on_vm_and_login(self, revertSnapshot=None):
+        if revertSnapshot == True or \
+           (revertSnapshot == None and self.asscfg.revert_to_snapshot(self.assignment)):
             self.revert()
 
         self.start()
         return True
-        
-    def test_submission(self, buildcfg = None):
-        # start host kernel message intercepting commands (including boot-up)
-        kernel_messages = self.vmcfg.get(self.machine, 'KernelMessages', default='')
-        kernel_messages_data = self.host.start_host_commands(self.bundle_dir, kernel_messages)
-
-        success = self.try_power_on_vm_and_login()
-        if not success:
-            _logger.error('Could not power on or login on the VM')
-            self.stop()
-            sys.exit(1)
-
-        # start host commands
-        host_command = self.vmcfg.get(self.machine, 'HostCommand', default='')
-        host_command_data = self.host.start_host_commands(self.bundle_dir, host_command)
-        
-        timeout = self.asscfg.get(self.assignment, 'Timeout')
-        try:
-            if buildcfg==None:
-                buildcfg = {
-                    'input'  : ['archive.zip', 'tests.zip'],
-                    'script' : ['build.sh'],
-                    'output' : ['build-stdout.vmr', 'build-stderr.vmr'],
-                    'timeout': int(timeout),
-                    }
-                if not self.runTest(self.bundle_dir, self.machinecfg, buildcfg):
-                    _logger.info('Build failed')
-                    return
-            
-                testcfg = {
-                    'input'  : [],
-                    'script' : ['run.sh'],
-                    'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
-                    'timeout': int(timeout)
-                    }
-                self.runTest(self.bundle_dir, self.machinecfg, testcfg) 
-            else:
-                self.runTest(self.bundle_dir, self.machinecfg, buildcfg)
-        except Exception:
-            _logger.exception('FUCK! Exception!RUUUUUUUN!!!')
-        finally:
-            self.host.stop_host_commands(host_command_data)
-            self.stop()
-

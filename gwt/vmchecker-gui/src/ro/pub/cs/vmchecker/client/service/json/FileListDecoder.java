@@ -8,12 +8,12 @@ import com.google.gwt.json.client.JSONArray;
 
 import ro.pub.cs.vmchecker.client.model.FileList;
 
-public class FileListDecoder implements JSONDecoder<FileList> {
+public final class FileListDecoder extends JSONDecoder<FileList> {
 
-	public static final String filenameKey = "fileName";
+	private static final String filenameKey = "fileName";
 
 	@Override
-	public FileList decode(String text) throws Exception {
+	protected FileList decode(String text) {
 
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONArray jsonArray = jsonValue.isArray();

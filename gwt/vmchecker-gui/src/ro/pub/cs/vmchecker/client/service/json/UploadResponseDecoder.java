@@ -6,13 +6,13 @@ import com.google.gwt.json.client.JSONValue;
 
 import ro.pub.cs.vmchecker.client.model.UploadStatus;
 
-public class UploadResponseDecoder implements JSONDecoder<UploadStatus> {
+public final class UploadResponseDecoder extends JSONDecoder<UploadStatus> {
 
-	public static final String statusKey = "status";
-	public static final String dumpLogKey = "dumpLog"; 
+	private static final String statusKey = "status";
+	private static final String dumpLogKey = "dumpLog";
 	
 	@Override
-	public UploadStatus decode(String text) throws Exception {
+	protected UploadStatus decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONObject jsonObject = jsonValue.isObject();
 		boolean status = jsonObject.get(statusKey).isBoolean().booleanValue();

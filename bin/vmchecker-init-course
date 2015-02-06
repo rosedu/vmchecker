@@ -107,7 +107,8 @@ def create_build_run_scritps(root_path):
     files = ['so-linux_vmchecker_build.sh',
              'so-win_vmchecker_build.sh',
              'so-linux_vmchecker_run.sh',
-             'so-win_vmchecker_run.sh']
+             'so-win_vmchecker_run.sh',
+             'one_reboot_runner.py']
     for fname in files:
         full_path = os.path.join('examples', fname)
         with pkg_resources.resource_stream('vmchecker', full_path) as in_file:

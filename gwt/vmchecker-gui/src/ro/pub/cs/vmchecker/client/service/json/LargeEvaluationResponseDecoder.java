@@ -6,13 +6,13 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
-public class LargeEvaluationResponseDecoder implements JSONDecoder<LargeEvaluationResponse> {
+public final class LargeEvaluationResponseDecoder extends JSONDecoder<LargeEvaluationResponse> {
 
-	public static final String statusKey = "status";
-	public static final String errorKey = "error";
+	private static final String statusKey = "status";
+	private static final String errorKey = "error";
 
 	@Override
-	public LargeEvaluationResponse decode(String text) throws Exception {
+	protected LargeEvaluationResponse decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONObject jsonObj = jsonValue.isObject();
 

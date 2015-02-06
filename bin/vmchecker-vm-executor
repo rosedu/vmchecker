@@ -14,6 +14,7 @@ except ImportError:
     import json
 
 import os
+import imp
 import sys
 import time
 import logging
@@ -22,7 +23,9 @@ import ConfigParser
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VirtualMachineConfig, CourseConfig
+from vmchecker.generic_runner import Runner
+from vmchecker.large_runner import LargeRunner
 _logger = logging.getLogger('vm_executor')
 
 try:
@@ -63,27 +66,50 @@ class GenericHost():
         
         asscfg  = vmcfg.assignments()
         machine = asscfg.get(assignment, 'Machine')
-        machinecfg = VmwareMachineConfig(vmcfg, machine)
+        machinecfg = VirtualMachineConfig(vmcfg, machine)
         
+        needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'course-config']
+        if machinecfg.custom_runner() != '':
+            needed_files.append(machinecfg.custom_runner())
+        _check_required_files(bundle_dir, needed_files)
+
         host = None
-        _logger.debug("Testing environment is: "+machinecfg.get_type())
-        if machinecfg.get_type()=='lxc':
+        _logger.debug("Testing environment is: " + machinecfg.get_type())
+        if machinecfg.get_type() == 'lxc':
             host = LXCHost()
-        if machinecfg.get_type()=='vmware':
+        elif machinecfg.get_type() == 'vmware':
             host = VmWareHost()
-        if machinecfg.get_type()=='kvm':
+        elif machinecfg.get_type() == 'kvm':
             host = kvmHost()
-        if machinecfg.get_type() == 'open-nebula':
+        elif machinecfg.get_type() == 'open-nebula':
             host = OneHost()
+        else:
+            _logger.error("Invalid testing environment specified.")
+            sys.exit(1)
+
         vm = host.getVM(bundle_dir, vmcfg, assignment)
-        vm.test_submission()
+
+        runner = None
+
+        # First check if a custom runner was specified
+        if machinecfg.custom_runner() != '':
+            custom_runner_path = os.path.join(bundle_dir, machinecfg.custom_runner())
+            custom_runner = imp.load_source("custom_runner", custom_runner_path)
+            runner = custom_runner.get_runner(host, vm)
+        elif asscfg.getd(assignment, 'assignmentstorage', '').lower() == 'large':
+            runner = LargeRunner(host, vm)
+        else:
+            runner = Runner(host, vm)
+
+        _logger.debug("Using runner: " + runner.__class__.__name__)
+
+        runner.testSubmission(bundle_dir)
 
 
-def _check_required_files(path):
+def _check_required_files(path, needed_files):
     """Checks that a set of files required by commander is present in
     the given path."""
     found_all = True
-    needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'course-config']
     found_files = os.listdir(path)
     not_found = []
     for need in needed_files:
@@ -115,7 +141,6 @@ def main():
         sys.exit(1)
 
     bundle_dir = sys.argv[1]
-    _check_required_files(bundle_dir)
     GenericHost.test(bundle_dir)
 
     # some vmware calls may block indefinetly.  if we don't exit

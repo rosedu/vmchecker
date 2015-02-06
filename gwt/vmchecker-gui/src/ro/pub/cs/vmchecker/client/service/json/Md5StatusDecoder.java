@@ -6,14 +6,14 @@ import com.google.gwt.json.client.JSONValue;
 
 import ro.pub.cs.vmchecker.client.model.Md5Status;
 
-public class Md5StatusDecoder implements JSONDecoder<Md5Status> {
+public final class Md5StatusDecoder extends JSONDecoder<Md5Status> {
 
-	public static final String fileExistsKey = "fileExists";
-	public static final String md5SumKey = "md5Sum";
-	public static final String uploadTimeKey = "uploadTime";
+	private static final String fileExistsKey = "fileExists";
+	private static final String md5SumKey = "md5Sum";
+	private static final String uploadTimeKey = "uploadTime";
 
 	@Override
-	public Md5Status decode(String text) throws Exception {
+	protected Md5Status decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text);
 		JSONObject jsonObject = jsonValue.isObject();
 		boolean fileExists = jsonObject.get(fileExistsKey).isBoolean().booleanValue();

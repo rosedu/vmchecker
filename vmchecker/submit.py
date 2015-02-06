@@ -230,9 +230,10 @@ def create_testing_bundle(user, assignment, course_id):
 
     asscfg  = vmcfg.assignments()
     machine = asscfg.get(assignment, 'Machine')
+    machinecfg = config.VirtualMachineConfig(vmcfg, machine)
 
-    rel_file_list = [ ('run.sh',   vmcfg.get(machine, 'RunScript',   '')),
-                      ('build.sh', vmcfg.get(machine, 'BuildScript', '')),
+    rel_file_list = [ ('run.sh',   machinecfg.guest_run_script()),
+                      ('build.sh', machinecfg.guest_build_script()),
                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
                       ('course-config', vmpaths.config_file()),
                       ('submission-config', paths.submission_config_file(sbroot)) ]
@@ -251,6 +252,9 @@ def create_testing_bundle(user, assignment, course_id):
         arch_path = vmpaths.abspath(arch_path)
         should_not_contain = map(lambda f: f[0], rel_file_list)
         check_archive_for_file_override(arch_path, should_not_contain)
+
+    if machinecfg.custom_runner() != '':
+        rel_file_list += [ ( machinecfg.custom_runner(), machinecfg.custom_runner() ) ]
 
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list if src != '' ]
 
