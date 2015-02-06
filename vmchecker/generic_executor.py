@@ -23,7 +23,7 @@ import shlex
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VirtualMachineConfig, CourseConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
@@ -85,8 +85,7 @@ class VM():
 
         self.asscfg  = vmcfg.assignments()
         self.machine = self.asscfg.get(assignment, 'Machine')
-        self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
-        self.vmwarecfg = VmwareConfig(vmcfg.testers(), self.machinecfg.get_tester_id())
+        self.machinecfg = VirtualMachineConfig(vmcfg, self.machine)
         self.error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
         self.shell = self.machinecfg.guest_shell_path()
 

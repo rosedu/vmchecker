@@ -22,7 +22,7 @@ import ConfigParser
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VirtualMachineConfig, CourseConfig
 _logger = logging.getLogger('vm_executor')
 
 try:
@@ -63,7 +63,7 @@ class GenericHost():
         
         asscfg  = vmcfg.assignments()
         machine = asscfg.get(assignment, 'Machine')
-        machinecfg = VmwareMachineConfig(vmcfg, machine)
+        machinecfg = VirtualMachineConfig(vmcfg, machine)
         
         host = None
         _logger.debug("Testing environment is: "+machinecfg.get_type())

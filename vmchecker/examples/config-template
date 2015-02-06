@@ -282,6 +282,8 @@ GuestShellPath=/bin/bash
 GuestHomeInBash=/home/student/
 BuildScript=so-linux_vmchecker_build.sh
 RunScript=so-linux_vmchecker_run.sh
+# Type = vmware | lxc | kvm | open-nebula
+Type = vmware
 # KernelMessages = netcat -l -u -p6000
 #	This defines what to be run on the Host machine _before_ the VM starts booting.
 KernelMessages=netcat -l -u -p6000

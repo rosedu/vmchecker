@@ -230,9 +230,10 @@ def create_testing_bundle(user, assignment, course_id):
 
     asscfg  = vmcfg.assignments()
     machine = asscfg.get(assignment, 'Machine')
+    machinecfg = config.VirtualMachineConfig(vmcfg, machine)
 
-    rel_file_list = [ ('run.sh',   vmcfg.get(machine, 'RunScript',   '')),
-                      ('build.sh', vmcfg.get(machine, 'BuildScript', '')),
+    rel_file_list = [ ('run.sh',   machinecfg.guest_run_script()),
+                      ('build.sh', machinecfg.guest_build_script()),
                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
                       ('course-config', vmpaths.config_file()),
                       ('submission-config', paths.submission_config_file(sbroot)) ]

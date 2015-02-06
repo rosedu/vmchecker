@@ -23,7 +23,6 @@ from threading import Thread
 from subprocess import Popen
 import serial
 from subprocess import Popen, PIPE, STDOUT
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
 from vmchecker.generic_executor import VM, Host
 _logger = logging.getLogger('vm_executor')
 
@@ -35,7 +34,7 @@ class kvmVM(VM):
     hostname = 'kvm2'
     def __init__(self, host, bundle_dir, vmcfg, assignment):
         VM.__init__(self, host, bundle_dir, vmcfg, assignment)
-        self.hostname = self.machinecfg.get_vmx_path()
+        self.hostname = self.machinecfg.get_vm_path()
         self.path = self.getPath()
         print self.path
         

@@ -379,7 +379,7 @@ class VmwareConfig():
 
 
 
-class VmwareMachineConfig(object):
+class VirtualMachineConfig(object):
     """Configuration for a virtual machine:
        * how to login
        * where to store files
@@ -402,8 +402,8 @@ class VmwareMachineConfig(object):
         return self.config.get(self.machine_id, 'Tester')
 
 
-    def get_vmx_path(self):
-        """Path to a .vmx file to be used"""
+    def get_vm_path(self):
+        """Path to the VM config file to be used"""
         path = self.config.get(self.machine_id, 'VMPath', '')
         if path == '':
             return None
@@ -475,12 +475,24 @@ class VmwareMachineConfig(object):
         return self.config.get(self.machine_id, 'RunScript')
         
     def get_type(self):
-        """The option can be vmware, lxc or kvm.
-           Default is vmware """
+        """The option can be vmware, lxc, kvm, one."""
+        vmtype = self.config.get(self.machine_id, 'Type')
+        return vmtype
+
+    def custom_runner(self):
+        """The name of the script that provides a custom implementation of the runner"""
+        return self.config.get(self.machine_id, 'CustomRunner', '')
+
+class VmwareMachineConfig(VirtualMachineConfig):
+    def get_vmx_path(self):
+        """Path to a .vmx file to be used"""
+        return super(VmwareMachineConfig, self).get_vm_path()
+
+    def get_type(self):
         vmtype = self.config.get(self.machine_id, 'Type', default='vmware')
         return vmtype
 
-class OneMachineConfig(VmwareMachineConfig):
+class OneMachineConfig(VirtualMachineConfig):
     def get_one_credentials(self):
         return self.config.get(self.machine_id, 'OneCredentials', None)
 
@@ -492,3 +504,7 @@ class OneMachineConfig(VmwareMachineConfig):
 
     def get_one_vm_id(self):
         return self.config.get(self.machine_id, 'OneVMID', None)
+
+    def get_type(self):
+        vmtype = self.config.get(self.machine_id, 'Type', default='open-nebula')
+        return vmtype
