@@ -253,6 +253,9 @@ def create_testing_bundle(user, assignment, course_id):
         should_not_contain = map(lambda f: f[0], rel_file_list)
         check_archive_for_file_override(arch_path, should_not_contain)
 
+    if machinecfg.custom_runner() != '':
+        rel_file_list += [ ( machinecfg.custom_runner(), machinecfg.custom_runner() ) ]
+
     file_list = [ (dst, vmpaths.abspath(src)) for (dst, src) in rel_file_list if src != '' ]
 
     # builds archive with configuration
