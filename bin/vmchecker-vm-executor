@@ -66,15 +66,19 @@ class GenericHost():
         machinecfg = VirtualMachineConfig(vmcfg, machine)
         
         host = None
-        _logger.debug("Testing environment is: "+machinecfg.get_type())
-        if machinecfg.get_type()=='lxc':
+        _logger.debug("Testing environment is: " + machinecfg.get_type())
+        if machinecfg.get_type() == 'lxc':
             host = LXCHost()
-        if machinecfg.get_type()=='vmware':
+        elif machinecfg.get_type() == 'vmware':
             host = VmWareHost()
-        if machinecfg.get_type()=='kvm':
+        elif machinecfg.get_type() == 'kvm':
             host = kvmHost()
-        if machinecfg.get_type() == 'open-nebula':
+        elif machinecfg.get_type() == 'open-nebula':
             host = OneHost()
+        else:
+            _logger.error("Invalid testing environment specified.")
+            sys.exit(1)
+
         vm = host.getVM(bundle_dir, vmcfg, assignment)
         vm.test_submission()
 
