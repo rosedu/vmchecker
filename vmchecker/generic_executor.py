@@ -54,7 +54,7 @@ class Host():
 
         outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
         try:
-            proc = Popen(host_command, stdout=outf, shell=True)
+            proc = Popen("exec " + host_command, stdout=outf, shell=True)
         except:
             _logger.exception('HOSTPROC: opening process: ' + host_command)
         return (proc, outf)
