@@ -189,5 +189,6 @@ class VM():
             _logger.exception('FUCK! Exception!RUUUUUUUN!!!')
         finally:
             self.host.stop_host_commands(host_command_data)
+            self.host.stop_host_commands(kernel_messages_data)
             self.stop()
 
