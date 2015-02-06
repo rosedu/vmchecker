@@ -138,8 +138,9 @@ class VmWareVM(VM):
         
         power_thd.join()
         
-    def try_power_on_vm_and_login(self):
-        if self.asscfg.revert_to_snapshot(self.assignment):
+    def try_power_on_vm_and_login(self, revertSnapshot=None):
+        if revertSnapshot == True or \
+           (revertSnapshot == None and self.asscfg.revert_to_snapshot(self.assignment)):
             self.revert(self.vminstance.nRootSnapshots - 1)
 
         tools_timeout = self.asscfg.delay_wait_for_tools(self.assignment)

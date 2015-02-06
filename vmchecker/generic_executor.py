@@ -144,8 +144,9 @@ class VM():
         finally:
             return True
         
-    def try_power_on_vm_and_login(self):
-        if self.asscfg.revert_to_snapshot(self.assignment):
+    def try_power_on_vm_and_login(self, revertSnapshot=None):
+        if revertSnapshot == True or \
+           (revertSnapshot == None and self.asscfg.revert_to_snapshot(self.assignment)):
             self.revert()
 
         self.start()
