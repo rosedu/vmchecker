@@ -14,6 +14,7 @@ except ImportError:
     import json
 
 import os
+import imp
 import sys
 import time
 import logging
@@ -23,6 +24,8 @@ from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
 from vmchecker.config import VirtualMachineConfig, CourseConfig
+from vmchecker.generic_runner import Runner
+from vmchecker.large_runner import LargeRunner
 _logger = logging.getLogger('vm_executor')
 
 try:
@@ -80,7 +83,17 @@ class GenericHost():
             sys.exit(1)
 
         vm = host.getVM(bundle_dir, vmcfg, assignment)
-        vm.test_submission()
+
+        runner = None
+
+        if asscfg.getd(assignment, 'assignmentstorage', '').lower() == 'large':
+            runner = LargeRunner(host, vm)
+        else:
+            runner = Runner(host, vm)
+
+        _logger.debug("Using runner: " + runner.__class__.__name__)
+
+        runner.testSubmission(bundle_dir)
 
 
 def _check_required_files(path):

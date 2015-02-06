@@ -38,7 +38,21 @@ class VmWareVM(VM):
     vmhost = None
     vminstance = None
             
-    def initialize(self):
+    def __init__(self, host, bundle_dir, vmcfg, assignment):
+        VM.__init__(self, host, bundle_dir, vmcfg, assignment)
+        self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
+        self.vmwarecfg = VmwareConfig(vmcfg.testers(), self.machinecfg.get_tester_id())
+        self.vmx_path = self.machinecfg.get_vmx_path()
+        if self.vmx_path == None:
+            self.vmx_path = self.get_submission_vmx_file()
+        if self.vmx_path == None:
+            # no vmx, nothing to do.
+            _logger.error('Could not find a vmx to run')
+            with open(self.error_fname, 'a') as handler:
+                print >> handler, 'Error powering on the virtual machine.\n' + \
+                                  'Unable to find .vmx file.\n'
+            sys.exit(1)
+
         try:
             # try defaults
             self.vmhost = pyvix.vix.Host()
@@ -224,32 +238,6 @@ class VmWareVM(VM):
                 if f.endswith(".vmx"):
                     return os.path.join(root, f)
         return None
-
-    def test_submission(self, buildcfg = None):
-        self.vmx_path = self.machinecfg.get_vmx_path()
-        if self.vmx_path == None:
-            self.vmx_path = self.get_submission_vmx_file()
-        if self.vmx_path == None:
-            # no vmx, nothing to do.
-            _logger.error('Could not find a vmx to run')
-            with open(self.error_fname, 'a') as handler:
-                print >> handler, 'Error powering on the virtual machine.\n' + \
-	        		'Unable to find .vmx file.\n'
-            sys.exit(1) 
-            
-        self.initialize()
-
-        if self.asscfg.getd(self.assignment, 'assignmentstorage', '').lower() != 'large':
-            VM.test_submission(self)
-        else:
-            timeout = self.asscfg.get(self.assignment, 'Timeout')
-            testcfg = {
-                'input'  : ['tests.zip'],
-                'script' : ['run.sh'],
-                'output' : ['run-stdout.vmr', 'run-stderr.vmr'],
-                'timeout': int(timeout)
-                }
-            super(VmWareVM,self).test_submission(testcfg)
 
     def hasStarted(self):
         return self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_TOOLS_RUNNING != 0
