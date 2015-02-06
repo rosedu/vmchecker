@@ -104,6 +104,9 @@ class VM():
     def hasStarted(self):
         return False
 
+    def hasStopped(self):
+        return False
+
     def start(self):
         pass
         

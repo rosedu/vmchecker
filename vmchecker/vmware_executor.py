@@ -15,6 +15,7 @@ except ImportError:
 
 
 import pyvix.vix
+from pyvix.vix import *
 import os
 import sys
 import time
@@ -248,3 +249,9 @@ class VmWareVM(VM):
                 'timeout': int(timeout)
                 }
             super(VmWareVM,self).test_submission(testcfg)
+
+    def hasStarted(self):
+        return self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_TOOLS_RUNNING != 0
+
+    def hasStopped(self):
+        return self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_POWERED_OFF != 0
