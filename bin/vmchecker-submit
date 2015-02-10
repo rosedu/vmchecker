@@ -25,10 +25,10 @@ def main():
 
     course_id        = argv[0]
     assignment       = argv[1]
-    user             = argv[2]
+    account          = argv[2]
     archive_filename = argv[3]
 
-    submit.submit(archive_filename, assignment, user, course_id,
+    submit.submit(archive_filename, assignment, account, course_id,
                   options.skip_time_check, options.forced_upload_time)
 
 

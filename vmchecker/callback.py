@@ -225,7 +225,7 @@ def send_results_and_notify(files, conf_vars):
             sftp_transfer_files(sftp, files, conf_vars)
 
         cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
-            ' --user=' + conf_vars['user'] + ' --assignment=' + conf_vars['assignment']
+            ' --account=' + conf_vars['account'] + ' --assignment=' + conf_vars['assignment']
         call_remote_program(t, cmdline)
     except:
         _logger.exception('error while transferring files with paramiko')

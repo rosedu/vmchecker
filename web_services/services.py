@@ -273,7 +273,7 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
     sys.stdout = strout
 
     try:
-        submit.evaluate_large_submission(archiveFileName, assignmentId, username, courseId)
+        submit.evaluate_large_submission(archiveFileName, assignmentId, account, courseId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,

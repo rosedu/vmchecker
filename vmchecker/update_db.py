@@ -22,23 +22,23 @@ _logger = vmlogging.create_module_logger('update_db')
 
 
 
-def compute_late_penalty(assignment, user, vmcfg):
+def compute_late_penalty(assignment, account, vmcfg):
     """Returns the late submission penalty for this submission
 
-    Computes the time penalty for the user, obtains the other
+    Computes the time penalty for the account, obtains the other
     penalties and bonuses from the grade_filename file
     and computes the final grade.
 
     """
 
     # The weights and limit are specific for each assignment
-    # because you can have different wieghts and limit per
+    # because you can have different weights and limit per
     # assignment
     weights = [float(x) for x in vmcfg.assignments().get(assignment, 'PenaltyWeights').split()]
     limit = int(vmcfg.assignments().get(assignment, 'PenaltyLimit'))
 
     sss = submissions.Submissions(VmcheckerPaths(vmcfg.root_path()))
-    upload_time = sss.get_upload_time_struct(assignment, user)
+    upload_time = sss.get_upload_time_struct(assignment, account)
 
     deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                              penalty.DATE_FORMAT)
@@ -116,9 +116,9 @@ def compute_grade(assignment, user, grade_filename, vmcfg):
 
 
 
-def db_save_grade(assignment, user, submission_root,
-                  vmcfg, course_db, ignore_timestamp=False):
-    """Updates grade for user's submission of assignment.
+def db_save_grade(assignment, account, submission_root,
+                  vmcfg, course_db, ignore_timestamp = False):
+    """Updates grade for the account's submission of assignment.
 
     Reads the grade's value only if the file containing the
     value was modified since the last update of the DB for this
@@ -134,7 +134,7 @@ def db_save_grade(assignment, user, submission_root,
     if os.path.exists(grade_filename):
         # we have the evaluation results for this homework
         mtime = os.path.getmtime(grade_filename)
-        grade = compute_grade(assignment, user, grade_filename, vmcfg)
+        grade = compute_grade(assignment, account, grade_filename, vmcfg)
     elif os.path.exists(submission_root):
         # we don't have evaluation results, but the homework exists.
         # it must be in the tester's queue waiting to be evaluated.
@@ -150,31 +150,33 @@ def db_save_grade(assignment, user, submission_root,
     # only update grades for newer submissions than those already checked
     # or when forced to do so
     if db_mtime != mtime or ignore_timestamp:
-        _logger.debug('Updating %s, %s (%s)', assignment, user, grade_filename)
+        _logger.debug('Updating %s, %s (%s)', assignment, account, grade_filename)
         course_db.save_grade(assignment_id, user_id, grade, mtime)
-        _logger.info('Updated %s, %s (%s) -- grade=%s', assignment, user, grade_filename, str(grade))
+        _logger.info('Updated %s, %s (%s) -- grade=%s', assignment, account, grade_filename, str(grade))
     else:
-        _logger.info('SKIP (no tstamp change) %s, %s (%s)', assignment, user, grade_filename)
+        _logger.info('SKIP (no tstamp change) %s, %s (%s)', assignment, account, grade_filename)
 
 
 
 
 
-def update_grades(course_id, user=None, assignment=None, ignore_timestamp=False, simulate=False):
+def update_grades(course_id, account = None, assignment = None,
+        ignore_timestamp = False, simulate = False):
     """Update grades based on the given parameters.
 
-        @user and @assignment can be used to narrow the search:
+        @account and @assignment can be used to narrow the search:
 
-          * user==None, assignment==None -- compute all grades
-          * user==None, assignment!=None -- all submissions for the assignment
-          * user!=None, assignment==None -- all submissions from the user
-          * user!=None, assignment!=None -- the user's last submission for the assignment
+          * account==None, assignment==None -- compute all grades
+          * account==None, assignment!=None -- all submissions for the assignment
+          * account!=None, assignment==None -- all submissions from the account
+          * account!=None, assignment!=None -- the account's last submission for the assignment
     """
+
     vmcfg   = CourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     walker  = repo_walker.RepoWalker(vmcfg, simulate)
     db_file = vmpaths.db_file()
 
     with opening_course_db(db_file, isolation_level="EXCLUSIVE") as course_db:
-        walker.walk(user, assignment, func=db_save_grade,
+        walker.walk(account, assignment, func=db_save_grade,
                     args=(vmcfg, course_db, ignore_timestamp))

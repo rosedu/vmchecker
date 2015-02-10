@@ -197,28 +197,28 @@ def _find_file(searched_file_name, rfiles):
 
 
 
-def submission_upload_info(courseId, user, assignment):
+def submission_upload_info(courseId, assignment, account, isTeamAccount):
     """Return a string explaining the submission upload time, deadline
     and the late submission penalty
     """
 
     vmcfg = CourseConfig(CourseList().course_config(courseId))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    sbroot = vmpaths.dir_cur_submission_root(assignment, user)
+    sbroot = vmpaths.dir_cur_submission_root(assignment, account)
     grade_file = paths.submission_results_grade(sbroot)
     sbcfg = paths.submission_config_file(sbroot)
     if not os.path.exists(sbcfg):
         return _("No submission exists for this assignment")
 
-    late_penalty = update_db.compute_late_penalty(assignment, user, vmcfg)
+    late_penalty = update_db.compute_late_penalty(assignment, account, vmcfg)
     ta_penalty   = update_db.compute_TA_penalty(grade_file)
     deadline_str = vmcfg.assignments().get(assignment, 'Deadline')
     total_points = int(vmcfg.assignments().get(assignment, 'TotalPoints'))
     deadline_struct = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                                     penalty.DATE_FORMAT)
     sss = submissions.Submissions(vmpaths)
-    upload_time_str = sss.get_upload_time_str(assignment, user)
-    upload_time_struct = sss.get_upload_time_struct(assignment, user)
+    upload_time_str = sss.get_upload_time_str(assignment, account)
+    upload_time_struct = sss.get_upload_time_struct(assignment, account)
 
     deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
 
@@ -332,7 +332,7 @@ def get_test_queue_contents(courseId):
 
 
 
-def get_storagedir_contents(courseId, assignmentId, username):
+def get_storagedir_contents(courseId, assignmentId, account):
     """Get the content of a the archive coresponding to a
     MD5Submission-type homework"""
     client = paramiko.SSHClient()
@@ -341,7 +341,7 @@ def get_storagedir_contents(courseId, assignmentId, username):
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.storage_basepath(assignmentId, username)
+        storage_basepath = assignments.storage_basepath(assignmentId, account)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -349,7 +349,7 @@ def get_storagedir_contents(courseId, assignmentId, username):
                        key_filename=vmcfg.storer_sshid(),
                        look_for_keys=False)
 
-        cmd = "find " + storage_basepath + '/' + username + \
+        cmd = "find " + storage_basepath + '/' + account + \
             " \( ! -regex '.*/\..*' \) -type f"
 
         stdin, stdout, stderr = client.exec_command(cmd)
@@ -369,7 +369,7 @@ def get_storagedir_contents(courseId, assignmentId, username):
 def QuoteForPOSIX(string):
     return "\\'".join("'" + p + "'" for p in string.split("'"))
 
-def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
+def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
     """Checks whether a MD5Submission is valid:
        * checks that the uploaded md5 corresponds to the one of the machine
        * checks that the archive uploaded by the student is a zip file
@@ -390,7 +390,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.storage_basepath(assignmentId, username)
+        storage_basepath = assignments.storage_basepath(assignmentId, account)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -398,7 +398,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
                        key_filename=vmcfg.storer_sshid(),
                        look_for_keys=False)
 
-        archive_abs = os.path.join(storage_basepath, username, archiveFileName)
+        archive_abs = os.path.join(storage_basepath, account, archiveFileName)
 
         # XXX: This will take ages to compute! I wonder how many
         # connections will Apache hold.
@@ -412,7 +412,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
 
 
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+        submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
         md5_fpath = paths.submission_md5_file(submission_dir)
 
         if os.path.isfile(md5_fpath):
@@ -446,14 +446,14 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
     md5_fpath = paths.submission_md5_file(submission_dir)
 
     md5_result = {}
     try:
         if os.path.exists(paths.submission_config_file(submission_dir)) and os.path.isfile(md5_fpath):
             sss = submissions.Submissions(vmpaths)
-            upload_time_str = sss.get_upload_time_str(assignmentId, username)
+            upload_time_str = sss.get_upload_time_str(assignmentId, account)
             md5_result['fileExists'] = True
 
             with open(md5_fpath, 'r') as f:
@@ -502,7 +502,7 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
     try:
         result_files = []
         if os.path.isdir(r_path):
-            update_db.update_grades(courseId, user=username, assignment=assignmentId)
+            update_db.update_grades(courseId, account=account, assignment=assignmentId)
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
