@@ -9,12 +9,12 @@ import ldap
 import time
 import paramiko
 import traceback
-import sqlite3
 import codecs
 import subprocess
 from cgi import escape
 
-from vmchecker import paths, update_db, penalty, submissions
+from vmchecker import paths, update_db, penalty, submissions, coursedb
+from vmchecker.coursedb import opening_course_db
 from vmchecker.courselist import CourseList
 from vmchecker.config import LdapConfig, CourseConfig
 
@@ -541,7 +541,6 @@ def getAllGradesHelper(courseId, username, strout):
         #update_db.update_grades(courseId)
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        db_conn = sqlite3.connect(vmpaths.db_file())
         assignments = vmcfg.assignments()
         sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
                                                        int(assignments.get(y, "OrderNumber")))
@@ -554,40 +553,29 @@ def getAllGradesHelper(courseId, username, strout):
         if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
             user_can_view_all = True
 
-        query_string = (
-            'SELECT users.name, assignments.name, grades.grade '
-            'FROM users, assignments, grades '
-            'WHERE 1 '
-            'AND users.id = grades.user_id '
-            'AND assignments.id = grades.assignment_id'
-        )
-
-        if not user_can_view_all:
-            query_string += ' AND users.name = "' + username + '"'
+        with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+            if user_can_view_all:
+                rows = course_db.get_grades()
+            else:
+                rows = course_db.get_grades(username)
 
         grades = {}
-        try:
-            db_cursor = db_conn.cursor()
-            db_cursor.execute(query_string)
-            for row in db_cursor:
-                user, assignment, grade = row
-                if not assignment in vmcfg.assignments():
+        for row in rows:
+            user, assignment, grade = row
+            if not assignment in vmcfg.assignments():
+                continue
+            if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                deadtime = time.mktime(deadline)
+                if time.time() < deadtime:
                     continue
-                if not vmcfg.assignments().show_grades_before_deadline(assignment):
-                    deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
-                    deadtime = time.mktime(deadline)
-                    if time.time() < deadtime:
-                        continue
-                grades.setdefault(user, {})[assignment] = grade
-            db_cursor.close()
-        finally:
-            db_conn.close()
+            grades.setdefault(user, {})[assignment] = grade
 
         ret = []
         for user in sorted(grades.keys()):
-            ret.append({'studentName' : user,
-                        'studentId'   : user,
-                        'results'     : grades.get(user)})
+            ret.append({'name'       : 'user',
+                        'results'    : grades.get(user)})
+
         return json.dumps(ret)
     except:
         traceback.print_exc(file = strout)

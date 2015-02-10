@@ -89,6 +89,16 @@ class CourseDb(object):
                                'VALUES (?, ?, ?, ?) ',
                                (grade, mtime, assignment_id, user_id))
 
+    def get_grades(self, user = None):
+        """Return all the individual grades of one or all users."""
+        self.db_cursor.execute('SELECT users.name, assignments.name, grades.grade ' +
+                               'FROM users, assignments, student_grades ' +
+                               'WHERE 1 ' +
+                               'AND users.id = grades.user_id ' +
+                               'AND assignments.id = grades.assignment_id ' +
+                               ('AND users.name = "' + user + '"' if user != None else ''))
+        return self.db_cursor.fetchall()
+
 
 
 @contextmanager
