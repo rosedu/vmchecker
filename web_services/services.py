@@ -675,33 +675,6 @@ def login(req, username, password, remember_me=False, locale=websutil.DEFAULT_LO
                        'info' : 'Succesfully logged in'})
 
 ######### @ServiceMethod
-def autologin(req, username):
-    return json.dumps({})
-    req.content_type = 'text/html'
-    # don't permit brute force password guessing:
-    time.sleep(1)
-
-    websutil.sanityCheckUsername(username)
-
-    s = Session.Session(req)
-
-    if not s.is_new():
-	#TODO take the username from session
-        return json.dumps({'status':True, 'username':username,
-            'info':'Already logged in'})
-
-    if not req.connection.remote_ip == '127.0.0.1':
-        s.invalidate()
-        return json.dumps({'status':False, 'username':"", 
-            'info':req.connection.remote_ip})
-
-    s["username"] = username.lower()
-    s.save()
-    return json.dumps({'status':True, 'username':username,
-            'info':'Success!'})
-
-
-######### @ServiceMethod
 def logout(req):
     req.content_type = 'text/html'
     s = Session.Session(req)
