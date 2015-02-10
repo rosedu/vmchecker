@@ -27,7 +27,7 @@ except ImportError:
 EXTENDED_SESSION_TIMEOUT = 60 * 60 * 24 * 14;
 
 # .vmr files may be very large because of errors in the student's submission.
-MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
+MAX_VMR_FILE_SIZE = 5 * 1024 * 1024 # 500 KB
 
 # define ERROR_MESSAGES
 ERR_AUTH = 1
@@ -570,7 +570,7 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
                     overflow_msg = ''
                     f_size = os.path.getsize(f_path)
                     if f_size > MAX_VMR_FILE_SIZE:
-                        overflow_msg = '\n\n<b>' + _('File truncated! Actual size') + ': ' + str(f_size) + ' ' + _('bytes') + '</b>\n'
+                        overflow_msg = '\n\n' + _('File truncated! Actual size') + ': ' + str(f_size) + ' ' + _('bytes') + '\n'
                     # decode as utf-8 and ignore any errors, because
                     # characters will be badly encoded as json.
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
