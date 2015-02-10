@@ -201,6 +201,7 @@ def submission_upload_info(courseId, user, assignment):
     """Return a string explaining the submission upload time, deadline
     and the late submission penalty
     """
+
     vmcfg = CourseConfig(CourseList().course_config(courseId))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_cur_submission_root(assignment, user)
@@ -225,12 +226,19 @@ def submission_upload_info(courseId, user, assignment):
     rows_to_print = [
         [ _("Submission date"), upload_time_str ],
         [ _("Assignment deadline"), deadline_str ],
-        [ deadline_explanation ],
-        [ '' ],
-        [ _("Penalty (late submission)"), str(late_penalty) ],
-        [ _("Penalty (grading)"), str(ta_penalty) ],
-        [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
-        [ '' ],
+        [ deadline_explanation ]
+    ]
+
+    if not vmcfg.assignments().is_deadline_hard(assignment):
+        rows_to_print += [
+            [ '' ],
+            [ _("Penalty (late submission)"), str(late_penalty) ],
+            [ _("Penalty (grading)"), str(ta_penalty) ],
+            [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
+            [ '' ]
+        ]
+
+    rows_to_print += [
         [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
     ]
 
@@ -239,7 +247,8 @@ def submission_upload_info(courseId, user, assignment):
         if len(row) == 2 and len(row[0]) > max_line_width:
             max_line_width = len(row[0])
 
-    rows_to_print[7][0] = '-' * max_line_width
+    # Put a dashed line just above the 'Grade' line
+    rows_to_print[len(rows_to_print) - 2][0] = '-' * max_line_width
 
     ret = u""
     for row in rows_to_print:
