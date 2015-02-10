@@ -654,9 +654,11 @@ def login(req, username, password, remember_me=False, locale=websutil.DEFAULT_LO
                            'info':_('Invalid username/password')})
 
     # Use extended session timeout if requested
-    if remember_me == True or remember_me == "true":
+    if remember_me != False:
         c = s.make_cookie()
-        c.expires = (datetime.datetime.now() + datetime.timedelta(seconds=websutil.EXTENDED_SESSION_TIMEOUT)).strftime("%a, %d-%b-%Y %H:%M:%S GMT")
+        expiration = datetime.datetime.now()
+        expiration += datetime.timedelta(seconds = websutil.EXTENDED_SESSION_TIMEOUT)
+        c.expires = expiration.strftime("%a, %d-%b-%Y %H:%M:%S GMT")
 
         req.headers_out.clear()
         Cookie.add_cookie(req, c)
