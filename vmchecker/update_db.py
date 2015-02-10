@@ -165,7 +165,7 @@ def db_save_grade(assignment, account, submission_root,
         # we don't have evaluation results, but the homework exists.
         # it must be in the tester's queue waiting to be evaluated.
         ignore_timestamp = True
-        grade = 'not-tested'
+        grade = submissions.STATUS_QUEUED
         mtime = 0
     else:
         # not evaluated and not even submitted. The student did not

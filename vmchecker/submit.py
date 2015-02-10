@@ -28,6 +28,7 @@ from . import submissions
 from . import vmlogging
 from . import tempfileutil
 from . import callback
+from . import update_db
 
 from penalty import str_to_time
 from ziputil import check_archive_for_file_override
@@ -478,26 +479,34 @@ def submit(submission_filename, assignment, account, course_id, user = None,
     sbcfg = save_submission_in_storer(submission_filename, account, assignment,
                               course_id, upload_time_str, user = user)
 
-    if vmcfg.assignments().submit_only(assignment):
-        # XXX this assumes that the storer machine and the vmchecker machine
-        # are the same. There's no way to connect to storer machines. This
-        # process runs as www-data.
-        conf_vars = dict(sbcfg.items('Assignment'))
+    grade_message = None
+    if vmcfg.assignments().submit_only(assignment) or \
+            storage_type.lower() == "large":
+        grade_message = submissions.STATUS_SAVED
+    else:
+        grade_message = submissions.STATUS_QUEUED
 
-        try:
-            # create dir
-            os.makedirs(conf_vars['resultsdest'])
+    # write the status of the submission
+    conf_vars = dict(sbcfg.items('Assignment'))
 
-            # create a dummy results grade.vmr
-            with open(os.path.join(conf_vars['resultsdest'], 'grade.vmr'), 'wt') as f:
-                f.write("TODO\n")
-        except Exception as e:
-            logger.error("Failed to save assignment: %s" % (str(e)))
-            raise
+    try:
+        # create dir
+        os.makedirs(conf_vars['resultsdest'])
+
+        # create a dummy results grade.vmr
+        with open(os.path.join(conf_vars['resultsdest'], 'grade.vmr'), 'wt') as f:
+            f.write(grade_message + "\n")
+    except Exception as e:
+        logger.error("Failed to save assignment: %s" % (str(e)))
+        raise
+
+    update_db.update_grades(course_id, account, assignment)
+
+    if vmcfg.assignments().submit_only(assignment) or \
+            storage_type.lower() == "large":
         return
 
-    if storage_type.lower() != "large":
-        queue_for_testing(assignment, account, course_id)
+    queue_for_testing(assignment, account, course_id)
 
 
 def evaluate_large_submission(archive_fname, assignment, account, course_id):

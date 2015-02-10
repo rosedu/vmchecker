@@ -11,9 +11,13 @@ import sys
 import ConfigParser
 
 from . import vmlogging
+from . import submissions
 
 _DEFAULT_SSH_PORT = 22
 _logger = vmlogging.create_module_logger('callback')
+
+STATUS_PROCESSING = 1
+STATUS_DONE = 2
 
 
 def _setup_logging():
@@ -208,11 +212,32 @@ def call_remote_program(t, cmdline):
     except SSHException:
         _logger.exception('error while running remote cmd [' + cmdline + ']')
 
+def notify_submission_is_being_processed(conf_vars):
+    """Opens a connection, writes 'processing' to grade.vmr and
+    and calls a script on the storer."""
+    try:
+        t = connect_to_host(conf_vars)
+    except:
+        _logger.exception('could not connect to remote host')
+        return
+
+    try:
+        cmdline = 'echo "' + submissions.STATUS_PROCESSING + '" > ' + \
+                    os.path.join(conf_vars['resultsdest'], 'grade.vmr')
+        call_remote_program(t, cmdline)
+
+        cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
+            ' --account=' + conf_vars['account'] + ' --assignment=' + conf_vars['assignment']
+        call_remote_program(t, cmdline)
+    except:
+        _logger.exception('error while transferring files with paramiko')
+    finally:
+        t.close()
+
 
 def send_results_and_notify(files, conf_vars):
-    """Opens a connection, transfers files, and
-    TODO: calls a script on the storer.
-    """
+    """Opens a connection, transfers files
+    and calls a script on the storer."""
     try:
         t = connect_to_host(conf_vars)
     except:
@@ -238,10 +263,15 @@ def print_usage():
 
 
 
-def run_callback(config_file, files):
+def run_callback(config_file, files, status):
     _setup_logging()
     conf_vars = _config_variables(config_file, 'Assignment')
-    send_results_and_notify(list(files), conf_vars)
+    if status == STATUS_PROCESSING:
+        notify_submission_is_being_processed(conf_vars)
+    elif status == STATUS_DONE:
+        send_results_and_notify(list(files), conf_vars)
+    else:
+        pass
 
 
 def main():

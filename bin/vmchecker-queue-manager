@@ -30,6 +30,7 @@ from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
 from vmchecker.paths  import VmcheckerPaths
+from vmchecker import submissions
 from vmchecker import vmlogging
 from vmchecker import callback
 from vmchecker import ziputil
@@ -55,7 +56,7 @@ def upload_results_to_sender(bundle_dir):
             if fname.endswith('.vmr'):
                 vmrfiles.append(os.path.join(bundle_dir, fname))
         sb_config = os.path.join(bundle_dir, 'submission-config')
-        callback.run_callback(sb_config, vmrfiles)
+        callback.run_callback(sb_config, vmrfiles, callback.STATUS_DONE)
     except:
         # XXX: don't know whether to allow exceptions to kill
         # queue-manager or not. Silent exceptions will most certainly
@@ -91,7 +92,7 @@ def log_vmchecker_grade(location, exit_code):
     """
     vmchecker_grade = os.path.join(location, 'grade.vmr')
     with open(vmchecker_grade, 'w') as handler:
-        print >> handler, ['error', 'ok'] [ exit_code == 0 ]
+        print >> handler, [submissions.STATUS_ERROR, submissions.STATUS_DONE] [ exit_code == 0 ]
 
 
 def launch_external_downloader(location):
@@ -165,6 +166,7 @@ def process_job(path, name, vmpaths):
         _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
         launch_external_downloader(location)
         _logger.info('-- QM: finished downloading external dependencies')
+        callback.run_callback(os.path.join(location, 'submission-config'), None, callback.STATUS_PROCESSING)
         launch_executor(location)
         _logger.info('-- QM: finished testing - sending results')
         upload_results_to_sender(location)

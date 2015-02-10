@@ -34,6 +34,10 @@ ERR_AUTH = 1
 ERR_EXCEPTION = 2
 ERR_OTHER = 3
 
+# define MD5 processing errors
+MD5_ERR_BAD_MD5 = 'md5'
+MD5_ERR_BAD_ZIP = 'zip'
+
 
 # I18N support
 import gettext
@@ -366,10 +370,10 @@ def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
        * checks that the uploaded md5 corresponds to the one of the machine
        * checks that the archive uploaded by the student is a zip file
 
-       On success returns 'ok'.
+       On success returns (True,).
        On failure reports the source of the failure:
-       - 'md5' - the uploaded md5 does not match the one computed on the archive
-       - 'zip' - the uploaded archive is not zip.
+       - (False, 'md5') - the uploaded md5 does not match the one computed on the archive
+       - (False, 'zip') - the uploaded archive is not zip.
     """
 
     md5_calculated = ""
@@ -418,13 +422,13 @@ def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
         client.close()
 
     if not md5_calculated == md5_uploaded:
-        return "md5" # report the type of the problem
+        return (False, MD5_ERR_BAD_MD5) # report the type of the problem
 
     if not archive_file_type == "zip":
-        return "zip" # report the type of the problem
+        return (False, MD5_ERR_BAD_ZIP) # report the type of the problem
 
 
-    return "ok" # no problemo
+    return (True,) # no problemo
 
 # Service method helpers
 def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
@@ -558,7 +562,8 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
                         content = xssescape(content)
                         result_files.append({fname : content})
 
-        if len(result_files) == 0:
+        if (len(result_files) == 1 and result_files[0].keys()[0] == "grade.vmr") and \
+                not vmcfg.assignments().submit_only(assignmentId):
             msg = _("In the meantime have a fortune cookie") + ": <blockquote>"
             try:
                 process = subprocess.Popen('/usr/games/fortune',
@@ -569,8 +574,8 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
                 msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
-        if 'late-submission.vmr' not in ignored_vmrs:
-            result_files.append({'late-submission.vmr' :
+        if 'submission.vmr' not in ignored_vmrs:
+            result_files.append({'submission.vmr' :
                                  submission_upload_info(courseId, assignmentId, account, isTeamAccount)})
         result_files = sortResultFiles(result_files)
         return json.dumps(result_files)

@@ -17,6 +17,12 @@ import logging
 from .config import DATE_FORMAT
 from . import paths
 
+STATUS_SAVED = 'saved'
+STATUS_ERROR = 'error'
+STATUS_QUEUED = 'queued'
+STATUS_PROCESSING = 'running'
+STATUS_DONE = 'done'
+
 _logger = logging.getLogger('vmchecker.submissions')
 
 def get_time_struct_from_str(time_str):

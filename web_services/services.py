@@ -278,8 +278,8 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
 
     (_, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
     archiveValidationResult = websutil.validate_md5_submission(courseId, assignmentId, account, archiveFileName)
-    if not(archiveValidationResult == "ok"):
-        return json.dumps({'status':False, 'error':archiveValidationResult});
+    if not(archiveValidationResult[0]):
+        return json.dumps({'status' : False, 'error' : archiveValidationResult[1]});
 
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
