@@ -222,8 +222,20 @@ def submission_upload_info(courseId, assignment, account, isTeamAccount):
 
     deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
 
+    submitter_explanation = None
+    if isTeamAccount:
+        submitter_explanation = _("Submitted by") + ": " + sss.get_submitting_user(assignment, account)
+
     max_line_width = 0
-    rows_to_print = [
+    rows_to_print = []
+
+    if isTeamAccount:
+        rows_to_print += [
+            [ submitter_explanation ],
+            [ '' ]
+        ]
+
+    rows_to_print += [
         [ _("Submission date"), upload_time_str ],
         [ _("Assignment deadline"), deadline_str ],
         [ deadline_explanation ]
@@ -445,6 +457,7 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+    (_, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
     md5_fpath = paths.submission_md5_file(submission_dir)
@@ -470,8 +483,38 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
+def getAssignmentAccountName(courseId, assignmentId, username, strout):
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+        # First check if the user is part of a team for this assignment
+        user_team = course_db.get_user_team_for_assignment(assignmentId, username)
+        if user_team == None:
+            # No team, so just use the user's own account
+            return (False, username)
+        else:
+            # Check if this team has a mutual account
+            mutual_account = course_db.get_team_has_mutual_account(user_team)
+            if mutual_account:
+                return (True, user_team)
+            else:
+                return (False, username)
+
+def getResultsHelper(courseId, assignmentId, currentUser, strout, username = None, teamname = None, currentTeam = None):
     # assume that the session was already checked
+
+    if username != None and teamname != None:
+        return json.dumps({'errorType' : ERR_OTHER,
+                           'errorMessage' : "Can't query both user and team results at the same time.",
+                           'errorTrace' : ""})
+
 
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
@@ -481,11 +524,14 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-    # Check if the current user is allowed to view all the grades
+    # Check if the current user is allowed to view any other user's grade.
     # TODO: This should be implemented neater using some group
     # and permission model.
 
-    is_authorized = vmcfg.students_can_view_all_results() or currentUser in vmcfg.view_all_results_user_list() or username == currentUser
+    is_authorized = vmcfg.students_can_view_all_results() or \
+                    currentUser in vmcfg.view_all_results_user_list() or \
+                    username == currentUser or \
+                    teamname == currentTeam
 
     if not is_authorized:
         traceback.print_exc(file = strout)
@@ -494,7 +540,17 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+
+    account = None
+    if username != None:
+        # Check if the user is part of a team with a mutual account for this submission
+        (isTeamAccount, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
+    else:
+        account = teamname
+        isTeamAccount = True
+
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
+
     r_path = paths.dir_submission_results(submission_dir)
 
     assignments = vmcfg.assignments()
@@ -535,7 +591,7 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
         if 'late-submission.vmr' not in ignored_vmrs:
             result_files.append({'late-submission.vmr' :
-                                 submission_upload_info(courseId, username, assignmentId)})
+                                 submission_upload_info(courseId, assignmentId, account, isTeamAccount)})
         result_files = sortResultFiles(result_files)
         return json.dumps(result_files)
     except:
@@ -562,14 +618,21 @@ def getAllGradesHelper(courseId, username, strout):
         if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
             user_can_view_all = True
 
+        user_grade_rows = None
+        team_grade_rows = None
         with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
             if user_can_view_all:
-                rows = course_db.get_grades()
+                user_grade_rows = course_db.get_user_grades()
+                team_grade_rows = course_db.get_team_grades()
             else:
-                rows = course_db.get_grades(username)
+                # Get all the individual grades that the user is allowed to see
+                user_grade_rows = course_db.get_user_and_teammates_grades(username)
+                # Get all the team grades that the user is allowed to see
+                team_grade_rows = course_db.get_user_team_grades(user = username)
 
+        ret = []
         grades = {}
-        for row in rows:
+        for row in user_grade_rows:
             user, assignment, grade = row
             if not assignment in vmcfg.assignments():
                 continue
@@ -580,11 +643,27 @@ def getAllGradesHelper(courseId, username, strout):
                     continue
             grades.setdefault(user, {})[assignment] = grade
 
-        ret = []
         for user in sorted(grades.keys()):
-            ret.append({'name'       : 'user',
+            ret.append({'gradeOwner' : 'user',
+                        'name'       : user,
                         'results'    : grades.get(user)})
 
+        grades = {}
+        for row in team_grade_rows:
+            team, assignment, grade = row
+            if not assignment in vmcfg.assignments():
+                continue
+            if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                deadtime = time.mktime(deadline)
+                if time.time() < deadtime:
+                    continue
+            grades.setdefault(team, {})[assignment] = grade
+
+        for team in sorted(grades.keys()):
+            ret.append({'gradeOwner' : 'team',
+                        'name'       : team,
+                        'results'    : grades.get(team)})
         return json.dumps(ret)
     except:
         traceback.print_exc(file = strout)
@@ -594,8 +673,9 @@ def getAllGradesHelper(courseId, username, strout):
 
 def getUserStorageDirContentsHelper(courseId, assignmentId, username, strout):
     """Get the current files in the home directory on the storage host for a given username"""
+    (_, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
     try:
-        result = get_storagedir_contents(courseId, assignmentId, username)
+        result = get_storagedir_contents(courseId, assignmentId, account)
         return result
     except:
         traceback.print_exc(file = strout)

@@ -66,7 +66,7 @@ class CourseDb(object):
                                (assignment,))
         result = self.db_cursor.fetchone()
         if result is None:
-            return self.add_assignment(assignment)
+            return result
         return result[0]
 
 
@@ -202,7 +202,7 @@ class CourseDb(object):
         self.db_cursor.execute('SELECT id FROM users WHERE name=?', (user,))
         result = self.db_cursor.fetchone()
         if result is None:
-            return self.add_user(user)
+            return result
         return result[0]
 
 

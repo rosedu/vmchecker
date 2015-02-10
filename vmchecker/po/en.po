@@ -29,6 +29,9 @@ msgstr "Submission date"
 msgid "Assignment deadline"
 msgstr "Assignment deadline"
 
+msgid "Submitted by"
+msgstr "Submitted by"
+
 #: websutil.py:218
 msgid "Penalty (late submission)"
 msgstr "Penalty (late submission)"

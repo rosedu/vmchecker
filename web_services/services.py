@@ -68,9 +68,13 @@ def uploadedFile(req, courseId, assignmentId, tmpname, locale=websutil.DEFAULT_L
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
     sys.stdout = strout
+    (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
     try:
-        submit.submit(tmpname, assignmentId, username, courseId)
-        update_db.update_grades(courseId, user=username, assignment=assignmentId)
+        if hasTeam:
+            submit.submit(tmpname, assignmentId, account, courseId, user = username)
+        else:
+            submit.submit(tmpname, assignmentId, account, courseId)
+        update_db.update_grades(courseId, account, assignment = assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -140,9 +144,13 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile, locale=websutil.D
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
     sys.stdout = strout
+    (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
     try:
-        submit.submit(tmpname, assignmentId, username, courseId)
-        update_db.update_grades(courseId, user=username, assignment=assignmentId)
+        if hasTeam:
+            submit.submit(tmpname, assignmentId, account, courseId, user = username)
+        else:
+            submit.submit(tmpname, assignmentId, account, courseId)
+        update_db.update_grades(courseId, account, assignment = assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -205,9 +213,13 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum, locale=websutil.DEF
     # Call submit.py
     ## Redirect stdout to catch logging messages from submit
     sys.stdout = strout
+    (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
     try:
-        submit.submit(tmpname, assignmentId, username, courseId)
-        update_db.update_grades(courseId, user=username, assignment=assignmentId)
+        if hasTeam:
+            submit.submit(tmpname, assignmentId, account, courseId, user = username)
+        else:
+            submit.submit(tmpname, assignmentId, account, courseId)
+        update_db.update_grades(courseId, account, assignment = assignmentId)
     except submit.SubmittedTooSoonError:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -264,7 +276,8 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
     # Reset the timeout
     s.save()
 
-    archiveValidationResult = websutil.validate_md5_submission(courseId, assignmentId, username, archiveFileName)
+    (_, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
+    archiveValidationResult = websutil.validate_md5_submission(courseId, assignmentId, account, archiveFileName)
     if not(archiveValidationResult == "ok"):
         return json.dumps({'status':False, 'error':archiveValidationResult});
 
@@ -298,8 +311,59 @@ def beginEvaluation(req, courseId, assignmentId, archiveFileName, locale=websuti
 
 
 ########## @ServiceMethod
-def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.DEFAULT_LOCALE):
-    """Get the results for a given username.
+def getTeamResults(req, courseId, assignmentId, teamname=None, locale=websutil.DEFAULT_LOCALE):
+    """Get the results for a given team name.
+       If the team name is empty, get the results of the current user's team."""
+
+    websutil.install_i18n(websutil.sanityCheckLocale(locale))
+
+    websutil.sanityCheckAssignmentId(assignmentId)
+    websutil.sanityCheckCourseId(courseId)
+    if teamname != None:
+        websutil.sanityCheckUsername(teamname)
+
+    req.content_type = 'text/html'
+    strout = websutil.OutputString()
+
+    # Check permission
+    s = Session.Session(req)
+    if s.is_new():
+        s.invalidate()
+        return json.dumps({'errorType':websutil.ERR_AUTH,
+                'errorMessage':"",
+                'errorTrace':""})
+
+    try:
+        s.load()
+        current_user = s['username']
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : websutil.ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    (hasTeam, current_team) = websutil.getAssignmentAccountName(courseId, assignmentId, current_user, strout)
+    if teamname == None:
+        if not hasTeam:
+            # User is not part of any team for the assignment
+            return json.dumps({'errorType' : websutil.ERR_OTHER,
+                               'errorMessage' : "User is not part of any team for this assignment",
+                               'errorTrace' : ""})
+        teamname = current_team
+
+    # Reset the timeout
+    s.save()
+    return websutil.getResultsHelper(courseId,
+                                     assignmentId,
+                                     current_user,
+                                     strout,
+                                     teamname = teamname,
+                                     currentTeam = current_team)
+
+########## @ServiceMethod
+def getUserResults(req, courseId, assignmentId, username=None,
+        locale=websutil.DEFAULT_LOCALE):
+    """Get the individual results for a given username.
        If the username is empty, get the results of the current user."""
 
     websutil.install_i18n(websutil.sanityCheckLocale(locale))
@@ -334,7 +398,11 @@ def getUserResults(req, courseId, assignmentId, username=None, locale=websutil.D
 
     # Reset the timeout
     s.save()
-    return websutil.getUserResultsHelper(courseId, assignmentId, username, current_user, strout)
+    return websutil.getResultsHelper(courseId,
+                                     assignmentId,
+                                     current_user,
+                                     strout,
+                                     username = username)
 
 ######### @ServiceMethod
 def getCourses(req):

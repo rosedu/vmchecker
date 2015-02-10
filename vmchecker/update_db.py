@@ -127,8 +127,34 @@ def db_save_grade(assignment, account, submission_root,
     """
     grade_filename = paths.submission_results_grade(submission_root)
     assignment_id = course_db.get_assignment_id(assignment)
-    user_id = course_db.get_user_id(user)
-    db_mtime = course_db.get_grade_mtime(assignment_id, user_id)
+    if assignment_id is None:
+        assignment_id = course_db.add_assignment(assignment)
+
+    user_id = None
+    team_id = None
+    isTeamAccount = False
+    # First check if this is a team's mutual account
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    sss = submissions.Submissions(vmpaths)
+    submitting_user = sss.get_submitting_user(assignment, account)
+    if submitting_user is not None:
+        # If there is a separate submitting user, then this is a team account
+        isTeamAccount = True
+        team_id = course_db.get_team_id(account)
+        if team_id is None:
+            team_id = course_db.add_team(account, True)
+        submitting_user_id = course_db.get_user_id(submitting_user)
+        if submitting_user_id is None:
+            submitting_user_id = course_db.add_user(submitting_user)
+        course_db.add_team_member(submitting_user_id, team_id)
+        course_db.activate_team_for_assignment(team_id, assignment_id)
+
+    if team_id is None:
+        user_id = course_db.get_user_id(account)
+        if user_id is None:
+            user_id = course_db.add_user(account)
+
+    db_mtime = course_db.get_grade_mtime(assignment_id, user_id = user_id, team_id = team_id)
 
 
     if os.path.exists(grade_filename):
@@ -151,7 +177,10 @@ def db_save_grade(assignment, account, submission_root,
     # or when forced to do so
     if db_mtime != mtime or ignore_timestamp:
         _logger.debug('Updating %s, %s (%s)', assignment, account, grade_filename)
-        course_db.save_grade(assignment_id, user_id, grade, mtime)
+        if not isTeamAccount:
+            course_db.save_user_grade(assignment_id, user_id, grade, mtime)
+        else:
+            course_db.save_team_grade(assignment_id, team_id, grade, mtime)
         _logger.info('Updated %s, %s (%s) -- grade=%s', assignment, account, grade_filename, str(grade))
     else:
         _logger.info('SKIP (no tstamp change) %s, %s (%s)', assignment, account, grade_filename)
