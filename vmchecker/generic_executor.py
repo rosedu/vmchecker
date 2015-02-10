@@ -24,7 +24,7 @@ import shlex
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VirtualMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VirtualMachineConfig
 
 _logger = logging.getLogger('vm_executor')
 

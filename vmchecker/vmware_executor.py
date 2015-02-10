@@ -25,7 +25,7 @@ import ConfigParser
 from threading import Thread
 from subprocess import Popen
 from vmchecker.generic_executor import VM, Host
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VmwareMachineConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
