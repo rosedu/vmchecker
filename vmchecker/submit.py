@@ -282,6 +282,26 @@ def create_testing_bundle(account, assignment, course_id):
 
     return bundle_path
 
+def get_tester_queue_contents(vmcfg, tester_id):
+    # connect to the tester
+    tstcfg = vmcfg.testers()
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        client.load_system_host_keys(vmcfg.known_hosts_file())
+        client.connect(tstcfg.hostname(tester_id),
+                       username=tstcfg.login_username(tester_id),
+                       key_filename=vmcfg.storer_sshid(),
+                       look_for_keys=False)
+
+        # run 'ls' in the queue_path and get it's output.
+        cmd = 'ls -ctgG ' + tstcfg.queue_path(tester_id)
+        stdin, stdout, stderr = client.exec_command(cmd)
+        data = stdout.readlines()
+        for f in [stdin, stdout, stderr]: f.close()
+        if len(data) > 0:
+            data = data[1:]
+            return data
 
 def ssh_bundle(bundle_path, vmcfg, assignment):
     """Sends a bundle over ssh to the tester machine"""

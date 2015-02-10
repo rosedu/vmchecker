@@ -13,7 +13,7 @@ import codecs
 import subprocess
 from cgi import escape
 
-from vmchecker import paths, update_db, penalty, submissions, coursedb
+from vmchecker import paths, update_db, penalty, submissions, submit, coursedb
 from vmchecker.coursedb import opening_course_db
 from vmchecker.courselist import CourseList
 from vmchecker.config import LdapConfig, CourseConfig
@@ -312,27 +312,7 @@ def get_test_queue_contents(courseId):
         tstcfg = vmcfg.testers()
         queue_contents = [] # array of strings
         for tester_id in tstcfg:
-            # connect to the tester
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            try:
-                client.load_system_host_keys(vmcfg.known_hosts_file())
-                client.connect(tstcfg.hostname(tester_id),
-                               username=tstcfg.login_username(tester_id),
-                               key_filename=vmcfg.storer_sshid(),
-                               look_for_keys=False)
-
-                # run 'ls' in the queue_path and get it's output.
-                cmd = 'ls -ctgG ' + tstcfg.queue_path(tester_id)
-                stdin, stdout, stderr = client.exec_command(cmd)
-                data = stdout.readlines()
-                for f in [stdin, stdout, stderr]: f.close()
-                if len(data) > 0:
-                    data = data[1:]
-                    queue_contents.append(data)
-
-            finally:
-                client.close()
+            queue_contents.append(submit.get_tester_queue_contents(vmcfg, tester_id))
 
         # print the concatenation of all 'ls' instances
         return json.dumps(queue_contents, indent=4)
