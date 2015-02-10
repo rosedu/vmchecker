@@ -38,6 +38,7 @@ from .courselist import CourseList
 logger = vmlogging.create_module_logger('submit')
 
 _DEFAULT_SSH_PORT = 22
+DEADLINE_GRACE_TIME = 60 # 1 minute
 
 class SubmittedTooSoonError(Exception):
     """Raised when a user sends a submission too soon after a previous one.
@@ -383,7 +384,7 @@ def check_valid_time(course_id, assignment, user,
         deadline_ts = str_to_time(deadline_str)
         upload_ts = str_to_time(upload_time_str)
         # extra minute grace time
-        if upload_ts > 60+deadline_ts:
+        if upload_ts > DEADLINE_GRACE_TIME + deadline_ts:
             msg = 'You submited too late '
             msg += 'Deadline was ' + deadline_str + ' and '
             msg += 'you submited at ' + upload_time_str + '.'
