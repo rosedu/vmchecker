@@ -17,8 +17,8 @@ from vmchecker.generic_executor import Host, VM
 _logger = logging.getLogger('vm_executor')
 
 class OneHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment):
-        return OneVM(self, bundle_dir, vmcfg, assignment)
+    def getVM(self, bundle_dir, vmcfg, assignment, tester):
+        return OneVM(self, bundle_dir, vmcfg, assignment, tester)
 
 class OneVMException(Exception):
     pass
@@ -30,8 +30,8 @@ class OneVM(VM):
     # resume means resume (but) it should not be used from outside
     # start and stop operations are blocking (i.e. we wait for the machine to
     # be up again)
-    def __init__(self, host, bundle_dir, vmcfg, assignment):
-        VM.__init__(self, host, bundle_dir, vmcfg, assignment)
+    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
+        VM.__init__(self, host, bundle_dir, vmcfg, assignment, tester)
         self.machinecfg = OneMachineConfig(vmcfg, self.machine)
         self.one_server = self.machinecfg.get_one_server()
         self.one_credentials = self.machinecfg.get_one_credentials()

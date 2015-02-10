@@ -150,6 +150,27 @@ class Submissions:
             return None
         return hrc.get('Assignment', 'SubmittingUser')
 
+    def get_tester(self, assignment, account):
+        """Get the name of the tester used for the evaluation of
+        this submission."""
+        hrc = self._get_submission_config(assignment, account)
+        if hrc == None:
+            return None
+        return hrc.get('Assignment', 'Tester')
+
+    def set_tester(self, assignment, account, tester):
+        """Appends the tester to an existing
+        submission-config"""
+        config_file = self._get_submission_config_fname(assignment, account)
+        if config_file == None:
+            return None
+        hrc = ConfigParser.RawConfigParser()
+        with open(config_file) as handler:
+            hrc.readfp(handler)
+
+        hrc.set('Assignment', 'Tester', tester)
+        with open(config_file, "w") as handler:
+            hrc.write(handler)
 
     def submission_exists(self, assignment, account):
         """Returns true if a valid submission exists for the given

@@ -41,8 +41,8 @@ class Host():
         _logger.debug('Command output: %s' % output)
         return output
 
-    def getVM(self, bundle_dir, vmcfg, assignment):
-        vm = VM(self, bundle_dir, vmcfg, assignment)
+    def getVM(self, bundle_dir, vmcfg, assignment, tester):
+        vm = VM(self, bundle_dir, vmcfg, assignment, tester)
         return None
 	
     def start_host_commands(self, jobs_path, host_command):

@@ -272,6 +272,10 @@ class AssignmentsConfig(ConfigWithDefaults):
 
         return result
 
+    def get_machine_id(self, assignment):
+        """Return a config object describing the VM to run this assignment on."""
+        return self.get(assignment, 'Machine')
+
 class TestersConfig(ConfigWithDefaults):
     """Obtain information about assignments from a config file.
 
@@ -302,6 +306,10 @@ class TestersConfig(ConfigWithDefaults):
     def queue_path(self, tester):
         """The path on the tester machine where the queued files are put"""
         return self.get(tester, 'queuepath')
+
+    def vm_store_path(self, tester):
+        """The path on tester machine where the vms are stored"""
+        return self.get(tester, 'vmstorepath')
 
 
 
@@ -392,14 +400,14 @@ class VirtualMachineConfig(object):
         self.machine_id = machine_id
 
 
-    def get_tester_id(self):
+    def get_tester_ids(self):
         """Returns the id of a tester configuration.
 
         The config script contains sections named
             [tester TESTER_ID]
         from which more info about the tester can be determined.
         """
-        return self.config.get(self.machine_id, 'Tester')
+        return self.config.get_list(self.machine_id, 'Testers')
 
 
     def get_vm_path(self):

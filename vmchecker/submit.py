@@ -303,11 +303,23 @@ def get_tester_queue_contents(vmcfg, tester_id):
             data = data[1:]
             return data
 
-def ssh_bundle(bundle_path, vmcfg, assignment):
-    """Sends a bundle over ssh to the tester machine"""
-    machine = vmcfg.assignments().get(assignment, 'Machine')
-    tester = vmcfg.get(machine, 'Tester')
+    finally:
+        client.close()
 
+def get_least_busy_tester(vmcfg, testers):
+    min_num_jobs = None
+    least_busy_tester = None
+    for tester in testers:
+        num_jobs = len(get_tester_queue_contents(vmcfg, tester))
+        if min_num_jobs is None or num_jobs < min_num_jobs:
+            min_num_jobs = num_jobs
+            least_busy_tester = tester
+
+    return least_busy_tester
+
+
+def ssh_bundle(bundle_path, vmcfg, tester):
+    """Sends a bundle over ssh to the tester machine"""
     tstcfg = vmcfg.testers()
     tester_username  = tstcfg.login_username(tester)
     tester_hostname  = tstcfg.hostname(tester)
@@ -364,11 +376,19 @@ def submitted_too_soon(assignment, account, vmcfg, check_eval_queueing_time):
 
 def queue_for_testing(assignment, account, course_id):
     """Queue for testing the last submittion for the given assignment,
-    course and account."""
+    course and account on the least busy tester machine."""
     vmcfg = config.CourseConfig(CourseList().course_config(course_id))
+    # Find the least busy tester, write this to the submission-config, and submit
+    machine = config.VirtualMachineConfig(vmcfg, vmcfg.assignments().get_machine_id(assignment))
+    testers = machine.get_tester_ids()
+    tester = get_least_busy_tester(vmcfg, testers)
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    subm = submissions.Submissions(vmpaths)
+    subm.set_tester(assignment, account, tester)
+    # Create submission bundle
     bundle_path = create_testing_bundle(account, assignment, course_id)
     try:
-        ssh_bundle(bundle_path, vmcfg, assignment)
+        ssh_bundle(bundle_path, vmcfg, tester)
     finally:
         os.remove(bundle_path)
 
