@@ -147,7 +147,7 @@ class VmWareVM(VM):
             # vm.powerOn() didn't hang: the machine has been powered on
             return
         
-        proc = Popen(['vmchecker-self.vminstance-message-handler',
+        proc = Popen(['vmchecker-message-handler',
                   self.vmwarecfg.vmware_hostname(),
                   self.vmwarecfg.vmware_username(),
                   self.vmwarecfg.vmware_password(),
