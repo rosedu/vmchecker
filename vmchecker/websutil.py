@@ -286,7 +286,7 @@ def sortResultFiles(rfiles):
     file_descriptions = [
         {'fortune.vmr'          : _('Results not yet available')},
         {'grade.vmr'            : _('Grade')},
-        {'late-submission.vmr'  : _('Penalty points')},
+        {'submission.vmr'       : _('Submission info')},
         {'build-stdout.vmr'     : _('Compilation (stdout)')},
         {'build-stderr.vmr'     : _('Compilation (stderr)')},
         {'run-stdout.vmr'       : _('Testing (stdout)')},

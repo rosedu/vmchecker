@@ -95,7 +95,7 @@ def compute_TA_penalty(grade_filename):
 def compute_grade(assignment, user, grade_filename, vmcfg):
     """Returns the grade value after applying penalties and bonuses."""
 
-    #if the file only contains 'ok' or 'copiat' there's noting to compute
+    #if the file only contains one word(evaluation status) there's noting to compute
     with open(grade_filename) as f:
         lines = f.readlines()
         if len(lines) == 1 and len(lines[0].split()) == 1:

@@ -54,7 +54,7 @@ msgid "Results not yet available"
 msgstr "Rezultatele nu sunt încă disponibile"
 
 #: websutil.py:249
-msgid "Penalty points"
+msgid "Submission info"
 msgstr "Nota și observații"
 
 #: websutil.py:250

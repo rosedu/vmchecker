@@ -53,8 +53,8 @@ msgid "Results not yet available"
 msgstr "Résultats pas encore disponibles"
 
 #: websutil.py:249
-msgid "Penalty points"
-msgstr "Points de pénalité"
+msgid "Submission info"
+msgstr "Informations de rendu"
 
 #: websutil.py:250
 msgid "Compilation (stdout)"
