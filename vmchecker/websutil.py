@@ -201,7 +201,7 @@ def _find_file(searched_file_name, rfiles):
 
 
 
-def submission_upload_info(courseId, assignment, account, isTeamAccount):
+def submission_upload_info(courseId, assignment, account, isTeamAccount, isGraded):
     """Return a string explaining the submission upload time, deadline
     and the late submission penalty
     """
@@ -245,26 +245,32 @@ def submission_upload_info(courseId, assignment, account, isTeamAccount):
         [ deadline_explanation ]
     ]
 
-    if not vmcfg.assignments().is_deadline_hard(assignment):
+    if isGraded or not vmcfg.assignments().is_deadline_hard(assignment):
         rows_to_print += [
-            [ '' ],
-            [ _("Penalty (late submission)"), str(late_penalty) ],
-            [ _("Penalty (grading)"), str(ta_penalty) ],
-            [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
             [ '' ]
         ]
 
-    rows_to_print += [
-        [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
-    ]
+    if not vmcfg.assignments().is_deadline_hard(assignment):
+        rows_to_print += [
+            [ _("Penalty (late submission)"), str(late_penalty) ],
+        ]
+
+    if isGraded:
+        rows_to_print += [
+            [ _("Penalty (grading)"), str(ta_penalty) ],
+            [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
+            [ '' ],
+            [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
+        ]
 
     for row in rows_to_print:
         row[0] = row[0].decode("utf-8")
         if len(row) == 2 and len(row[0]) > max_line_width:
             max_line_width = len(row[0])
 
-    # Put a dashed line just above the 'Grade' line
-    rows_to_print[len(rows_to_print) - 2][0] = '-' * max_line_width
+    if isGraded:
+        # Put a dashed line just above the 'Grade' line
+        rows_to_print[len(rows_to_print) - 2][0] = '-' * max_line_width
 
     ret = u""
     for row in rows_to_print:
@@ -540,6 +546,7 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
     assignments = vmcfg.assignments()
     ignored_vmrs = assignments.ignored_vmrs(assignmentId)
     try:
+        isGraded = False
         result_files = []
         if os.path.isdir(r_path):
             update_db.update_grades(courseId, account=account, assignment=assignmentId)
@@ -561,7 +568,9 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
                         content = f.read(MAX_VMR_FILE_SIZE) + overflow_msg
                         content = xssescape(content)
                         result_files.append({fname : content})
-
+                        if fname == 'grade.vmr' and \
+                                "".join(content.split()) not in submissions.GENERATED_STATUSES:
+                            isGraded = True
         if (len(result_files) == 1 and result_files[0].keys()[0] == "grade.vmr") and \
                 not vmcfg.assignments().submit_only(assignmentId):
             msg = _("In the meantime have a fortune cookie") + ": <blockquote>"
@@ -576,7 +585,7 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
         if 'submission.vmr' not in ignored_vmrs:
             result_files.append({'submission.vmr' :
-                                 submission_upload_info(courseId, assignmentId, account, isTeamAccount)})
+                                 submission_upload_info(courseId, assignmentId, account, isTeamAccount, isGraded)})
         result_files = sortResultFiles(result_files)
         return json.dumps(result_files)
     except:

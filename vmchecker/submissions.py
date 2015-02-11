@@ -23,6 +23,8 @@ STATUS_QUEUED = 'queued'
 STATUS_PROCESSING = 'running'
 STATUS_DONE = 'done'
 
+GENERATED_STATUSES = [ STATUS_SAVED, STATUS_ERROR, STATUS_QUEUED, STATUS_PROCESSING, STATUS_DONE ]
+
 _logger = logging.getLogger('vmchecker.submissions')
 
 def get_time_struct_from_str(time_str):
