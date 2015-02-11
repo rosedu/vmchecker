@@ -19,7 +19,7 @@ from vmchecker import paths, coursedb
 _logger = logging.getLogger("vmchecker.initialise_course")
 
 
-def _install_example_config_file(root_path, repo_path, config_path):
+def _install_example_config_file(root_path, repo_path, config_path, type):
     """Install an example config file to a file named 'config' in the
     current directory
 
@@ -31,7 +31,7 @@ def _install_example_config_file(root_path, repo_path, config_path):
 
     # get the data from the package-provided example config template.
     template_data = ""
-    with pkg_resources.resource_stream('vmchecker', 'examples/config-template') as template:
+    with pkg_resources.resource_stream('vmchecker', 'examples/' + type + '-config-template') as template:
         template_data = template.read()
 
     # the example is a template that contains some '$var' variables.
@@ -46,10 +46,10 @@ def _install_example_config_file(root_path, repo_path, config_path):
 
 
 
-def _install_if_needed_example_config_file(root_path, repo_path, config_path):
+def _install_if_needed_example_config_file(root_path, repo_path, config_path, type):
     """Install config file only is not already existing"""
     if not os.path.exists(config_path):
-        _install_example_config_file(root_path, repo_path, config_path)
+        _install_example_config_file(root_path, repo_path, config_path, type)
         print(('A new default vmchecker configuration file was written to %s. '+
                'Update it before running any vmchecker code.') % config_path)
     else:
@@ -207,10 +207,10 @@ def main():
         usage()
         exit(1)
     if cmp(sys.argv[1], 'storer') == 0:
-        _install_if_needed_example_config_file(root_path, repo_path, config_path)
+        _install_if_needed_example_config_file(root_path, repo_path, config_path, 'storer')
         main_storer(root_path)
     elif cmp(sys.argv[1], 'tester') == 0:
-        _install_if_needed_example_config_file(root_path, repo_path, config_path)
+        _install_if_needed_example_config_file(root_path, repo_path, config_path, 'tester')
         main_tester(root_path)
     elif cmp(sys.argv[1], '--help') == 0:
         usage()

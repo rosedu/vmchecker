@@ -25,7 +25,10 @@ import signal
 import tempfile
 import optparse
 import subprocess
+import ConfigParser
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
+from threading import Thread, Lock
+from Queue import Queue
 
 from vmchecker.courselist import CourseList
 from vmchecker.config import CourseConfig
@@ -45,6 +48,52 @@ EXIT_SUCCESS = 0
 EXIT_FAIL = 1
 
 _logger = vmlogging.create_script_stdout_logger()
+vmqueue_lock = Lock()
+
+def prepare_workers(vmcfg):
+    if not vmcfg.config.has_option('vmchecker', 'NumWorkers'):
+        _logger.info('No workers config option found, defaulting to 1 worker.')
+        num_workers = 1
+    else:
+        num_workers = int(vmcfg.get('vmchecker', 'NumWorkers'))
+        _logger.info('Using %d workers.' % num_workers)
+
+    assignment_queue = Queue()
+
+    if not vmcfg.config.has_option('vmchecker', 'DuplicatedVMs'):
+        duplicated_vms = []
+    else:
+        duplicated_vms = vmcfg.get_list('vmchecker', 'DuplicatedVMs')
+
+    # Here we create a set of queues per each duplicated vm.
+    # NOTE: For VMs that are not duplicated we will create the queues
+    # during execution
+    vms_conf = {}
+    vms_queues = {}
+
+    for vm in duplicated_vms:
+        vm_conf = {}
+        vm_queue = Queue()
+        vms_conf[vm] = vm_conf
+        vms_queues[vm] = vm_queue
+        for section in vmcfg.sections():
+            if section != vm and section.startswith(vm):
+                worker_id = section[len(vm):]
+                wk_conf = {}
+                vm_conf[worker_id] = wk_conf
+
+                for item in vmcfg.config.items(section):
+                    wk_conf[item[0]] = item[1]
+
+                vm_queue.put(worker_id)
+
+    workers = []
+    for i in range(num_workers):
+        worker = Thread(target = launch_worker, args = (assignment_queue, vms_queues, vms_conf))
+        workers.append(worker)
+        worker.start()
+
+    return (workers, assignment_queue)
 
 
 def upload_results_to_sender(bundle_dir):
@@ -67,8 +116,9 @@ def upload_results_to_sender(bundle_dir):
 class _InotifyHandler(ProcessEvent):
     """Dummy class needed to start processing events"""
 
-    def __init__(self, vmpaths):
+    def __init__(self, vmpaths, assignment_queue):
         self.vmpaths = vmpaths
+        self.assignment_queue = assignment_queue
 
     def process_IN_CLOSE_WRITE(self, event):
         """Called when a write ends (this means a new
@@ -77,7 +127,7 @@ class _InotifyHandler(ProcessEvent):
         """
         _logger.info('Processing job "%s" in queue dir "%s"' % (
                 event.name, event.path))
-        process_job(event.path, event.name, self.vmpaths)
+        self.assignment_queue.put((event.path, event.name, self.vmpaths))
 
 
 def log_vmchecker_stderr(location, string):
@@ -155,8 +205,60 @@ def launch_executor(location):
     except OSError:
         _logger.exception('Exception in kill(PID=%d)', popen.pid)
 
+def launch_worker(assignment_queue, vms_queues, vms_conf):
+    while True:
+        (path, name, vmpaths) = assignment_queue.get()
+        _logger.info("-- QM: Start processing job.")
+        process_job(path, name, vmpaths, vms_queues, vms_conf)
+        assignment_queue.task_done()
 
-def process_job(path, name, vmpaths):
+def get_submission_vm(sb_cfg_file, course_cfg_file):
+    course_cfg = CourseConfig(course_cfg_file)
+    sb_cfg = ConfigParser.RawConfigParser()
+    with open(sb_cfg_file) as handle:
+        sb_cfg.readfp(handle)
+
+
+    assignment = sb_cfg.get('Assignment', 'Assignment')
+    assg_vm = course_cfg.assignments().get_machine_id(assignment)
+
+    return assg_vm
+
+def reserve_vm_and_patch_cfg(course_cfg_file, assg_vm, vms_queues, vms_conf):
+    course_cfg = CourseConfig(course_cfg_file)
+
+    # First check if this VM is duplicated, and if not,
+    # create a Queue for it, if not already existent
+
+    if not vms_queues.has_key(assg_vm):
+        queue_lock.acquire()
+        if not vms_queues.has_key(assg_vm):
+            vms_queues[assg_vm] = Queue()
+            vms_queues[assg_vm].put('default')
+        queue_lock.release()
+
+    # Reserve a worker or wait for one to become available
+    worker = vms_queues[assg_vm].get()
+
+    if vms_conf.has_key(assg_vm):
+        # Patch the course-config to use the duplicated VM
+        vm_conf = vms_conf[assg_vm]
+        wk_conf = vm_conf[worker]
+        for key in wk_conf:
+            if course_cfg.config.has_option(assg_vm, key):
+                _logger.info("Overwriting %s in section %s with %s" % (key, assg_vm, wk_conf[key]))
+                course_cfg.config.set(assg_vm, key, wk_conf[key])
+
+        with open(course_cfg_file, "w") as handler:
+            course_cfg.config.write(handler)
+
+    return worker
+
+def release_vm(assg_vm, worker, vms_queues):
+    vms_queues[assg_vm].task_done()
+    vms_queues[assg_vm].put(worker)
+
+def process_job(path, name, vmpaths, vms_queues, vms_conf):
     """Unzip a bundle archive and call the commander."""
     location = tempfile.mkdtemp(prefix='vmchecker-',
                                 dir=vmpaths.dir_tester_unzip_tmp())
@@ -166,8 +268,17 @@ def process_job(path, name, vmpaths):
         _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
         launch_external_downloader(location)
         _logger.info('-- QM: finished downloading external dependencies')
-        callback.run_callback(os.path.join(location, 'submission-config'), None, callback.STATUS_PROCESSING)
+        sb_cfg = os.path.join(location, 'submission-config')
+
+        callback.run_callback(sb_cfg, None, callback.STATUS_PROCESSING)
+        course_cfg = os.path.join(location, 'course-config')
+        assg_vm = get_submission_vm(sb_cfg, course_cfg)
+        worker = reserve_vm_and_patch_cfg(course_cfg, assg_vm, vms_queues, vms_conf)
+
         launch_executor(location)
+
+        release_vm(assg_vm, worker, vms_queues)
+
         _logger.info('-- QM: finished testing - sending results')
         upload_results_to_sender(location)
     except:
@@ -180,7 +291,7 @@ def process_job(path, name, vmpaths):
     os.unlink(bundle_archive)
 
 
-def process_stale_jobs(dir_queue, vmpaths):
+def process_stale_jobs(dir_queue, vmpaths, assignment_queue):
     """The queue_manager may die leaving jobs unchecked.
     This function runs the commander for each job found
     in the queue directory at startup.
@@ -192,7 +303,7 @@ def process_stale_jobs(dir_queue, vmpaths):
     for stale_job in stale_jobs:
         _logger.info('Processing stale job "%s" in queue dir "%s"' % (
                 stale_job, dir_queue))
-        process_job(dir_queue, stale_job, vmpaths)
+        assignment_queue.put((dir_queue, stale_job, vmpaths))
 
 
 def _callback(watch_manager):
@@ -203,7 +314,7 @@ def _callback(watch_manager):
     _logger.info('Waiting for the next job to arrive')
 
 
-def start_queue(vmpaths):
+def start_queue(vmpaths, assignment_queue):
     """ Process any stale jobs and register with inotify to wait
     for new jobs to arrive.
 
@@ -213,8 +324,8 @@ def start_queue(vmpaths):
     # register for inotify envents before processing stale jobs
     watch_manager = WatchManager()
     watch_manager.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
-    notifier = Notifier(watch_manager, _InotifyHandler(vmpaths))
-    process_stale_jobs(dir_queue, vmpaths)
+    notifier = Notifier(watch_manager, _InotifyHandler(vmpaths, assignment_queue))
+    process_stale_jobs(dir_queue, vmpaths, assignment_queue)
 
     # set callback to receive notifications (includes queued jobs after
     # setting up inotify but before we finished processing stale jobs)
@@ -276,7 +387,10 @@ def main():
     # fail early if something is not setup corectly, and not at a
     # distant point when we'll need these things.
     check_tester_setup_correctly(vmpaths)
-    start_queue(vmpaths)
+
+    # start worker pool
+    (workers, assignment_queue) = prepare_workers(vmcfg)
+    start_queue(vmpaths, assignment_queue)
 
 if __name__ == '__main__':
     main()
