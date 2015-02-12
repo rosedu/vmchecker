@@ -11,17 +11,17 @@ from vmchecker.config import CourseConfig
 from vmchecker.courselist import CourseList
 
 
-def resubmit_wrapper(assignment, user, submission_root, course_id):
-    """Resubmit the user's submission for that assignment.
+def resubmit_wrapper(assignment, account, submission_root, course_id):
+    """Resubmit the account's submission for that assignment.
 
     This is only a wrapper for queue_for_testing.
 
     We only need this function because RepoWalker calls the func with
-    at least three arguments: (assignment, user, grade_path), but
+    at least three arguments: (assignment, account, grade_path), but
     queue_for_testing doesn't take grade_path.
 
     """
-    submit.queue_for_testing(assignment, user, course_id)
+    submit.queue_for_testing(assignment, account, course_id)
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
 
     vmcfg = CourseConfig(CourseList().course_config(options.course_id))
     walker = repo_walker.RepoWalker(vmcfg, options.simulate)
-    walker.walk(options.user, options.assignment,
+    walker.walk(options.account, options.assignment,
                 func=resubmit_wrapper, args=(options.course_id,))
 
 if __name__ == '__main__':

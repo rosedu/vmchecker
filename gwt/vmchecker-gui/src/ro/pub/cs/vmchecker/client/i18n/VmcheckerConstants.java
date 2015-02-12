@@ -17,7 +17,4 @@ public interface VmcheckerConstants extends Constants,
 	String exceptionError();
 	String exceptionErrorText();
 	String exceptionErrorContent();
-
-	String statisticsTitle();
-	String statisticsNoSubmissionAvailable();
 }

@@ -36,12 +36,12 @@ public class VmcheckerPopup extends PopupPanel {
 	private void setup() {
 		hide();
 		popupCloseButton.setText(constants.popupCloseButton());
-		setWidth("" + (Window.getClientWidth()/2) + "px");
+		setWidth("" + (3 * Window.getClientWidth() / 4) + "px");
 		setHeight("" + (Window.getClientHeight() - 200) + "px");
 		setGlassEnabled(true);
 		detailsPopupContainer.add(popupCloseButton);
 		detailsPopupContainer.add(detailsPopupContent);
-		detailsPopupContent.setWidth("" + (Window.getClientWidth()/2 - 10) + "px");
+		detailsPopupContent.setWidth("" + ((3 * Window.getClientWidth() / 4) - 10) + "px");
 		detailsPopupContent.setHeight("" + (Window.getClientHeight() - 250) + "px");
 		add(detailsPopupContainer);
 		detailsPopupContainer.setStyleName(containerStyle);

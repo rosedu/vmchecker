@@ -44,7 +44,7 @@ public class ServiceError {
 			/* unexpected format */
 			eventBus.fireEvent(new ErrorDisplayEvent(constants.serviceError() + " " + constants.unknownFormat(),
 					"<b>" + constants.serviceErrorUrl() + "</b>: " + URL + "<br/>" +
-					"<b>" + constants.serviceErrorContent() + "</b>:<br/>"));
+					"<b>" + constants.serviceErrorContent() + "</b>:<br/>" + text));
 		}
 	}
 

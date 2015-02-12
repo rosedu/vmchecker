@@ -25,23 +25,23 @@ import ConfigParser
 from threading import Thread
 from subprocess import Popen
 from vmchecker.generic_executor import VM, Host
-from vmchecker.config import VmwareMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VmwareMachineConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
 
 class VmWareHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment):
-        return VmWareVM(self, bundle_dir, vmcfg, assignment)
+    def getVM(self, bundle_dir, vmcfg, assignment, tester):
+        return VmWareVM(self, bundle_dir, vmcfg, assignment, tester)
 
 class VmWareVM(VM):
     vmhost = None
     vminstance = None
             
-    def __init__(self, host, bundle_dir, vmcfg, assignment):
+    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
         VM.__init__(self, host, bundle_dir, vmcfg, assignment)
         self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
-        self.vmwarecfg = VmwareConfig(vmcfg.testers(), self.machinecfg.get_tester_id())
+        self.vmwarecfg = VmwareConfig(vmcfg.testers(), tester)
         self.vmx_path = self.machinecfg.get_vmx_path()
         if self.vmx_path == None:
             self.vmx_path = self.get_submission_vmx_file()
@@ -52,6 +52,10 @@ class VmWareVM(VM):
                 print >> handler, 'Error powering on the virtual machine.\n' + \
                                   'Unable to find .vmx file.\n'
             sys.exit(1)
+
+        vmx_prefix = vmcfg.testers().vm_store_path(tester)
+        if vmx_prefix is not None:
+            self.vmx_path = os.path.join(vmx_prefix, self.vmx_path)
 
         try:
             # try defaults
@@ -143,7 +147,7 @@ class VmWareVM(VM):
             # vm.powerOn() didn't hang: the machine has been powered on
             return
         
-        proc = Popen(['vmchecker-self.vminstance-message-handler',
+        proc = Popen(['vmchecker-message-handler',
                   self.vmwarecfg.vmware_hostname(),
                   self.vmwarecfg.vmware_username(),
                   self.vmwarecfg.vmware_password(),

@@ -58,11 +58,23 @@ class GenericHost():
             config.readfp(handle)
         assignment = config.get('Assignment', 'Assignment')
         return assignment
+
+    @staticmethod
+    def get_tester_id(bundle_dir):
+        """Reads the tester identifier from the config file of the
+        submission from bundle_dir"""
+        sb_config = os.path.join(bundle_dir, 'submission-config')
+        with open(sb_config) as handle:
+            config = ConfigParser.RawConfigParser()
+            config.readfp(handle)
+        tester = config.get('Assignment', 'Tester')
+        return tester
         
     @staticmethod
     def test(bundle_dir):
         vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
         assignment = GenericHost.get_assignment_id(bundle_dir)
+        tester = GenericHost.get_tester_id(bundle_dir)
         
         asscfg  = vmcfg.assignments()
         machine = asscfg.get(assignment, 'Machine')
@@ -87,7 +99,7 @@ class GenericHost():
             _logger.error("Invalid testing environment specified.")
             sys.exit(1)
 
-        vm = host.getVM(bundle_dir, vmcfg, assignment)
+        vm = host.getVM(bundle_dir, vmcfg, assignment, tester)
 
         runner = None
 

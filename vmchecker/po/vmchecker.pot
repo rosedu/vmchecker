@@ -29,6 +29,9 @@ msgstr ""
 msgid "Assignment deadline"
 msgstr ""
 
+msgid "Submitted by"
+msgstr ""
+
 #: websutil.py:218
 msgid "Penalty (late submission)"
 msgstr ""
@@ -50,7 +53,7 @@ msgid "Results not yet available"
 msgstr ""
 
 #: websutil.py:249
-msgid "Penalty points"
+msgid "Submission info"
 msgstr ""
 
 #: websutil.py:250

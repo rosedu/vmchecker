@@ -208,7 +208,7 @@ Timeout = 120
 #      view) before the deadline is reached. Meaning that all the students
 #      (even the ones that are not registered), can view other's grades.
 #
-# IgnoredVmrs = grade.vmr, late-submission.vmr etc.
+# IgnoredVmrs = grade.vmr, submission.vmr etc.
 #
 #     Optional parameter.
 #
@@ -216,7 +216,7 @@ Timeout = 120
 #     confusing for a student. The most simple way is to display
 #     compiling (stdout and stderr) and testing (stdout and stderr).
 #     A good default is:
-#       vmchecker-stderr.vmr grade.vmr late-submission.vmr run-km.vmr
+#       vmchecker-stderr.vmr grade.vmr submission.vmr run-km.vmr
 #
 # DeadlineIsHard
 #

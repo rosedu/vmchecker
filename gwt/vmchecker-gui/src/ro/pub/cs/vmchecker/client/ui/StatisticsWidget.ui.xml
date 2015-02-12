@@ -7,14 +7,23 @@
 		background-color: #EEEEEE;
 	}
 
-	.title {
+	.subtitle {
 		font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
-		font-size: 18px;
-		font-weight: bold;
+		font-size: 14px;
 		line-height: 24px;
 		text-align: center;
 		width: 100%;
+		padding-top: 20px;
 		padding-bottom: 20px;
+	}
+
+	.title {
+		font-family:  'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+		font-weight: bold;
+		font-size: 18px;
+		line-height: 24px;
+		text-align: center;
+		width: 100%;
 	}
 
 	.noSubmissionText {
@@ -31,6 +40,8 @@
 	.table {
 		border: 3px solid #CCC;
 		background-color: #FFFFFF;
+		table-layout: fixed;
+		width: 100%;
 	}
 
 	.header {
@@ -48,11 +59,11 @@
 
 	.cell {
 		border: 1px solid #FFF;
+		text-align: center;
 	}
 
 	.innercell, .innercell a, .innercell a:hover, .innercell a:visited {
 		text-decoration: none;
-		text-align: center;
 		cursor: pointer;
 		font-weight: bold;
 		color: green;
@@ -75,6 +86,8 @@
 		<g:Label ui:field="title" styleName="{style.title}"></g:Label>
 		<g:FlowPanel ui:field="tablePanel">
 			<g:Label ui:field="noSubmissionAvailableMessage" styleName="{style.noSubmissionText}"></g:Label>
+			<g:Label ui:field="teamTitle" styleName="{style.subtitle}"></g:Label>
+			<g:Label ui:field="studentTitle" styleName="{style.subtitle}"></g:Label>
 		</g:FlowPanel>
 	</g:FlowPanel>
 </ui:UiBinder>

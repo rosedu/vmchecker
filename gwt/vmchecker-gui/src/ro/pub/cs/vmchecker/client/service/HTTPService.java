@@ -12,7 +12,7 @@ import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.model.Md5Status;
 import ro.pub.cs.vmchecker.client.model.FileList;
-import ro.pub.cs.vmchecker.client.model.StudentInfo;
+import ro.pub.cs.vmchecker.client.model.ResultInfo;
 import ro.pub.cs.vmchecker.client.service.json.AssignmentsListDecoder;
 import ro.pub.cs.vmchecker.client.service.json.AuthenticationResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.CoursesListDecoder;
@@ -28,6 +28,7 @@ public class HTTPService {
 	public static String VMCHECKER_SERVICES_URL = computeServicesURL();
 	public static String GET_COURSES_URL = VMCHECKER_SERVICES_URL + "getCourses";
 	public static String GET_ASSIGNMENTS_URL = VMCHECKER_SERVICES_URL + "getAssignments";
+	public static String GET_TEAM_RESULTS_URL = VMCHECKER_SERVICES_URL + "getTeamResults";
 	public static String GET_USER_RESULTS_URL = VMCHECKER_SERVICES_URL + "getUserResults";
 	public static String GET_UPLOADED_MD5_URL = VMCHECKER_SERVICES_URL + "getUploadedMd5";
 	public static String GET_ALL_RESULTS_URL = VMCHECKER_SERVICES_URL + "getAllGrades";
@@ -117,9 +118,21 @@ public class HTTPService {
 		delegate.sendRequest(callback, new ResultDecoder(), params);
 	}
 
-	public void getAllResults(String courseId, final AsyncCallback<StudentInfo[]> callback) {
-		Delegate<StudentInfo[]> delegate =
-			new Delegate<StudentInfo[]>(eventBus, GET_ALL_RESULTS_URL, true, false);
+	public void getTeamResults(String courseId, String assignmentId, String teamname,
+			final AsyncCallback<EvaluationResult[]> callback) {
+		Delegate<EvaluationResult[]> delegate =
+			new Delegate<EvaluationResult[]>(eventBus, GET_TEAM_RESULTS_URL, true, true);
+		HashMap<String, String> params = new HashMap<String, String>();
+		params.put("courseId", courseId);
+		params.put("assignmentId", assignmentId);
+		params.put("teamname", teamname);
+		delegate.sendRequest(callback, new ResultDecoder(), params);
+	}
+
+
+	public void getAllResults(String courseId, final AsyncCallback<ResultInfo[]> callback) {
+		Delegate<ResultInfo[]> delegate =
+			new Delegate<ResultInfo[]>(eventBus, GET_ALL_RESULTS_URL, true, false);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		delegate.sendRequest(callback, new StatisticsDecoder(), params);

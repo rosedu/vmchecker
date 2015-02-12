@@ -27,13 +27,13 @@ from vmchecker.generic_executor import VM, Host
 _logger = logging.getLogger('vm_executor')
 
 class kvmHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment):
-        return kvmVM(self, bundle_dir, vmcfg, assignment)
+    def getVM(self, bundle_dir, vmcfg, assignment, tester):
+        return kvmVM(self, bundle_dir, vmcfg, assignment, tester)
 
 class kvmVM(VM):
     hostname = 'kvm2'
-    def __init__(self, host, bundle_dir, vmcfg, assignment):
-        VM.__init__(self, host, bundle_dir, vmcfg, assignment)
+    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
+        VM.__init__(self, host, bundle_dir, vmcfg, assignment, tester)
         self.hostname = self.machinecfg.get_vm_path()
         self.path = self.getPath()
         print self.path

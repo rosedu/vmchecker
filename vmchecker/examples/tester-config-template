@@ -1,0 +1,31 @@
+# vim: set ft=dosini:
+[vmchecker]
+root_queue = $root
+# Number of virtual machine instances that should be evaluated simultaneously
+# on this tester. Default is 1.
+# NOTE: Some VMs (e.g., Vmware) will require separate VM instances for each
+# worker. This can be achieved through Linked Clones in Vmware.
+#
+# It is a good idea to have as many workers as VM duplicates.
+NumWorkers = 4
+# We need to define which VMs have separate instances (and paths)
+DuplicatedVMs = so-lin so-win
+
+# Next, for each VM, we define a worker instance, overwriting which elements
+# differ.
+# For example:
+# - VMPath will be different
+# - KernelMessages will need to listen on a different UDP port
+[so-lin worker1]
+VMPath=/home/courses/so/vmware/2010/so-vm-linux-ubuntu-1/so-vm-linux-ubuntu.vmx
+KernelMessages=netcat -l -u -p6001
+
+[so-lin worker2]
+VMPath=/home/courses/so/vmware/2010/so-vm-linux-ubuntu-2/so-vm-linux-ubuntu.vmx
+KernelMessages=netcat -l -u -p6002
+
+[so-win worker1]
+VMPath=/home/courses/so/vmware/2010/so-vm-win2k3-1/so-vm-win2k3.vmx
+
+[so-win worker2]
+VMPath=/home/courses/so/vmware/2010/so-vm-win2k3-2/so-vm-win2k3.vmx

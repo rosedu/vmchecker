@@ -24,7 +24,7 @@ import shlex
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VirtualMachineConfig, CourseConfig, VmwareConfig
+from vmchecker.config import VirtualMachineConfig
 
 _logger = logging.getLogger('vm_executor')
 
@@ -41,8 +41,8 @@ class Host():
         _logger.debug('Command output: %s' % output)
         return output
 
-    def getVM(self, bundle_dir, vmcfg, assignment):
-        vm = VM(self, bundle_dir, vmcfg, assignment)
+    def getVM(self, bundle_dir, vmcfg, assignment, tester):
+        vm = VM(self, bundle_dir, vmcfg, assignment, tester)
         return None
 	
     def start_host_commands(self, jobs_path, host_command):
@@ -54,7 +54,7 @@ class Host():
 
         outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
         try:
-            proc = Popen(host_command, stdout=outf, shell=True)
+            proc = Popen("exec " + host_command, stdout=outf, shell=True)
         except:
             _logger.exception('HOSTPROC: opening process: ' + host_command)
         return (proc, outf)

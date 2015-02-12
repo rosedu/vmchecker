@@ -9,12 +9,12 @@ import ldap
 import time
 import paramiko
 import traceback
-import sqlite3
 import codecs
 import subprocess
 from cgi import escape
 
-from vmchecker import paths, update_db, penalty, submissions
+from vmchecker import paths, update_db, penalty, submissions, submit, coursedb
+from vmchecker.coursedb import opening_course_db
 from vmchecker.courselist import CourseList
 from vmchecker.config import LdapConfig, CourseConfig
 
@@ -27,12 +27,16 @@ except ImportError:
 EXTENDED_SESSION_TIMEOUT = 60 * 60 * 24 * 14;
 
 # .vmr files may be very large because of errors in the student's submission.
-MAX_VMR_FILE_SIZE = 500 * 1024 # 500 KB
+MAX_VMR_FILE_SIZE = 5 * 1024 * 1024 # 500 KB
 
 # define ERROR_MESSAGES
 ERR_AUTH = 1
 ERR_EXCEPTION = 2
 ERR_OTHER = 3
+
+# define MD5 processing errors
+MD5_ERR_BAD_MD5 = 'md5'
+MD5_ERR_BAD_ZIP = 'zip'
 
 
 # I18N support
@@ -197,49 +201,76 @@ def _find_file(searched_file_name, rfiles):
 
 
 
-def submission_upload_info(courseId, user, assignment):
+def submission_upload_info(courseId, assignment, account, isTeamAccount, isGraded):
     """Return a string explaining the submission upload time, deadline
     and the late submission penalty
     """
+
     vmcfg = CourseConfig(CourseList().course_config(courseId))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    sbroot = vmpaths.dir_cur_submission_root(assignment, user)
+    sbroot = vmpaths.dir_cur_submission_root(assignment, account)
     grade_file = paths.submission_results_grade(sbroot)
     sbcfg = paths.submission_config_file(sbroot)
     if not os.path.exists(sbcfg):
         return _("No submission exists for this assignment")
 
-    late_penalty = update_db.compute_late_penalty(assignment, user, vmcfg)
+    late_penalty = update_db.compute_late_penalty(assignment, account, vmcfg)
     ta_penalty   = update_db.compute_TA_penalty(grade_file)
     deadline_str = vmcfg.assignments().get(assignment, 'Deadline')
     total_points = int(vmcfg.assignments().get(assignment, 'TotalPoints'))
     deadline_struct = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'),
                                     penalty.DATE_FORMAT)
     sss = submissions.Submissions(vmpaths)
-    upload_time_str = sss.get_upload_time_str(assignment, user)
-    upload_time_struct = sss.get_upload_time_struct(assignment, user)
+    upload_time_str = sss.get_upload_time_str(assignment, account)
+    upload_time_struct = sss.get_upload_time_struct(assignment, account)
 
     deadline_explanation = penalty.verbose_time_difference(upload_time_struct, deadline_struct)
 
+    submitter_explanation = None
+    if isTeamAccount:
+        submitter_explanation = _("Submitted by") + ": " + sss.get_submitting_user(assignment, account)
+
     max_line_width = 0
-    rows_to_print = [
+    rows_to_print = []
+
+    if isTeamAccount:
+        rows_to_print += [
+            [ submitter_explanation ],
+            [ '' ]
+        ]
+
+    rows_to_print += [
         [ _("Submission date"), upload_time_str ],
         [ _("Assignment deadline"), deadline_str ],
-        [ deadline_explanation ],
-        [ '' ],
-        [ _("Penalty (late submission)"), str(late_penalty) ],
-        [ _("Penalty (grading)"), str(ta_penalty) ],
-        [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
-        [ '' ],
-        [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
+        [ deadline_explanation ]
     ]
+
+    if isGraded or not vmcfg.assignments().is_deadline_hard(assignment):
+        rows_to_print += [
+            [ '' ]
+        ]
+
+    if not vmcfg.assignments().is_deadline_hard(assignment):
+        rows_to_print += [
+            [ _("Penalty (late submission)"), str(late_penalty) ],
+        ]
+
+    if isGraded:
+        rows_to_print += [
+            [ _("Penalty (grading)"), str(ta_penalty) ],
+            [ _("Penalty (total)"), str(ta_penalty + late_penalty) ],
+            [ '' ],
+            [ _("Grade"), str(total_points + ta_penalty + late_penalty) ]
+        ]
 
     for row in rows_to_print:
         row[0] = row[0].decode("utf-8")
         if len(row) == 2 and len(row[0]) > max_line_width:
             max_line_width = len(row[0])
 
-    rows_to_print[7][0] = '-' * max_line_width
+    if isGraded:
+        # Put a dashed line just above the 'Grade' line
+        rows_to_print[len(rows_to_print) - 2][0] = '-' * max_line_width
 
     ret = u""
     for row in rows_to_print:
@@ -261,7 +292,7 @@ def sortResultFiles(rfiles):
     file_descriptions = [
         {'fortune.vmr'          : _('Results not yet available')},
         {'grade.vmr'            : _('Grade')},
-        {'late-submission.vmr'  : _('Penalty points')},
+        {'submission.vmr'       : _('Submission info')},
         {'build-stdout.vmr'     : _('Compilation (stdout)')},
         {'build-stderr.vmr'     : _('Compilation (stderr)')},
         {'run-stdout.vmr'       : _('Testing (stdout)')},
@@ -289,29 +320,9 @@ def get_test_queue_contents(courseId):
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         tstcfg = vmcfg.testers()
-        queue_contents = [] # array of strings
+        queue_contents = {} # dict of strings
         for tester_id in tstcfg:
-            # connect to the tester
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            try:
-                client.load_system_host_keys(vmcfg.known_hosts_file())
-                client.connect(tstcfg.hostname(tester_id),
-                               username=tstcfg.login_username(tester_id),
-                               key_filename=vmcfg.storer_sshid(),
-                               look_for_keys=False)
-
-                # run 'ls' in the queue_path and get it's output.
-                cmd = 'ls -ctgG ' + tstcfg.queue_path(tester_id)
-                stdin, stdout, stderr = client.exec_command(cmd)
-                data = stdout.readlines()
-                for f in [stdin, stdout, stderr]: f.close()
-                if len(data) > 0:
-                    data = data[1:]
-                    queue_contents.append(data)
-
-            finally:
-                client.close()
+            queue_contents[tester_id] = submit.get_tester_queue_contents(vmcfg, tester_id)
 
         # print the concatenation of all 'ls' instances
         return json.dumps(queue_contents, indent=4)
@@ -323,7 +334,7 @@ def get_test_queue_contents(courseId):
 
 
 
-def get_storagedir_contents(courseId, assignmentId, username):
+def get_storagedir_contents(courseId, assignmentId, account):
     """Get the content of a the archive coresponding to a
     MD5Submission-type homework"""
     client = paramiko.SSHClient()
@@ -332,7 +343,7 @@ def get_storagedir_contents(courseId, assignmentId, username):
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.storage_basepath(assignmentId, username)
+        storage_basepath = assignments.storage_basepath(assignmentId, account)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -340,7 +351,7 @@ def get_storagedir_contents(courseId, assignmentId, username):
                        key_filename=vmcfg.storer_sshid(),
                        look_for_keys=False)
 
-        cmd = "find " + storage_basepath + '/' + username + \
+        cmd = "find " + storage_basepath + '/' + account + \
             " \( ! -regex '.*/\..*' \) -type f"
 
         stdin, stdout, stderr = client.exec_command(cmd)
@@ -360,15 +371,15 @@ def get_storagedir_contents(courseId, assignmentId, username):
 def QuoteForPOSIX(string):
     return "\\'".join("'" + p + "'" for p in string.split("'"))
 
-def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
+def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
     """Checks whether a MD5Submission is valid:
        * checks that the uploaded md5 corresponds to the one of the machine
        * checks that the archive uploaded by the student is a zip file
 
-       On success returns 'ok'.
+       On success returns (True,).
        On failure reports the source of the failure:
-       - 'md5' - the uploaded md5 does not match the one computed on the archive
-       - 'zip' - the uploaded archive is not zip.
+       - (False, 'md5') - the uploaded md5 does not match the one computed on the archive
+       - (False, 'zip') - the uploaded archive is not zip.
     """
 
     md5_calculated = ""
@@ -381,7 +392,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.storage_basepath(assignmentId, username)
+        storage_basepath = assignments.storage_basepath(assignmentId, account)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -389,7 +400,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
                        key_filename=vmcfg.storer_sshid(),
                        look_for_keys=False)
 
-        archive_abs = os.path.join(storage_basepath, username, archiveFileName)
+        archive_abs = os.path.join(storage_basepath, account, archiveFileName)
 
         # XXX: This will take ages to compute! I wonder how many
         # connections will Apache hold.
@@ -403,7 +414,7 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
 
 
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+        submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
         md5_fpath = paths.submission_md5_file(submission_dir)
 
         if os.path.isfile(md5_fpath):
@@ -417,13 +428,13 @@ def validate_md5_submission(courseId, assignmentId, username, archiveFileName):
         client.close()
 
     if not md5_calculated == md5_uploaded:
-        return "md5" # report the type of the problem
+        return (False, MD5_ERR_BAD_MD5) # report the type of the problem
 
     if not archive_file_type == "zip":
-        return "zip" # report the type of the problem
+        return (False, MD5_ERR_BAD_ZIP) # report the type of the problem
 
 
-    return "ok" # no problemo
+    return (True,) # no problemo
 
 # Service method helpers
 def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
@@ -436,15 +447,16 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
+    (_, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
     md5_fpath = paths.submission_md5_file(submission_dir)
 
     md5_result = {}
     try:
         if os.path.exists(paths.submission_config_file(submission_dir)) and os.path.isfile(md5_fpath):
             sss = submissions.Submissions(vmpaths)
-            upload_time_str = sss.get_upload_time_str(assignmentId, username)
+            upload_time_str = sss.get_upload_time_str(assignmentId, account)
             md5_result['fileExists'] = True
 
             with open(md5_fpath, 'r') as f:
@@ -461,8 +473,38 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
+def getAssignmentAccountName(courseId, assignmentId, username, strout):
+    try:
+        vmcfg = CourseConfig(CourseList().course_config(courseId))
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+        # First check if the user is part of a team for this assignment
+        user_team = course_db.get_user_team_for_assignment(assignmentId, username)
+        if user_team == None:
+            # No team, so just use the user's own account
+            return (False, username)
+        else:
+            # Check if this team has a mutual account
+            mutual_account = course_db.get_team_has_mutual_account(user_team)
+            if mutual_account:
+                return (True, user_team)
+            else:
+                return (False, username)
+
+def getResultsHelper(courseId, assignmentId, currentUser, strout, username = None, teamname = None, currentTeam = None):
     # assume that the session was already checked
+
+    if username != None and teamname != None:
+        return json.dumps({'errorType' : ERR_OTHER,
+                           'errorMessage' : "Can't query both user and team results at the same time.",
+                           'errorTrace' : ""})
+
 
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
@@ -472,11 +514,14 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-    # Check if the current user is allowed to view all the grades
+    # Check if the current user is allowed to view any other user's grade.
     # TODO: This should be implemented neater using some group
     # and permission model.
 
-    is_authorized = vmcfg.students_can_view_all_results() or currentUser in vmcfg.view_all_results_user_list() or username == currentUser
+    is_authorized = vmcfg.students_can_view_all_results() or \
+                    currentUser in vmcfg.view_all_results_user_list() or \
+                    username == currentUser or \
+                    teamname == currentTeam
 
     if not is_authorized:
         traceback.print_exc(file = strout)
@@ -485,15 +530,26 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, username)
+
+    account = None
+    if username != None:
+        # Check if the user is part of a team with a mutual account for this submission
+        (isTeamAccount, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
+    else:
+        account = teamname
+        isTeamAccount = True
+
+    submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
+
     r_path = paths.dir_submission_results(submission_dir)
 
     assignments = vmcfg.assignments()
     ignored_vmrs = assignments.ignored_vmrs(assignmentId)
     try:
+        isGraded = False
         result_files = []
         if os.path.isdir(r_path):
-            update_db.update_grades(courseId, user=username, assignment=assignmentId)
+            update_db.update_grades(courseId, account=account, assignment=assignmentId)
             for fname in os.listdir(r_path):
                 # skill all files not ending in '.vmr'
                 if not fname.endswith('.vmr'):
@@ -505,15 +561,18 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
                     overflow_msg = ''
                     f_size = os.path.getsize(f_path)
                     if f_size > MAX_VMR_FILE_SIZE:
-                        overflow_msg = '\n\n<b>' + _('File truncated! Actual size') + ': ' + str(f_size) + ' ' + _('bytes') + '</b>\n'
+                        overflow_msg = '\n\n' + _('File truncated! Actual size') + ': ' + str(f_size) + ' ' + _('bytes') + '\n'
                     # decode as utf-8 and ignore any errors, because
                     # characters will be badly encoded as json.
                     with codecs.open(f_path, 'r', encoding='utf-8', errors='ignore') as f:
                         content = f.read(MAX_VMR_FILE_SIZE) + overflow_msg
                         content = xssescape(content)
                         result_files.append({fname : content})
-
-        if len(result_files) == 0:
+                        if fname == 'grade.vmr' and \
+                                "".join(content.split()) not in submissions.GENERATED_STATUSES:
+                            isGraded = True
+        if (len(result_files) == 1 and result_files[0].keys()[0] == "grade.vmr") and \
+                not vmcfg.assignments().submit_only(assignmentId):
             msg = _("In the meantime have a fortune cookie") + ": <blockquote>"
             try:
                 process = subprocess.Popen('/usr/games/fortune',
@@ -524,9 +583,9 @@ def getUserResultsHelper(courseId, assignmentId, username, currentUser, strout):
                 msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
             result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
-        if 'late-submission.vmr' not in ignored_vmrs:
-            result_files.append({'late-submission.vmr' :
-                                 submission_upload_info(courseId, username, assignmentId)})
+        if 'submission.vmr' not in ignored_vmrs:
+            result_files.append({'submission.vmr' :
+                                 submission_upload_info(courseId, assignmentId, account, isTeamAccount, isGraded)})
         result_files = sortResultFiles(result_files)
         return json.dumps(result_files)
     except:
@@ -541,7 +600,6 @@ def getAllGradesHelper(courseId, username, strout):
         #update_db.update_grades(courseId)
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-        db_conn = sqlite3.connect(vmpaths.db_file())
         assignments = vmcfg.assignments()
         sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
                                                        int(assignments.get(y, "OrderNumber")))
@@ -554,40 +612,52 @@ def getAllGradesHelper(courseId, username, strout):
         if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
             user_can_view_all = True
 
-        query_string = (
-            'SELECT users.name, assignments.name, grades.grade '
-            'FROM users, assignments, grades '
-            'WHERE 1 '
-            'AND users.id = grades.user_id '
-            'AND assignments.id = grades.assignment_id'
-        )
-
-        if not user_can_view_all:
-            query_string += ' AND users.name = "' + username + '"'
-
-        grades = {}
-        try:
-            db_cursor = db_conn.cursor()
-            db_cursor.execute(query_string)
-            for row in db_cursor:
-                user, assignment, grade = row
-                if not assignment in vmcfg.assignments():
-                    continue
-                if not vmcfg.assignments().show_grades_before_deadline(assignment):
-                    deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
-                    deadtime = time.mktime(deadline)
-                    if time.time() < deadtime:
-                        continue
-                grades.setdefault(user, {})[assignment] = grade
-            db_cursor.close()
-        finally:
-            db_conn.close()
+        user_grade_rows = None
+        team_grade_rows = None
+        with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+            if user_can_view_all:
+                user_grade_rows = course_db.get_user_grades()
+                team_grade_rows = course_db.get_team_grades()
+            else:
+                # Get all the individual grades that the user is allowed to see
+                user_grade_rows = course_db.get_user_and_teammates_grades(username)
+                # Get all the team grades that the user is allowed to see
+                team_grade_rows = course_db.get_user_team_grades(user = username)
 
         ret = []
+        grades = {}
+        for row in user_grade_rows:
+            user, assignment, grade = row
+            if not assignment in vmcfg.assignments():
+                continue
+            if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                deadtime = time.mktime(deadline)
+                if time.time() < deadtime:
+                    continue
+            grades.setdefault(user, {})[assignment] = grade
+
         for user in sorted(grades.keys()):
-            ret.append({'studentName' : user,
-                        'studentId'   : user,
-                        'results'     : grades.get(user)})
+            ret.append({'gradeOwner' : 'user',
+                        'name'       : user,
+                        'results'    : grades.get(user)})
+
+        grades = {}
+        for row in team_grade_rows:
+            team, assignment, grade = row
+            if not assignment in vmcfg.assignments():
+                continue
+            if not vmcfg.assignments().show_grades_before_deadline(assignment):
+                deadline = time.strptime(vmcfg.assignments().get(assignment, 'Deadline'), DATE_FORMAT)
+                deadtime = time.mktime(deadline)
+                if time.time() < deadtime:
+                    continue
+            grades.setdefault(team, {})[assignment] = grade
+
+        for team in sorted(grades.keys()):
+            ret.append({'gradeOwner' : 'team',
+                        'name'       : team,
+                        'results'    : grades.get(team)})
         return json.dumps(ret)
     except:
         traceback.print_exc(file = strout)
@@ -597,8 +667,9 @@ def getAllGradesHelper(courseId, username, strout):
 
 def getUserStorageDirContentsHelper(courseId, assignmentId, username, strout):
     """Get the current files in the home directory on the storage host for a given username"""
+    (_, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
     try:
-        result = get_storagedir_contents(courseId, assignmentId, username)
+        result = get_storagedir_contents(courseId, assignmentId, account)
         return result
     except:
         traceback.print_exc(file = strout)

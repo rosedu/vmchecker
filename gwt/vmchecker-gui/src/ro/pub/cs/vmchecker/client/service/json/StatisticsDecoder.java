@@ -7,32 +7,32 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
-import ro.pub.cs.vmchecker.client.model.StudentInfo;
+import ro.pub.cs.vmchecker.client.model.ResultInfo;
 
-public final class StatisticsDecoder extends JSONDecoder<StudentInfo[]> {
+public final class StatisticsDecoder extends JSONDecoder<ResultInfo[]> {
 
-	private static final String nameKey = "studentName";
-	private static final String idKey = "studentId";
+	private static final String ownerKey = "gradeOwner";
+	private static final String nameKey = "name";
 	private static final String resultsKey = "results";
-	
+
 	@Override
-	protected StudentInfo[] decode(String text) {
+	protected ResultInfo[] decode(String text) {
 		JSONValue jsonValue = JSONParser.parse(text); 
-		JSONArray jsonArray = jsonValue.isArray(); 
-		StudentInfo[] result = new StudentInfo[jsonArray.size()];
+		JSONArray jsonArray = jsonValue.isArray();
+		ResultInfo[] results = new ResultInfo[jsonArray.size()];
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JSONObject studentObj = jsonArray.get(i).isObject();
+			String owner = studentObj.get(ownerKey).isString().stringValue();
 			String name = studentObj.get(nameKey).isString().stringValue();
-			String id = studentObj.get(idKey).isString().stringValue();
-			HashMap<String, String> assignmentsResults = new HashMap<String, String>(); 
-			JSONObject resultsObj = studentObj.get(resultsKey).isObject(); 
+			HashMap<String, String> assignmentsResults = new HashMap<String, String>();
+			JSONObject resultsObj = studentObj.get(resultsKey).isObject();
 			for (String assignmentId : resultsObj.keySet()) {
-				assignmentsResults.put(assignmentId, resultsObj.get(assignmentId).isString().stringValue()); 
+				assignmentsResults.put(assignmentId, resultsObj.get(assignmentId).isString().stringValue());
 			}
-			result[i] = new StudentInfo(name, id, assignmentsResults); 
+			results[i] = new ResultInfo(ResultInfo.OwnerType.valueOf(owner.toUpperCase()), name, assignmentsResults);
 		}
-		
-		return result; 
+
+		return results;
 	}
 
 }
