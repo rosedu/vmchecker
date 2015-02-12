@@ -320,9 +320,9 @@ def get_test_queue_contents(courseId):
     try:
         vmcfg = CourseConfig(CourseList().course_config(courseId))
         tstcfg = vmcfg.testers()
-        queue_contents = [] # array of strings
+        queue_contents = {} # dict of strings
         for tester_id in tstcfg:
-            queue_contents.append(submit.get_tester_queue_contents(vmcfg, tester_id))
+            queue_contents[tester_id] = submit.get_tester_queue_contents(vmcfg, tester_id)
 
         # print the concatenation of all 'ls' instances
         return json.dumps(queue_contents, indent=4)
