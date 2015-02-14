@@ -231,11 +231,11 @@ def reserve_vm_and_patch_cfg(course_cfg_file, assg_vm, vms_queues, vms_conf):
     # create a Queue for it, if not already existent
 
     if not vms_queues.has_key(assg_vm):
-        queue_lock.acquire()
+        vmqueue_lock.acquire()
         if not vms_queues.has_key(assg_vm):
             vms_queues[assg_vm] = Queue()
             vms_queues[assg_vm].put('default')
-        queue_lock.release()
+        vmqueue_lock.release()
 
     # Reserve a worker or wait for one to become available
     worker = vms_queues[assg_vm].get()
