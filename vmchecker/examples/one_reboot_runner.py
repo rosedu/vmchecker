@@ -37,7 +37,7 @@ class OneRebootRunner(Runner):
                 self.logger.info('Build failed')
                 return
 
-            self.vm.executeCommand("poweroff")
+            self.vm.stop()
             self.logger.info('Waiting for VM to power off.')
             thd = Thread(target = self._wait_for_power_off)
             thd.start()
