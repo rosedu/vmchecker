@@ -1,6 +1,9 @@
 # vim: set ft=dosini:
 [vmchecker]
-root_queue = $root
+rootQueue = $root
+# Number of seconds an instance of the vmexecutor is allowed to run before it
+# is considered to be hanged and it gets killed.
+ExecutorTimeout = 1000
 # Number of virtual machine instances that should be evaluated simultaneously
 # on this tester. Default is 1.
 # NOTE: Some VMs (e.g., Vmware) will require separate VM instances for each

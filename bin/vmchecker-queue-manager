@@ -39,31 +39,20 @@ from vmchecker import callback
 from vmchecker import ziputil
 
 
-# The maximum number of seconds each instance of vmchecker-vm-executor
-# is allowed to run. If it runs for more than this ammount of time,
-# the process gets killed automatically by the queue manager
-VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME = 10 * 60 # 10 minutes!
-
 EXIT_SUCCESS = 0
 EXIT_FAIL = 1
 
 _logger = vmlogging.create_script_stdout_logger()
 vmqueue_lock = Lock()
+vmexecutor_timeout = None
 
 def prepare_workers(vmcfg):
-    if not vmcfg.config.has_option('vmchecker', 'NumWorkers'):
-        _logger.info('No workers config option found, defaulting to 1 worker.')
-        num_workers = 1
-    else:
-        num_workers = int(vmcfg.get('vmchecker', 'NumWorkers'))
-        _logger.info('Using %d workers.' % num_workers)
+
+    num_workers = vmcfg.num_workers()
+    _logger.info('Using %d workers.' % num_workers)
+    duplicated_vms = vmcfg.duplicated_vms()
 
     assignment_queue = Queue()
-
-    if not vmcfg.config.has_option('vmchecker', 'DuplicatedVMs'):
-        duplicated_vms = []
-    else:
-        duplicated_vms = vmcfg.get_list('vmchecker', 'DuplicatedVMs')
 
     # Here we create a set of queues per each duplicated vm.
     # NOTE: For VMs that are not duplicated we will create the queues
@@ -159,7 +148,7 @@ def launch_executor(location):
     """Launch the vmchecker-vm-executor process and kill it if it runs
     for too long"""
 
-    deadline = time.time() + VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME
+    deadline = time.time() + vmexecutor_timeout
     _logger.info('Begin homework evaluation. Location %s', location)
 
     # launch vmchecker-vm-executor
@@ -186,14 +175,14 @@ def launch_executor(location):
                 log_vmchecker_grade(location, exit_code)
                 return
             # if process has not finished => continue to poll every 5s
-            _logger.debug('-- QM sleep(5): total=%d max=%d', counter*5,
-                          VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME)
+            _logger.debug('-- QM sleep(5): total=%d max=%d', counter * 5,
+                          vmexecutor_timeout)
             time.sleep(5)
         else:
-            log_vmchecker_stderr(location, '''VMExecutor successfuly
-                      started, but it's taking too long. Check your
-                      sources, makefiles, etc and resubmit. If the
-                      problem persists please contact administrators.''')
+            log_vmchecker_stderr(location, "VMExecutor successfuly " + \
+                      "started, but it's taking too long. Check your " + \
+                      "sources, makefiles, etc and resubmit. If the " + \
+                      "problem persists please contact administrators.")
             log_vmchecker_grade(location, EXIT_FAIL)
     except (IOError, OSError):
         _logger.exception('Exception while waiting for vmexecutor to end')
@@ -382,6 +371,8 @@ def main():
 
     vmcfg = TesterCourseConfig(CourseList().course_config(course_id))
     vmpaths = VmcheckerPaths(vmcfg.root_path_queue_manager())
+    global vmexecutor_timeout
+    vmexecutor_timeout = vmcfg.vmexecutor_timeout()
 
     os.chdir(vmcfg.root_path_queue_manager())
     # fail early if something is not setup corectly, and not at a
