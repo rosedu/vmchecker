@@ -189,19 +189,6 @@ def _config_variables(config_file, section_name):
     return dict(_config.items(section_name))
 
 
-def get_deadline(conf_vars):
-    """Return the deadline for the current homework"""
-    assignment = conf_vars['assignment']
-    storer_config = get_unzipped_local_storer_config()
-    # XXX the 'assignment ' + on the next line is a HACK!
-    # in the storer config the assignments are stored as 'assignment 1-minishell-linux'
-    # but our assignment variable is just '1-minishell-linux'.
-    # we shouldn't hardcode 'assignment ' here!
-    storer_assignment_vars = _config_variables(storer_config, 'assignment ' + assignment)
-    return storer_assignment_vars['deadline']
-
-
-
 def call_remote_program(t, cmdline):
     """Runs the program specified by cmdline on the remote host
     identified by Transport t"""
