@@ -483,7 +483,7 @@ def getAssignmentAccountName(courseId, assignmentId, username, strout):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+    with opening_course_db(vmpaths.db_file()) as course_db:
         # First check if the user is part of a team for this assignment
         user_team = course_db.get_user_team_for_assignment(assignmentId, username)
         if user_team == None:
@@ -614,7 +614,7 @@ def getAllGradesHelper(courseId, username, strout):
 
         user_grade_rows = None
         team_grade_rows = None
-        with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+        with opening_course_db(vmpaths.db_file()) as course_db:
             if user_can_view_all:
                 user_grade_rows = course_db.get_user_grades()
                 team_grade_rows = course_db.get_team_grades()
