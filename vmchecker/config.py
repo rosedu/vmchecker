@@ -20,10 +20,6 @@ DEFAULT_LDAP_CONFIG = '/etc/vmchecker/ldap.config'
 DEFAULT_ACL_CONFIG = '/etc/vmchecker/acl.config'
 
 class CourseConfig(Config):
-    def repository_path(self):
-        """Get the submission (git) repository path for this course."""
-        return self.get('vmchecker', 'repository')
-
     def sections(self):
         """Give access to the underlining config's sections"""
         # XXX: LAG: I think this is a sign that we should have derived the
@@ -34,9 +30,10 @@ class CourseConfig(Config):
         """Get the root path for this course"""
         return self.get('vmchecker', 'root')
 
-    def root_path_queue_manager(self):
-        """Get the root path for the queue for this course (if any)"""
-        return self.get('vmchecker', 'root_queue', self.root_path())
+class StorerCourseConfig(CourseConfig):
+    def repository_path(self):
+        """Get the submission (git) repository path for this course."""
+        return self.get('vmchecker', 'repository')
 
     def students_can_view_all_results(self):
         """Get whether a student can view all the other students' results"""
@@ -89,6 +86,24 @@ class CourseConfig(Config):
         tester machines used."""
         return TestersConfig(self)
 
+class TesterCourseConfig(CourseConfig):
+    def root_path_queue_manager(self):
+        """Get the root path for the queue for this course (if any)"""
+        return self.get('vmchecker', 'rootQueue', self.root_path())
+
+    def vmexecutor_timeout(self):
+        """Get the timeout of the vmexecutor in seconds. This should
+        be defined per tester, since some machines can, potentially,
+        take more time to run than others."""
+        return self.get_int('vmchecker', 'ExecutorTimeout', 600) # Default to 10 minutes
+
+    def num_workers(self):
+        """Get the number of worker threads to be started on the tester."""
+        return self.get_int('vmchecker', 'NumWorkers', 1)
+
+    def duplicated_vms(self):
+        """Get a list of duplicated vms on this tester."""
+        return self.get_list('vmchecker', 'DuplicatedVMs', [])
 
 
 class LdapConfig(Config):

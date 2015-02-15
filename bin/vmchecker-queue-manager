@@ -31,7 +31,7 @@ from threading import Thread, Lock
 from Queue import Queue
 
 from vmchecker.courselist import CourseList
-from vmchecker.config import CourseConfig
+from vmchecker.config import TesterCourseConfig
 from vmchecker.paths  import VmcheckerPaths
 from vmchecker import submissions
 from vmchecker import vmlogging
@@ -380,7 +380,7 @@ def main():
 
     redirect_std_files(options.stdin, options.stdout, options.stderr)
 
-    vmcfg = CourseConfig(CourseList().course_config(course_id))
+    vmcfg = TesterCourseConfig(CourseList().course_config(course_id))
     vmpaths = VmcheckerPaths(vmcfg.root_path_queue_manager())
 
     os.chdir(vmcfg.root_path_queue_manager())
