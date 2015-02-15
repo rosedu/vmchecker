@@ -150,28 +150,12 @@ class AclConfig(Config):
 
 
 
-class AssignmentsConfig(ConfigWithDefaults):
-    """Obtain information about assignments from a config file.
-
-        [assignment DEFAULT]
-        somevar = somveval
-
-        [assignment as1]
-        somevar = somveval
-
-        [assignment as2]
-        somevar = somveval
-    """
-
-    def __init__(self, config):
-        ConfigWithDefaults.__init__(self, config, 'assignment ')
-
+class AssignmentConfig(Config):
 
     def lock(self, vmpaths, assignment):
         """Returns a lock over assignment"""
         self._check_valid(assignment)
         return dirlocking.DirLock(vmpaths.dir_assignment(assignment))
-
 
     def course(self, assignment):
         """Returns a string representing course name of assignment"""
@@ -259,7 +243,15 @@ class AssignmentsConfig(ConfigWithDefaults):
         """How much time (in seconds) to wait for vmware tools to load."""
         return self.get_int(assignment, 'WaitForVmwareToolsTimeout', '0')
 
-    def storage_basepath(self, assignment, username):
+    def storage_type(self, assignment):
+        """Currently there are two types of storage: 'normal' and 'large'.
+        The difference is that with 'normal' assignments, the VM itself is
+        the same for all the users. With 'large' submissions, each user
+        submits his own VM image."""
+        return self.get(assignment, "AssignmentStorage", "normal")
+
+    @staticmethod
+    def storage_basepath(basepath, username):
         """When using an external storage server (for Large assignments).
            the basepath can be particularized depending on its configuration.
            Because of this there can be special expressions inserted in the path
@@ -273,7 +265,6 @@ class AssignmentsConfig(ConfigWithDefaults):
                 would translate to:
                 /home/j/files
         """
-        basepath = self.get(assignment, 'AssignmentStorageBasepath')
         try:
             result = basepath.format(username = username)
         except:
@@ -291,22 +282,24 @@ class AssignmentsConfig(ConfigWithDefaults):
         """Return a config object describing the VM to run this assignment on."""
         return self.get(assignment, 'Machine')
 
-class TestersConfig(ConfigWithDefaults):
+class AssignmentsConfig(ConfigWithDefaults, AssignmentConfig):
     """Obtain information about assignments from a config file.
 
-        [tester DEFAULT]
+        [assignment DEFAULT]
         somevar = somveval
 
-        [tester as1]
+        [assignment as1]
         somevar = somveval
 
-        [tester as2]
+        [assignment as2]
         somevar = somveval
     """
 
     def __init__(self, config):
-        ConfigWithDefaults.__init__(self, config, 'tester ')
+        ConfigWithDefaults.__init__(self, config, 'assignment ')
 
+
+class TesterConfig(Config):
 
     def login_username(self, tester):
         """The username to use when logging in with ssh to the tester machine"""
@@ -325,6 +318,22 @@ class TestersConfig(ConfigWithDefaults):
     def vm_store_path(self, tester):
         """The path on tester machine where the vms are stored"""
         return self.get(tester, 'vmstorepath')
+
+class TestersConfig(ConfigWithDefaults, TesterConfig):
+    """Obtain information about assignments from a config file.
+
+        [tester DEFAULT]
+        somevar = somveval
+
+        [tester as1]
+        somevar = somveval
+
+        [tester as2]
+        somevar = somveval
+    """
+
+    def __init__(self, config):
+        ConfigWithDefaults.__init__(self, config, 'tester ')
 
 
 
