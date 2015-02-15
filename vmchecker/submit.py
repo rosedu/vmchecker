@@ -64,19 +64,15 @@ def submission_config(vmcfg, account, assignment, course_id, upload_time,
        - which team member submitted it (in case of teams)
        - which assignment does it solve
        - which course was it for
-       - when was it uploaded
-
-       Also, XXX, should be removed:
-       - where to store results
-       - with which user to connect to the machine storring the results
-       - which is the machine storring the results
-
-       The last part should not be part of the submission config, but
-       should be generated automatically when the submission is sent
-       for testing.
+       - when it was uploaded
+       In addition, add the sections of the course configuration relevant
+       for the evaluation:
+       - where to copy back the results
+       - the remainder of the assignment configuration
+       - the VM configuration
+       The tester ID and tester configuration are added at the time of submission.
     """
-    # Get the assignment submission type (zip archive vs. md5 sum)
-    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
+    machine_id = vmcfg.assignments().get_machine_id(assignment)
 
     sbcfg = ConfigParser.RawConfigParser()
     sbcfg.add_section('Assignment')
@@ -86,12 +82,23 @@ def submission_config(vmcfg, account, assignment, course_id, upload_time,
     sbcfg.set('Assignment', 'Assignment', assignment)
     sbcfg.set('Assignment', 'UploadTime', upload_time)
     sbcfg.set('Assignment', 'CourseID', course_id)
-    sbcfg.set('Assignment', 'Storage', storage_type.lower())
 
-    # XXX these should go to `callback'
-    sbcfg.set('Assignment', 'ResultsDest', storer_result_dir)
-    sbcfg.set('Assignment', 'RemoteUsername', storer_username)
-    sbcfg.set('Assignment', 'RemoteHostname', storer_hostname)
+	# Add the remainder of the Assignment config
+    assignment_section = vmcfg.assignments().items(assignment)
+    for options in assignment_section:
+        sbcfg.set('Assignment', options[0], options[1])
+
+    sbcfg.add_section('Storer')
+    sbcfg.set('Storer', 'ResultsDest', storer_result_dir)
+    sbcfg.set('Storer', 'RemoteUsername', storer_username)
+    sbcfg.set('Storer', 'RemoteHostname', storer_hostname)
+
+    # Add the VM config
+    sbcfg.add_section('Machine')
+    machine_section = vmcfg.config.items(machine_id)
+    for options in machine_section:
+        sbcfg.set('Machine', options[0], options[1])
+
     return sbcfg
 
 
@@ -143,7 +150,7 @@ def submission_backup(back_dir, submission_filename, sbcfg):
     with open(back_cfg, 'w') as handle:
         sbcfg.write(handle)
 
-    if sbcfg.get('Assignment', 'Storage').lower() == "large":
+    if sbcfg.get('Assignment', 'AssignmentStorage').lower() == "large":
         shutil.copyfile(submission_filename, back_md5)
     else:
         # copy the (unmodified) archive. This should be the first thing we
@@ -222,7 +229,6 @@ def create_testing_bundle(vmcfg, account, assignment, course_id):
 
     The bundle contains:
         submission-config - submission config (eg. name, time of submission etc)
-        course-config     - the whole configuration of the course
         archive.zip - a zip containing the sources
         tests.zip   - a zip containing the tests
         ???         - assignment's extra files (see Assignments.include())
@@ -238,7 +244,6 @@ def create_testing_bundle(vmcfg, account, assignment, course_id):
     rel_file_list = [ ('run.sh',   machinecfg.guest_run_script()),
                       ('build.sh', machinecfg.guest_build_script()),
                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                      ('course-config', vmpaths.config_file()),
                       ('submission-config', paths.submission_config_file(sbroot)) ]
 
     # Get the assignment submission type (zip archive vs. MD5 Sum).
@@ -380,8 +385,9 @@ def queue_for_testing(vmcfg, assignment, account, course_id):
     testers = machine.get_tester_ids()
     tester = get_least_busy_tester(vmcfg, testers)
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    # Add the Tester config
     subm = submissions.Submissions(vmpaths)
-    subm.set_tester(assignment, account, tester)
+    subm.add_tester_config(assignment, account, tester, vmcfg.testers().items(tester))
     # Create submission bundle
     bundle_path = create_testing_bundle(vmcfg, account, assignment, course_id)
     try:
@@ -482,7 +488,7 @@ def submit(submission_filename, assignment, account, course_id, user = None,
         grade_message = submissions.STATUS_QUEUED
 
     # write the status of the submission
-    conf_vars = dict(sbcfg.items('Assignment'))
+    conf_vars = dict(sbcfg.items('Storer'))
 
     try:
         # create dir

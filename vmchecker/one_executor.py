@@ -11,14 +11,14 @@ import xmlrpclib
 
 from xml.dom import minidom
 
-from vmchecker.config import OneMachineConfig
+from vmchecker.config import AssignmentConfig, OneMachineConfig
 from vmchecker.generic_executor import Host, VM
 
 _logger = logging.getLogger('vm_executor')
 
 class OneHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment, tester):
-        return OneVM(self, bundle_dir, vmcfg, assignment, tester)
+    def getVM(self, bundle_dir, sb_cfg):
+        return OneVM(self, bundle_dir, sb_cfg)
 
 class OneVMException(Exception):
     pass
@@ -30,9 +30,10 @@ class OneVM(VM):
     # resume means resume (but) it should not be used from outside
     # start and stop operations are blocking (i.e. we wait for the machine to
     # be up again)
-    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
-        VM.__init__(self, host, bundle_dir, vmcfg, assignment, tester)
-        self.machinecfg = OneMachineConfig(vmcfg, self.machine)
+    def __init__(self, host, bundle_dir, sb_cfg):
+        VM.__init__(self, host, bundle_dir, sb_cfg)
+        self.machinecfg = OneMachineConfig(sb_cfg, 'Machine')
+        self.asscfg = AssignmentConfig(sb_cfg)
         self.one_server = self.machinecfg.get_one_server()
         self.one_credentials = self.machinecfg.get_one_credentials()
 
@@ -42,8 +43,7 @@ class OneVM(VM):
         self.snapshot_id = 0
 
         # we cannot use the revert mechanism from outside
-        asscfg = vmcfg.assignments()
-        assert(False == asscfg.revert_to_snapshot(assignment))
+        assert(False == self.asscfg.revert_to_snapshot('Assignment'))
 
     def start(self):
         # assume that the vm has been already suspended in a good state

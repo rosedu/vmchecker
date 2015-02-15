@@ -11,18 +11,16 @@ class Runner():
         self.host = host
         self.vm = vm
         self.bundle_dir = vm.bundle_dir
-        self.vmcfg = vm.vmcfg
-        self.assignment = vm.assignment
+        self.sb_cfg = vm.sb_cfg
         self.logger = logging.getLogger('vm_executor.' + self.__class__.__name__)
 
 
-        self.asscfg  = self.vmcfg.assignments()
-        self.machine = self.asscfg.get(self.assignment, 'Machine')
-        self.machinecfg = VirtualMachineConfig(self.vmcfg, self.machine)
+        self.machine = self.sb_cfg.get('Assignment', 'Machine')
+        self.machinecfg = VirtualMachineConfig(self.sb_cfg, 'Machine')
 
     def testSubmission(self, bundleDir, buildCfg = None):
         # start host kernel message intercepting commands (including boot-up)
-        kernel_messages = self.vmcfg.get(self.machine, 'KernelMessages', default='')
+        kernel_messages = self.sb_cfg.get('Machine', 'KernelMessages', default='')
         kernel_messages_data = self.host.start_host_commands(self.bundle_dir, kernel_messages)
 
         success = self.vm.try_power_on_vm_and_login()
@@ -32,10 +30,10 @@ class Runner():
             sys.exit(1)
 
         # start host commands
-        host_command = self.vmcfg.get(self.machine, 'HostCommand', default='')
+        host_command = self.sb_cfg.get('Machine', 'HostCommand', default='')
         host_command_data = self.host.start_host_commands(self.bundle_dir, host_command)
         
-        timeout = self.asscfg.get(self.assignment, 'Timeout')
+        timeout = self.sb_cfg.get('Assignment', 'Timeout')
         try:
             if buildCfg==None:
                 buildcfg = {

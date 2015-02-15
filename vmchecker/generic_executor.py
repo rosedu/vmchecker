@@ -19,7 +19,6 @@ import sys
 import time
 import logging
 import signal
-import ConfigParser
 import shlex
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
@@ -41,8 +40,8 @@ class Host():
         _logger.debug('Command output: %s' % output)
         return output
 
-    def getVM(self, bundle_dir, vmcfg, assignment, tester):
-        vm = VM(self, bundle_dir, vmcfg, assignment, tester)
+    def getVM(self, bundle_dir, sb_cfg):
+        vm = VM(self, bundle_dir, sb_cfg)
         return None
 	
     def start_host_commands(self, jobs_path, host_command):
@@ -78,15 +77,12 @@ class VM():
     username	= None
     password	= None
     IP	= None
-    def __init__(self, host, bundle_dir, vmcfg, assignment):
+    def __init__(self, host, bundle_dir, sb_cfg):
         self.host = host
         self.bundle_dir = bundle_dir
-        self.vmcfg = vmcfg
-        self.assignment = assignment
+        self.sb_cfg = sb_cfg
 
-        self.asscfg  = vmcfg.assignments()
-        self.machine = self.asscfg.get(assignment, 'Machine')
-        self.machinecfg = VirtualMachineConfig(vmcfg, self.machine)
+        self.machinecfg = VirtualMachineConfig(sb_cfg, 'Machine')
         self.error_fname = os.path.join(bundle_dir, 'vmchecker-stderr.vmr')
         self.shell = self.machinecfg.guest_shell_path()
 
@@ -146,7 +142,7 @@ class VM():
         
     def try_power_on_vm_and_login(self, revertSnapshot=None):
         if revertSnapshot == True or \
-           (revertSnapshot == None and self.asscfg.revert_to_snapshot(self.assignment)):
+           (revertSnapshot == None and self.sb_cfg.get('Assignment', 'RevertToSnapshot')):
             self.revert()
 
         self.start()

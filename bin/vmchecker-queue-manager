@@ -25,13 +25,12 @@ import signal
 import tempfile
 import optparse
 import subprocess
-import ConfigParser
 from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
 from threading import Thread, Lock
 from Queue import Queue
 
 from vmchecker.courselist import CourseList
-from vmchecker.config import TesterCourseConfig
+from vmchecker.config import Config, TesterCourseConfig
 from vmchecker.paths  import VmcheckerPaths
 from vmchecker import submissions
 from vmchecker import vmlogging
@@ -201,20 +200,9 @@ def launch_worker(assignment_queue, vms_queues, vms_conf):
         process_job(path, name, vmpaths, vms_queues, vms_conf)
         assignment_queue.task_done()
 
-def get_submission_vm(sb_cfg_file, course_cfg_file):
-    course_cfg = CourseConfig(course_cfg_file)
-    sb_cfg = ConfigParser.RawConfigParser()
-    with open(sb_cfg_file) as handle:
-        sb_cfg.readfp(handle)
-
-
-    assignment = sb_cfg.get('Assignment', 'Assignment')
-    assg_vm = course_cfg.assignments().get_machine_id(assignment)
-
-    return assg_vm
-
-def reserve_vm_and_patch_cfg(course_cfg_file, assg_vm, vms_queues, vms_conf):
-    course_cfg = CourseConfig(course_cfg_file)
+def reserve_vm_and_patch_cfg(sb_cfg_file, vms_queues, vms_conf):
+    sb_cfg = Config(sb_cfg_file)
+    assg_vm = sb_cfg.get('Assignment', 'Machine')
 
     # First check if this VM is duplicated, and if not,
     # create a Queue for it, if not already existent
@@ -230,18 +218,18 @@ def reserve_vm_and_patch_cfg(course_cfg_file, assg_vm, vms_queues, vms_conf):
     worker = vms_queues[assg_vm].get()
 
     if vms_conf.has_key(assg_vm):
-        # Patch the course-config to use the duplicated VM
+        # Patch the submission-config to use the duplicated VM
         vm_conf = vms_conf[assg_vm]
         wk_conf = vm_conf[worker]
         for key in wk_conf:
-            if course_cfg.config.has_option(assg_vm, key):
+            if sb_cfg.config.has_option('Machine', key):
                 _logger.info("Overwriting %s in section %s with %s" % (key, assg_vm, wk_conf[key]))
-                course_cfg.config.set(assg_vm, key, wk_conf[key])
+                sb_cfg.config.set('Machine', key, wk_conf[key])
 
-        with open(course_cfg_file, "w") as handler:
-            course_cfg.config.write(handler)
+        with open(sb_cfg_file, "w") as handler:
+            sb_cfg.config.write(handler)
 
-    return worker
+    return (assg_vm, worker)
 
 def release_vm(assg_vm, worker, vms_queues):
     vms_queues[assg_vm].task_done()
@@ -257,12 +245,10 @@ def process_job(path, name, vmpaths, vms_queues, vms_conf):
         _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
         launch_external_downloader(location)
         _logger.info('-- QM: finished downloading external dependencies')
-        sb_cfg = os.path.join(location, 'submission-config')
 
-        callback.run_callback(sb_cfg, None, callback.STATUS_PROCESSING)
-        course_cfg = os.path.join(location, 'course-config')
-        assg_vm = get_submission_vm(sb_cfg, course_cfg)
-        worker = reserve_vm_and_patch_cfg(course_cfg, assg_vm, vms_queues, vms_conf)
+        callback.run_callback(sb_cfg_file, None, callback.STATUS_PROCESSING)
+        sb_cfg_file = os.path.join(location, 'submission-config')
+        (assg_vm, worker) = reserve_vm_and_patch_cfg(sb_cfg_file, vms_queues, vms_conf)
 
         launch_executor(location)
 

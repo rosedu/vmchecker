@@ -18,7 +18,6 @@ import sys
 import time
 import logging
 import signal
-import ConfigParser
 from threading import Thread
 from subprocess import Popen
 import serial
@@ -27,13 +26,13 @@ from vmchecker.generic_executor import VM, Host
 _logger = logging.getLogger('vm_executor')
 
 class kvmHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment, tester):
-        return kvmVM(self, bundle_dir, vmcfg, assignment, tester)
+    def getVM(self, bundle_dir, sb_cfg):
+        return kvmVM(self, bundle_dir, sb_cfg)
 
 class kvmVM(VM):
     hostname = 'kvm2'
-    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
-        VM.__init__(self, host, bundle_dir, vmcfg, assignment, tester)
+    def __init__(self, host, bundle_dir, sb_cfg):
+        VM.__init__(self, host, bundle_dir, sb_cfg)
         self.hostname = self.machinecfg.get_vm_path()
         self.path = self.getPath()
         print self.path

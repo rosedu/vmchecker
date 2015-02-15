@@ -21,27 +21,28 @@ import sys
 import time
 import logging
 import signal
-import ConfigParser
 from threading import Thread
 from subprocess import Popen
 from vmchecker.generic_executor import VM, Host
-from vmchecker.config import VmwareMachineConfig, VmwareConfig
+from vmchecker.config import Config, AssignmentConfig, TesterConfig, VmwareMachineConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
 
 
 class VmWareHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment, tester):
-        return VmWareVM(self, bundle_dir, vmcfg, assignment, tester)
+    def getVM(self, bundle_dir, sb_cfg):
+        return VmWareVM(self, bundle_dir, sb_cfg)
 
 class VmWareVM(VM):
     vmhost = None
     vminstance = None
             
-    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
-        VM.__init__(self, host, bundle_dir, vmcfg, assignment)
-        self.machinecfg = VmwareMachineConfig(vmcfg, self.machine)
-        self.vmwarecfg = VmwareConfig(vmcfg.testers(), tester)
+    def __init__(self, host, bundle_dir, sb_cfg):
+        VM.__init__(self, host, bundle_dir, sb_cfg)
+        self.machinecfg = VmwareMachineConfig(sb_cfg, 'Machine')
+        self.vmwarecfg = VmwareConfig(sb_cfg, 'Tester')
+        self.asscfg = AssignmentConfig(config = sb_cfg)
+        self.testercfg = TesterConfig(config = sb_cfg)
         self.vmx_path = self.machinecfg.get_vmx_path()
         if self.vmx_path == None:
             self.vmx_path = self.get_submission_vmx_file()
@@ -53,7 +54,7 @@ class VmWareVM(VM):
                                   'Unable to find .vmx file.\n'
             sys.exit(1)
 
-        vmx_prefix = vmcfg.testers().vm_store_path(tester)
+        vmx_prefix = self.testercfg.vm_store_path('Tester')
         if vmx_prefix is not None:
             self.vmx_path = os.path.join(vmx_prefix, self.vmx_path)
 
@@ -158,10 +159,10 @@ class VmWareVM(VM):
         
     def try_power_on_vm_and_login(self, revertSnapshot=None):
         if revertSnapshot == True or \
-           (revertSnapshot == None and self.asscfg.revert_to_snapshot(self.assignment)):
+           (revertSnapshot == None and self.asscfg.revert_to_snapshot('Assignment')):
             self.revert(self.vminstance.nRootSnapshots - 1)
 
-        tools_timeout = self.asscfg.delay_wait_for_tools(self.assignment)
+        tools_timeout = self.asscfg.delay_wait_for_tools('Assignment')
         self.powerOn()
         
         if not self.wait_for_tools_with_timeout(tools_timeout, self.error_fname):
@@ -178,7 +179,7 @@ class VmWareVM(VM):
                         'Make sure you have the user accounts properly configured.\n'
                 return False
 
-        time.sleep(self.asscfg.delay_between_tools_and_tests(self.assignment))
+        time.sleep(self.asscfg.delay_between_tools_and_tests('Assignment'))
         return True
         
         

@@ -12,7 +12,7 @@ class OneRebootRunner(Runner):
             
     def testSubmission(self, bundleDir):
         # start host kernel message intercepting commands (including boot-up)
-        kernel_messages = self.vmcfg.get(self.machine, 'KernelMessages', default='')
+        kernel_messages = self.sb_cfg.get('Machine', 'KernelMessages', default='')
         kernel_messages_data = self.host.start_host_commands(self.bundle_dir, kernel_messages)
 
         success = self.vm.try_power_on_vm_and_login()
@@ -22,10 +22,10 @@ class OneRebootRunner(Runner):
             sys.exit(1)
 
         # start host commands
-        host_command = self.vmcfg.get(self.machine, 'HostCommand', default='')
+        host_command = self.sb_cfg.get('Machine', 'HostCommand', default='')
         host_command_data = self.host.start_host_commands(self.bundle_dir, host_command)
         
-        timeout = self.asscfg.get(self.assignment, 'Timeout')
+        timeout = self.sb_cfg.get('Assignment', 'Timeout')
         try:
             buildcfg = {
                 'input'  : ['archive.zip', 'tests.zip'],

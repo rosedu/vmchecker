@@ -113,8 +113,8 @@ def connect_to_host(conf_vars):
     Return a reference to the open connection.
     """
     port = _DEFAULT_SSH_PORT
-    host = conf_vars['remotehostname']
-    username = conf_vars['remoteusername']
+    host = conf_vars['storer']['remotehostname']
+    username = conf_vars['storer']['remoteusername']
 
     sock = open_socket(host, port)
     t = paramiko.Transport(sock)
@@ -155,7 +155,7 @@ def sftp_transfer_files(sftp, files, conf_vars):
         # extract the name of the file from the path
         fname = os.path.basename(fpath)
         # append the name to the destination
-        fdest = os.path.join(conf_vars['resultsdest'], fname)
+        fdest = os.path.join(conf_vars['storer']['resultsdest'], fname)
         if not os.path.isfile(fpath):
             _logger.info('Could not find file [%s] to transfer' % fpath)
             sftp.open(fdest, 'w').write('-- (could not locate this file on the test vm) --')
@@ -210,11 +210,12 @@ def notify_submission_is_being_processed(conf_vars):
 
     try:
         cmdline = 'echo "' + submissions.STATUS_PROCESSING + '" > ' + \
-                    os.path.join(conf_vars['resultsdest'], 'grade.vmr')
+                    os.path.join(conf_vars['storer']['resultsdest'], 'grade.vmr')
         call_remote_program(t, cmdline)
 
-        cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
-            ' --account=' + conf_vars['account'] + ' --assignment=' + conf_vars['assignment']
+        cmdline = 'vmchecker-update-db --course_id=' + conf_vars['assignment']['courseid'] + \
+            ' --account=' + conf_vars['assignment']['account'] + ' --assignment=' + \
+            conf_vars['assignment']['assignment']
         call_remote_program(t, cmdline)
     except:
         _logger.exception('error while transferring files with paramiko')
@@ -233,11 +234,12 @@ def send_results_and_notify(files, conf_vars):
     try:
         if len(files) > 0:
             sftp = paramiko.SFTPClient.from_transport(t)
-            sftp_mkdir_if_not_exits(sftp, conf_vars['resultsdest'])
+            sftp_mkdir_if_not_exits(sftp, conf_vars['storer']['resultsdest'])
             sftp_transfer_files(sftp, files, conf_vars)
 
-        cmdline = 'vmchecker-update-db --course_id=' + conf_vars['courseid'] + \
-            ' --account=' + conf_vars['account'] + ' --assignment=' + conf_vars['assignment']
+        cmdline = 'vmchecker-update-db --course_id=' + conf_vars['assignment']['courseid'] + \
+            ' --account=' + conf_vars['assignment']['account'] + ' --assignment=' + \
+            conf_vars['assignment']['assignment']
         call_remote_program(t, cmdline)
     except:
         _logger.exception('error while transferring files with paramiko')
@@ -252,7 +254,9 @@ def print_usage():
 
 def run_callback(config_file, files, status):
     _setup_logging()
-    conf_vars = _config_variables(config_file, 'Assignment')
+    conf_vars = {}
+    conf_vars['assignment'] = _config_variables(config_file, 'Assignment')
+    conf_vars['storer'] = _config_variables(config_file, 'Storer')
     if status == STATUS_PROCESSING:
         notify_submission_is_being_processed(conf_vars)
     elif status == STATUS_DONE:

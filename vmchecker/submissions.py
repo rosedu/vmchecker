@@ -166,7 +166,7 @@ class Submissions:
             return None
         return hrc.get('Assignment', 'Tester')
 
-    def set_tester(self, assignment, account, tester):
+    def add_tester_config(self, assignment, account, tester, tester_config):
         """Appends the tester to an existing
         submission-config"""
         config_file = self._get_submission_config_fname(assignment, account)
@@ -177,6 +177,10 @@ class Submissions:
             hrc.readfp(handler)
 
         hrc.set('Assignment', 'Tester', tester)
+        hrc.add_section('Tester')
+        for options in tester_config:
+            hrc.set('Tester', options[0], options[1])
+
         with open(config_file, "w") as handler:
             hrc.write(handler)
 
