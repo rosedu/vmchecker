@@ -8,15 +8,21 @@ LIST_SEPARATOR = ' '
 
 class Config:
     """An object that encapsulates parsing of the config file of a course"""
-    def __init__(self, config_file_):
-        self.config_file = config_file_
-        self.config = ConfigParser.RawConfigParser()
-        with open(os.path.expanduser(config_file_)) as handle:
-            self.config.readfp(handle)
+    def __init__(self, config_file_ = None, config = None):
+        if config != None:
+            # Copy the underlying ConfigParser from the given instance
+            self.config = config.config
+            self.config_file = config.config_file
+        else:
+            self.config = ConfigParser.RawConfigParser()
+            if config_file_ != None:
+                self.config_file = config_file_
+                with open(os.path.expanduser(config_file_)) as handle:
+                    self.config.readfp(handle)
 
     def get(self, section, option, default=None):
         """A convenient wrapper for config.get()"""
-        if default != None and not self.config.has_option(section, option):
+        if not self.config.has_option(section, option) and default != None:
             return default
         return self.config.get(section, option)
 
@@ -114,6 +120,11 @@ class ConfigWithDefaults(Config):
         self._check_valid(section_id)
         return option.lower() in self.section_ids[section_id]
 
+    def items(self, section_id):
+        """Return the items in this section."""
+        if not self.section_ids.has_key(section_id):
+            return default
+        return self.section_ids[section_id].items()
 
     def __iter__(self):
         """Returns an iterator over the section IDs"""
