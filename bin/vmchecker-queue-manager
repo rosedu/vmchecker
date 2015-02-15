@@ -246,10 +246,10 @@ def process_job(path, name, vmpaths, vms_queues, vms_conf):
         launch_external_downloader(location)
         _logger.info('-- QM: finished downloading external dependencies')
 
-        callback.run_callback(sb_cfg_file, None, callback.STATUS_PROCESSING)
         sb_cfg_file = os.path.join(location, 'submission-config')
         (assg_vm, worker) = reserve_vm_and_patch_cfg(sb_cfg_file, vms_queues, vms_conf)
 
+        callback.run_callback(sb_cfg_file, None, callback.STATUS_PROCESSING)
         launch_executor(location)
 
         release_vm(assg_vm, worker, vms_queues)
