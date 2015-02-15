@@ -7,7 +7,7 @@ import sys
 
 from vmchecker import vmlogging
 from vmchecker.courselist import CourseList
-from vmchecker.config import CourseConfig
+from vmchecker.config import StorerCourseConfig
 from vmchecker.coursedb import opening_course_db
 from vmchecker import paths, coursedb
 
@@ -202,7 +202,7 @@ def main():
 
     print args
 
-    vmcfg = CourseConfig(CourseList().course_config(args.course_id))
+    vmcfg = StorerCourseConfig(CourseList().course_config(args.course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:

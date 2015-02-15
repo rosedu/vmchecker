@@ -14,7 +14,7 @@ from . import submissions
 from . import penalty
 from . import vmlogging
 from .paths import VmcheckerPaths
-from .config import CourseConfig
+from .config import StorerCourseConfig
 from .coursedb import opening_course_db
 from .courselist import CourseList
 
@@ -116,8 +116,8 @@ def compute_grade(assignment, user, grade_filename, vmcfg):
 
 
 
-def db_save_grade(assignment, account, submission_root,
-                  vmcfg, course_db, ignore_timestamp = False):
+def db_save_grade(vmcfg, assignment, account, submission_root,
+                  course_db, ignore_timestamp = False):
     """Updates grade for the account's submission of assignment.
 
     Reads the grade's value only if the file containing the
@@ -201,11 +201,11 @@ def update_grades(course_id, account = None, assignment = None,
           * account!=None, assignment!=None -- the account's last submission for the assignment
     """
 
-    vmcfg   = CourseConfig(CourseList().course_config(course_id))
+    vmcfg   = StorerCourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     walker  = repo_walker.RepoWalker(vmcfg, simulate)
     db_file = vmpaths.db_file()
 
     with opening_course_db(db_file, isolation_level="EXCLUSIVE") as course_db:
         walker.walk(account, assignment, func=db_save_grade,
-                    args=(vmcfg, course_db, ignore_timestamp))
+                    args=(course_db, ignore_timestamp))
