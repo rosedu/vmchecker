@@ -177,6 +177,8 @@ class Submissions:
             hrc.readfp(handler)
 
         hrc.set('Assignment', 'Tester', tester)
+        if hrc.has_section('Tester'):
+            hrc.remove_section('Tester')
         hrc.add_section('Tester')
         for options in tester_config:
             hrc.set('Tester', options[0], options[1])
