@@ -489,7 +489,8 @@ def getAssignments(req, courseId, locale=websutil.DEFAULT_LOCALE):
         a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
         if a['assignmentStorage'].lower() == "large":
             a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
-            a['assignmentStorageBasepath'] = assignments.storage_basepath(key, username)
+            a['assignmentStorageBasepath'] = assignments.storage_basepath( \
+                assignments.get(key, "AssignmentStorageBasepath"), username)
         a['deadline'] = assignments.get(key, "Deadline")
         a['statementLink'] = assignments.get(key, "StatementLink")
         ass_arr.append(a)
