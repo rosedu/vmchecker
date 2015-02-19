@@ -516,8 +516,8 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
     # TODO: This should be implemented neater using some group
     # and permission model.
 
-    is_authorized = vmcfg.students_can_view_all_results() or \
-                    currentUser in vmcfg.view_all_results_user_list() or \
+    is_authorized = vmcfg.public_results() or \
+                    currentUser in vmcfg.admin_list() or \
                     username == currentUser or \
                     teamname == currentTeam
 
@@ -607,7 +607,7 @@ def getAllGradesHelper(courseId, username, strout):
         # and permission model.
 
         user_can_view_all = False
-        if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
+        if vmcfg.public_results() or username in vmcfg.admin_list():
             user_can_view_all = True
 
         user_grade_rows = None

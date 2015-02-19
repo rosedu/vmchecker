@@ -35,13 +35,13 @@ class StorerCourseConfig(CourseConfig):
         """Get the submission (git) repository path for this course."""
         return self.get('vmchecker', 'repository')
 
-    def students_can_view_all_results(self):
+    def public_results(self):
         """Get whether a student can view all the other students' results"""
-        return self.get_boolean('vmchecker', 'StudentsCanViewAllResults', 'yes')
+        return self.get_boolean('vmchecker', 'PublicResults', 'yes')
 
-    def view_all_results_user_list(self):
+    def admin_list(self):
         """Get configured list of users that can always view all results."""
-        return self.get_list('vmchecker', 'ViewAllResultsUserList', '')
+        return self.get_list('vmchecker', 'AdminList', '')
 
     def storer_username(self):
         """The username to use when logging in with ssh to the storer machine"""
