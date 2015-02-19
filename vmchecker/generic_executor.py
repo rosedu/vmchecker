@@ -44,16 +44,17 @@ class Host():
         vm = VM(self, bundle_dir, sb_cfg)
         return None
 	
-    def start_host_commands(self, jobs_path, host_command):
+    def start_host_commands(self, jobs_path, host_command, out_file = 'run-km.vmr'):
         """Run a command on the tester (host) machine"""
         _logger.info('%%% -- starting host commands [' + host_command + ']')
 
         if len(host_command) == 0:
             return None
 
-        outf = open(os.path.join(jobs_path, 'run-km.vmr'), 'a')
+        outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
         try:
-            proc = Popen("exec " + host_command, stdout=outf, shell=True)
+            proc = Popen("exec " + host_command, stdout=outf, \
+                stderr = STDOUT, close_fds = True, shell = True, bufsize = 0)
         except:
             _logger.exception('HOSTPROC: opening process: ' + host_command)
         return (proc, outf)
