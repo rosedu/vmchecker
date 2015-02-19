@@ -481,6 +481,8 @@ def getAssignments(req, courseId, locale=websutil.DEFAULT_LOCALE):
     ass_arr = []
 
     for key in sorted_assg:
+        if assignments.is_hidden(key) and not username in vmcfg.admin_list():
+            continue
         a = {}
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")

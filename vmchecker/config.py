@@ -282,6 +282,10 @@ class AssignmentConfig(Config):
         """Return a config object describing the VM to run this assignment on."""
         return self.get(assignment, 'Machine')
 
+    def is_hidden(self, assignment):
+        """Return whether this assignment is visible to the students."""
+        return self.get_boolean(assignment, 'Hidden', 'no')
+
 class AssignmentsConfig(ConfigWithDefaults, AssignmentConfig):
     """Obtain information about assignments from a config file.
 

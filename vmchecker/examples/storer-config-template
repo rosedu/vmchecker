@@ -234,6 +234,14 @@ Timeout = 120
 #
 #    Default: 10MB
 #
+# Hidden
+#
+#    Optional parameter
+#
+#    Specify if this assignment should be hidden to non-admin users.
+#
+#    Default: no
+#
 # # These are only for Large assignments
 # AssignmentStorage = Large               # this is a MD5Submission.
 # AssignmentStoragePort = 22              # the ssh port to use

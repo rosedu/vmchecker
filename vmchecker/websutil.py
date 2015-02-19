@@ -633,6 +633,9 @@ def getAllGradesHelper(courseId, username, strout):
                 deadtime = time.mktime(deadline)
                 if time.time() < deadtime:
                     continue
+            if vmcfg.assignments().is_hidden(assignment) and username not in vmcfg.admin_list():
+                continue
+
             grades.setdefault(user, {})[assignment] = grade
 
         for user in sorted(grades.keys()):

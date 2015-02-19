@@ -57,6 +57,15 @@ class SubmittedTooLateError(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
+class SubmittedHiddenAssignmentError(Exception):
+    """Raised when a user sends a submission to a hidden assignment and
+       he is not an admin.
+    """
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
 def submission_config(vmcfg, account, assignment, course_id, upload_time,
                       storer_result_dir, storer_username, storer_hostname, user = None):
     """Creates a configuration file describing the current submission:
@@ -397,11 +406,13 @@ def queue_for_testing(vmcfg, assignment, account, course_id):
 
 
 
-def check_valid_time(vmcfg, course_id, assignment, account,
+def check_submit_is_valid(vmcfg, course_id, assignment, account,
                      upload_time_str, skip_toosoon_check, check_eval_queueing_time):
     """Check whether students are uploading/evaluating homework at a
     propper time and that they aren't pushing the 'Submit' button too
-    fast hogging the server.
+    fast hogging the server. Also check that students can submit
+    for this assignment (i.e., students shouldn't be able to
+    submit for hidden assignments).
 
 
     If skip_toosoon_check is True, it will not check whether there
@@ -446,6 +457,11 @@ def check_valid_time(vmcfg, course_id, assignment, account,
                                     'Please allow %s between submissions') %
                                     min_time_between_subm)
 
+    # check if the assignment is hidden and the user is an admin
+    if vmcfg.assignments().is_hidden(assignment) and \
+            not account in vmcfg.admin_list():
+        raise SubmittedHiddenAssignmentError('You are not allowed to submit ' +
+            ' to this assignment.')
 
 def submit(submission_filename, assignment, account, course_id, user = None,
            skip_toosoon_check = False, forced_upload_time = None):
@@ -470,7 +486,7 @@ def submit(submission_filename, assignment, account, course_id, user = None,
     else:
         upload_time_str = time.strftime(config.DATE_FORMAT)
 
-    check_valid_time(vmcfg, course_id, assignment, account,
+    check_submit_is_valid(vmcfg, course_id, assignment, account,
                      upload_time_str, skip_toosoon_check, False)
     storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
     if storage_type.lower() != "large":
@@ -531,7 +547,7 @@ def evaluate_large_submission(archive_fname, assignment, account, course_id):
         # haven't been queued for testing before.
         skip_toosoon_check = True
 
-    check_valid_time(vmcfg, course_id, assignment, account,
+    check_submit_is_valid(vmcfg, course_id, assignment, account,
                      upload_time_str, skip_toosoon_check, True)
 
     if os.path.exists(results_dir):
