@@ -1,7 +1,7 @@
 package ro.pub.cs.vmchecker.client.presenter;
 
 import com.google.gwt.event.dom.client.HasClickHandlers;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.HasWidgets;
 
 public class MenuPresenter implements Presenter {
@@ -11,10 +11,10 @@ public class MenuPresenter implements Presenter {
 		public int getSelectedIndex(); 
 	}
 
-	private HandlerManager eventBus; 
+	private EventBus eventBus;
 	private MenuPresenter.Widget widget; 
 	
-	public MenuPresenter(HandlerManager eventBus, MenuPresenter.Widget widget) {
+	public MenuPresenter(EventBus eventBus, MenuPresenter.Widget widget) {
 		this.eventBus = eventBus;
 		bindWidget(widget); 
 	}

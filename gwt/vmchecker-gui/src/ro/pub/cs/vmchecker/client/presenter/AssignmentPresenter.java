@@ -15,14 +15,14 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
 
 public class AssignmentPresenter implements Presenter {
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service;
 	private AssignmentWidget widget;
 
@@ -42,7 +42,7 @@ public class AssignmentPresenter implements Presenter {
 		HasClickHandlers getViewStatsButton();
 	}
 
-	public AssignmentPresenter(HandlerManager eventBus, HTTPService service, String courseId,
+	public AssignmentPresenter(EventBus eventBus, HTTPService service, String courseId,
 			User user, AssignmentWidget widget) {
 		this.eventBus = eventBus;
 		this.service = service;

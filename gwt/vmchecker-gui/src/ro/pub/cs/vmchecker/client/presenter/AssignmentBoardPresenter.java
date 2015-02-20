@@ -16,7 +16,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.HasSelectionHandlers;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
@@ -55,7 +55,7 @@ public class AssignmentBoardPresenter implements Presenter {
 		HasHTML getResultContainer();
 	}
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service;
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
@@ -69,7 +69,7 @@ public class AssignmentBoardPresenter implements Presenter {
 	private StatementWidget statementWidget = new ro.pub.cs.vmchecker.client.ui.StatementWidget();
 	private ResultsWidget resultsWidget = new ro.pub.cs.vmchecker.client.ui.ResultsWidget();
 
-	public AssignmentBoardPresenter(HandlerManager eventBus, HTTPService service, String courseId, AssignmentBoardPresenter.Widget widget) {
+	public AssignmentBoardPresenter(EventBus eventBus, HTTPService service, String courseId, AssignmentBoardPresenter.Widget widget) {
 
 		this.eventBus = eventBus;
 		this.service = service;

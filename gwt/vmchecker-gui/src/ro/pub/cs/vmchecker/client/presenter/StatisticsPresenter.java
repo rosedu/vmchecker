@@ -13,7 +13,7 @@ import ro.pub.cs.vmchecker.client.service.HTTPService;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.HasWidgets;
@@ -56,7 +56,7 @@ public class StatisticsPresenter implements Presenter {
 	}
 
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service;
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
@@ -68,7 +68,7 @@ public class StatisticsPresenter implements Presenter {
 	private Assignment[] assignments;
 	private ArrayList<ResultInfo> teamResultsInfo, studentResultsInfo;
 
-	public StatisticsPresenter(HandlerManager eventBus, HTTPService service,
+	public StatisticsPresenter(EventBus eventBus, HTTPService service,
 			String courseId, User user, Assignment[] assignments, StatisticsPresenter.Widget widget) {
 		this.eventBus = eventBus;
 		this.service = service;

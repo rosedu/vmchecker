@@ -11,7 +11,7 @@ import ro.pub.cs.vmchecker.client.service.json.ErrorResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.JSONDecoder;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -25,13 +25,13 @@ public class Delegate<T> {
 
 	public static final int requestTimeoutMillis = 10000; /* 10 seconds */
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private RequestBuilder rb;
 	private boolean isGet, attachLocale;
 	private String url;
 	private HashMap<String, Request> ongoingRequests;
 
-	public Delegate(HandlerManager eventBus, String url, boolean isGet, boolean attachLocale,
+	public Delegate(EventBus eventBus, String url, boolean isGet, boolean attachLocale,
 			HashMap<String, Request> ongoingRequests) {
 		this.eventBus = eventBus;
 		this.isGet = isGet;

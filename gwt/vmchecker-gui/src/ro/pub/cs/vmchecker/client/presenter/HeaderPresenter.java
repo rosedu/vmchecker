@@ -17,7 +17,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.event.dom.client.HasClickHandlers;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class HeaderPresenter implements Presenter {
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service; 
 	private HeaderWidget widget; 
 	private HasWidgets container; 
@@ -45,7 +45,7 @@ public class HeaderPresenter implements Presenter {
 		int getSelectedCourseIndex();
 	}
 	
-	public HeaderPresenter(HandlerManager eventBus, HTTPService service, HeaderWidget widget) {
+	public HeaderPresenter(EventBus eventBus, HTTPService service, HeaderWidget widget) {
 		this.eventBus = eventBus; 
 		this.service = service; 
 		bindWidget(widget);

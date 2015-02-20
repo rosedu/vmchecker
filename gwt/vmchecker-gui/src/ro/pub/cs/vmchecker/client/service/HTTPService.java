@@ -3,7 +3,7 @@ package ro.pub.cs.vmchecker.client.service;
 import java.util.HashMap;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.http.client.Request;
 
@@ -40,7 +40,7 @@ public class HTTPService {
 	public static String UPLOAD_MD5_URL = VMCHECKER_SERVICES_URL + "uploadAssignmentMd5";
 	public static String BEGIN_EVALUATION_URL = VMCHECKER_SERVICES_URL + "beginEvaluation";
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HashMap<String, Request> ongoingRequests = new HashMap<String, Request>();
 
 	/**
@@ -57,7 +57,7 @@ public class HTTPService {
 		return uiURL.substring(0, uiURL.substring(0, uiURL.lastIndexOf('/')).lastIndexOf('/') + 1) + SERVICES_SUFFIX + '/';
 	}
 
-	public HTTPService(HandlerManager eventBus) {
+	public HTTPService(EventBus eventBus) {
 		this.eventBus = eventBus;
 	}
 

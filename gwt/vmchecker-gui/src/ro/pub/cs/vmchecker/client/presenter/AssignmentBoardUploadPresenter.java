@@ -24,7 +24,7 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.dom.client.HasKeyPressHandlers;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
@@ -69,7 +69,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 		Tree getFileListTree();
 	}
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service;
 	private String courseId;
 	private Assignment assignment;
@@ -85,7 +85,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 			.create(VmcheckerImages.class);
 
 
-	public AssignmentBoardUploadPresenter(HandlerManager eventBus, HTTPService service) {
+	public AssignmentBoardUploadPresenter(EventBus eventBus, HTTPService service) {
 		this.eventBus = eventBus;
 		this.service = service;
 		listenSubmitUpload();

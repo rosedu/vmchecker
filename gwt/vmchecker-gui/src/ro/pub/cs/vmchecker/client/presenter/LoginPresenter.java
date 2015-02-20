@@ -12,7 +12,7 @@ import com.google.gwt.event.dom.client.HasKeyPressHandlers;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -37,13 +37,13 @@ public class LoginPresenter implements Presenter, KeyPressHandler {
 		HasKeyPressHandlers[] getEnterSources();
 	}
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service;
 	private static LoginConstants constants = GWT
 			.create(LoginConstants.class);
 	private Widget widget;
 
-	public LoginPresenter(HandlerManager eventBus, HTTPService service, Widget widget) {
+	public LoginPresenter(EventBus eventBus, HTTPService service, Widget widget) {
 		this.eventBus = eventBus;
 		this.service = service;
 		bindWidget(widget);
