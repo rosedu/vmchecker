@@ -1,5 +1,7 @@
 package ro.pub.cs.vmchecker.client.ui;
 
+import java.util.ArrayList;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -87,7 +89,7 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 		return studentTable;
 	}
 
-	private void populateTable(HTMLTable table, User user, Assignment assignments[], ResultInfo[] resultsInfo) {
+	private void populateTable(HTMLTable table, User user, Assignment assignments[], ArrayList<ResultInfo> resultsInfo) {
 		table.setCellPadding(5);
 		table.setCellSpacing(0);
 		table.setStyleName(style.table());
@@ -102,8 +104,8 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 			}
 		}
 		/* complete the content */
-		for (i = 1; i <= resultsInfo.length; i++) {
-			ResultInfo result = resultsInfo[i - 1];
+		for (i = 1; i <= resultsInfo.size(); i++) {
+			ResultInfo result = resultsInfo.get(i - 1);
 			for (int j = 0; j <= assignments.length; j++) {
 				table.getCellFormatter().addStyleName(i, j, style.cell());
 				/* the first column contains the student's name */
@@ -126,22 +128,23 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 	}
 
 	@Override
-	public void displayInfo(User user, Assignment[] assignments, ResultInfo[] teamResultsInfo, ResultInfo[] studentResultsInfo) {
+	public void displayInfo(User user, Assignment[] assignments,
+			ArrayList<ResultInfo> teamResultsInfo, ArrayList<ResultInfo> studentResultsInfo) {
 		tablePanel.clear();
 
 		/* if there are no submissions to show, display the appropriate message. */
-		if (teamResultsInfo.length == 0 && studentResultsInfo.length == 0) {
+		if (teamResultsInfo.size() == 0 && studentResultsInfo.size() == 0) {
 			tablePanel.add(noSubmissionAvailableMessage);
 			return;
 		}
 
-		if (teamResultsInfo.length != 0) {
+		if (teamResultsInfo.size() != 0) {
 			tablePanel.add(teamTitle);
 			populateTable(teamTable, user, assignments, teamResultsInfo);
 			tablePanel.add(teamTable);
 		}
 
-		if (studentResultsInfo.length != 0) {
+		if (studentResultsInfo.size() != 0) {
 			tablePanel.add(studentTitle);
 			populateTable(studentTable, user, assignments, studentResultsInfo);
 			tablePanel.add(studentTable);
