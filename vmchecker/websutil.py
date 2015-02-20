@@ -227,7 +227,9 @@ def submission_upload_info(vmcfg, courseId, assignment, account, isTeamAccount, 
 
     submitter_explanation = None
     if isTeamAccount:
-        submitter_explanation = _("Submitted by") + ": " + sss.get_submitting_user(assignment, account)
+        submitting_user = sss.get_submitting_user(assignment, account)
+        if submitting_user is not None:
+            submitter_explanation = _("Submitted by") + ": " + submitting_user
 
     max_line_width = 0
     rows_to_print = []
@@ -484,18 +486,7 @@ def getAssignmentAccountName(courseId, assignmentId, username, strout):
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     with opening_course_db(vmpaths.db_file()) as course_db:
-        # First check if the user is part of a team for this assignment
-        user_team = course_db.get_user_team_for_assignment(assignmentId, username)
-        if user_team == None:
-            # No team, so just use the user's own account
-            return (False, username)
-        else:
-            # Check if this team has a mutual account
-            mutual_account = course_db.get_team_has_mutual_account(user_team)
-            if mutual_account:
-                return (True, user_team)
-            else:
-                return (False, username)
+        return course_db.get_assignment_account(assignmentId, username)
 
 def getResultsHelper(courseId, assignmentId, currentUser, strout, username = None, teamname = None, currentTeam = None):
     # assume that the session was already checked

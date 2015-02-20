@@ -137,10 +137,15 @@ def db_save_grade(vmcfg, assignment, account, submission_root,
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sss = submissions.Submissions(vmpaths)
     submitting_user = sss.get_submitting_user(assignment, account)
+
+    # First check if this is a team account
+    team_id = course_db.get_team_id(account)
+    if team_id is not None:
+        isTeamAccount = True
+
     if submitting_user is not None:
         # If there is a separate submitting user, then this is a team account
         isTeamAccount = True
-        team_id = course_db.get_team_id(account)
         if team_id is None:
             team_id = course_db.add_team(account, True)
         submitting_user_id = course_db.get_user_id(submitting_user)
@@ -149,7 +154,7 @@ def db_save_grade(vmcfg, assignment, account, submission_root,
         course_db.add_team_member(submitting_user_id, team_id)
         course_db.activate_team_for_assignment(team_id, assignment_id)
 
-    if team_id is None:
+    if not isTeamAccount:
         user_id = course_db.get_user_id(account)
         if user_id is None:
             user_id = course_db.add_user(account)
