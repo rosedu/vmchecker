@@ -29,12 +29,15 @@ public class Delegate<T> {
 	private RequestBuilder rb;
 	private boolean isGet, attachLocale;
 	private String url;
+	private HashMap<String, Request> ongoingRequests;
 
-	public Delegate(HandlerManager eventBus, String url, boolean isGet, boolean attachLocale) {
+	public Delegate(HandlerManager eventBus, String url, boolean isGet, boolean attachLocale,
+			HashMap<String, Request> ongoingRequests) {
 		this.eventBus = eventBus;
 		this.isGet = isGet;
 		this.attachLocale = attachLocale;
 		this.url = url;
+		this.ongoingRequests = ongoingRequests;
 		/**
 		 * We reconstruct the entire RequestBuilder for GET requests when
 		 * we call sendRequest(), so don't create a new instance for it
@@ -45,6 +48,10 @@ public class Delegate<T> {
 			rb.setHeader("Content-Type", "application/x-www-form-urlencoded");
 			rb.setTimeoutMillis(requestTimeoutMillis);
 		}
+
+		Request ongoing = ongoingRequests.get(url);
+		if (ongoing != null) ongoing.cancel();
+
 	}
 
 	private String packParameters(HashMap<String, String> params) {
@@ -109,7 +116,8 @@ public class Delegate<T> {
 			 * or at least so is said in the GWT documentation. Given the nature of the
 			 * different requests this seems more appropriate
 			 */
-			rb.sendRequest(packedParameters, rqc);
+			Request req = rb.sendRequest(packedParameters, rqc);
+			ongoingRequests.put(url, req);
 		} catch(RequestException e) {
 			callback.onFailure(e);
 		}
