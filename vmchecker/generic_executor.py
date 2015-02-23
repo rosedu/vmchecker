@@ -44,32 +44,47 @@ class Host():
         vm = VM(self, bundle_dir, sb_cfg)
         return None
 	
-    def start_host_commands(self, jobs_path, host_command, out_file = 'run-km.vmr'):
-        """Run a command on the tester (host) machine"""
-        _logger.info('%%% -- starting host commands [' + host_command + ']')
+    def start_host_commands(self, jobs_path, host_commands):
+        """Run a set of commands on the tester (host) machine"""
+        host_command_data = []
 
-        if len(host_command) == 0:
+        for host_command_out in host_commands:
+            out_file = 'run-km.vmr' # Default file name
+            if host_command_out.rfind('>') != -1:
+                out_file = host_command_out.split('>')[1].strip()
+
+            host_command = host_command_out.split('>')[0].strip()
+
+            if len(host_command) == 0:
+                continue
+
+            _logger.info('%%% -- starting host commands [' + host_command + '] >> ' + out_file)
+
+            outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
+            try:
+                proc = Popen("exec " + host_command, stdout=outf, \
+                    stderr = STDOUT, close_fds = True, shell = True, bufsize = 0)
+            except:
+                _logger.exception('HOSTPROC: opening process: ' + host_command)
+
+            host_command_data.append((proc, outf))
+
+        if len(host_command_data) == 0:
             return None
+        return host_command_data
 
-        outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
-        try:
-            proc = Popen("exec " + host_command, stdout=outf, \
-                stderr = STDOUT, close_fds = True, shell = True, bufsize = 0)
-        except:
-            _logger.exception('HOSTPROC: opening process: ' + host_command)
-        return (proc, outf)
-        
-    def stop_host_commands(self, host_command_data):
+    def stop_host_commands(self, host_commands_data):
         """Stop previously run host commands"""
-        if host_command_data == None:
+        if host_commands_data == None:
             return
 
-        (proc, outf) = host_command_data
-        try:
-            os.kill(proc.pid, signal.SIGTERM)
-            outf.close()
-        except:
-            _logger.exception('HOSTPROC: while stopping host cmds')
+        for host_command_data in host_commands_data:
+            (proc, outf) = host_command_data
+            try:
+                os.kill(proc.pid, signal.SIGTERM)
+                outf.close()
+            except:
+                _logger.exception('HOSTPROC: while stopping host cmds')
         _logger.info("%%% -- stopped host commands")
 		    
 class VM():
