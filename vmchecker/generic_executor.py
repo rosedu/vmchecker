@@ -80,6 +80,7 @@ class Host():
 
         for host_command_data in host_commands_data:
             (proc, outf) = host_command_data
+            _logger.info('%%% -- stopping host command writing to file [' + outf.name + ']')
             try:
                 os.kill(proc.pid, signal.SIGTERM)
                 outf.close()
