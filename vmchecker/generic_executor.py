@@ -62,7 +62,7 @@ class Host():
 
             outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
             try:
-                proc = Popen("exec " + host_command, stdout=outf, \
+                proc = Popen("exec " + host_command, stdout=outf, cwd = jobs_path, \
                     stderr = STDOUT, close_fds = True, shell = True, bufsize = 0)
             except:
                 _logger.exception('HOSTPROC: opening process: ' + host_command)
