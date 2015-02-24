@@ -192,8 +192,8 @@ class VmWareVM(VM):
             _logger.error('Snapshot number is needed')
             return
         if self.vminstance.nRootSnapshots <= number:
-            err_str = ('''Cannot revert to snapshot %d. Too few
-                        snapshots (nr = %d) found on %s.''' %
+            err_str = ('Cannot revert to snapshot %d. Too few ' +
+                       'snapshots (nr = %d) found on %s.' %
                        (number, self.vminstance.nRootSnapshots, self.vminstance.vmxPath))
             raise Exception(err_str)
         snaps = self.vminstance.rootSnapshots
