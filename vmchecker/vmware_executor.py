@@ -59,22 +59,46 @@ class VmWareVM(VM):
             self.vmx_path = os.path.join(vmx_prefix, self.vmx_path)
 
         try:
-            # try defaults
-            self.vmhost = pyvix.vix.Host()
-        except pyvix.vix.VIXException:
-            self.vmhost = pyvix.vix.Host(self.vmwarecfg.vmware_type(),
+            if self.vmwarecfg.vmware_type() == 3:
+                self.vmhost = pyvix.vix.Host()
+            elif self.vmwarecfg.vmware_type() == 2 or \
+                    self.vmwarecfg.vmware_type() == 10:
+                self.vmhost = pyvix.vix.Host(self.vmwarecfg.vmware_type(),
                                   self.vmwarecfg.vmware_url(),
                                   int(self.vmwarecfg.vmware_port()),
                                   self.vmwarecfg.vmware_username(),
                                   self.vmwarecfg.vmware_password())
+        except pyvix.vix.VIXException:
+            _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
+            with open(self.error_fname, 'a') as handler:
+                print >> handler, 'Error powering on the virtual machine.\n' + \
+                                  'Connecting to the host Vmware services failed.\n'
+            sys.exit(1)
 
         if self.vmwarecfg.vmware_register_and_unregister():
             self.vmhost.registerVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
 
+        vmx_path = self.vmx_path
+        if not os.path.isfile(vmx_path):
+            vmx_path = self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path)
+
+        if not os.path.isfile(vmx_path):
+            # no vmx, nothing to do.
+            _logger.error('Could not find a vmx to run')
+            with open(self.error_fname, 'a') as handler:
+                print >> handler, 'Error powering on the virtual machine.\n' + \
+                                  'Unable to find .vmx file.\n'
+            sys.exit(1)
+
         try:
-            self.vminstance = self.vmhost.openVM(self.vmx_path)
+            self.vminstance = self.vmhost.openVM(vmx_path)
         except pyvix.vix.VIXException:
-            self.vminstance = self.vmhost.openVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
+            _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
+            with open(self.error_fname, 'a') as handler:
+                print >> handler, 'Error powering on the virtual machine.\n' + \
+                                  'Unable to open the .vmx file..\n'
+            sys.exit(1)
+
 
 
     def executeCommand(self,cmd):
@@ -87,12 +111,12 @@ class VmWareVM(VM):
         try:
             self.vminstance.powerOff()
         except pyvix.vix.VIXException:
-            _logger.exception('IGNORED EXCEPTION')
+            _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
         if self.vmwarecfg.vmware_register_and_unregister():
             try:
                 self.vmhost.unregisterVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
             except pyvix.vix.VIXException:
-                _logger.exception('IGNORED EXCEPTION')
+                _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
 
     def _wait_for_tools(self):
         """Called by the thread that waits for the VMWare Tools to
@@ -104,7 +128,7 @@ class VmWareVM(VM):
         try:
             self.vminstance.waitForToolsInGuest()
         except pyvix.vix.VIXException:
-            _logger.exception("_WAIT FOR TOOLS")
+            _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
 
 
     def wait_for_tools_with_timeout(self, timeout, error_fname):
@@ -148,15 +172,23 @@ class VmWareVM(VM):
             # vm.powerOn() didn't hang: the machine has been powered on
             return
         
-        proc = Popen(['vmchecker-message-handler',
-                  self.vmwarecfg.vmware_hostname(),
-                  self.vmwarecfg.vmware_username(),
-                  self.vmwarecfg.vmware_password(),
-                  self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path)])
-        os.waitpid(proc.pid, 0)
+        if self.vmwarecfg.vmware_type() == 2 or \
+                self.vmwarecfg.vmware_type() == 10:
+            proc = Popen(['vmchecker-message-handler',
+                      self.vmwarecfg.vmware_hostname(),
+                      self.vmwarecfg.vmware_username(),
+                      self.vmwarecfg.vmware_password(),
+                      self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path)])
+            os.waitpid(proc.pid, 0)
         
-        power_thd.join()
-        
+            power_thd.join()
+        else:
+            _logger.error('Powering on VM timed out')
+            with open(self.error_fname, 'a') as handler:
+                print >> handler, 'Error powering on the virtual machine.\n' + \
+                                  'Timed out while powering on.\n'
+            sys.exit(1)
+
     def try_power_on_vm_and_login(self, revertSnapshot=None):
         if revertSnapshot == True or \
            (revertSnapshot == None and self.asscfg.revert_to_snapshot('Assignment')):
