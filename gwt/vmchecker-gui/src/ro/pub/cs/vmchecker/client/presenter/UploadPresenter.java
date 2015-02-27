@@ -1,6 +1,5 @@
 package ro.pub.cs.vmchecker.client.presenter;
 
-import ro.pub.cs.vmchecker.client.ui.images.VmcheckerImages;
 import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
@@ -22,51 +21,39 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.dom.client.HasKeyPressHandlers;
-import com.google.gwt.event.logical.shared.SelectionEvent;
-import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasHTML;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HasWidgets;
-import com.google.gwt.user.client.ui.Hidden;
-import com.google.gwt.user.client.ui.Tree;
-import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.user.client.TakesValue;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FormPanel.SubmitEvent;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteHandler;
 
-public class AssignmentBoardUploadPresenter implements Presenter, SubmitCompleteHandler {
+public class UploadPresenter implements Presenter, SubmitCompleteHandler {
 
-	public interface UploadNormalWidget {
-		HasClickHandlers getSubmitButton();
-		FormPanel getUploadForm();
-		Hidden getCourseField();
-		Hidden getAssignmentField();
-	}
-
-	public interface UploadLargeWidget {
+	public interface UploadWidget {
 		HasClickHandlers getMd5SubmitButton();
 		HasClickHandlers getBeginEvaluationButton();
 		HasText getFileListEmptyLabel();
 		FormPanel getMd5UploadForm();
 		FormPanel getEvaluationForm();
-		Hidden getCourseField();
-		Hidden getAssignmentField();
-		Hidden getEvalCourseField();
-		Hidden getEvalAssignmentField();
-		Hidden getEvalArchiveFileNameField();
+		TakesValue<String> getEvalArchiveFileNameField();
 		void setFileListEmptyLabelVisible(boolean visible);
 		void setBeginEvaluationButtonEnabled(boolean enabled);
 		void resetMd5SumInfo();
 		void displayMd5SumInfo(String md5Sum, String uploadTime);
 		boolean validateMd5Sum(boolean onSubmit);
-		Tree getFileListTree();
+		HasClickHandlers getSubmitButton();
+		FormPanel getUploadForm();
+		void setUploadType(Assignment.StorageType type);
+		void setParameters(String courseId, String assignmentId);
+		void populateFileList(Assignment assignment, String[] files);
 	}
 
 	private EventBus eventBus;
@@ -76,27 +63,23 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 	private String selectedArchiveFileName;
 	private HasWidgets container;
 
-	private UploadNormalWidget uploadNormalWidget = new ro.pub.cs.vmchecker.client.ui.UploadNormalWidget();
-	private UploadLargeWidget uploadLargeWidget = new ro.pub.cs.vmchecker.client.ui.UploadLargeWidget();
+	private UploadWidget uploadWidget = new ro.pub.cs.vmchecker.client.ui.UploadWidget();
 
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
-	private static VmcheckerImages images = GWT
-			.create(VmcheckerImages.class);
 
-
-	public AssignmentBoardUploadPresenter(EventBus eventBus, HTTPService service) {
+	public UploadPresenter(EventBus eventBus, HTTPService service) {
 		this.eventBus = eventBus;
 		this.service = service;
 		listenSubmitUpload();
 		listenMd5SubmitUpload();
 
-		uploadNormalWidget.getUploadForm().setAction(HTTPService.UPLOAD_URL);
-		uploadNormalWidget.getUploadForm().addSubmitCompleteHandler(this);
-		uploadLargeWidget.getMd5UploadForm().setAction(HTTPService.UPLOAD_MD5_URL);
-		uploadLargeWidget.getMd5UploadForm().addSubmitCompleteHandler(this);
-		uploadLargeWidget.getEvaluationForm().setAction(HTTPService.BEGIN_EVALUATION_URL);
-		uploadLargeWidget.getEvaluationForm().addSubmitCompleteHandler(this);
+		uploadWidget.getUploadForm().setAction(HTTPService.UPLOAD_URL);
+		uploadWidget.getUploadForm().addSubmitCompleteHandler(this);
+		uploadWidget.getMd5UploadForm().setAction(HTTPService.UPLOAD_MD5_URL);
+		uploadWidget.getMd5UploadForm().addSubmitCompleteHandler(this);
+		uploadWidget.getEvaluationForm().setAction(HTTPService.BEGIN_EVALUATION_URL);
+		uploadWidget.getEvaluationForm().addSubmitCompleteHandler(this);
 	}
 
 	@Override
@@ -109,7 +92,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 		 * changed.
 		 */
 
-		if (event.getSource() == uploadNormalWidget.getUploadForm()) {
+		if (event.getSource() == uploadWidget.getUploadForm()) {
 
 			/* Normal assignment file submission response */
 
@@ -132,7 +115,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 			}
 		}
 
-		if (event.getSource() == uploadLargeWidget.getMd5UploadForm()) {
+		if (event.getSource() == uploadWidget.getMd5UploadForm()) {
 
 			/* Large assignment md5 submission response */
 
@@ -157,7 +140,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 
 		}
 
-		if (event.getSource() == uploadLargeWidget.getEvaluationForm()) {
+		if (event.getSource() == uploadWidget.getEvaluationForm()) {
 
 			/* Large assignment evaluation request response */
 
@@ -196,38 +179,36 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 		service.getUploadedMd5(courseId, assignment.id, new AsyncCallback<Md5Status>() {
 
 			public void onFailure(Throwable caught) {
-				GWT.log("[AssignmentBoardUploadPresenter]", caught);
+				GWT.log("[UploadPresenter]", caught);
 				eventBus.fireEvent(new ErrorDisplayEvent(constants.loadMd5sumFail(), caught.getMessage()));
 			}
 
 			public void onSuccess(Md5Status md5Status) {
 				if(md5Status.fileExists) {
-					uploadLargeWidget.displayMd5SumInfo(md5Status.md5Sum, md5Status.uploadTime);
+					uploadWidget.displayMd5SumInfo(md5Status.md5Sum, md5Status.uploadTime);
 					eventBus.fireEvent(new StatusChangedEvent(
 						StatusChangedEvent.StatusType.RESET, ""));
 					loadFileList();
-					listenFileListSelection();
 					listenBeginEvaluation();
-					uploadLargeWidget.setFileListEmptyLabelVisible(false);
-					uploadLargeWidget.getEvaluationForm().setVisible(true);
+					uploadWidget.setFileListEmptyLabelVisible(false);
+					uploadWidget.getEvaluationForm().setVisible(true);
 				} else {
-					uploadLargeWidget.getEvaluationForm().setVisible(false);
+					uploadWidget.getEvaluationForm().setVisible(false);
 					eventBus.fireEvent(new StatusChangedEvent(
 						StatusChangedEvent.StatusType.RESET, ""));
 				}
-				displayView((com.google.gwt.user.client.ui.Widget)uploadLargeWidget);
 			}
 		});
 	}
 
 	public void loadAndDisplayUpload() {
 
-		if(assignment.storageType.equals("normal")) {
-			displayView((com.google.gwt.user.client.ui.Widget)uploadNormalWidget);
-		} else {
-			uploadLargeWidget.resetMd5SumInfo();
+		uploadWidget.setUploadType(assignment.storageType);
+		if (assignment.storageType == Assignment.StorageType.LARGE) {
+			uploadWidget.resetMd5SumInfo();
 			loadAndDisplayMd5Sum();
 		}
+		displayView((com.google.gwt.user.client.ui.Widget)uploadWidget);
 	}
 
 	private void loadFileList() {
@@ -238,18 +219,17 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 		service.getStorageDirContents(courseId, assignment.id, new AsyncCallback<FileList>() {
 
 			public void onFailure(Throwable caught) {
-				GWT.log("[AssignmentBoardUploadPresenter]", caught);
+				GWT.log("[UploadPresenter]", caught);
 				eventBus.fireEvent(new ErrorDisplayEvent(constants.loadStorageDirFail(), caught.getMessage()));
 			}
 
 			public void onSuccess(FileList fileList) {
-				uploadLargeWidget.setFileListEmptyLabelVisible(true);
+				uploadWidget.setFileListEmptyLabelVisible(true);
 				if(fileList.Files != null) {
-					populateFileListTree(fileList.Files);
-					uploadLargeWidget.getFileListTree().setAnimationEnabled(true);
-					uploadLargeWidget.setFileListEmptyLabelVisible(false);
+					uploadWidget.populateFileList(assignment, fileList.Files);
+					uploadWidget.setFileListEmptyLabelVisible(false);
 				} else
-					uploadLargeWidget.setFileListEmptyLabelVisible(true);
+					uploadWidget.setFileListEmptyLabelVisible(true);
 				eventBus.fireEvent(new StatusChangedEvent(
 						StatusChangedEvent.StatusType.RESET, ""));
 			}
@@ -258,26 +238,22 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 	}
 
 	private void listenSubmitUpload() {
-		uploadNormalWidget.getSubmitButton().addClickHandler(new ClickHandler() {
+		uploadWidget.getSubmitButton().addClickHandler(new ClickHandler() {
 
 			public void onClick(ClickEvent event) {
-				uploadNormalWidget.getCourseField().setValue(courseId);
-				uploadNormalWidget.getAssignmentField().setValue(assignment.id);
 				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, constants.uploadFile()));
-				uploadNormalWidget.getUploadForm().submit();
+				uploadWidget.getUploadForm().submit();
 			}
 		});
 	}
 
 	private void listenMd5SubmitUpload() {
-		uploadLargeWidget.getMd5SubmitButton().addClickHandler(new ClickHandler() {
+		uploadWidget.getMd5SubmitButton().addClickHandler(new ClickHandler() {
 
 			public void onClick(ClickEvent event) {
-				if(uploadLargeWidget.validateMd5Sum(true)) {
-					uploadLargeWidget.getCourseField().setValue(courseId);
-					uploadLargeWidget.getAssignmentField().setValue(assignment.id);
+				if(uploadWidget.validateMd5Sum(true)) {
 					eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, constants.uploadMd5()));
-					uploadLargeWidget.getMd5UploadForm().submit();
+					uploadWidget.getMd5UploadForm().submit();
 				}
 			}
 		});
@@ -285,99 +261,17 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 
 	private void listenBeginEvaluation() {
 
-		uploadLargeWidget.getBeginEvaluationButton().addClickHandler(new ClickHandler() {
+		uploadWidget.getBeginEvaluationButton().addClickHandler(new ClickHandler() {
 
 			public void onClick(ClickEvent event) {
 				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION, constants.evaluate()));
-				uploadLargeWidget.getEvalCourseField().setValue(courseId);
-				uploadLargeWidget.getEvalAssignmentField().setValue(assignment.id);
-				uploadLargeWidget.getEvalArchiveFileNameField().setValue(AssignmentBoardUploadPresenter.this.selectedArchiveFileName);
-				uploadLargeWidget.getEvaluationForm().submit();
+				uploadWidget.getEvaluationForm().submit();
 			}
 		});
 
 	}
 
-	private void listenFileListSelection() {
 
-		uploadLargeWidget.getFileListTree().addSelectionHandler(new SelectionHandler<TreeItem> () {
-
-			public void onSelection(SelectionEvent<TreeItem> event) {
-				TreeItem item = event.getSelectedItem();
-
-				if(item.getChildCount() != 0)
-					uploadLargeWidget.setBeginEvaluationButtonEnabled(false);
-				else {
-					uploadLargeWidget.setBeginEvaluationButtonEnabled(true);
-
-					TreeItem temp_item = item;
-					selectedArchiveFileName = item.getText();
-					/* Eliminate the <img /> tag before the folder name */
-					selectedArchiveFileName = selectedArchiveFileName.substring(selectedArchiveFileName.indexOf('>') + 2);
-
-					while(temp_item.getParentItem() != null) {
-
-						temp_item = temp_item.getParentItem();
-						if(temp_item.getParentItem() == null) break;
-						String folderName = temp_item.getText();
-						/* Eliminate the <img /> tag before the folder name */
-						folderName = folderName.substring(folderName.indexOf('>') + 2);
-						selectedArchiveFileName = folderName + "/" + selectedArchiveFileName;
-					}
-				}
-
-			}});
-	}
-
-	private void populateFileListTree(String[] files) {
-
-		/* Define the image strings */
-		String folderImage = AbstractImagePrototype.create(images.folder()).getHTML();
-		String zipImage = AbstractImagePrototype.create(images.zip()).getHTML();
-		String fileImage = AbstractImagePrototype.create(images.file()).getHTML();
-
-		Tree tree = uploadLargeWidget.getFileListTree();
-		TreeItem treeRoot;
-		String firstFile = files[0].substring((assignment.storageBasepath + "/").length());
-		String userDir = firstFile.substring(0, firstFile.indexOf('/'));
-		tree.removeItems();
-		treeRoot = tree.addTextItem(AbstractImagePrototype.create(images.connection()).getHTML() + " " + userDir + "@" + assignment.storageHost);
-
-		for(String s : files) {
-			String file = s.substring((assignment.storageBasepath + "/").length());
-			file = file.substring(file.indexOf('/') + 1);
-			TreeItem treeBranch = treeRoot;
-
-			while(file.indexOf('/') != -1) {
-				String folderPart = file.substring(0, file.indexOf('/'));
-				file = file.substring(file.indexOf('/') + 1);
-
-				int existingFolders;
-				boolean found = false;
-				existingFolders = treeBranch.getChildCount();
-				for(int i = 0 ; i < existingFolders ; i++) {
-					String branchText = treeBranch.getChild(i).getText();
-					branchText = branchText.substring(branchText.indexOf('>') + 2);
-					if(branchText.equals(folderPart)) {
-						treeBranch = treeBranch.getChild(i);
-						found = true;
-						break;
-					}
-				}
-
-				if(!found) treeBranch = treeBranch.addTextItem(folderImage + " " +  folderPart);
-			}
-
-			String fileName = file.trim(); /* Eliminate all trailing end-of-line characters */
-			if(fileName.indexOf('.') != -1)
-				if(fileName.substring(fileName.indexOf('.') + 1).equals("zip"))
-					treeBranch.addTextItem(zipImage + " " + fileName);
-				else
-					treeBranch.addTextItem(fileImage + " " + fileName);
-			else
-				treeBranch.addTextItem(fileImage + " " + fileName);
-		}
-	}
 
 	@Override
 	public void go(HasWidgets container) {
@@ -391,6 +285,7 @@ public class AssignmentBoardUploadPresenter implements Presenter, SubmitComplete
 	public void setParameters(String courseId, Assignment assignment) {
 		this.courseId = courseId;
 		this.assignment = assignment;
+		uploadWidget.setParameters(courseId, assignment.id);
 	}
 
 	public void displayView(com.google.gwt.user.client.ui.Widget widget) {

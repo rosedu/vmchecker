@@ -33,10 +33,11 @@ public final class AssignmentsListDecoder extends JSONDecoder<Assignment[]> {
 	private Assignment parseAssignment(JSONObject jsonObj) {
 		String id = jsonObj.get(idKey).isString().stringValue();
 		String title = jsonObj.get(titleKey).isString().stringValue();
-		String storageType = jsonObj.get(storageTypeKey).isString().stringValue().toLowerCase();
+		Assignment.StorageType storageType =
+			Assignment.StorageType.valueOf(jsonObj.get(storageTypeKey).isString().stringValue().toUpperCase());
 		String deadline = jsonObj.get(deadlineKey).isString().stringValue();
 		String statementLink = jsonObj.get(statementLinkKey).isString().stringValue();
-		if (storageType.toLowerCase().equals("normal")) {
+		if (storageType == Assignment.StorageType.NORMAL) {
 			return new Assignment(id, title, storageType, null, null, deadline, statementLink);
 		} else {
 			String storageHost = jsonObj.get(storageHostKey).isString().stringValue();

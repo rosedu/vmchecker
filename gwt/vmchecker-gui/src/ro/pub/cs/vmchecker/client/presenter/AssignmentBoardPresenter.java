@@ -60,7 +60,7 @@ public class AssignmentBoardPresenter implements Presenter {
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 	private AssignmentBoardPresenter.Widget widget;
-	private AssignmentBoardUploadPresenter uploadPresenter = null;
+	private UploadPresenter uploadPresenter = null;
 	private HasWidgets container;
 	private HandlerRegistration assignmentSelectReg = null;
 	private String courseId;
@@ -74,7 +74,7 @@ public class AssignmentBoardPresenter implements Presenter {
 		this.eventBus = eventBus;
 		this.service = service;
 		this.courseId = courseId;
-		uploadPresenter = new AssignmentBoardUploadPresenter(eventBus, service);
+		uploadPresenter = new UploadPresenter(eventBus, service);
 		bindWidget(widget);
 
 	}
