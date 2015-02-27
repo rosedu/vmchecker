@@ -62,8 +62,9 @@ class Host():
 
             outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
             try:
-                proc = Popen("exec " + host_command, stdout=outf, cwd = jobs_path, \
-                    stderr = STDOUT, close_fds = True, shell = True, bufsize = 0)
+                proc = Popen([host_command], stdout=outf, cwd = jobs_path, \
+                    stderr = STDOUT, close_fds = True, shell = True, bufsize = 0, \
+                    preexec_fn = os.setsid)
             except:
                 _logger.exception('HOSTPROC: opening process: ' + host_command)
 
@@ -82,7 +83,7 @@ class Host():
             (proc, outf) = host_command_data
             _logger.info('%%% -- stopping host command writing to file [' + outf.name + ']')
             try:
-                os.kill(proc.pid, signal.SIGTERM)
+                os.killpg(proc.pid, signal.SIGTERM)
                 outf.close()
             except:
                 _logger.exception('HOSTPROC: while stopping host cmds')
