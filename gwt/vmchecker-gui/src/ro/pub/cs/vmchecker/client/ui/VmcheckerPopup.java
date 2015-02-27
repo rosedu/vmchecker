@@ -14,11 +14,17 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Overflow;
+import com.google.gwt.dom.client.Document;
 
 /**
  * Wrapper over the classic PopupPanel
  * Adds a close button and a scrollable content panel
  * @author claudiugh
+ * Implement proper scrolling support and make sure
+ * the body doesn't scroll when used.
+ * @author calin.iorgulescu
  *
  */
 public class VmcheckerPopup extends PopupPanel {
@@ -33,8 +39,7 @@ public class VmcheckerPopup extends PopupPanel {
 	private Anchor popupCloseButton = new Anchor();
 
 	public VmcheckerPopup() {
-//		super(true, true);
-		super(true, false);
+		super(true);
 		setup();
 	}
 
@@ -61,28 +66,21 @@ public class VmcheckerPopup extends PopupPanel {
 
 	}
 
-/*
-	private void focusContentPanel() {
-		Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
-			@Override
-			public void execute() {
-				detailsPopupContent.getElement().focus();
-			}
-		});
-	}
-*/
-
 	public void showContent(String htmlContent) {
 		detailsPopupContent.clear();
 		detailsPopupContent.add(new HTML(htmlContent));
 		center();
 		show();
-//		focusContentPanel();
+		Document.get().getBody().getStyle().setOverflow(Style.Overflow.HIDDEN);
 	}
 
 	@Override
 	protected void onPreviewNativeEvent(NativePreviewEvent event) {
 		super.onPreviewNativeEvent(event);
+		if (!isShowing()) {
+			return;
+		}
+
 		switch (event.getTypeInt()) {
 			case Event.ONKEYDOWN:
 				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
@@ -138,35 +136,15 @@ public class VmcheckerPopup extends PopupPanel {
 					detailsPopupContent.scrollToTop();
 				}
 
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_RIGHT) {
-					int scrollIncrement = (detailsPopupContent.getMaximumHorizontalScrollPosition() - 
-						detailsPopupContent.getMinimumHorizontalScrollPosition()) / 20;
-					if (detailsPopupContent.getHorizontalScrollPosition() <
-							detailsPopupContent.getMaximumHorizontalScrollPosition()) {
-						detailsPopupContent.setHorizontalScrollPosition(
-							detailsPopupContent.getHorizontalScrollPosition() + scrollIncrement);
-					}
-				}
-
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_LEFT) {
-					int scrollIncrement = (detailsPopupContent.getMaximumHorizontalScrollPosition() - 
-						detailsPopupContent.getMinimumHorizontalScrollPosition()) / 20;
-					if (detailsPopupContent.getHorizontalScrollPosition() >
-							detailsPopupContent.getMinimumHorizontalScrollPosition()) {
-						detailsPopupContent.setHorizontalScrollPosition(
-							detailsPopupContent.getHorizontalScrollPosition() - scrollIncrement);
-					}
-				}
-
+				event.cancel();
 				break;
-/*
-			case Event.ONCLICK:
-				// XXX: Kind of hack-ish, but if the scrollpanel doesn't have focus
-				// it won't allow scrolling with keys.
-				focusContentPanel();
-				break;
-*/
 		}
+	}
+
+	@Override
+	protected void onUnload() {
+		super.onUnload();
+		Document.get().getBody().getStyle().clearOverflow();
 	}
 
 }
