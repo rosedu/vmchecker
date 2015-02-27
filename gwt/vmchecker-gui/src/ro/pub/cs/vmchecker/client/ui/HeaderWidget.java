@@ -50,11 +50,17 @@ public class HeaderWidget extends Composite
 	@Override
 	public void addCourse(String name, String id) {
 		coursesList.addItem(name, id);
+		if (coursesList.getItemCount() == 2) {
+			coursesList.setVisible(true);
+			coursesList.setVisible(true);
+		}
 	}
 
 	@Override
 	public void clearCourses() {
 		coursesList.clear();
+		coursesList.setVisible(false);
+		courseSelection.setVisible(false);
 	}
 
 	@Override
