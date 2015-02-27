@@ -33,9 +33,9 @@ class Host():
     def __init__(self):
         pass
 
-    def executeCommand(self, cmd):
+    def executeCommand(self, cmd, path = None):
         _logger.debug('Running command: %s' % cmd)
-        p = Popen([cmd],stdout=PIPE,stderr=STDOUT,shell=True)
+        p = Popen([cmd], stdout=PIPE, stderr=STDOUT, shell = True, cwd = path)
         output = p.stdout.read()
         _logger.debug('Command output: %s' % output)
         return output
