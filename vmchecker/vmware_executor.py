@@ -27,6 +27,7 @@ from vmchecker.generic_executor import VM, Host
 from vmchecker.config import Config, AssignmentConfig, TesterConfig, VmwareMachineConfig, VmwareConfig
 
 _logger = logging.getLogger('vm_executor')
+VMWARE_VM_POWERON_TIMEOUT=20
 
 
 class VmWareHost(Host):
@@ -166,7 +167,7 @@ class VmWareVM(VM):
         """ see power_on_with_message_handler """
         power_thd = Thread(target = self.start)
         power_thd.start()
-        power_thd.join(5)
+        power_thd.join(VMWARE_VM_POWERON_TIMEOUT)
 
         if not power_thd.isAlive():
             # vm.powerOn() didn't hang: the machine has been powered on
