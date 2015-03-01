@@ -14,6 +14,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Hidden;
@@ -48,6 +49,15 @@ public class UploadWidget extends Composite
 
 	interface UploadWidgetUiBinder extends UiBinder<Widget, UploadWidget> {
 	}
+
+	@UiField
+	HorizontalPanel teamContainer;
+
+	@UiField
+	Label teamMsg;
+
+	@UiField
+	Label teamName;
 
 	@UiField
 	HTML uploadHeader;
@@ -140,9 +150,13 @@ public class UploadWidget extends Composite
 	Button uploadFileButton;
 
 
+	private Assignment assignment;
+
 
 	public UploadWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
+
+		teamMsg.setText(constants.teamMsg());
 
 		md5Title.setText(constants.md5Title());
 		md5SumOldDesc.setText(constants.md5SumOldDesc());
@@ -298,17 +312,27 @@ public class UploadWidget extends Composite
 	}
 
 	@Override
-	public void setParameters(String courseId, String assignmentId) {
+	public void updateWidget(String courseId, Assignment assignment) {
+
+		this.assignment = assignment;
+
 		md5CourseIdField.setValue(courseId);
-		md5AssignmentIdField.setValue(assignmentId);
+		md5AssignmentIdField.setValue(assignment.id);
 		evalCourseIdField.setValue(courseId);
-		evalAssignmentIdField.setValue(assignmentId);
+		evalAssignmentIdField.setValue(assignment.id);
 		courseIdField.setValue(courseId);
-		assignmentIdField.setValue(assignmentId);
+		assignmentIdField.setValue(assignment.id);
+
+		if (assignment.hasTeam) {
+			teamName.setText(assignment.team);
+			teamContainer.setVisible(true);
+		} else {
+			teamContainer.setVisible(false);
+		}
 	}
 
 	@Override
-	public void populateFileList(Assignment assignment, String[] files) {
+	public void populateFileList(String[] files) {
 
 		/* Define the image strings */
 		String folderImage = AbstractImagePrototype.create(images.folder()).getHTML();

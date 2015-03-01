@@ -15,6 +15,7 @@
 			padding: 10px;
 			border: 3px solid #EEEEEE;
 			margin-top: 20px;
+			margin-bottom: 20px;
 		}
 
 		.inputField {
@@ -45,14 +46,20 @@
 			cursor: pointer;
 		}
 
+		.bold {
+			font-weight: bold;
+		}
+
 		.errorComment {
 			color: #990000;
-			font-weight: bold;
 		}
 
 		.okComment {
 			color: #007F00;
-			font-weight: bold;
+		}
+
+		.teamName {
+			padding-left: 10px;
 		}
 
 		.help {
@@ -69,13 +76,17 @@
 	</ui:style>
 	<g:HTMLPanel styleName="{style.container}">
 		<g:HTML ui:field="uploadHeader"></g:HTML>
+		<g:HorizontalPanel ui:field="teamContainer" styleName="{style.formContainer}">
+			<g:Label ui:field="teamMsg"></g:Label>
+			<g:Label ui:field="teamName" styleName="{style.teamName} {style.bold}"></g:Label>
+		</g:HorizontalPanel>
 		<g:FormPanel ui:field="md5Form" styleName="{style.formContainer}">
 			<g:VerticalPanel>
 				<g:Label ui:field="md5Title" styleName="{style.formTitle}"></g:Label>
 				<g:HorizontalPanel>
 					<g:Label ui:field="md5SumOldDesc" styleName="{style.fieldComment} {style.help}"></g:Label>
-					<g:Label ui:field="md5SumEmptyLabel" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
-					<g:Label ui:field="md5SumValueLabel" styleName="{style.fieldComment} {style.okComment}" visible="false"></g:Label>
+					<g:Label ui:field="md5SumEmptyLabel" styleName="{style.fieldComment} {style.errorComment} {style.bold}"></g:Label>
+					<g:Label ui:field="md5SumValueLabel" styleName="{style.fieldComment} {style.okComment} {style.bold}" visible="false"></g:Label>
 				</g:HorizontalPanel>
 				<g:HorizontalPanel>
 					<g:Label ui:field="md5SumTimeCommentLabel" styleName="{style.fieldComment} {style.help}" visible="false"></g:Label>
@@ -85,7 +96,7 @@
 					<g:Label ui:field="md5SumDesc" styleName="{style.fieldComment} {style.help}"></g:Label>
 					<g:TextBox ui:field="md5SumInputField" name="md5Sum" styleName="{style.inputField}"></g:TextBox>
 				</g:HorizontalPanel>
-				<g:Label ui:field="md5SumInputCommentLabel" styleName="{style.fieldComment} {style.errorComment}"></g:Label>
+				<g:Label ui:field="md5SumInputCommentLabel" styleName="{style.fieldComment} {style.errorComment} {style.bold}"></g:Label>
 				<g:Button ui:field="uploadMd5Button" enabled="true"></g:Button>
 				<g:Hidden ui:field="md5CourseIdField" name="courseId"></g:Hidden>
 				<g:Hidden ui:field="md5AssignmentIdField" name="assignmentId"></g:Hidden>
@@ -95,7 +106,7 @@
 			<g:VerticalPanel>
 				<g:Label ui:field="archiveTitle" styleName="{style.formTitle}"></g:Label>
 				<g:Label ui:field="archiveDesc" styleName="{style.fieldComment} {style.help}"></g:Label>
-				<g:Label ui:field="fileListEmptyLabel" styleName="{style.fieldComment} {style.errorComment}" visible="false"></g:Label>
+				<g:Label ui:field="fileListEmptyLabel" styleName="{style.fieldComment} {style.errorComment} {style.bold}" visible="false"></g:Label>
 				<g:ScrollPanel styleName="{style.scrollPanel}">
 					<g:Tree ui:field="fileListTree"></g:Tree>
 				</g:ScrollPanel>

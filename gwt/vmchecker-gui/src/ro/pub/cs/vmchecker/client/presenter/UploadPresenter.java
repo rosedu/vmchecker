@@ -52,8 +52,8 @@ public class UploadPresenter implements Presenter, SubmitCompleteHandler {
 		HasClickHandlers getSubmitButton();
 		FormPanel getUploadForm();
 		void setUploadType(Assignment.StorageType type);
-		void setParameters(String courseId, String assignmentId);
-		void populateFileList(Assignment assignment, String[] files);
+		void updateWidget(String courseId, Assignment assignment);
+		void populateFileList(String[] files);
 	}
 
 	private EventBus eventBus;
@@ -226,7 +226,7 @@ public class UploadPresenter implements Presenter, SubmitCompleteHandler {
 			public void onSuccess(FileList fileList) {
 				uploadWidget.setFileListEmptyLabelVisible(true);
 				if(fileList.Files != null) {
-					uploadWidget.populateFileList(assignment, fileList.Files);
+					uploadWidget.populateFileList(fileList.Files);
 					uploadWidget.setFileListEmptyLabelVisible(false);
 				} else
 					uploadWidget.setFileListEmptyLabelVisible(true);
@@ -285,7 +285,7 @@ public class UploadPresenter implements Presenter, SubmitCompleteHandler {
 	public void setParameters(String courseId, Assignment assignment) {
 		this.courseId = courseId;
 		this.assignment = assignment;
-		uploadWidget.setParameters(courseId, assignment.id);
+		uploadWidget.updateWidget(courseId, assignment);
 	}
 
 	public void displayView(com.google.gwt.user.client.ui.Widget widget) {

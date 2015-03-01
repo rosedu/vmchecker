@@ -13,10 +13,13 @@ public class Assignment {
 	public String storageBasepath;
 	public String deadline;
 	public String statementLink;
+	public boolean hasTeam;
+	public String team;
 
 	public Assignment(String id, String title, StorageType storageType,
 			String storageHost, String storageBasepath,
-			String deadline, String statementLink) {
+			String deadline, String statementLink,
+			boolean hasTeam, String team) {
 		this.id = id;
 		this.title = title;
 		this.storageType = storageType;
@@ -25,6 +28,8 @@ public class Assignment {
 		this.storageType = storageType;
 		this.deadline = deadline;
 		this.statementLink = statementLink;
+		this.hasTeam = hasTeam;
+		this.team = team;
 	}
 
 }
