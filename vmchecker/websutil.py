@@ -503,20 +503,25 @@ def getAssignmentsHelper(courseId, currentUser, strout):
                                                    int(assignments.get(y, "OrderNumber")))
     assg_arr = []
 
-    for key in sorted_assg:
-        if assignments.is_hidden(key) and not currentUser in vmcfg.admin_list():
-            continue
-        a = {}
-        a['assignmentId'] = key
-        a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
-        a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
-        if a['assignmentStorage'].lower() == "large":
-            a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
-            a['assignmentStorageBasepath'] = assignments.storage_basepath( \
-                assignments.get(key, "AssignmentStorageBasepath"), currentUser)
-        a['deadline'] = assignments.get(key, "Deadline")
-        a['statementLink'] = assignments.get(key, "StatementLink")
-        assg_arr.append(a)
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    with opening_course_db(vmpaths.db_file()) as course_db:
+        for key in sorted_assg:
+            if assignments.is_hidden(key) and not currentUser in vmcfg.admin_list():
+                continue
+            a = {}
+            a['assignmentId'] = key
+            a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
+            a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
+            if a['assignmentStorage'].lower() == "large":
+                a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
+                a['assignmentStorageBasepath'] = assignments.storage_basepath( \
+                    assignments.get(key, "AssignmentStorageBasepath"), currentUser)
+            a['deadline'] = assignments.get(key, "Deadline")
+            a['statementLink'] = assignments.get(key, "StatementLink")
+            team = course_db.get_user_team_for_assignment(key, currentUser)
+            if team is not None:
+                a['team'] = team
+            assg_arr.append(a)
     return json.dumps(assg_arr)
 
 def getResultsHelper(courseId, assignmentId, currentUser, strout, username = None, teamname = None, currentTeam = None):
