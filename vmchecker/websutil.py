@@ -456,7 +456,7 @@ def getAssignmentAccountName(courseId, assignmentId, username, strout):
 def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
     """Get the current MD5 sum submitted for a given username on a given assignment"""
     try:
-        vmcfg = config.StorerCourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
@@ -490,11 +490,11 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorTrace' : strout.get()})
 
 def getAssignmentsHelper(courseId, currentUser, strout):
-   try:
-        vmcfg = config.StorerCourseConfig(CourseList().course_config(courseId))
+    try:
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+        return json.dumps({'errorType': ERR_EXCEPTION,
             'errorMessage':"Unable to load course config",
             'errorTrace':strout.get()})
 
