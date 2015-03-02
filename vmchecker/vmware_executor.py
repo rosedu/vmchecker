@@ -167,28 +167,41 @@ class VmWareVM(VM):
         """ see power_on_with_message_handler """
         power_thd = Thread(target = self.start)
         power_thd.start()
-        power_thd.join(VMWARE_VM_POWERON_TIMEOUT)
 
-        if not power_thd.isAlive():
-            # vm.powerOn() didn't hang: the machine has been powered on
-            return
-        
         if self.vmwarecfg.vmware_type() == 2 or \
                 self.vmwarecfg.vmware_type() == 10:
+            # VMWARE_SERVER or VMWARE_VI_SERVER
+            # Wait for the VM to powr on in case it hangs on a message
+            power_thd.join(VMWARE_VM_POWERON_TIMEOUT)
+
+            if not power_thd.isAlive():
+                # vm.powerOn() didn't hang: the machine has been powered on
+                return
+
+            # Run the message handler
             proc = Popen(['vmchecker-message-handler',
                       self.vmwarecfg.vmware_hostname(),
                       self.vmwarecfg.vmware_username(),
                       self.vmwarecfg.vmware_password(),
                       self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path)])
             os.waitpid(proc.pid, 0)
-        
-            power_thd.join()
-        else:
+
+            # Wait for the VM to power on again
+            power_thd.join(VMWARE_VM_POWERON_TIMEOUT)
+
+            if not power_thd.isAlive():
+                # vm.powerOn() didn't hang: the machine has been powered on
+                return
+
             _logger.error('Powering on VM timed out')
             with open(self.error_fname, 'a') as handler:
                 print >> handler, 'Error powering on the virtual machine.\n' + \
                                   'Timed out while powering on.\n'
             sys.exit(1)
+        else:
+            # VMWARE_WORKSTATION
+            # Just wait until the VM has powered on
+            power_thd.join()
 
     def try_power_on_vm_and_login(self, revertSnapshot=None):
         if revertSnapshot == True or \
