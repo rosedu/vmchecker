@@ -234,7 +234,7 @@ def submission_upload_info(vmcfg, courseId, assignment, account, isTeamAccount, 
     max_line_width = 0
     rows_to_print = []
 
-    if isTeamAccount:
+    if submitter_explanation is not None:
         rows_to_print += [
             [ submitter_explanation ],
             [ '' ]
