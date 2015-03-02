@@ -393,9 +393,6 @@ def getUserResults(req, courseId, assignmentId, username=None,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-    if username == None:
-        username = current_user
-
     # Reset the timeout
     s.save()
     return websutil.getResultsHelper(courseId,

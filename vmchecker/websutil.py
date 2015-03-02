@@ -560,11 +560,17 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
 
     account = None
     if username != None:
-        # Check if the user is part of a team with a mutual account for this submission
-        (isTeamAccount, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
-    else:
+        # Get the individual results for this user
+        account = username
+        isTeamAccount = False
+    elif teamname != None:
+        # Get the team results for this team
         account = teamname
         isTeamAccount = True
+    else:
+        # Check if the user is part of a team with a mutual account for this submission
+        (isTeamAccount, account) = getAssignmentAccountName(courseId, assignmentId, currentUser, strout)
+
 
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
 
