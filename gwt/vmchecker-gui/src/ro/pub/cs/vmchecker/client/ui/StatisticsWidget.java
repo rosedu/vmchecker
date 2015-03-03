@@ -89,7 +89,8 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 		return studentTable;
 	}
 
-	private void populateTable(HTMLTable table, User user, Assignment assignments[], ArrayList<ResultInfo> resultsInfo) {
+	private void populateTable(FlexTable table, User user, Assignment assignments[], ArrayList<ResultInfo> resultsInfo) {
+		table.removeAllRows();
 		table.setCellPadding(5);
 		table.setCellSpacing(0);
 		table.setStyleName(style.table());
