@@ -21,6 +21,7 @@ import ro.pub.cs.vmchecker.client.ui.AssignmentWidget;
 import ro.pub.cs.vmchecker.client.ui.StatusWidget;
 import ro.pub.cs.vmchecker.client.ui.HeaderWidget;
 import ro.pub.cs.vmchecker.client.ui.LoginWidget;
+import ro.pub.cs.vmchecker.client.util.CookieManager;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;

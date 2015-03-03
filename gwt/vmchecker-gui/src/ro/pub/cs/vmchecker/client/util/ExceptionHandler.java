@@ -1,4 +1,4 @@
-package ro.pub.cs.vmchecker.client;
+package ro.pub.cs.vmchecker.client.util;
 
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 

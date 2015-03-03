@@ -14,7 +14,7 @@ public class ResultInfo {
 	public HashMap<String, String> results;
 
 	public ResultInfo(OwnerType owner, String name, HashMap<String, String> results) {
-        this.owner = owner;
+		this.owner = owner;
 		this.name = name;
 		this.results = results;
 	}
