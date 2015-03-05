@@ -9,6 +9,7 @@ import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.ui.AssignmentBoardWidget;
 import ro.pub.cs.vmchecker.client.ui.NumberedMenu;
 import ro.pub.cs.vmchecker.client.ui.StatisticsWidget;
+import ro.pub.cs.vmchecker.client.ui.ServerTimeWidget;
 import ro.pub.cs.vmchecker.client.model.User;
 
 import com.google.gwt.core.client.GWT;
@@ -33,12 +34,14 @@ public class AssignmentPresenter implements Presenter {
 	private MenuPresenter menuPresenter = null;
 	private AssignmentBoardPresenter boardPresenter = null;
 	private StatisticsPresenter statsPresenter = null;
+	private ServerTimePresenter serverTimePresenter = null;
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 
 	public interface AssignmentWidget {
 		HasWidgets getMenuPanel();
 		HasWidgets getBoardPanel();
+		HasWidgets getSidePanel();
 		HasClickHandlers getViewStatsButton();
 	}
 
@@ -101,15 +104,18 @@ public class AssignmentPresenter implements Presenter {
 				menuPresenter = new MenuPresenter(eventBus, new NumberedMenu(titles));
 				boardPresenter = new AssignmentBoardPresenter(eventBus, service, courseId, new AssignmentBoardWidget());
 				statsPresenter = new StatisticsPresenter(eventBus, service, courseId, user, result, new StatisticsWidget());
+				serverTimePresenter = new ServerTimePresenter(eventBus, new ServerTimeWidget());
 
 				bindWidget(widget);
+
 				widget.getMenuPanel().clear();
 				menuPresenter.go(widget.getMenuPanel());
 				menuPresenter.getWidget().setSelectedIndex(-1);
-				/* init */
+
 				statsPresenter.go(widget.getBoardPanel());
-				//fireAssignmentSelected(0);
-				/* boardPresenter.assignmentSelected(assignments[0]); */
+
+				serverTimePresenter.go(widget.getSidePanel());
+
 				container.add((Widget)widget);
 				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
 			}
@@ -125,6 +131,12 @@ public class AssignmentPresenter implements Presenter {
 		}
 		if (boardPresenter != null) {
 			boardPresenter.clearEventHandlers();
+		}
+		if (statsPresenter != null) {
+			statsPresenter.clearEventHandlers();
+		}
+		if (serverTimePresenter != null) {
+			serverTimePresenter.clearEventHandlers();
 		}
 	}
 

@@ -1,0 +1,26 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+			 xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+	<ui:style>
+		.container {
+			padding: 10px;
+			border: 3px solid #EEEEEE;
+			margin-left: 20px;
+			margin-bottom: 20px;
+		}
+		.time {
+			margin-left: 5px;
+			font-weight: bold;
+		}
+	</ui:style>
+	<g:VerticalPanel styleName="{style.container}">
+		<g:HorizontalPanel>
+			<g:Label ui:field="serverTimeMsg"></g:Label>
+			<g:Label ui:field="serverTime" styleName="{style.time}"></g:Label>
+		</g:HorizontalPanel>
+		<g:HorizontalPanel>
+			<g:Label ui:field="browserTimeOffsetMsg"></g:Label>
+			<g:Label ui:field="browserTimeOffset" styleName="{style.time}"></g:Label>
+		</g:HorizontalPanel>
+	</g:VerticalPanel>
+</ui:UiBinder>

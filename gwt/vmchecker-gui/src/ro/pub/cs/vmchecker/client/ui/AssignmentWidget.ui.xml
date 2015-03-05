@@ -27,6 +27,8 @@
 			</g:FlowPanel>
 			<g:SimplePanel ui:field="boardPanel" styleName="{style.content}">
 			</g:SimplePanel>
+			<g:VerticalPanel ui:field="sidePanel">
+			</g:VerticalPanel>
 		</g:HorizontalPanel>
 	</g:SimplePanel>
 </ui:UiBinder>
