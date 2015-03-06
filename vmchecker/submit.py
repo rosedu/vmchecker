@@ -225,11 +225,6 @@ def save_submission_in_storer(vmcfg, submission_filename, account, assignment,
             os.unlink(cur_sb)
         os.symlink(new_sb, cur_sb)
 
-    return sbcfg
-
-
-
-
 def create_testing_bundle(vmcfg, account, assignment, course_id):
     """Creates a testing bundle.
 
@@ -404,6 +399,15 @@ def queue_for_testing(vmcfg, assignment, account, course_id):
     finally:
         os.remove(bundle_path)
 
+    try:
+        subm.write_grade(assignment, account, submissions.STATUS_QUEUED + "\n")
+    except Exception as e:
+        logger.error("Failed to write submission status: %s" % (str(e)))
+        raise
+
+    update_db.update_grades(course_id, account, assignment)
+
+
 
 
 def check_submit_is_valid(vmcfg, course_id, assignment, account,
@@ -481,6 +485,7 @@ def submit(submission_filename, assignment, account, course_id, user = None,
     Checks whether submissions are active for this course.
     """
     vmcfg = config.StorerCourseConfig(CourseList().course_config(course_id))
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     if forced_upload_time != None:
         skip_toosoon_check = True
@@ -495,28 +500,15 @@ def submit(submission_filename, assignment, account, course_id, user = None,
         max_submission_size = vmcfg.assignments().max_submission_size(assignment)
         check_archive_size(submission_filename, max_submission_size)
 
-    sbcfg = save_submission_in_storer(vmcfg, submission_filename, account, assignment,
+    save_submission_in_storer(vmcfg, submission_filename, account, assignment,
                               course_id, upload_time_str, user = user)
 
-    grade_message = None
-    if vmcfg.assignments().submit_only(assignment) or \
-            storage_type.lower() == "large":
-        grade_message = submissions.STATUS_SAVED
-    else:
-        grade_message = submissions.STATUS_QUEUED
-
-    # write the status of the submission
-    conf_vars = dict(sbcfg.items('Storer'))
-
     try:
-        # create dir
-        os.makedirs(conf_vars['resultsdest'])
-
         # create a dummy results grade.vmr
-        with open(os.path.join(conf_vars['resultsdest'], 'grade.vmr'), 'wt') as f:
-            f.write(grade_message + "\n")
+        submissions.Submissions(vmpaths).write_grade(assignment, account,
+                submissions.STATUS_SAVED + "\n")
     except Exception as e:
-        logger.error("Failed to save assignment: %s" % (str(e)))
+        logger.error("Failed to write submission status: %s" % (str(e)))
         raise
 
     update_db.update_grades(course_id, account, assignment)
