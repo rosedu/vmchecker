@@ -38,8 +38,10 @@ public class NumberedMenu extends Composite
 			panel.add(item);
 			items.add(item); 
 		}
-		/* initialize */
-		setSelectedIndex(0); 
+		if (itemsText.length > 0) {
+			/* initialize */
+			setSelectedIndex(0);
+		}
 	}
 
 	@Override
