@@ -9,11 +9,12 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.PopupPanel;
-import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.dom.client.Document;
@@ -35,7 +36,7 @@ public class VmcheckerPopup extends PopupPanel {
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 	private FlowPanel detailsPopupContainer = new FlowPanel();
-	private ScrollPanel detailsPopupContent = new ScrollPanel();
+	private FocusPanel detailsPopupContent = new FocusPanel();
 	private Anchor popupCloseButton = new Anchor();
 
 	public VmcheckerPopup() {
@@ -64,6 +65,14 @@ public class VmcheckerPopup extends PopupPanel {
 			}
 		});
 
+		detailsPopupContent.addBlurHandler(new BlurHandler() {
+			@Override
+			public void onBlur(BlurEvent event) {
+				if (isShowing()) {
+					detailsPopupContent.setFocus(true);
+				}
+			}
+		});
 	}
 
 	public void showContent(String htmlContent) {
@@ -72,6 +81,7 @@ public class VmcheckerPopup extends PopupPanel {
 		center();
 		show();
 		Document.get().getBody().getStyle().setOverflow(Style.Overflow.HIDDEN);
+		detailsPopupContent.setFocus(true);
 	}
 
 	@Override
@@ -86,57 +96,6 @@ public class VmcheckerPopup extends PopupPanel {
 				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
 					hide();
 				}
-				// XXX: It seems that on Chrome or Safari focusing the scrollpanel doesn't work.
-				// There's probably a better way to do this, but for now, it'll do.
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_DOWN) {
-					int scrollIncrement = (detailsPopupContent.getMaximumVerticalScrollPosition() - 
-						detailsPopupContent.getMinimumVerticalScrollPosition()) / 200;
-					if (detailsPopupContent.getVerticalScrollPosition() <
-							detailsPopupContent.getMaximumVerticalScrollPosition()) {
-						detailsPopupContent.setVerticalScrollPosition(
-							detailsPopupContent.getVerticalScrollPosition() + scrollIncrement);
-					}
-				}
-
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_UP) {
-					int scrollIncrement = (detailsPopupContent.getMaximumVerticalScrollPosition() - 
-						detailsPopupContent.getMinimumVerticalScrollPosition()) / 200;
-					if (detailsPopupContent.getVerticalScrollPosition() >
-							detailsPopupContent.getMinimumVerticalScrollPosition()) {
-						detailsPopupContent.setVerticalScrollPosition(
-							detailsPopupContent.getVerticalScrollPosition() - scrollIncrement);
-					}
-				}
-
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_PAGEDOWN) {
-					int scrollIncrement = (detailsPopupContent.getMaximumVerticalScrollPosition() - 
-						detailsPopupContent.getMinimumVerticalScrollPosition()) / 20;
-					if (detailsPopupContent.getVerticalScrollPosition() <
-							detailsPopupContent.getMaximumVerticalScrollPosition()) {
-						detailsPopupContent.setVerticalScrollPosition(
-							detailsPopupContent.getVerticalScrollPosition() + scrollIncrement);
-					}
-				}
-
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_PAGEUP) {
-					int scrollIncrement = (detailsPopupContent.getMaximumVerticalScrollPosition() - 
-						detailsPopupContent.getMinimumVerticalScrollPosition()) / 20;
-					if (detailsPopupContent.getVerticalScrollPosition() >
-							detailsPopupContent.getMinimumVerticalScrollPosition()) {
-						detailsPopupContent.setVerticalScrollPosition(
-							detailsPopupContent.getVerticalScrollPosition() - scrollIncrement);
-					}
-				}
-
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_END) {
-					detailsPopupContent.scrollToBottom();
-				}
-
-				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_HOME) {
-					detailsPopupContent.scrollToTop();
-				}
-
-				event.cancel();
 				break;
 		}
 	}

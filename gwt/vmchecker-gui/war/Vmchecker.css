@@ -113,9 +113,11 @@ a.fillButton:hover {
 	margin-top: 10px;
 	padding-top: 10px;
 	border-top: 1px solid #CCCCCC;
-	overflow-x: scroll;
+	overflow-y: auto;
+	overflow-x: hidden;
 	overflow-wrap: break-word;
 	word-wrap: break-word;
+	outline: 0;
 }		
 
 .check_error {
