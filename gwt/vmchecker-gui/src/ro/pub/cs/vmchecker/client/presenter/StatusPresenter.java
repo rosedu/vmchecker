@@ -17,7 +17,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasChangeHandlers;
 import com.google.gwt.event.dom.client.HasClickHandlers;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasText;
@@ -27,7 +27,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.core.client.GWT;
 public class StatusPresenter implements Presenter {
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service; 
 	private StatusWidget widget; 
 	private HasWidgets container; 
@@ -44,7 +44,7 @@ public class StatusPresenter implements Presenter {
 		void setStatusType(StatusChangedEvent.StatusType type);
 	}
 	
-	public StatusPresenter(HandlerManager eventBus, HTTPService service, StatusWidget widget) {
+	public StatusPresenter(EventBus eventBus, HTTPService service, StatusWidget widget) {
 		this.eventBus = eventBus; 
 		this.service = service; 
 		this.widget = widget; 

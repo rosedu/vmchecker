@@ -3,14 +3,14 @@ package ro.pub.cs.vmchecker.client;
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 
 public class ExceptionHandler {
 
 	private static ExceptionHandler exceptionHandlerSingleton;
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 
@@ -23,7 +23,7 @@ public class ExceptionHandler {
 		return exceptionHandlerSingleton;
 	}
 
-	public void setEventBus(HandlerManager eventBus) {
+	public void setEventBus(EventBus eventBus) {
 		this.eventBus = eventBus;
 	}
 

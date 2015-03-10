@@ -18,13 +18,13 @@ UploadActiveUntil = 2019.12.30 23:59:00
 # If set to 'no', a student will only be able to see his
 # own grades.
 # Default value is 'yes'.
-# StudentsCanViewAllResults = no
+# PublicResults = no
 
 # Teachers and assistants should be able to see all grades.
 # All such users should have their account names put here.
 # NOTE: This only makes sense if StudentsCanViewAllResults is set to 'no'.
 # Example:
-# ViewAllResultsUserList = john.done mary_jane
+# AdminList = john.done mary_jane
 
 
 # information about the machine used to store homework submissions,
@@ -233,6 +233,14 @@ Timeout = 120
 #    have. Example: 10MB, 23k
 #
 #    Default: 10MB
+#
+# Hidden
+#
+#    Optional parameter
+#
+#    Specify if this assignment should be hidden to non-admin users.
+#
+#    Default: no
 #
 # # These are only for Large assignments
 # AssignmentStorage = Large               # this is a MD5Submission.

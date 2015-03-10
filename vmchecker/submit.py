@@ -57,27 +57,31 @@ class SubmittedTooLateError(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
-def submission_config(account, assignment, course_id, upload_time,
+class SubmittedHiddenAssignmentError(Exception):
+    """Raised when a user sends a submission to a hidden assignment and
+       he is not an admin.
+    """
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
+def submission_config(vmcfg, account, assignment, course_id, upload_time,
                       storer_result_dir, storer_username, storer_hostname, user = None):
     """Creates a configuration file describing the current submission:
        - which account uploaded it
        - which team member submitted it (in case of teams)
        - which assignment does it solve
        - which course was it for
-       - when was it uploaded
-
-       Also, XXX, should be removed:
-       - where to store results
-       - with which user to connect to the machine storring the results
-       - which is the machine storring the results
-
-       The last part should not be part of the submission config, but
-       should be generated automatically when the submission is sent
-       for testing.
+       - when it was uploaded
+       In addition, add the sections of the course configuration relevant
+       for the evaluation:
+       - where to copy back the results
+       - the remainder of the assignment configuration
+       - the VM configuration
+       The tester ID and tester configuration are added at the time of submission.
     """
-    # Get the assignment submission type (zip archive vs. md5 sum)
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
-    storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
+    machine_id = vmcfg.assignments().get_machine_id(assignment)
 
     sbcfg = ConfigParser.RawConfigParser()
     sbcfg.add_section('Assignment')
@@ -87,12 +91,23 @@ def submission_config(account, assignment, course_id, upload_time,
     sbcfg.set('Assignment', 'Assignment', assignment)
     sbcfg.set('Assignment', 'UploadTime', upload_time)
     sbcfg.set('Assignment', 'CourseID', course_id)
-    sbcfg.set('Assignment', 'Storage', storage_type.lower())
 
-    # XXX these should go to `callback'
-    sbcfg.set('Assignment', 'ResultsDest', storer_result_dir)
-    sbcfg.set('Assignment', 'RemoteUsername', storer_username)
-    sbcfg.set('Assignment', 'RemoteHostname', storer_hostname)
+	# Add the remainder of the Assignment config
+    assignment_section = vmcfg.assignments().items(assignment)
+    for options in assignment_section:
+        sbcfg.set('Assignment', options[0], options[1])
+
+    sbcfg.add_section('Storer')
+    sbcfg.set('Storer', 'ResultsDest', storer_result_dir)
+    sbcfg.set('Storer', 'RemoteUsername', storer_username)
+    sbcfg.set('Storer', 'RemoteHostname', storer_hostname)
+
+    # Add the VM config
+    sbcfg.add_section('Machine')
+    machine_section = vmcfg.config.items(machine_id)
+    for options in machine_section:
+        sbcfg.set('Machine', options[0], options[1])
+
     return sbcfg
 
 
@@ -144,7 +159,7 @@ def submission_backup(back_dir, submission_filename, sbcfg):
     with open(back_cfg, 'w') as handle:
         sbcfg.write(handle)
 
-    if sbcfg.get('Assignment', 'Storage').lower() == "large":
+    if sbcfg.get('Assignment', 'AssignmentStorage').lower() == "large":
         shutil.copyfile(submission_filename, back_md5)
     else:
         # copy the (unmodified) archive. This should be the first thing we
@@ -170,7 +185,7 @@ def submission_git_commit(dest, user, assignment):
 
 
 
-def save_submission_in_storer(submission_filename, account, assignment,
+def save_submission_in_storer(vmcfg, submission_filename, account, assignment,
                               course_id, upload_time, user = None):
     """ Save the submission on the storer machine:
 
@@ -181,7 +196,6 @@ def save_submission_in_storer(submission_filename, account, assignment,
         - copy the archive near the data committed in the repo to be
           easily accessible.
     """
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
 
     dir_name = 'sb_' + str(upload_time) + '_rnd' + str(random.randint(0, 1000))
@@ -191,7 +205,7 @@ def save_submission_in_storer(submission_filename, account, assignment,
     cur_sb = vmpaths.dir_cur_submission_root(assignment, account)
     new_sb = vmpaths.dir_new_submission_root(assignment, account, dir_name)
 
-    sbcfg = submission_config(account, assignment, course_id, upload_time,
+    sbcfg = submission_config(vmcfg, account, assignment, course_id, upload_time,
                               paths.dir_submission_results(new_sb),
                               vmcfg.storer_username(),
                               vmcfg.storer_hostname(),
@@ -216,7 +230,7 @@ def save_submission_in_storer(submission_filename, account, assignment,
 
 
 
-def create_testing_bundle(account, assignment, course_id):
+def create_testing_bundle(vmcfg, account, assignment, course_id):
     """Creates a testing bundle.
 
     This function creates a zip archive (the bundle) with everything
@@ -224,13 +238,11 @@ def create_testing_bundle(account, assignment, course_id):
 
     The bundle contains:
         submission-config - submission config (eg. name, time of submission etc)
-        course-config     - the whole configuration of the course
         archive.zip - a zip containing the sources
         tests.zip   - a zip containing the tests
         ???         - assignment's extra files (see Assignments.include())
 
     """
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_cur_submission_root(assignment, account)
 
@@ -241,7 +253,6 @@ def create_testing_bundle(account, assignment, course_id):
     rel_file_list = [ ('run.sh',   machinecfg.guest_run_script()),
                       ('build.sh', machinecfg.guest_build_script()),
                       ('tests.zip', vmcfg.assignments().tests_path(vmpaths, assignment)),
-                      ('course-config', vmpaths.config_file()),
                       ('submission-config', paths.submission_config_file(sbroot)) ]
 
     # Get the assignment submission type (zip archive vs. MD5 Sum).
@@ -319,7 +330,7 @@ def get_least_busy_tester(vmcfg, testers):
     return least_busy_tester
 
 
-def ssh_bundle(bundle_path, vmcfg, tester):
+def ssh_bundle(vmcfg, bundle_path, tester):
     """Sends a bundle over ssh to the tester machine"""
     tstcfg = vmcfg.testers()
     tester_username  = tstcfg.login_username(tester)
@@ -347,7 +358,7 @@ def ssh_bundle(bundle_path, vmcfg, tester):
 
 
 
-def submitted_too_soon(assignment, account, vmcfg, check_eval_queueing_time):
+def submitted_too_soon(vmcfg, assignment, account, check_eval_queueing_time):
     """Check if the user submitted this assignment very soon after
     another submission.
 
@@ -375,31 +386,33 @@ def submitted_too_soon(assignment, account, vmcfg, check_eval_queueing_time):
 
 
 
-def queue_for_testing(assignment, account, course_id):
+def queue_for_testing(vmcfg, assignment, account, course_id):
     """Queue for testing the last submittion for the given assignment,
     course and account on the least busy tester machine."""
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     # Find the least busy tester, write this to the submission-config, and submit
     machine = config.VirtualMachineConfig(vmcfg, vmcfg.assignments().get_machine_id(assignment))
     testers = machine.get_tester_ids()
     tester = get_least_busy_tester(vmcfg, testers)
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    # Add the Tester config
     subm = submissions.Submissions(vmpaths)
-    subm.set_tester(assignment, account, tester)
+    subm.add_tester_config(assignment, account, tester, vmcfg.testers().items(tester))
     # Create submission bundle
-    bundle_path = create_testing_bundle(account, assignment, course_id)
+    bundle_path = create_testing_bundle(vmcfg, account, assignment, course_id)
     try:
-        ssh_bundle(bundle_path, vmcfg, tester)
+        ssh_bundle(vmcfg, bundle_path, tester)
     finally:
         os.remove(bundle_path)
 
 
 
-def check_valid_time(course_id, assignment, account,
+def check_submit_is_valid(vmcfg, course_id, assignment, account,
                      upload_time_str, skip_toosoon_check, check_eval_queueing_time):
     """Check whether students are uploading/evaluating homework at a
     propper time and that they aren't pushing the 'Submit' button too
-    fast hogging the server.
+    fast hogging the server. Also check that students can submit
+    for this assignment (i.e., students shouldn't be able to
+    submit for hidden assignments).
 
 
     If skip_toosoon_check is True, it will not check whether there
@@ -411,7 +424,6 @@ def check_valid_time(course_id, assignment, account,
     # check if upload is active at this time (restrict students from
     # submitting homework to a given interval).
 
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
     upload_time = time.strptime(upload_time_str, config.DATE_FORMAT)
     (active_start, active_stop) = vmcfg.upload_active_interval()
 
@@ -439,12 +451,17 @@ def check_valid_time(course_id, assignment, account,
         return
 
     # checks time difference between now and the last upload time
-    if submitted_too_soon(assignment, account, vmcfg, check_eval_queueing_time):
+    if submitted_too_soon(vmcfg, assignment, account, check_eval_queueing_time):
         min_time_between_subm = str(vmcfg.assignments().timedelta(assignment))
         raise SubmittedTooSoonError(('You are submitting too fast.' +
                                     'Please allow %s between submissions') %
                                     min_time_between_subm)
 
+    # check if the assignment is hidden and the user is an admin
+    if vmcfg.assignments().is_hidden(assignment) and \
+            not account in vmcfg.admin_list():
+        raise SubmittedHiddenAssignmentError('You are not allowed to submit ' +
+            ' to this assignment.')
 
 def submit(submission_filename, assignment, account, course_id, user = None,
            skip_toosoon_check = False, forced_upload_time = None):
@@ -461,7 +478,7 @@ def submit(submission_filename, assignment, account, course_id, user = None,
 
     Checks whether submissions are active for this course.
     """
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
+    vmcfg = config.StorerCourseConfig(CourseList().course_config(course_id))
 
     if forced_upload_time != None:
         skip_toosoon_check = True
@@ -469,14 +486,14 @@ def submit(submission_filename, assignment, account, course_id, user = None,
     else:
         upload_time_str = time.strftime(config.DATE_FORMAT)
 
-    check_valid_time(course_id, assignment, account,
+    check_submit_is_valid(vmcfg, course_id, assignment, account,
                      upload_time_str, skip_toosoon_check, False)
     storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
     if storage_type.lower() != "large":
         max_submission_size = vmcfg.assignments().max_submission_size(assignment)
         check_archive_size(submission_filename, max_submission_size)
 
-    sbcfg = save_submission_in_storer(submission_filename, account, assignment,
+    sbcfg = save_submission_in_storer(vmcfg, submission_filename, account, assignment,
                               course_id, upload_time_str, user = user)
 
     grade_message = None
@@ -487,7 +504,7 @@ def submit(submission_filename, assignment, account, course_id, user = None,
         grade_message = submissions.STATUS_QUEUED
 
     # write the status of the submission
-    conf_vars = dict(sbcfg.items('Assignment'))
+    conf_vars = dict(sbcfg.items('Storer'))
 
     try:
         # create dir
@@ -506,13 +523,13 @@ def submit(submission_filename, assignment, account, course_id, user = None,
             storage_type.lower() == "large":
         return
 
-    queue_for_testing(assignment, account, course_id)
+    queue_for_testing(vmcfg, assignment, account, course_id)
 
 
 def evaluate_large_submission(archive_fname, assignment, account, course_id):
     """Queue for testing a large submission"""
 
-    vmcfg = config.CourseConfig(CourseList().course_config(course_id))
+    vmcfg = config.StorerCourseConfig(CourseList().course_config(course_id))
     storage_type = vmcfg.assignments().getd(assignment, "AssignmentStorage", "")
     if storage_type.lower() != "large":
         raise Exception("Called evaluate_large_submission for a %s submission" %
@@ -530,7 +547,7 @@ def evaluate_large_submission(archive_fname, assignment, account, course_id):
         # haven't been queued for testing before.
         skip_toosoon_check = True
 
-    check_valid_time(course_id, assignment, account,
+    check_submit_is_valid(vmcfg, course_id, assignment, account,
                      upload_time_str, skip_toosoon_check, True)
 
     if os.path.exists(results_dir):
@@ -540,5 +557,5 @@ def evaluate_large_submission(archive_fname, assignment, account, course_id):
     # the submission config
     subm.set_eval_parameters(assignment, account, archive_fname, upload_time_str)
 
-    queue_for_testing(assignment, account, course_id)
+    queue_for_testing(vmcfg, assignment, account, course_id)
 

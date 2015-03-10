@@ -16,7 +16,7 @@ from cgi import escape
 from vmchecker import paths, update_db, penalty, submissions, submit, coursedb
 from vmchecker.coursedb import opening_course_db
 from vmchecker.courselist import CourseList
-from vmchecker.config import LdapConfig, CourseConfig
+from vmchecker.config import LdapConfig, StorerCourseConfig
 
 try:
     import simplejson as json
@@ -101,7 +101,7 @@ def get_user_from_auth_files(username, password):
     """Search all courseses for auth_files and if we can login in any
     course, return the login from there"""
     for coursecfg_fname in CourseList().course_configs():
-        vmpaths = paths.VmcheckerPaths(CourseConfig(coursecfg_fname).root_path())
+        vmpaths = paths.VmcheckerPaths(StorerCourseConfig(coursecfg_fname).root_path())
         r = get_user_from_auth_file(vmpaths, username, password)
         if not r is None:
             return r
@@ -201,12 +201,11 @@ def _find_file(searched_file_name, rfiles):
 
 
 
-def submission_upload_info(courseId, assignment, account, isTeamAccount, isGraded):
+def submission_upload_info(vmcfg, courseId, assignment, account, isTeamAccount, isGraded):
     """Return a string explaining the submission upload time, deadline
     and the late submission penalty
     """
 
-    vmcfg = CourseConfig(CourseList().course_config(courseId))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     sbroot = vmpaths.dir_cur_submission_root(assignment, account)
     grade_file = paths.submission_results_grade(sbroot)
@@ -228,7 +227,9 @@ def submission_upload_info(courseId, assignment, account, isTeamAccount, isGrade
 
     submitter_explanation = None
     if isTeamAccount:
-        submitter_explanation = _("Submitted by") + ": " + sss.get_submitting_user(assignment, account)
+        submitting_user = sss.get_submitting_user(assignment, account)
+        if submitting_user is not None:
+            submitter_explanation = _("Submitted by") + ": " + submitting_user
 
     max_line_width = 0
     rows_to_print = []
@@ -314,11 +315,10 @@ def sortResultFiles(rfiles):
     return ret
 
 
-def get_test_queue_contents(courseId):
+def get_test_queue_contents(vmcfg, courseId):
     """Get the contents of the test queues for all testers configured
     in the system."""
     try:
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
         tstcfg = vmcfg.testers()
         queue_contents = {} # dict of strings
         for tester_id in tstcfg:
@@ -339,11 +339,12 @@ def get_storagedir_contents(courseId, assignmentId, account):
     MD5Submission-type homework"""
     client = paramiko.SSHClient()
     try:
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.storage_basepath(assignmentId, account)
+        storage_basepath = assignments.storage_basepath( \
+            assignments.get(assignmentId, 'AssignmentStorageBasepath') , account)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -388,11 +389,12 @@ def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
 
     client = paramiko.SSHClient()
     try:
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
         assignments = vmcfg.assignments()
         storage_hostname = assignments.get(assignmentId, 'AssignmentStorageHost')
         storage_username = assignments.get(assignmentId, 'AssignmentStorageQueryUser')
-        storage_basepath = assignments.storage_basepath(assignmentId, account)
+        storage_basepath = assignments.storage_basepath( \
+            assignments.get(assignmentId, 'AssignmentStorageBasepath'), account)
 
         client.load_system_host_keys(vmcfg.known_hosts_file())
         client.connect(storage_hostname,
@@ -440,7 +442,7 @@ def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
 def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
     """Get the current MD5 sum submitted for a given username on a given assignment"""
     try:
-        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
+        vmcfg = config.StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
@@ -475,7 +477,7 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
 
 def getAssignmentAccountName(courseId, assignmentId, username, strout):
     try:
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
@@ -483,19 +485,8 @@ def getAssignmentAccountName(courseId, assignmentId, username, strout):
                            'errorTrace' : strout.get()})
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
-    with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
-        # First check if the user is part of a team for this assignment
-        user_team = course_db.get_user_team_for_assignment(assignmentId, username)
-        if user_team == None:
-            # No team, so just use the user's own account
-            return (False, username)
-        else:
-            # Check if this team has a mutual account
-            mutual_account = course_db.get_team_has_mutual_account(user_team)
-            if mutual_account:
-                return (True, user_team)
-            else:
-                return (False, username)
+    with opening_course_db(vmpaths.db_file()) as course_db:
+        return course_db.get_assignment_account(assignmentId, username)
 
 def getResultsHelper(courseId, assignmentId, currentUser, strout, username = None, teamname = None, currentTeam = None):
     # assume that the session was already checked
@@ -507,7 +498,7 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
 
 
     try:
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
@@ -518,8 +509,8 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
     # TODO: This should be implemented neater using some group
     # and permission model.
 
-    is_authorized = vmcfg.students_can_view_all_results() or \
-                    currentUser in vmcfg.view_all_results_user_list() or \
+    is_authorized = vmcfg.public_results() or \
+                    currentUser in vmcfg.admin_list() or \
                     username == currentUser or \
                     teamname == currentTeam
 
@@ -582,10 +573,10 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
             except:
                 msg += "Knock knock. Who's there? [Silence] </blockquote>"
             result_files = [ {'fortune.vmr' :  msg } ]
-            result_files.append({'queue-contents.vmr' :  get_test_queue_contents(courseId) })
+            result_files.append({'queue-contents.vmr' :  get_test_queue_contents(vmcfg, courseId) })
         if 'submission.vmr' not in ignored_vmrs:
             result_files.append({'submission.vmr' :
-                                 submission_upload_info(courseId, assignmentId, account, isTeamAccount, isGraded)})
+                                 submission_upload_info(vmcfg, courseId, assignmentId, account, isTeamAccount, isGraded)})
         result_files = sortResultFiles(result_files)
         return json.dumps(result_files)
     except:
@@ -598,7 +589,7 @@ def getAllGradesHelper(courseId, username, strout):
     try:
         # XXX: DON'T DO THIS: performance degrades very much!
         #update_db.update_grades(courseId)
-        vmcfg = CourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
         vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
         assignments = vmcfg.assignments()
         sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
@@ -609,12 +600,12 @@ def getAllGradesHelper(courseId, username, strout):
         # and permission model.
 
         user_can_view_all = False
-        if vmcfg.students_can_view_all_results() or username in vmcfg.view_all_results_user_list():
+        if vmcfg.public_results() or username in vmcfg.admin_list():
             user_can_view_all = True
 
         user_grade_rows = None
         team_grade_rows = None
-        with opening_course_db(vmpaths.db_file(), isolation_level="EXCLUSIVE") as course_db:
+        with opening_course_db(vmpaths.db_file()) as course_db:
             if user_can_view_all:
                 user_grade_rows = course_db.get_user_grades()
                 team_grade_rows = course_db.get_team_grades()
@@ -635,6 +626,9 @@ def getAllGradesHelper(courseId, username, strout):
                 deadtime = time.mktime(deadline)
                 if time.time() < deadtime:
                     continue
+            if vmcfg.assignments().is_hidden(assignment) and username not in vmcfg.admin_list():
+                continue
+
             grades.setdefault(user, {})[assignment] = grade
 
         for user in sorted(grades.keys()):

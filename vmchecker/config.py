@@ -20,10 +20,6 @@ DEFAULT_LDAP_CONFIG = '/etc/vmchecker/ldap.config'
 DEFAULT_ACL_CONFIG = '/etc/vmchecker/acl.config'
 
 class CourseConfig(Config):
-    def repository_path(self):
-        """Get the submission (git) repository path for this course."""
-        return self.get('vmchecker', 'repository')
-
     def sections(self):
         """Give access to the underlining config's sections"""
         # XXX: LAG: I think this is a sign that we should have derived the
@@ -34,17 +30,18 @@ class CourseConfig(Config):
         """Get the root path for this course"""
         return self.get('vmchecker', 'root')
 
-    def root_path_queue_manager(self):
-        """Get the root path for the queue for this course (if any)"""
-        return self.get('vmchecker', 'root_queue', self.root_path())
+class StorerCourseConfig(CourseConfig):
+    def repository_path(self):
+        """Get the submission (git) repository path for this course."""
+        return self.get('vmchecker', 'repository')
 
-    def students_can_view_all_results(self):
+    def public_results(self):
         """Get whether a student can view all the other students' results"""
-        return self.get_boolean('vmchecker', 'StudentsCanViewAllResults', 'yes')
+        return self.get_boolean('vmchecker', 'PublicResults', 'yes')
 
-    def view_all_results_user_list(self):
+    def admin_list(self):
         """Get configured list of users that can always view all results."""
-        return self.get_list('vmchecker', 'ViewAllResultsUserList', '')
+        return self.get_list('vmchecker', 'AdminList', '')
 
     def storer_username(self):
         """The username to use when logging in with ssh to the storer machine"""
@@ -89,6 +86,24 @@ class CourseConfig(Config):
         tester machines used."""
         return TestersConfig(self)
 
+class TesterCourseConfig(CourseConfig):
+    def root_path_queue_manager(self):
+        """Get the root path for the queue for this course (if any)"""
+        return self.get('vmchecker', 'rootQueue', self.root_path())
+
+    def vmexecutor_timeout(self):
+        """Get the timeout of the vmexecutor in seconds. This should
+        be defined per tester, since some machines can, potentially,
+        take more time to run than others."""
+        return self.get_int('vmchecker', 'ExecutorTimeout', 600) # Default to 10 minutes
+
+    def num_workers(self):
+        """Get the number of worker threads to be started on the tester."""
+        return self.get_int('vmchecker', 'NumWorkers', 1)
+
+    def duplicated_vms(self):
+        """Get a list of duplicated vms on this tester."""
+        return self.get_list('vmchecker', 'DuplicatedVMs', [])
 
 
 class LdapConfig(Config):
@@ -135,28 +150,12 @@ class AclConfig(Config):
 
 
 
-class AssignmentsConfig(ConfigWithDefaults):
-    """Obtain information about assignments from a config file.
-
-        [assignment DEFAULT]
-        somevar = somveval
-
-        [assignment as1]
-        somevar = somveval
-
-        [assignment as2]
-        somevar = somveval
-    """
-
-    def __init__(self, config):
-        ConfigWithDefaults.__init__(self, config, 'assignment ')
-
+class AssignmentConfig(Config):
 
     def lock(self, vmpaths, assignment):
         """Returns a lock over assignment"""
         self._check_valid(assignment)
         return dirlocking.DirLock(vmpaths.dir_assignment(assignment))
-
 
     def course(self, assignment):
         """Returns a string representing course name of assignment"""
@@ -244,7 +243,15 @@ class AssignmentsConfig(ConfigWithDefaults):
         """How much time (in seconds) to wait for vmware tools to load."""
         return self.get_int(assignment, 'WaitForVmwareToolsTimeout', '0')
 
-    def storage_basepath(self, assignment, username):
+    def storage_type(self, assignment):
+        """Currently there are two types of storage: 'normal' and 'large'.
+        The difference is that with 'normal' assignments, the VM itself is
+        the same for all the users. With 'large' submissions, each user
+        submits his own VM image."""
+        return self.get(assignment, "AssignmentStorage", "normal")
+
+    @staticmethod
+    def storage_basepath(basepath, username):
         """When using an external storage server (for Large assignments).
            the basepath can be particularized depending on its configuration.
            Because of this there can be special expressions inserted in the path
@@ -258,7 +265,6 @@ class AssignmentsConfig(ConfigWithDefaults):
                 would translate to:
                 /home/j/files
         """
-        basepath = self.get(assignment, 'AssignmentStorageBasepath')
         try:
             result = basepath.format(username = username)
         except:
@@ -276,22 +282,28 @@ class AssignmentsConfig(ConfigWithDefaults):
         """Return a config object describing the VM to run this assignment on."""
         return self.get(assignment, 'Machine')
 
-class TestersConfig(ConfigWithDefaults):
+    def is_hidden(self, assignment):
+        """Return whether this assignment is visible to the students."""
+        return self.get_boolean(assignment, 'Hidden', 'no')
+
+class AssignmentsConfig(ConfigWithDefaults, AssignmentConfig):
     """Obtain information about assignments from a config file.
 
-        [tester DEFAULT]
+        [assignment DEFAULT]
         somevar = somveval
 
-        [tester as1]
+        [assignment as1]
         somevar = somveval
 
-        [tester as2]
+        [assignment as2]
         somevar = somveval
     """
 
     def __init__(self, config):
-        ConfigWithDefaults.__init__(self, config, 'tester ')
+        ConfigWithDefaults.__init__(self, config, 'assignment ')
 
+
+class TesterConfig(Config):
 
     def login_username(self, tester):
         """The username to use when logging in with ssh to the tester machine"""
@@ -310,6 +322,22 @@ class TestersConfig(ConfigWithDefaults):
     def vm_store_path(self, tester):
         """The path on tester machine where the vms are stored"""
         return self.get(tester, 'vmstorepath')
+
+class TestersConfig(ConfigWithDefaults, TesterConfig):
+    """Obtain information about assignments from a config file.
+
+        [tester DEFAULT]
+        somevar = somveval
+
+        [tester as1]
+        somevar = somveval
+
+        [tester as2]
+        somevar = somveval
+    """
+
+    def __init__(self, config):
+        ConfigWithDefaults.__init__(self, config, 'tester ')
 
 
 

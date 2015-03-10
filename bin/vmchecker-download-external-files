@@ -13,43 +13,31 @@ import os
 import sys
 import socket
 import paramiko
-import ConfigParser
 
 
 from vmchecker import ziputil
-from vmchecker.config import CourseConfig
+from vmchecker.config import Config, AssignmentConfig
 
 
 
 def get_submission_config(bundle_dir):
     """Return the content of the submission config from the bundle"""
-    submission_config = ConfigParser.RawConfigParser()
     submission_config_file = os.path.join(bundle_dir, 'submission-config')
-    with open(submission_config_file) as handle:
-        submission_config.readfp(handle)
-    return submission_config
+    return Config(submission_config_file)
 
 
-def get_assignment_id(bundle_dir):
-    """Reads the assignment identifier from the config file of the
-    submission from bundle_dir"""
-    config = get_submission_config(bundle_dir)
-    assignment = config.get('Assignment', 'Assignment')
-    return assignment
-
-
-def get_external_archive_zip(bundle_dir, asscfg, assignment):
+def get_external_archive_zip(bundle_dir, sb_cfg):
     """Bring an archive.zip from an external location"""
 
-    if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
+    if sb_cfg.get('Assignment', 'assignmentstorage', '').lower() != 'large':
         return
 
-    submission_config = get_submission_config(bundle_dir)
-
-    ssh_port = asscfg.get(assignment, 'assignmentstorageport')
-    ssh_host = asscfg.get(assignment, 'assignmentstoragehost')
-    ssh_user = asscfg.get(assignment, 'AssignmentStorageQueryUser')
-    ssh_path = asscfg.storage_basepath(assignment, submission_config.get('Assignment', 'user'))
+    ssh_port = sb_cfg.get('Assignment', 'assignmentstorageport')
+    ssh_host = sb_cfg.get('Assignment', 'assignmentstoragehost')
+    ssh_user = sb_cfg.get('Assignment', 'AssignmentStorageQueryUser')
+    basepath = sb_cfg.get('Assignment', 'AssignmentStorageBasepath')
+    account = sb_cfg.get('Assignment', 'user')
+    ssh_path = AssignmentConfig.storage_basepath(basepath, account)
     # Initiate SCP session to retrieve archive.zip from the storage
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,8 +52,8 @@ def get_external_archive_zip(bundle_dir, asscfg, assignment):
         sftp = paramiko.SFTPClient.from_transport(transp)
 
         external_path = ssh_path + \
-            "/" + submission_config.get('Assignment', 'user') + \
-            "/" + submission_config.get('Assignment', 'archivefilename')
+            "/" + sb_cfg.get('Assignment', 'user') + \
+            "/" + sb_cfg.get('Assignment', 'archivefilename')
 
         # download the file from the external machine as 'archive.zip'
         sftp.get(external_path, os.path.join(bundle_dir, "archive.zip"))
@@ -73,11 +61,10 @@ def get_external_archive_zip(bundle_dir, asscfg, assignment):
         transp.close()
 
 
-def expand_archive(bundle_dir, assignment, asscfg):
+def expand_archive(bundle_dir, sb_cfg):
     """If required by the assignment config, expand the archive"""
 
-    unpack = asscfg.getd(assignment, 'UnpackArchive', '').lower()
-    if not (unpack == 'yes' or unpack == 'y' or unpack == 'True'):
+    if not sb_cfg.get_boolean('Assignment', 'UnpackArchive', 'yes'):
         return
 
     unpack_dir = os.path.join(bundle_dir, 'archive')
@@ -101,13 +88,11 @@ def main():
         sys.exit(1)
 
     bundle_dir = sys.argv[1]
-    assignment = get_assignment_id(bundle_dir)
-    vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
-    asscfg  = vmcfg.assignments()
+    sb_cfg = get_submission_config(bundle_dir)
 
-    get_external_archive_zip(bundle_dir, asscfg, assignment)
+    get_external_archive_zip(bundle_dir, sb_cfg)
 
-    expand_archive(bundle_dir, assignment, asscfg)
+    expand_archive(bundle_dir, sb_cfg)
 
 
 if __name__ == "__main__":

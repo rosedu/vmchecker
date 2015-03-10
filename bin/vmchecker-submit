@@ -4,7 +4,9 @@
 
 import optparse
 
-from vmchecker import submit
+from vmchecker import submit, paths, coursedb
+from vmchecker.config import StorerCourseConfig
+from vmchecker.courselist import CourseList
 
 def main():
     """Parse arguments and sends the submission for evaluation"""
@@ -28,8 +30,15 @@ def main():
     account          = argv[2]
     archive_filename = argv[3]
 
+    vmcfg = StorerCourseConfig(CourseList().course_config(course_id))
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    with coursedb.opening_course_db(vmpaths.db_file()) as course_db:
+        (isTeamAccount, user) = course_db.get_assignment_account(assignment, account)
+
     submit.submit(archive_filename, assignment, account, course_id,
-                  options.skip_time_check, options.forced_upload_time)
+                  skip_toosoon_check = options.skip_time_check,
+                  user = user if isTeamAccount else None,
+                  forced_upload_time = options.forced_upload_time)
 
 
 if __name__ == '__main__':

@@ -7,11 +7,11 @@ import optparse
 
 from vmchecker import submit
 from vmchecker import repo_walker
-from vmchecker.config import CourseConfig
+from vmchecker.config import StorerCourseConfig
 from vmchecker.courselist import CourseList
 
 
-def resubmit_wrapper(assignment, account, submission_root, course_id):
+def resubmit_wrapper(vmcfg, assignment, account, submission_root, course_id):
     """Resubmit the account's submission for that assignment.
 
     This is only a wrapper for queue_for_testing.
@@ -21,7 +21,7 @@ def resubmit_wrapper(assignment, account, submission_root, course_id):
     queue_for_testing doesn't take grade_path.
 
     """
-    submit.queue_for_testing(assignment, account, course_id)
+    submit.queue_for_testing(vmcfg, assignment, account, course_id)
 
 
 def main():
@@ -31,7 +31,7 @@ def main():
     (options, _) = cmdline.parse_args()
     repo_walker.check_arguments(cmdline, options)
 
-    vmcfg = CourseConfig(CourseList().course_config(options.course_id))
+    vmcfg = StorerCourseConfig(CourseList().course_config(options.course_id))
     walker = repo_walker.RepoWalker(vmcfg, options.simulate)
     walker.walk(options.account, options.assignment,
                 func=resubmit_wrapper, args=(options.course_id,))

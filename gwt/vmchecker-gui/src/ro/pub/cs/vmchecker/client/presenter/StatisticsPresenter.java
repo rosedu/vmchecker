@@ -13,7 +13,7 @@ import ro.pub.cs.vmchecker.client.service.HTTPService;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.HasWidgets;
@@ -23,15 +23,16 @@ public class StatisticsPresenter implements Presenter {
 	public interface Widget {
 		HTMLTable getTeamTable();
 		HTMLTable getStudentTable();
-		void displayInfo(User user, Assignment[] assignments, ResultInfo[] teamResultInfo, ResultInfo[] studentResultInfo);
+		void displayInfo(User user, Assignment[] assignments,
+			ArrayList<ResultInfo> teamResultInfo, ArrayList<ResultInfo> studentResultInfo);
 		void displayResultDetails(String htmlDetails);
 	}
 
 	private class TableClickHandler implements ClickHandler {
 		final HTMLTable table;
-		final ResultInfo[] resultsInfo;
+		final ArrayList<ResultInfo> resultsInfo;
 
-		public TableClickHandler(HTMLTable table, ResultInfo[] resultsInfo) {
+		public TableClickHandler(HTMLTable table, ArrayList<ResultInfo> resultsInfo) {
 			this.table = table;
 			this.resultsInfo = resultsInfo;
 		}
@@ -41,7 +42,7 @@ public class StatisticsPresenter implements Presenter {
 			HTMLTable.Cell cell = this.table.getCellForEvent(event);
 			if (cell != null) {
 				GWT.log("Click for cell " + cell, null);
-				ResultInfo resultInfo = this.resultsInfo[cell.getRowIndex() - 1];
+				ResultInfo resultInfo = this.resultsInfo.get(cell.getRowIndex() - 1);
 				String assignmentId = assignments[cell.getCellIndex() - 1].id;
 				if (resultInfo.results.containsKey(assignmentId)) {
 					if (resultInfo.owner == ResultInfo.OwnerType.USER) {
@@ -55,7 +56,7 @@ public class StatisticsPresenter implements Presenter {
 	}
 
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service;
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
@@ -65,16 +66,19 @@ public class StatisticsPresenter implements Presenter {
 	private String courseId;
 	private User user;
 	private Assignment[] assignments;
-	private ResultInfo[] teamResultsInfo, studentResultsInfo;
+	private ArrayList<ResultInfo> teamResultsInfo, studentResultsInfo;
 
-	public StatisticsPresenter(HandlerManager eventBus, HTTPService service,
+	public StatisticsPresenter(EventBus eventBus, HTTPService service,
 			String courseId, User user, Assignment[] assignments, StatisticsPresenter.Widget widget) {
 		this.eventBus = eventBus;
 		this.service = service;
 		this.courseId = courseId;
 		this.assignments = assignments;
 		this.user = user;
+		this.teamResultsInfo = new ArrayList<ResultInfo>();
+		this.studentResultsInfo = new ArrayList<ResultInfo>();
 		bindWidget(widget);
+		listenTableEvents();
 	}
 
 	private void listenTableEvents() {
@@ -138,22 +142,17 @@ public class StatisticsPresenter implements Presenter {
 	}
 
 	private void processResults(ResultInfo[] resultsInfo) {
-		ArrayList<ResultInfo> teamResults = new ArrayList<ResultInfo>();
-		ArrayList<ResultInfo> studentResults = new ArrayList<ResultInfo>();
+		studentResultsInfo.clear();
+		teamResultsInfo.clear();
 		for (ResultInfo result : resultsInfo) {
 			if (result.owner == ResultInfo.OwnerType.USER) {
-				studentResults.add(result);
+				studentResultsInfo.add(result);
 			}
 
 			if (result.owner == ResultInfo.OwnerType.TEAM) {
-				teamResults.add(result);
+				teamResultsInfo.add(result);
 			}
 		}
-
-		teamResultsInfo = new ResultInfo[teamResults.size()];
-		teamResultsInfo = teamResults.toArray(teamResultsInfo);
-		studentResultsInfo = new ResultInfo[studentResults.size()];
-		studentResultsInfo = studentResults.toArray(studentResultsInfo);
 	}
 
 	@Override
@@ -172,7 +171,6 @@ public class StatisticsPresenter implements Presenter {
 			public void onSuccess(ResultInfo[] result) {
 				container.clear();
 				processResults(result);
-				listenTableEvents();
 				widget.displayInfo(user, assignments, teamResultsInfo, studentResultsInfo);
 				container.add((com.google.gwt.user.client.ui.Widget) widget);
 				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));

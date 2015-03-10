@@ -3,8 +3,9 @@ package ro.pub.cs.vmchecker.client.service;
 import java.util.HashMap;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.http.client.Request;
 
 import ro.pub.cs.vmchecker.client.model.Assignment;
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
@@ -39,6 +40,9 @@ public class HTTPService {
 	public static String UPLOAD_MD5_URL = VMCHECKER_SERVICES_URL + "uploadAssignmentMd5";
 	public static String BEGIN_EVALUATION_URL = VMCHECKER_SERVICES_URL + "beginEvaluation";
 
+	private EventBus eventBus;
+	private HashMap<String, Request> ongoingRequests = new HashMap<String, Request>();
+
 	/**
 	 * Computes the base URL for services by erasing the last level
 	 * of directories from the URL and add the SERVICES_SUFFIX to it
@@ -53,20 +57,18 @@ public class HTTPService {
 		return uiURL.substring(0, uiURL.substring(0, uiURL.lastIndexOf('/')).lastIndexOf('/') + 1) + SERVICES_SUFFIX + '/';
 	}
 
-	private HandlerManager eventBus;
-
-	public HTTPService(HandlerManager eventBus) {
+	public HTTPService(EventBus eventBus) {
 		this.eventBus = eventBus;
 	}
 
 	public void getCourses(final AsyncCallback<Course[]> callback) {
-		Delegate<Course[]> delegate = new Delegate<Course[]>(eventBus, GET_COURSES_URL, true, false);
+		Delegate<Course[]> delegate = new Delegate<Course[]>(eventBus, GET_COURSES_URL, true, false, ongoingRequests);
 		delegate.sendRequest(callback, new CoursesListDecoder(), null);
 	}
 
 	public void getAssignments(String courseId, final AsyncCallback<Assignment[]> callback) {
 		Delegate<Assignment[]> delegate =
-			new Delegate<Assignment[]>(eventBus, GET_ASSIGNMENTS_URL, true, false);
+			new Delegate<Assignment[]>(eventBus, GET_ASSIGNMENTS_URL, true, false, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		delegate.sendRequest(callback, new AssignmentsListDecoder(), params);
@@ -75,7 +77,7 @@ public class HTTPService {
 	public void getUploadedMd5(String courseId, String assignmentId,
 			final AsyncCallback<Md5Status> callback) {
 		Delegate<Md5Status> delegate =
-			new Delegate<Md5Status>(eventBus, GET_UPLOADED_MD5_URL, true, false);
+			new Delegate<Md5Status>(eventBus, GET_UPLOADED_MD5_URL, true, false, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -85,7 +87,7 @@ public class HTTPService {
 	public void getStorageDirContents(String courseId, String assignmentId,
 			final AsyncCallback<FileList> callback) {
 		Delegate<FileList> delegate =
-			new Delegate<FileList>(eventBus, GET_STORAGE_FILE_LIST_URL, true, false);
+			new Delegate<FileList>(eventBus, GET_STORAGE_FILE_LIST_URL, true, false, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -100,7 +102,7 @@ public class HTTPService {
 	public void getResults(String courseId, String assignmentId,
 			final AsyncCallback<EvaluationResult[]> callback) {
 		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true);
+			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -110,7 +112,7 @@ public class HTTPService {
 	public void getUserResults(String courseId, String assignmentId, String username,
 			final AsyncCallback<EvaluationResult[]> callback) {
 		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true);
+			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -121,7 +123,7 @@ public class HTTPService {
 	public void getTeamResults(String courseId, String assignmentId, String teamname,
 			final AsyncCallback<EvaluationResult[]> callback) {
 		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_TEAM_RESULTS_URL, true, true);
+			new Delegate<EvaluationResult[]>(eventBus, GET_TEAM_RESULTS_URL, true, true, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
@@ -132,7 +134,7 @@ public class HTTPService {
 
 	public void getAllResults(String courseId, final AsyncCallback<ResultInfo[]> callback) {
 		Delegate<ResultInfo[]> delegate =
-			new Delegate<ResultInfo[]>(eventBus, GET_ALL_RESULTS_URL, true, false);
+			new Delegate<ResultInfo[]>(eventBus, GET_ALL_RESULTS_URL, true, false, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		delegate.sendRequest(callback, new StatisticsDecoder(), params);
@@ -141,7 +143,7 @@ public class HTTPService {
 	public void performAuthentication(String username, String password, Boolean extendSession,
 			final AsyncCallback<AuthenticationResponse> callback) {
 		Delegate<AuthenticationResponse> delegate =
-			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false, true);
+			new Delegate<AuthenticationResponse>(eventBus, PERFORM_AUTHENTICATION_URL, false, true, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
@@ -150,7 +152,7 @@ public class HTTPService {
 	}
 
 	public void sendLogoutRequest(final AsyncCallback<Boolean> callback) {
-		Delegate<Boolean> delegate = new Delegate<Boolean>(eventBus, LOGOUT_URL, true, false);
+		Delegate<Boolean> delegate = new Delegate<Boolean>(eventBus, LOGOUT_URL, true, false, ongoingRequests);
 		delegate.sendRequest(callback, new NullDecoder(), null);
 	}
 

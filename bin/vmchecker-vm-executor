@@ -19,11 +19,10 @@ import sys
 import time
 import logging
 import signal
-import ConfigParser
 from threading import Thread
 from subprocess import Popen, PIPE, STDOUT
 
-from vmchecker.config import VirtualMachineConfig, CourseConfig
+from vmchecker.config import Config, VirtualMachineConfig
 from vmchecker.generic_runner import Runner
 from vmchecker.large_runner import LargeRunner
 _logger = logging.getLogger('vm_executor')
@@ -49,41 +48,15 @@ except:
 
 class GenericHost():
     @staticmethod
-    def get_assignment_id(bundle_dir):
-        """Reads the assignment identifier from the config file of the
-        submission from bundle_dir"""
-        sb_config = os.path.join(bundle_dir, 'submission-config')
-        with open(sb_config) as handle:
-            config = ConfigParser.RawConfigParser()
-            config.readfp(handle)
-        assignment = config.get('Assignment', 'Assignment')
-        return assignment
-
-    @staticmethod
-    def get_tester_id(bundle_dir):
-        """Reads the tester identifier from the config file of the
-        submission from bundle_dir"""
-        sb_config = os.path.join(bundle_dir, 'submission-config')
-        with open(sb_config) as handle:
-            config = ConfigParser.RawConfigParser()
-            config.readfp(handle)
-        tester = config.get('Assignment', 'Tester')
-        return tester
-        
-    @staticmethod
     def test(bundle_dir):
-        vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
-        assignment = GenericHost.get_assignment_id(bundle_dir)
-        tester = GenericHost.get_tester_id(bundle_dir)
-        
-        asscfg  = vmcfg.assignments()
-        machine = asscfg.get(assignment, 'Machine')
-        machinecfg = VirtualMachineConfig(vmcfg, machine)
-        
-        needed_files = ['archive.zip', 'tests.zip', 'submission-config', 'course-config']
+        needed_files = ['archive.zip', 'tests.zip', 'submission-config']
+        sb_cfg_file = os.path.join(bundle_dir, 'submission-config')
+        sb_cfg = Config(sb_cfg_file)
+
+        machinecfg = VirtualMachineConfig(sb_cfg, 'Machine')
         if machinecfg.custom_runner() != '':
-            needed_files.append(machinecfg.custom_runner())
-        _check_required_files(bundle_dir, needed_files)
+            needed_files = [ machinecfg.custom_runner() ]
+            _check_required_files(bundle_dir, needed_files)
 
         host = None
         _logger.debug("Testing environment is: " + machinecfg.get_type())
@@ -99,7 +72,7 @@ class GenericHost():
             _logger.error("Invalid testing environment specified.")
             sys.exit(1)
 
-        vm = host.getVM(bundle_dir, vmcfg, assignment, tester)
+        vm = host.getVM(bundle_dir, sb_cfg)
 
         runner = None
 
@@ -108,7 +81,7 @@ class GenericHost():
             custom_runner_path = os.path.join(bundle_dir, machinecfg.custom_runner())
             custom_runner = imp.load_source("custom_runner", custom_runner_path)
             runner = custom_runner.get_runner(host, vm)
-        elif asscfg.getd(assignment, 'assignmentstorage', '').lower() == 'large':
+        elif sb_cfg.getd('Assignment', 'assignmentstorage', '').lower() == 'large':
             runner = LargeRunner(host, vm)
         else:
             runner = Runner(host, vm)
@@ -143,7 +116,6 @@ def main():
       - archive.zip
       - tests.zip
       - submission-config
-      - course-config
       - build and run scripts.
     """
     logging.basicConfig(level=logging.DEBUG)

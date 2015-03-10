@@ -25,7 +25,7 @@ import ro.pub.cs.vmchecker.client.ui.LoginWidget;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryListener;
 import com.google.gwt.user.client.Window;
@@ -36,7 +36,7 @@ import com.google.gwt.user.client.ui.SimplePanel;
 
 public class AppController implements HistoryListener {
 	
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private HTTPService service; 
 	private HasWidgets container;
 	private SimplePanel content = new SimplePanel(); 
@@ -49,7 +49,7 @@ public class AppController implements HistoryListener {
 	private HashSet<String> coursesTags;
 	private HashMap<String, Course> idToCourse; 
 	
-	public AppController(HandlerManager eventBus, HTTPService service) {
+	public AppController(EventBus eventBus, HTTPService service) {
 		this.eventBus = eventBus;
 		this.service = service; 
 		bindHistory();

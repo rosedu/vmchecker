@@ -8,12 +8,12 @@ from threading import Thread
 import time
 
 class LXCHost(Host):
-    def getVM(self, bundle_dir, vmcfg, assignment, tester):
-        return LXCVM(self, bundle_dir, vmcfg, assignment, tester)
+    def getVM(self, bundle_dir, sb_cfg):
+        return LXCVM(self, bundle_dir, sb_cfg)
 
 class LXCVM(VM):
-    def __init__(self, host, bundle_dir, vmcfg, assignment, tester):
-        VM.__init__(self, host, bundle_dir, vmcfg, assignment, tester)
+    def __init__(self, host, bundle_dir, sb_cfg):
+        VM.__init__(self, host, bundle_dir, sb_cfg)
         self.hostname = self.machinecfg.get_vm_path()
 
     def executeCommand(self,cmd):

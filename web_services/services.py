@@ -26,7 +26,7 @@ import datetime
 from mod_python import Session, Cookie
 
 from vmchecker.courselist import CourseList
-from vmchecker.config import CourseConfig
+from vmchecker.config import StorerCourseConfig
 from vmchecker import submit, config, websutil, update_db, paths, submissions
 from vmchecker.config import DATE_FORMAT
 
@@ -425,7 +425,7 @@ def getCourses(req):
         clist = CourseList()
         for course_id in clist.course_names():
             course_cfg_fname = clist.course_config(course_id)
-            course_cfg = CourseConfig(course_cfg_fname)
+            course_cfg = StorerCourseConfig(course_cfg_fname)
             course_title = course_cfg.course_name()
             course_arr.append({'id' : course_id,
                                'title' : course_title})
@@ -468,7 +468,7 @@ def getAssignments(req, courseId, locale=websutil.DEFAULT_LOCALE):
     s.save()
 
     try:
-        vmcfg = config.CourseConfig(CourseList().course_config(courseId))
+        vmcfg = config.StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType':websutil.ERR_EXCEPTION,
@@ -481,13 +481,16 @@ def getAssignments(req, courseId, locale=websutil.DEFAULT_LOCALE):
     ass_arr = []
 
     for key in sorted_assg:
+        if assignments.is_hidden(key) and not username in vmcfg.admin_list():
+            continue
         a = {}
         a['assignmentId'] = key
         a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
         a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
         if a['assignmentStorage'].lower() == "large":
             a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
-            a['assignmentStorageBasepath'] = assignments.storage_basepath(key, username)
+            a['assignmentStorageBasepath'] = assignments.storage_basepath( \
+                assignments.get(key, "AssignmentStorageBasepath"), username)
         a['deadline'] = assignments.get(key, "Deadline")
         a['statementLink'] = assignments.get(key, "StatementLink")
         ass_arr.append(a)

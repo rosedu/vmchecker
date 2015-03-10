@@ -15,20 +15,17 @@ export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 case "$1" in
     start)
-        echo -n "Starting daemon: "$NAME
-	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --chdir $CWDIR --pidfile $PIDFILE --background --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
-        echo "."
+        echo "Starting daemon: "$NAME
+	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --chdir $CWDIR --pidfile $PIDFILE --background --make-pidfile --startas $DAEMON -- $DAEMON_OPTS
 	;;
     stop)
-        echo -n "Stopping daemon: "$NAME
+        echo "Stopping daemon: "$NAME
 	start-stop-daemon --stop  --quiet --chuid $DAEMON_USER --user $DAEMON_USER --oknodo --pidfile $PIDFILE
-        echo "."
 	;;
     restart)
-        echo -n "Restarting daemon: "$NAME
+        echo "Restarting daemon: "$NAME
 	start-stop-daemon --stop  --quiet --chuid $DAEMON_USER --user $DAEMON_USER --oknodo --retry 30 --pidfile $PIDFILE
-	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --chdir $CWDIR --pidfile $PIDFILE --background --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
-	echo "."
+	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --chdir $CWDIR --pidfile $PIDFILE --background --make-pidfile --startas $DAEMON -- $DAEMON_OPTS
 	;;
     *)
 	echo "Usage: "$1" {start|stop|restart}"

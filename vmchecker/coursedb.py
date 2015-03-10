@@ -322,6 +322,21 @@ class CourseDb(object):
                                'AND users.name = "' + user +'";')
         return self.db_cursor.fetchall()
 
+    def get_assignment_account(self, assignment, username):
+        '''Return if for an assignment a user is submitting individually
+           or on behalf of a team.'''
+        # First check if the user is part of a team for this assignment
+        user_team = self.get_user_team_for_assignment(assignment, username)
+        if user_team == None:
+            # No team, so just use the user's own account
+            return (False, username)
+        else:
+            # Check if this team has a mutual account
+            mutual_account = self.get_team_has_mutual_account(user_team)
+            if mutual_account:
+                return (True, user_team)
+            else:
+                return (False, username)
 
 
 @contextmanager

@@ -5,7 +5,7 @@ from vmchecker.generic_runner import Runner
 
 class LargeRunner(Runner):
     def testSubmission(bundleDir):
-        timeout = self.asscfg.get(self.assignment, 'Timeout')
+        timeout = self.sb_cfg.get('Assignment', 'Timeout')
         testcfg = {
             'input'  : ['tests.zip'],
             'script' : ['run.sh'],

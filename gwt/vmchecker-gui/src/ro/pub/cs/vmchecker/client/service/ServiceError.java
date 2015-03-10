@@ -8,16 +8,16 @@ import ro.pub.cs.vmchecker.client.service.json.ErrorResponseDecoder;
 import ro.pub.cs.vmchecker.client.service.json.JSONDecoder;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.shared.HandlerManager;
+import com.google.gwt.event.shared.EventBus;
 
 public class ServiceError {
 
-	private HandlerManager eventBus;
+	private EventBus eventBus;
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 	private String URL;
 
-	public ServiceError(HandlerManager eventBus, String URL) {
+	public ServiceError(EventBus eventBus, String URL) {
 		this.eventBus = eventBus;
 		this.URL = URL;
 	}

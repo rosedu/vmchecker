@@ -8,10 +8,10 @@ import optparse
 from . import paths
 
 
-def simulator_func(assignment, account, submission_root, args):
+def simulator_func(vmcfg, assignment, account, submission_root, args):
     """Just prints the function the function call"""
     print 'calling %s(%s, %s, %s, *%s)' % (
-        repr(assignment), repr(account), repr(submission_root), repr(args))
+        repr(vmcfg), repr(assignment), repr(account), repr(submission_root), repr(args))
 
 
 
@@ -33,7 +33,7 @@ class RepoWalker:
             return
         if self.simulate:
             func = simulator_func
-        func(assignment, account, path, *args)
+        func(self.vmcfg, assignment, account, path, *args)
 
 
     def walk_account(self, account, func=simulator_func, args=()):
