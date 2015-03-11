@@ -1,6 +1,8 @@
 package ro.pub.cs.vmchecker.client.presenter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
@@ -9,6 +11,7 @@ import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.model.ResultInfo;
 import ro.pub.cs.vmchecker.client.model.User;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
+import ro.pub.cs.vmchecker.client.util.AlphanumComparator;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -55,6 +58,13 @@ public class StatisticsPresenter implements Presenter {
 		}
 	}
 
+	private class ResultInfoComparator implements Comparator<ResultInfo> {
+		AlphanumComparator stringComparator = new AlphanumComparator();
+		@Override
+		public int compare(ResultInfo r1, ResultInfo r2) {
+			return stringComparator.compare(r1.name, r2.name);
+		}
+	}
 
 	private EventBus eventBus;
 	private HTTPService service;
@@ -153,6 +163,8 @@ public class StatisticsPresenter implements Presenter {
 				teamResultsInfo.add(result);
 			}
 		}
+		Collections.sort(studentResultsInfo, new ResultInfoComparator());
+		Collections.sort(teamResultsInfo, new ResultInfoComparator());
 	}
 
 	@Override

@@ -17,9 +17,16 @@ def main():
     cmdline.add_option('-t', '--forced-upload-time',
                        help='Force the time of upload to be the argument. ' +
                        'If not given, the current system time is used.')
+    cmdline.add_option('-i', '--individual', action = 'store_true',
+                       dest = 'override_team', default = False,
+                       help = 'Override any teams the user is a part of and submit ' +
+                       'individually.')
+    cmdline.add_option('-H', '--skip_hidden_check', action = 'store_true',
+                       dest = 'skip_hidden_check', default = False,
+                       help = 'Skip checking if the user can view this assignment.')
 
     cmdline.set_usage('Usage: %prog [options] course_id assignment' +
-                      ' user archive_filename')
+                      ' account archive_filename')
     (options, argv) = cmdline.parse_args()
 
     if len(argv) != 4:
@@ -32,12 +39,20 @@ def main():
 
     vmcfg = StorerCourseConfig(CourseList().course_config(course_id))
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    user = None
     with coursedb.opening_course_db(vmpaths.db_file()) as course_db:
-        (isTeamAccount, user) = course_db.get_assignment_account(assignment, account)
+        # First check if this is a team account
+        if course_db.get_team_id(account) is not None:
+            # This is a user's account, check if he is submitting for a team
+            if not options.override_team:
+                (isTeamAccount, real_account) = course_db.get_assignment_account(assignment, account)
+                if isTeamAccount:
+                    user = account
+                    account = real_account
 
-    submit.submit(archive_filename, assignment, account, course_id,
+    submit.submit(archive_filename, assignment, account, course_id, user = None,
                   skip_toosoon_check = options.skip_time_check,
-                  user = user if isTeamAccount else None,
+                  skip_hidden_check = options.skip_hidden_check,
                   forced_upload_time = options.forced_upload_time)
 
 

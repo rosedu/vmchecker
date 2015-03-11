@@ -69,7 +69,6 @@ h2 {
 	border: 3px solid #9B0000;
 	padding:10px;
 	background:none repeat scroll 0 0 white; 
-	overflow:scroll;
 	cursor: pointer;
 }
 
@@ -82,7 +81,6 @@ h2 {
 	border: 3px solid green;
 	padding:10px;
 	background:none repeat scroll 0 0 white; 
-	overflow:scroll;
 }
 
 .resultsPopup a, .resultsPopup a:hover, .resultsPopup a:visited {
@@ -115,7 +113,11 @@ a.fillButton:hover {
 	margin-top: 10px;
 	padding-top: 10px;
 	border-top: 1px solid #CCCCCC;
-	overflow: scroll;
+	overflow-y: auto;
+	overflow-x: hidden;
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+	outline: 0;
 }		
 
 .check_error {

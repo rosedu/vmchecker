@@ -16,6 +16,7 @@ public final class AssignmentsListDecoder extends JSONDecoder<Assignment[]> {
 	private static final String storageBasepathKey = "assignmentStorageBasepath";
 	private static final String deadlineKey = "deadline";
 	private static final String statementLinkKey = "statementLink";
+	private static final String teamKey = "team";
 
 	@Override
 	protected Assignment[] decode(String text) {
@@ -33,15 +34,21 @@ public final class AssignmentsListDecoder extends JSONDecoder<Assignment[]> {
 	private Assignment parseAssignment(JSONObject jsonObj) {
 		String id = jsonObj.get(idKey).isString().stringValue();
 		String title = jsonObj.get(titleKey).isString().stringValue();
-		String storageType = jsonObj.get(storageTypeKey).isString().stringValue().toLowerCase();
+		Assignment.StorageType storageType =
+			Assignment.StorageType.valueOf(jsonObj.get(storageTypeKey).isString().stringValue().toUpperCase());
 		String deadline = jsonObj.get(deadlineKey).isString().stringValue();
 		String statementLink = jsonObj.get(statementLinkKey).isString().stringValue();
-		if (storageType.toLowerCase().equals("normal")) {
-			return new Assignment(id, title, storageType, null, null, deadline, statementLink);
+		boolean hasTeam = jsonObj.keySet().contains(teamKey);
+		String team = null;
+		if (hasTeam) {
+			team = jsonObj.get(teamKey).isString().stringValue();
+		}
+		if (storageType == Assignment.StorageType.NORMAL) {
+			return new Assignment(id, title, storageType, null, null, deadline, statementLink, hasTeam, team);
 		} else {
 			String storageHost = jsonObj.get(storageHostKey).isString().stringValue();
 			String storageBasepath = jsonObj.get(storageBasepathKey).isString().stringValue();
-			return new Assignment(id, title, storageType, storageHost, storageBasepath, deadline, statementLink);
+			return new Assignment(id, title, storageType, storageHost, storageBasepath, deadline, statementLink, hasTeam, team);
 		}
 	}
 

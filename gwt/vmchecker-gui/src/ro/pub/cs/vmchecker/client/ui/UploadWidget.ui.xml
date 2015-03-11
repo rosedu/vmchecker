@@ -1,0 +1,130 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.form {
+			margin: 10px 0 10px 0;
+		}
+
+		.container {
+			background-color: #FFF;
+			padding: 20px 10px 10px 10px;
+		}
+
+		.formContainer {
+			padding: 10px;
+			border: 3px solid #EEEEEE;
+			margin-top: 20px;
+			margin-bottom: 20px;
+		}
+
+		.inputField {
+			background-color: #E9EEF1;
+			font-size: 13px;
+			width: 250px;
+			border: 1px solid #CBCBCB;
+		}
+
+		.formTitle {
+			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+			font-size: 18px;
+			padding: 3px;
+			margin: 5px 5px 10px 5px;
+		}
+
+		.fieldComment {
+			font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans-serif;
+			padding: 0px 10px 10px 0px;
+			font-size: 12px;
+		}
+
+		.scrollPanel {
+			padding: 10px;
+			height: 100px;
+			width: 300px;
+			cursor: hand;
+			cursor: pointer;
+		}
+
+		.bold {
+			font-weight: bold;
+		}
+
+		.errorComment {
+			color: #990000;
+		}
+
+		.okComment {
+			color: #007F00;
+		}
+
+		.teamName {
+			padding-left: 10px;
+		}
+
+		.help {
+			color: #666666;
+		}
+		.gwt-Tree .gwt-TreeItem {
+			padding: 1px 0px;
+			margin: 0px;
+			white-space: nowrap;
+			cursor: hand;
+			cursor: pointer;
+		}
+
+	</ui:style>
+	<g:HTMLPanel styleName="{style.container}">
+		<g:HTML ui:field="uploadHeader"></g:HTML>
+		<g:HorizontalPanel ui:field="teamContainer" styleName="{style.formContainer}">
+			<g:Label ui:field="teamMsg"></g:Label>
+			<g:Label ui:field="teamName" styleName="{style.teamName} {style.bold}"></g:Label>
+		</g:HorizontalPanel>
+		<g:FormPanel ui:field="md5Form" styleName="{style.formContainer}">
+			<g:VerticalPanel>
+				<g:Label ui:field="md5Title" styleName="{style.formTitle}"></g:Label>
+				<g:HorizontalPanel>
+					<g:Label ui:field="md5SumOldDesc" styleName="{style.fieldComment} {style.help}"></g:Label>
+					<g:Label ui:field="md5SumEmptyLabel" styleName="{style.fieldComment} {style.errorComment} {style.bold}"></g:Label>
+					<g:Label ui:field="md5SumValueLabel" styleName="{style.fieldComment} {style.okComment} {style.bold}" visible="false"></g:Label>
+				</g:HorizontalPanel>
+				<g:HorizontalPanel>
+					<g:Label ui:field="md5SumTimeCommentLabel" styleName="{style.fieldComment} {style.help}" visible="false"></g:Label>
+					<g:Label ui:field="md5SumTimeLabel" styleName="{style.fieldComment} {style.help}" visible="false"></g:Label>
+				</g:HorizontalPanel>
+				<g:HorizontalPanel>
+					<g:Label ui:field="md5SumDesc" styleName="{style.fieldComment} {style.help}"></g:Label>
+					<g:TextBox ui:field="md5SumInputField" name="md5Sum" styleName="{style.inputField}"></g:TextBox>
+				</g:HorizontalPanel>
+				<g:Label ui:field="md5SumInputCommentLabel" styleName="{style.fieldComment} {style.errorComment} {style.bold}"></g:Label>
+				<g:Button ui:field="uploadMd5Button" enabled="true"></g:Button>
+				<g:Hidden ui:field="md5CourseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="md5AssignmentIdField" name="assignmentId"></g:Hidden>
+			</g:VerticalPanel>
+		</g:FormPanel>
+		<g:FormPanel ui:field="evaluationForm" styleName="{style.formContainer}">
+			<g:VerticalPanel>
+				<g:Label ui:field="archiveTitle" styleName="{style.formTitle}"></g:Label>
+				<g:Label ui:field="archiveDesc" styleName="{style.fieldComment} {style.help}"></g:Label>
+				<g:Label ui:field="fileListEmptyLabel" styleName="{style.fieldComment} {style.errorComment} {style.bold}" visible="false"></g:Label>
+				<g:ScrollPanel styleName="{style.scrollPanel}">
+					<g:Tree ui:field="fileListTree"></g:Tree>
+				</g:ScrollPanel>
+				<g:Button ui:field="beginEvaluationButton" enabled="false"></g:Button>
+				<g:Hidden ui:field="evalArchiveFileNameField" name="archiveFileName"></g:Hidden>
+				<g:Hidden ui:field="evalCourseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="evalAssignmentIdField" name="assignmentId"></g:Hidden>
+			</g:VerticalPanel>
+		</g:FormPanel>
+		<g:FormPanel ui:field="form" styleName="{style.form}">
+			<g:HorizontalPanel>
+				<g:FileUpload ui:field="fileUpload" name="archiveFile"></g:FileUpload>
+				<g:Button ui:field="uploadFileButton" enabled="false"></g:Button>
+				<g:Hidden ui:field="courseIdField" name="courseId"></g:Hidden>
+				<g:Hidden ui:field="assignmentIdField" name="assignmentId"></g:Hidden>
+			</g:HorizontalPanel>
+		</g:FormPanel>
+
+		<g:HTML ui:field="uploadFooter" styleName="{style.help}"></g:HTML>
+	</g:HTMLPanel>
+</ui:UiBinder>

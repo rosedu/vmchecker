@@ -9,12 +9,23 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.PopupPanel;
-import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Overflow;
+import com.google.gwt.dom.client.Document;
 
 /**
  * Wrapper over the classic PopupPanel
  * Adds a close button and a scrollable content panel
  * @author claudiugh
+ * Implement proper scrolling support and make sure
+ * the body doesn't scroll when used.
+ * @author calin.iorgulescu
  *
  */
 public class VmcheckerPopup extends PopupPanel {
@@ -25,11 +36,11 @@ public class VmcheckerPopup extends PopupPanel {
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 	private FlowPanel detailsPopupContainer = new FlowPanel();
-	private SimplePanel detailsPopupContent = new SimplePanel();
+	private FocusPanel detailsPopupContent = new FocusPanel();
 	private Anchor popupCloseButton = new Anchor();
 
 	public VmcheckerPopup() {
-		super(true, true);
+		super(true);
 		setup();
 	}
 
@@ -54,6 +65,14 @@ public class VmcheckerPopup extends PopupPanel {
 			}
 		});
 
+		detailsPopupContent.addBlurHandler(new BlurHandler() {
+			@Override
+			public void onBlur(BlurEvent event) {
+				if (isShowing()) {
+					detailsPopupContent.setFocus(true);
+				}
+			}
+		});
 	}
 
 	public void showContent(String htmlContent) {
@@ -61,6 +80,30 @@ public class VmcheckerPopup extends PopupPanel {
 		detailsPopupContent.add(new HTML(htmlContent));
 		center();
 		show();
+		Document.get().getBody().getStyle().setOverflow(Style.Overflow.HIDDEN);
+		detailsPopupContent.setFocus(true);
+	}
+
+	@Override
+	protected void onPreviewNativeEvent(NativePreviewEvent event) {
+		super.onPreviewNativeEvent(event);
+		if (!isShowing()) {
+			return;
+		}
+
+		switch (event.getTypeInt()) {
+			case Event.ONKEYDOWN:
+				if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
+					hide();
+				}
+				break;
+		}
+	}
+
+	@Override
+	protected void onUnload() {
+		super.onUnload();
+		Document.get().getBody().getStyle().clearOverflow();
 	}
 
 }

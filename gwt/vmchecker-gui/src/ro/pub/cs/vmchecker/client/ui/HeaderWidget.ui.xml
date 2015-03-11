@@ -86,13 +86,13 @@
 				<div class="logo"></div>
 			</g:HTML>
 			<g:FlowPanel styleName="{style.listWrapper}">
-				<g:Label ui:field="courseSelection" styleName="{style.courseListIndication}">alegeti cursul</g:Label>
+				<g:Label ui:field="courseSelection" styleName="{style.courseListIndication}"></g:Label>
 				<g:ListBox ui:field="coursesList" visibleItemCount='1' styleName="{style.list}" />
 			</g:FlowPanel>
 			</g:HorizontalPanel>
 			<g:HorizontalPanel ui:field="rightPanel" styleName="{style.rightPanel}">
-				<g:Label ui:field="usernameLabel" styleName="{style.username}">nume.prenume</g:Label>
-				<g:Anchor ui:field="logoutButton" styleName="fillButton">logout</g:Anchor>
+				<g:Label ui:field="usernameLabel" styleName="{style.username}"></g:Label>
+				<g:Anchor ui:field="logoutButton" styleName="fillButton"></g:Anchor>
 			</g:HorizontalPanel>
 			<g:SimplePanel styleName="{style.clear}"></g:SimplePanel>
 		</g:FlowPanel>

@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import ro.pub.cs.vmchecker.client.presenter.AssignmentPresenter;
 
@@ -32,6 +33,9 @@ public class AssignmentWidget extends Composite
 	SimplePanel boardPanel;
 
 	@UiField
+	VerticalPanel sidePanel;
+
+	@UiField
 	Anchor viewStatsButton;
 
 	public AssignmentWidget() {
@@ -47,6 +51,11 @@ public class AssignmentWidget extends Composite
 	@Override
 	public HasWidgets getMenuPanel() {
 		return menuPanel;
+	}
+
+	@Override
+	public HasWidgets getSidePanel() {
+		return sidePanel;
 	}
 
 	@Override

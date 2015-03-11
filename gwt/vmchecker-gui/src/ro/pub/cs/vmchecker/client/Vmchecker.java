@@ -1,6 +1,7 @@
 package ro.pub.cs.vmchecker.client;
 
 import ro.pub.cs.vmchecker.client.service.HTTPService;
+import ro.pub.cs.vmchecker.client.util.ExceptionHandler;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.shared.SimpleEventBus;

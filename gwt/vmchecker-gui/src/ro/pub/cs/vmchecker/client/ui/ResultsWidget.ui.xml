@@ -7,7 +7,8 @@
 			font-size: 14px;
 			background-color: #FFF;
 			padding: 30px 10px 10px 10px;
-			overflow: scroll;
+			overflow-wrap: break-word;
+			word-wrap: break-word;
 		}
 	</ui:style>
 	<g:HTMLPanel>

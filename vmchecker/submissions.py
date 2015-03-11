@@ -191,3 +191,14 @@ class Submissions:
         account and assignment"""
         return (self._get_submission_config(assignment, account) != None)
 
+    def write_grade(self, assignment, account, grade):
+        """Write the grade to the current submission for the given
+        account and assignment"""
+        results_path = self._get_submission_config(assignment, account).get('Storer', 'ResultsDest')
+        if results_path is None:
+            return
+        if not os.path.exists(results_path):
+            os.makedirs(results_path)
+        with open(os.path.join(results_path, 'grade.vmr'), 'wt') as f:
+            f.write(grade)
+

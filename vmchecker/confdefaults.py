@@ -36,6 +36,14 @@ class Config:
     def get_list(self, section, option, default=None):
         return self.get(section, option, default).split(LIST_SEPARATOR)
 
+    def get_prefixed_list(self, section, option, default=None):
+        result = []
+        for opt in self.config.options(section):
+            if opt.lower().startswith(option.lower()):
+                result.append(self.get(section, opt, default))
+
+        return result
+
 
 class ConfigWithDefaults(Config):
     """Defines a class able to use configuration files with per-section defaults"""

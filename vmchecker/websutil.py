@@ -234,7 +234,7 @@ def submission_upload_info(vmcfg, courseId, assignment, account, isTeamAccount, 
     max_line_width = 0
     rows_to_print = []
 
-    if isTeamAccount:
+    if submitter_explanation is not None:
         rows_to_print += [
             [ submitter_explanation ],
             [ '' ]
@@ -438,11 +438,25 @@ def validate_md5_submission(courseId, assignmentId, account, archiveFileName):
 
     return (True,) # no problemo
 
+def getAssignmentAccountName(courseId, assignmentId, username, strout):
+    try:
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
+    except:
+        traceback.print_exc(file = strout)
+        return json.dumps({'errorType' : ERR_EXCEPTION,
+                           'errorMessage' : "",
+                           'errorTrace' : strout.get()})
+
+    vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
+    with opening_course_db(vmpaths.db_file()) as course_db:
+        return course_db.get_assignment_account(assignmentId, username)
+
+
 # Service method helpers
 def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
     """Get the current MD5 sum submitted for a given username on a given assignment"""
     try:
-        vmcfg = config.StorerCourseConfig(CourseList().course_config(courseId))
+        vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
         return json.dumps({'errorType' : ERR_EXCEPTION,
@@ -475,18 +489,40 @@ def getUserUploadedMd5Helper(courseId, assignmentId, username, strout):
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-def getAssignmentAccountName(courseId, assignmentId, username, strout):
+def getAssignmentsHelper(courseId, currentUser, strout):
     try:
         vmcfg = StorerCourseConfig(CourseList().course_config(courseId))
     except:
         traceback.print_exc(file = strout)
-        return json.dumps({'errorType' : ERR_EXCEPTION,
-                           'errorMessage' : "",
-                           'errorTrace' : strout.get()})
+        return json.dumps({'errorType': ERR_EXCEPTION,
+            'errorMessage':"Unable to load course config",
+            'errorTrace':strout.get()})
+
+    assignments = vmcfg.assignments()
+    sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
+                                                   int(assignments.get(y, "OrderNumber")))
+    assg_arr = []
 
     vmpaths = paths.VmcheckerPaths(vmcfg.root_path())
     with opening_course_db(vmpaths.db_file()) as course_db:
-        return course_db.get_assignment_account(assignmentId, username)
+        for key in sorted_assg:
+            if assignments.is_hidden(key) and not currentUser in vmcfg.admin_list():
+                continue
+            a = {}
+            a['assignmentId'] = key
+            a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
+            a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
+            if a['assignmentStorage'].lower() == "large":
+                a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
+                a['assignmentStorageBasepath'] = assignments.storage_basepath( \
+                    assignments.get(key, "AssignmentStorageBasepath"), currentUser)
+            a['deadline'] = assignments.get(key, "Deadline")
+            a['statementLink'] = assignments.get(key, "StatementLink")
+            team = course_db.get_user_team_for_assignment(key, currentUser)
+            if team is not None:
+                a['team'] = team
+            assg_arr.append(a)
+    return json.dumps(assg_arr)
 
 def getResultsHelper(courseId, assignmentId, currentUser, strout, username = None, teamname = None, currentTeam = None):
     # assume that the session was already checked
@@ -524,11 +560,17 @@ def getResultsHelper(courseId, assignmentId, currentUser, strout, username = Non
 
     account = None
     if username != None:
-        # Check if the user is part of a team with a mutual account for this submission
-        (isTeamAccount, account) = getAssignmentAccountName(courseId, assignmentId, username, strout)
-    else:
+        # Get the individual results for this user
+        account = username
+        isTeamAccount = False
+    elif teamname != None:
+        # Get the team results for this team
         account = teamname
         isTeamAccount = True
+    else:
+        # Check if the user is part of a team with a mutual account for this submission
+        (isTeamAccount, account) = getAssignmentAccountName(courseId, assignmentId, currentUser, strout)
+
 
     submission_dir = vmpaths.dir_cur_submission_root(assignmentId, account)
 

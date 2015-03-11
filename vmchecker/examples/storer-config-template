@@ -298,6 +298,21 @@ KernelMessages=netcat -l -u -p6000
 # HostCommand = ls
 # 	This defines what to be run on the Host machine _after_ the VM has finished booting.
 HostCommand=ls
+# NOTE: For KernelMessages and HostCommand it is possible to specify the output file
+# using '>'. If this is not done, the output file will be 'run-km.vmr'.
+# WARNING: This is done in a very crude manner: the string is split by '>'. If there
+# are other places in the string where '>' is used, it will cause undefined behavior.
+# Example:
+# HostCommand=ls > ls_out.vmr
+# NOTE: For KernelMessages and HostCommand it is possible to specify multiple entries
+# as long as they all start with the keywords 'KernelMessages' or 'HostCommand'.
+# For example:
+# HostCommand[0]=ls > ls_out.vmr
+# HostCommand[1]=ps ax > ps_out.vmr
+# WARNING: The implementation makes no attempt to honor indexing conventions such as
+# the ones in the previous example. It simply looks for all keys that start with a
+# given keyword.
+#
 # CustomRunner = my_runner.py
 #   This defines a custom runner implementation to be used when evaluating assignments.
 #   Useful for complex runs that, for example, require rebooting the VM several times.

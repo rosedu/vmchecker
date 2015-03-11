@@ -189,6 +189,12 @@ def launch_executor(location):
     try:
         # can't do "popen.kill()" here because it only
         # available from python 2.6
+        # First send a SIGINT, and then a SIGTERM. This
+        # gives the executor time to fire its 'finally' blocks
+        # and, thus, not leak any running VM processes or
+        # host commands.
+        os.kill(popen.pid, signal.SIGINT)
+        time.sleep(5)
         os.kill(popen.pid, signal.SIGTERM)
     except OSError:
         _logger.exception('Exception in kill(PID=%d)', popen.pid)

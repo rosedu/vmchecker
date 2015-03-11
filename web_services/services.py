@@ -393,9 +393,6 @@ def getUserResults(req, courseId, assignmentId, username=None,
                            'errorMessage' : "",
                            'errorTrace' : strout.get()})
 
-    if username == None:
-        username = current_user
-
     # Reset the timeout
     s.save()
     return websutil.getResultsHelper(courseId,
@@ -467,34 +464,7 @@ def getAssignments(req, courseId, locale=websutil.DEFAULT_LOCALE):
     # Reset the timeout
     s.save()
 
-    try:
-        vmcfg = config.StorerCourseConfig(CourseList().course_config(courseId))
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"Unable to load course config",
-            'errorTrace':strout.get()})
-
-    assignments = vmcfg.assignments()
-    sorted_assg = sorted(assignments, lambda x, y: int(assignments.get(x, "OrderNumber")) -
-                                                   int(assignments.get(y, "OrderNumber")))
-    ass_arr = []
-
-    for key in sorted_assg:
-        if assignments.is_hidden(key) and not username in vmcfg.admin_list():
-            continue
-        a = {}
-        a['assignmentId'] = key
-        a['assignmentTitle'] = assignments.get(key, "AssignmentTitle")
-        a['assignmentStorage'] = assignments.getd(key, "AssignmentStorage", "")
-        if a['assignmentStorage'].lower() == "large":
-            a['assignmentStorageHost'] = assignments.get(key, "AssignmentStorageHost")
-            a['assignmentStorageBasepath'] = assignments.storage_basepath( \
-                assignments.get(key, "AssignmentStorageBasepath"), username)
-        a['deadline'] = assignments.get(key, "Deadline")
-        a['statementLink'] = assignments.get(key, "StatementLink")
-        ass_arr.append(a)
-    return json.dumps(ass_arr)
+    return websutil.getAssignmentsHelper(courseId, username, strout)
 
 ######### @ServiceMethod
 def getUploadedMd5(req, courseId, assignmentId, locale=websutil.DEFAULT_LOCALE):

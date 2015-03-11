@@ -5,6 +5,8 @@ import com.google.gwt.i18n.client.Constants;
 
 public interface UploadConstants extends Constants {
 
+	String teamMsg();
+
 	String md5sumInvalid();
 	String md5sumIncomplete();
 

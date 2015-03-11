@@ -33,9 +33,9 @@ class Host():
     def __init__(self):
         pass
 
-    def executeCommand(self, cmd):
+    def executeCommand(self, cmd, path = None):
         _logger.debug('Running command: %s' % cmd)
-        p = Popen([cmd],stdout=PIPE,stderr=STDOUT,shell=True)
+        p = Popen([cmd], stdout=PIPE, stderr=STDOUT, shell = True, cwd = path)
         output = p.stdout.read()
         _logger.debug('Command output: %s' % output)
         return output
@@ -44,32 +44,49 @@ class Host():
         vm = VM(self, bundle_dir, sb_cfg)
         return None
 	
-    def start_host_commands(self, jobs_path, host_command, out_file = 'run-km.vmr'):
-        """Run a command on the tester (host) machine"""
-        _logger.info('%%% -- starting host commands [' + host_command + ']')
+    def start_host_commands(self, jobs_path, host_commands):
+        """Run a set of commands on the tester (host) machine"""
+        host_command_data = []
 
-        if len(host_command) == 0:
+        for host_command_out in host_commands:
+            out_file = 'run-km.vmr' # Default file name
+            if host_command_out.rfind('>') != -1:
+                out_file = host_command_out.split('>')[1].strip()
+
+            host_command = host_command_out.split('>')[0].strip()
+
+            if len(host_command) == 0:
+                continue
+
+            _logger.info('%%% -- starting host commands [' + host_command + '] >> ' + out_file)
+
+            outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
+            try:
+                proc = Popen([host_command], stdout=outf, cwd = jobs_path, \
+                    stderr = STDOUT, close_fds = True, shell = True, bufsize = 0, \
+                    preexec_fn = os.setsid)
+            except:
+                _logger.exception('HOSTPROC: opening process: ' + host_command)
+
+            host_command_data.append((proc, outf))
+
+        if len(host_command_data) == 0:
             return None
+        return host_command_data
 
-        outf = open(os.path.join(jobs_path, out_file), 'a', buffering = 0)
-        try:
-            proc = Popen("exec " + host_command, stdout=outf, \
-                stderr = STDOUT, close_fds = True, shell = True, bufsize = 0)
-        except:
-            _logger.exception('HOSTPROC: opening process: ' + host_command)
-        return (proc, outf)
-        
-    def stop_host_commands(self, host_command_data):
+    def stop_host_commands(self, host_commands_data):
         """Stop previously run host commands"""
-        if host_command_data == None:
+        if host_commands_data == None:
             return
 
-        (proc, outf) = host_command_data
-        try:
-            os.kill(proc.pid, signal.SIGTERM)
-            outf.close()
-        except:
-            _logger.exception('HOSTPROC: while stopping host cmds')
+        for host_command_data in host_commands_data:
+            (proc, outf) = host_command_data
+            _logger.info('%%% -- stopping host command writing to file [' + outf.name + ']')
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+                outf.close()
+            except:
+                _logger.exception('HOSTPROC: while stopping host cmds')
         _logger.info("%%% -- stopped host commands")
 		    
 class VM():
@@ -123,7 +140,7 @@ class VM():
         pass
         
     def runTest(self, bundle_dir, machinecfg, test):
-        """ originally named  def copy_files_and_run_script(vm, bundle_dir, machinecfg, test) """
+        """Return False if an exception is thrown or the tests timeout."""
         try:
             files_to_copy = test['input'] + test['script']
             guest_dest_dir = machinecfg.guest_base_path()
@@ -136,10 +153,11 @@ class VM():
                 self.copyFrom(guest_dest_dir,bundle_dir,test['output'])
                 if timedout:
                     return False
-        except:
-            _logger.exception('error in copy_files_and_run_script')
-        finally:
+
             return True
+        except Exception as e:
+            _logger.exception('Exception thrown in runTest(): ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
+            return False
         
     def try_power_on_vm_and_login(self, revertSnapshot=None):
         if revertSnapshot == True or \

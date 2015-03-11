@@ -133,8 +133,9 @@ def assign_team(course_db, team_name, assignment_name, force, assign_team_to_all
     team_id = get_or_create_team_id(course_db, team_name, force)
 
     if assign_team_to_all:
-        print "Activating team " + team_name + " for assignments: " + vmcfg.assignments()
+        print "Activating team " + team_name + " for assignments: "
         for assignment in vmcfg.assignments():
+            print assignment
             assignment_id = course_db.get_assignment_id(assignment)
             course_db.activate_team_for_assignment(team_id, assignment_id)
     else:
@@ -236,11 +237,11 @@ def main():
                 sys.exit(1)
             del_member(course_db, args.team, args.user)
 
-        if args.command == "assignteam" and not args.assign_team_to_all:
+        if args.command == "assignteam":
             if args.team is None:
                 print "Please specify the team name (-t, --team)"
                 sys.exit(1)
-            if args.assignment is None:
+            if args.assignment is None and not args.assign_team_to_all:
                 print "Please specify the assignment name (-a, --assignment), or use -A to select all assignments"
                 sys.exit(1)
             assign_team(course_db, args.team, args.assignment, args.force, args.assign_team_to_all, vmcfg)

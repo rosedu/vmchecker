@@ -2,8 +2,12 @@ package ro.pub.cs.vmchecker.client.service;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Date;
+
+import com.google.gwt.i18n.shared.DateTimeFormat;
 
 import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
+import ro.pub.cs.vmchecker.client.event.ServerTimeUpdateEvent;
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 import ro.pub.cs.vmchecker.client.service.ServiceError;
@@ -17,6 +21,7 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
+import com.google.gwt.http.client.Header;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.LocaleInfo;
@@ -52,6 +57,17 @@ public class Delegate<T> {
 		Request ongoing = ongoingRequests.get(url);
 		if (ongoing != null) ongoing.cancel();
 
+	}
+
+	private Date parseDateFromResponse(Response response) {
+		Header[] headers = response.getHeaders();
+		for (Header header : headers) {
+			if (header.getName() == "Date") {
+				DateTimeFormat dtf = DateTimeFormat.getFormat(DateTimeFormat.PredefinedFormat.RFC_2822);
+				return dtf.parse(header.getValue());
+			}
+		}
+		return new Date(0);
 	}
 
 	private String packParameters(HashMap<String, String> params) {
@@ -97,6 +113,7 @@ public class Delegate<T> {
 				} else {
 					T result = decoder.getResult();
 					callback.onSuccess(result);
+					eventBus.fireEvent(new ServerTimeUpdateEvent(parseDateFromResponse(response)));
 				}
 			}
 		};
