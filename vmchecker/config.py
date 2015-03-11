@@ -137,7 +137,7 @@ class LdapConfig(Config):
 class AclConfig(Config):
     """Configuration for the users and groups that will implicitly
     receive default ACLs for all storer root folders"""
-    def __init__(self, acl_cfg_fname=DEFAULT_LDAP_CONFIG):
+    def __init__(self, acl_cfg_fname=DEFAULT_ACL_CONFIG):
         Config.__init__(self, config_file_=acl_cfg_fname)
 
     def users(self):
