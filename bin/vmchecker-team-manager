@@ -22,7 +22,7 @@ def prepare_argparse(cmdline):
     cmdline.add_argument('-a', '--assignment', help = 'The name of the assignment.')
     cmdline.add_argument('-f', '--force', help = 'Create user/team/assignemnt if not already existent.', action = 'store_true', default = False)
     cmdline.add_argument('-m', help = 'If set, created teams will not have a mutual account', action = 'store_true', default = False, dest = 'no_mutual_account')
-    cmdline.add_argument('-A', help = 'If set, created teams will be assigned to all assignments', action = 'store_true', default = False, dest = 'assign_team_to_all')
+    cmdline.add_argument('-A', help = 'If set, behavior varies based on the command: - For \'newteam\', created teams will be assigned to all assignments. - For \'assignteam\', if \'-t\' is given, then that team is assigned to all existing assignments. If \'-a\' is given, then all existing teams are assigned to that assignment. - For \'unassignteam\', the given team will be unassigned from all assignments.', action = 'store_true', default = False, dest = 'all_flag')
 
 def get_or_create_user_id(course_db, user_name, force):
     user_id = course_db.get_user_id(user_name)
@@ -129,20 +129,44 @@ def del_member(course_db, team_name, user_name):
 
     print "Successfully removed user " + user_name + " from team " + team_name
 
-def assign_team(course_db, team_name, assignment_name, force, assign_team_to_all, vmcfg):
-    team_id = get_or_create_team_id(course_db, team_name, force)
+def assign_team(course_db, team_name, assignment_name, force, all_flag, vmcfg):
 
-    if assign_team_to_all:
-        print "Activating team " + team_name + " for assignments: "
-        for assignment in vmcfg.assignments():
-            print assignment
-            assignment_id = course_db.get_assignment_id(assignment)
-            course_db.activate_team_for_assignment(team_id, assignment_id)
-    else:
+    affected_teams = []
+    affected_assignments = []
+    # First check if both team and assignment are given
+    if team_name is not None and assignment_name is not None:
+        print "Activating team " + team_name + " for assignment: " + assignment_name
+        team_id = get_or_create_team_id(course_db, team_name, force)
         assignment_id = get_or_create_assignment_id(course_db, assignment_name, force)
         course_db.activate_team_for_assignment(team_id, assignment_id)
+        affected_teams.append(team_name)
+        affected_assignments.append(assignment_name)
 
-        print "Successfully activated team " + team_name + " for assignment " + assignment_name
+    elif team_name is not None and all_flag:
+        # Activate team for all assignments
+        team_id = get_or_create_team_id(course_db, team_name, force)
+        print ("Activating team " + team_name + " for assignments: "),
+        affected_teams.append(team_name)
+        for assignment in vmcfg.assignments():
+            print (assignment),
+            affected_assignments.append(assignment)
+            assignment_id = course_db.get_assignment_id(assignment)
+            course_db.activate_team_for_assignment(team_id, assignment_id)
+        print ""
+    elif assignment_name is not None and all_flag:
+        # Activate all teams for assignment
+        assignment_id = get_or_create_assignment_id(course_db, assignment_name, force)
+        print ("Activating teams:"),
+        affected_assignments.append(assignment_name)
+        for team in course_db.get_teams():
+            team_name = team[0]
+            print (team_name),
+            affected_teams.append(team_name)
+            team_id = get_or_create_team_id(course_db, team_name, False)
+            course_db.activate_team_for_assignment(team_id, assignment_id)
+        print "for assignment: " + assignment_name
+
+    print "Successfully activated team(s) " + ', '.join(affected_teams) + " for assignment(s) " + ', '.join(affected_assignments)
 
 def unassign_team(course_db, team_name, assignment_name, assign_team_to_all, vmcfg):
     team_id = course_db.get_team_id(team_name)
@@ -211,7 +235,7 @@ def main():
             if args.team is None:
                 print "Please specify the team name (-t, --team)"
                 sys.exit(1)
-            new_team(course_db, args.team, args.no_mutual_account, args.assign_team_to_all, vmcfg)
+            new_team(course_db, args.team, args.no_mutual_account, args.all_flag, vmcfg)
 
         if args.command == "delteam":
             if args.team is None:
@@ -238,22 +262,28 @@ def main():
             del_member(course_db, args.team, args.user)
 
         if args.command == "assignteam":
-            if args.team is None:
-                print "Please specify the team name (-t, --team)"
+            if (args.team is None or args.assignment is None) and not args.all_flag:
+                print "Either specify both the team (-t, --team) and the assignment (-a, --assignment), or specify one and use -A to select all the other components."
                 sys.exit(1)
-            if args.assignment is None and not args.assign_team_to_all:
+            if args.team is not None and args.assignment is not None and args.all_flag:
+                print "It makes no sense to specify a team, an assignment, and the -A flag."
+                sys.exit(1)
+            if args.team is None and args.assignment is not None and not args.all_flag:
+                print "Please specify the team name (-t, --team), or use -A to select all teams"
+                sys.exit(1)
+            if args.team is not None and args.assignment is None and not args.all_flag:
                 print "Please specify the assignment name (-a, --assignment), or use -A to select all assignments"
                 sys.exit(1)
-            assign_team(course_db, args.team, args.assignment, args.force, args.assign_team_to_all, vmcfg)
+            assign_team(course_db, args.team, args.assignment, args.force, args.all_flag, vmcfg)
 
         if args.command == "unassignteam":
             if args.team is None:
                 print "Please specify the team name (-t, --team)"
                 sys.exit(1)
-            if args.assignment is None and not args.assign_team_to_all:
+            if args.assignment is None and not args.all_flag:
                 print "Please specify the assignment name (-a, --assignment), or use -A to select all assignments"
                 sys.exit(1)
-            unassign_team(course_db, args.team, args.assignment, args.assign_team_to_all, vmcfg)
+            unassign_team(course_db, args.team, args.assignment, args.all_flag, vmcfg)
 
         if args.command == "list":
             list(course_db, args.user, args.team, args.assignment)
