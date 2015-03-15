@@ -83,8 +83,15 @@ def create_db(db_file):
     """Create the implicit db if it does not exist."""
     # check for DB existance
     if os.path.isfile(db_file):
-        _logger.info('Skipping existing Sqlite3 DB file %s' % db_file)
-        return
+        _logger.info('Found existing Sqlite3 DB file %s' % db_file)
+        old_db_file = db_file
+        db_file = db_file + ".new"
+        _logger.info('Creating empty Sqlite3 DB file %s' % db_file)
+        _logger.info('NOTE: To avoid any inconsistencies between DB versions, please follow these steps:')
+        _logger.info('\t - Rename %s to something like %s.bak' % (old_db_file, old_db_file))
+        _logger.info('\t - Remame %s to %s' % (db_file, old_db_file))
+        _logger.info('\t - If you had any teams defined in %s, use vmchecker-team-manager to recreate them' % old_db_file)
+        _logger.info('\t - Run \'vmchecker-update-db -c course_id --all\')')
 
     # need to create a file without messing with the group persmission
     # bits to not upset POSIX ACL masks
