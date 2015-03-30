@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Collections;
+import java.util.Comparator;
 
 import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.AuthenticationEventHandler;
@@ -22,6 +24,7 @@ import ro.pub.cs.vmchecker.client.ui.StatusWidget;
 import ro.pub.cs.vmchecker.client.ui.HeaderWidget;
 import ro.pub.cs.vmchecker.client.ui.LoginWidget;
 import ro.pub.cs.vmchecker.client.util.CookieManager;
+import ro.pub.cs.vmchecker.client.util.AlphanumComparator;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -57,7 +60,16 @@ public class AppController implements HistoryListener {
 		listenCourseChange();
 		listenAuthenticationEvents(); 
 	}
-	
+
+	private class CourseComparator implements Comparator<Course> {
+		AlphanumComparator stringComparator = new AlphanumComparator();
+		@Override
+		public int compare(Course c1, Course c2) {
+			return stringComparator.compare(c1.title, c2.title);
+		}
+	}
+
+
 	private void listenAuthenticationEvents() {
 		eventBus.addHandler(AuthenticationEvent.TYPE, new AuthenticationEventHandler() {
 
@@ -138,6 +150,8 @@ public class AppController implements HistoryListener {
 					courses.add(course); 
 				}
 				
+				Collections.sort(courses, new CourseComparator());
+
 				/* initialize header presenter */
 				headerPresenter = new HeaderPresenter(eventBus, service, 
 						new HeaderWidget(CookieManager.getUser()));
