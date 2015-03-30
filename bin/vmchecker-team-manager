@@ -176,8 +176,9 @@ def unassign_team(course_db, team_name, assignment_name, assign_team_to_all, vmc
         sys.exit(1)
 
     if assign_team_to_all:
-        print "Deactivating team " + team_name + " for assignments: " + vmcfg.assignments()
+        print ("Deactivating team " + team_name + " for assignments:"),
         for assignment in vmcfg.assignments():
+            print (assignment),
             assignment_id = course_db.get_assignment_id(assignment)
             course_db.deactivate_team_for_assignment(team_id, assignment_id)
     else:

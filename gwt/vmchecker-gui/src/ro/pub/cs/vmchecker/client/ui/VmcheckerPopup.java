@@ -78,9 +78,11 @@ public class VmcheckerPopup extends PopupPanel {
 	public void showContent(String htmlContent) {
 		detailsPopupContent.clear();
 		detailsPopupContent.add(new HTML(htmlContent));
+		// Assume only one <html> tag per document. Reasonable assumption.
+		//Document.get().getElementsByTagName("html").getItem(0).getStyle().setOverflow(Style.Overflow.HIDDEN);
+		Document.get().getBody().getStyle().setOverflow(Style.Overflow.HIDDEN);
 		center();
 		show();
-		Document.get().getBody().getStyle().setOverflow(Style.Overflow.HIDDEN);
 		detailsPopupContent.setFocus(true);
 	}
 
@@ -103,6 +105,8 @@ public class VmcheckerPopup extends PopupPanel {
 	@Override
 	protected void onUnload() {
 		super.onUnload();
+		// Assume only one <html> tag per document. Reasonable assumption.
+		//Document.get().getElementsByTagName("html").getItem(0).getStyle().clearOverflow();
 		Document.get().getBody().getStyle().clearOverflow();
 	}
 
