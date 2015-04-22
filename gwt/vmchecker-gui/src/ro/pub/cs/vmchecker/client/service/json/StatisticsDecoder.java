@@ -7,6 +7,7 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
 
+import ro.pub.cs.vmchecker.client.model.AccountType;
 import ro.pub.cs.vmchecker.client.model.ResultInfo;
 
 public final class StatisticsDecoder extends JSONDecoder<ResultInfo[]> {
@@ -29,7 +30,7 @@ public final class StatisticsDecoder extends JSONDecoder<ResultInfo[]> {
 			for (String assignmentId : resultsObj.keySet()) {
 				assignmentsResults.put(assignmentId, resultsObj.get(assignmentId).isString().stringValue());
 			}
-			results[i] = new ResultInfo(ResultInfo.OwnerType.valueOf(owner.toUpperCase()), name, assignmentsResults);
+			results[i] = new ResultInfo(AccountType.valueOf(owner.toUpperCase()), name, assignmentsResults);
 		}
 
 		return results;

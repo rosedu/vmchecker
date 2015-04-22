@@ -112,14 +112,14 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 				/* the first column contains the student's name */
 				if (j == 0) {
 					table.getCellFormatter().addStyleName(i, j, style.name());
-					table.setText(i, j, result.name);
+					table.setText(i, j, result.accountName);
 				} else if (result.results.containsKey(assignments[j-1].id)) {
 					table.getCellFormatter().addStyleName(i, j, style.innercell());
 					table.setWidget(i, j, new Anchor(result.results.get(assignments[j-1].id)));
 				}
 			}
 
-			if (user.name.equals(result.name) || user.id.equals(result.name)) {
+			if (user.name.equals(result.accountName) || user.id.equals(result.accountName)) {
 				table.getRowFormatter().addStyleName(i, style.itself());
 			} else {
 				table.getRowFormatter().addStyleName(i, (i % 2 == 0) ? style.evenrow() : style.oddrow());

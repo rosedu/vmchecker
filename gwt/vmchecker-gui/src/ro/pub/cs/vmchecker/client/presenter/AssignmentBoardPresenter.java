@@ -7,6 +7,7 @@ import ro.pub.cs.vmchecker.client.event.AuthenticationEvent;
 import ro.pub.cs.vmchecker.client.event.ErrorDisplayEvent;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.AccountType;
 import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
@@ -120,7 +121,7 @@ public class AssignmentBoardPresenter implements Presenter {
 		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION,
 		constants.loadResults()));
 
-		service.getResults(courseId, assignment.id, new AsyncCallback<EvaluationResult[]>() {
+		service.getResults(courseId, assignment.id, null, AccountType.USER, new AsyncCallback<EvaluationResult[]>() {
 
 			public void onFailure(Throwable caught) {
 				GWT.log("[AssignmentBoardPresenter]", caught);

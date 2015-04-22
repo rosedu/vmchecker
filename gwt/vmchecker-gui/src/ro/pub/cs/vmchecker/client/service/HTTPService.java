@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.http.client.Request;
 
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.AccountType;
 import ro.pub.cs.vmchecker.client.model.AuthenticationResponse;
 import ro.pub.cs.vmchecker.client.model.Course;
 import ro.pub.cs.vmchecker.client.model.EvaluationResult;
@@ -94,43 +95,27 @@ public class HTTPService {
 		delegate.sendRequest(callback, new FileListDecoder(), params);
 	}
 
-	/*
-	 * getResults() and getUserResults() call the same service: GET_USER_RESULTS.
-	 * However, getResults() doesn't send the user as a parameter, thus getting information
-	 * about the current user.
-	 */
 	public void getResults(String courseId, String assignmentId,
+			String account, AccountType accountType,
 			final AsyncCallback<EvaluationResult[]> callback) {
+		final String URL = accountType == AccountType.USER ? GET_USER_RESULTS_URL : GET_TEAM_RESULTS_URL;
 		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true, ongoingRequests);
+			new Delegate<EvaluationResult[]>(eventBus, URL, true, true, ongoingRequests);
 		HashMap<String, String> params = new HashMap<String, String>();
 		params.put("courseId", courseId);
 		params.put("assignmentId", assignmentId);
+		/*
+		 * If no account is given, the current logged in account will be used implicitly.
+		 */
+		if (account != null) {
+			if (accountType == AccountType.USER) {
+				params.put("username", account);
+			} else {
+				params.put("teamname", account);
+			}
+		}
 		delegate.sendRequest(callback, new ResultDecoder(), params);
 	}
-
-	public void getUserResults(String courseId, String assignmentId, String username,
-			final AsyncCallback<EvaluationResult[]> callback) {
-		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_USER_RESULTS_URL, true, true, ongoingRequests);
-		HashMap<String, String> params = new HashMap<String, String>();
-		params.put("courseId", courseId);
-		params.put("assignmentId", assignmentId);
-		params.put("username", username);
-		delegate.sendRequest(callback, new ResultDecoder(), params);
-	}
-
-	public void getTeamResults(String courseId, String assignmentId, String teamname,
-			final AsyncCallback<EvaluationResult[]> callback) {
-		Delegate<EvaluationResult[]> delegate =
-			new Delegate<EvaluationResult[]>(eventBus, GET_TEAM_RESULTS_URL, true, true, ongoingRequests);
-		HashMap<String, String> params = new HashMap<String, String>();
-		params.put("courseId", courseId);
-		params.put("assignmentId", assignmentId);
-		params.put("teamname", teamname);
-		delegate.sendRequest(callback, new ResultDecoder(), params);
-	}
-
 
 	public void getAllResults(String courseId, final AsyncCallback<ResultInfo[]> callback) {
 		Delegate<ResultInfo[]> delegate =

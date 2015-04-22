@@ -4,18 +4,13 @@ import java.util.HashMap;
 
 public class ResultInfo {
 
-	public enum OwnerType {
-		USER,
-		TEAM
-	};
-
-	public OwnerType owner;
-	public String name;
+	public AccountType accountType;
+	public String accountName;
 	public HashMap<String, String> results;
 
-	public ResultInfo(OwnerType owner, String name, HashMap<String, String> results) {
-		this.owner = owner;
-		this.name = name;
+	public ResultInfo(AccountType accountType, String accountName, HashMap<String, String> results) {
+		this.accountType = accountType;
+		this.accountName = accountName;
 		this.results = results;
 	}
 }
