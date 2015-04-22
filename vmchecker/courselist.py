@@ -7,7 +7,7 @@ from __future__ import with_statement
 
 DEFAULT_CONFIG_FILE_LIST = '/etc/vmchecker/config.list'
 
-class CourseList():
+class CourseList(object):
     """A class to interact with the course list"""
     def __init__(self, config_file_list=DEFAULT_CONFIG_FILE_LIST):
         """Create a CourseList object.

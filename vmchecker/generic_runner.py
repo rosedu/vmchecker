@@ -5,7 +5,7 @@ from vmchecker.config import VirtualMachineConfig
 import sys
 import logging
 
-class Runner():
+class Runner(object):
 
     def __init__(self, host, vm):
         self.host = host

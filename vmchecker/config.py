@@ -342,7 +342,7 @@ class TestersConfig(ConfigWithDefaults, TesterConfig):
 
 
 
-class VmwareConfig():
+class VmwareConfig(object):
     """Configuration for the VMWare solution used for testing
     (Server or Workstation)"""
 
