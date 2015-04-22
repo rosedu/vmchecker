@@ -250,6 +250,8 @@ class VmWareVM(VM):
        
     def copyTo(self, sourceDir, targetDir, files):
         """ Copy files from host(source) to guest(target) """
+        if self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_TOOLS_RUNNING == 0:
+            return
         for f in files:
             host_path = os.path.join(sourceDir, f)
             guest_path = targetDir + f
@@ -261,6 +263,8 @@ class VmWareVM(VM):
         
     def copyFrom(self, sourceDir, targetDir, files):
         """ Copy files from guest(source) to host(target) """
+        if self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_TOOLS_RUNNING == 0:
+            return
         for f in files:
             host_path = os.path.join(targetDir, f)
             guest_path = sourceDir + f
