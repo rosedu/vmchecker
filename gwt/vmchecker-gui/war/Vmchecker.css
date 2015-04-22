@@ -49,6 +49,10 @@ h2 {
 	background-color: #FFFFFF;
 }
 
+.gwt-TabBarItem {
+	outline: 0;
+}
+
 .logo {
 	background: url('images/vmchecker_logo_ui.png') left top no-repeat; 
 	width: 200px;
