@@ -4,6 +4,7 @@
 from vmchecker.generic_runner import Runner
 from threading import Thread
 import time
+import sys
 
 class OneRebootRunner(Runner):
     def _wait_for_power_off(self):
@@ -38,6 +39,10 @@ class OneRebootRunner(Runner):
                 return
 
             self.vm.stop()
+            self.host.stop_host_commands(kernel_messages_data)
+            self.host.stop_host_commands(host_command_data)
+
+            kernel_messages_data = self.host.start_host_commands(self.bundle_dir, kernel_messages)
             self.logger.info('Waiting for VM to power off.')
             thd = Thread(target = self._wait_for_power_off)
             thd.start()
@@ -49,6 +54,8 @@ class OneRebootRunner(Runner):
                 self.vm.stop()
                 sys.exit(1)
        
+            host_command_data = self.host.start_host_commands(self.bundle_dir, host_command)
+
             testcfg = {
                 'input'  : [],
                 'script' : ['run.sh'],
