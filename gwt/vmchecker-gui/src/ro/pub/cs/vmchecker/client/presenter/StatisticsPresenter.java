@@ -29,7 +29,7 @@ public class StatisticsPresenter implements Presenter {
 		HTMLTable getStudentTable();
 		void displayInfo(User user, Assignment[] assignments,
 			ArrayList<ResultInfo> teamResultInfo, ArrayList<ResultInfo> studentResultInfo);
-		void displayResultDetails(String htmlDetails);
+		void displayResultDetails(String account, String assignment, String result, String htmlDetails);
 	}
 
 	private class TableClickHandler implements ClickHandler {
@@ -111,12 +111,8 @@ public class StatisticsPresenter implements Presenter {
 				for (int i = 0; i < result.length; i++) {
 					resultsHTML += result[i].toHTML();
 				}
-				widget.displayResultDetails(resultsHTML);
-			}
-
-		});
-	}
-
+				widget.displayResultDetails(resultInfo.accountName, assignment,
+						resultInfo.results.get(assignment), resultsHTML);
 			}
 
 		});

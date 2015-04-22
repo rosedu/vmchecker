@@ -9,7 +9,9 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -36,6 +38,7 @@ public class VmcheckerPopup extends PopupPanel {
 	private static VmcheckerConstants constants = GWT
 			.create(VmcheckerConstants.class);
 	private FlowPanel detailsPopupContainer = new FlowPanel();
+	private FlowPanel detailsPopupHeader = new FlowPanel();
 	private FocusPanel detailsPopupContent = new FocusPanel();
 	private Anchor popupCloseButton = new Anchor();
 
@@ -50,7 +53,8 @@ public class VmcheckerPopup extends PopupPanel {
 		setWidth("" + (3 * Window.getClientWidth() / 4) + "px");
 		setHeight("" + (Window.getClientHeight() - 200) + "px");
 		setGlassEnabled(true);
-		detailsPopupContainer.add(popupCloseButton);
+		detailsPopupHeader.add(popupCloseButton);
+		detailsPopupContainer.add(detailsPopupHeader);
 		detailsPopupContainer.add(detailsPopupContent);
 		detailsPopupContent.setWidth("" + ((3 * Window.getClientWidth() / 4) - 10) + "px");
 		detailsPopupContent.setHeight("" + (Window.getClientHeight() - 250) + "px");
@@ -73,6 +77,13 @@ public class VmcheckerPopup extends PopupPanel {
 				}
 			}
 		});
+	}
+
+	public void showContent(Widget header, String htmlContent) {
+		detailsPopupHeader.clear();
+		detailsPopupHeader.add(popupCloseButton);
+		detailsPopupHeader.add(header);
+		showContent(htmlContent);
 	}
 
 	public void showContent(String htmlContent) {
