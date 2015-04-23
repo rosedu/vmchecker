@@ -22,6 +22,7 @@ import tempfile
 import traceback
 import subprocess
 import datetime
+import shutil
 
 from mod_python import Session, Cookie
 
@@ -132,44 +133,40 @@ def uploadAssignment(req, courseId, assignmentId, archiveFile, locale=websutil.D
                     'errorMessage':_("File not uploaded."),
                     'errorTrace':""})
 
-    #  Save file in a temp
-    (fd, tmpname) = tempfile.mkstemp('.zip')
-    f = open(tmpname, 'wb', 10000)
-    ## Read the file in chunks
-    for chunk in websutil.fbuffer(archiveFile.file):
-        f.write(chunk)
-    f.close()
-    os.close(fd)
+    #  Save file in a temp location
+    with tempfile.NamedTemporaryFile(suffix = '.zip', bufsize = websutil.FILE_BUF_SIZE) as tmpfile:
+        shutil.copyfileobj(archiveFile.file, tmpfile, websutil.FILE_BUF_SIZE)
+        tmpfile.flush()
 
-    # Call submit.py
-    ## Redirect stdout to catch logging messages from submit
-    sys.stdout = strout
-    (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
-    try:
-        if hasTeam:
-            submit.submit(tmpname, assignmentId, account, courseId, user = username)
-        else:
-            submit.submit(tmpname, assignmentId, account, courseId)
-        update_db.update_grades(courseId, account, assignment = assignmentId)
-    except submit.SubmittedTooSoonError:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':_("The assignment was submitted too soon"),
-            'errorTrace':strout.get()})
-    except submit.SubmittedTooLateError:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':_("The assignment was submitted too late"),
-            'errorTrace':strout.get()})
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':"",
-            'errorTrace':strout.get()})
-	
-    return json.dumps({'status':True,
-                       'dumpLog':strout.get(),
-                       'file': tmpname}) 
+        # Call submit.py
+        ## Redirect stdout to catch logging messages from submit
+        sys.stdout = strout
+        (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
+        try:
+            if hasTeam:
+                submit.submit(tmpfile.name, assignmentId, account, courseId, user = username)
+            else:
+                submit.submit(tmpfile.name, assignmentId, account, courseId)
+            update_db.update_grades(courseId, account, assignment = assignmentId)
+        except submit.SubmittedTooSoonError:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+                'errorMessage':_("The assignment was submitted too soon"),
+                'errorTrace':strout.get()})
+        except submit.SubmittedTooLateError:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+                'errorMessage':_("The assignment was submitted too late"),
+                'errorTrace':strout.get()})
+        except:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+                'errorMessage':"",
+                'errorTrace':strout.get()})
+
+        return json.dumps({'status':True,
+                           'dumpLog':strout.get(),
+                           'file': tmpfile.name})
 
 ########## @ServiceMethod
 def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum, locale=websutil.DEFAULT_LOCALE):
@@ -204,40 +201,38 @@ def uploadAssignmentMd5(req, courseId, assignmentId, md5Sum, locale=websutil.DEF
     # Reset the timeout
     s.save()
 
-    #  Save file in a temp
-    (fd, tmpname) = tempfile.mkstemp('.txt')
-    with open(tmpname, 'wb', 10000) as f:
-        f.write(md5Sum)
-    os.close(fd)
+    #  Save file in a temp location
+    with tempfile.NamedTemporaryFile(suffix = '.txt', bufsize = -1) as tmpfile:
+        tmpfile.write(md5sum)
 
-    # Call submit.py
-    ## Redirect stdout to catch logging messages from submit
-    sys.stdout = strout
-    (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
-    try:
-        if hasTeam:
-            submit.submit(tmpname, assignmentId, account, courseId, user = username)
-        else:
-            submit.submit(tmpname, assignmentId, account, courseId)
-        update_db.update_grades(courseId, account, assignment = assignmentId)
-    except submit.SubmittedTooSoonError:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-                           'errorMessage':_("The assignment was submitted too soon"),
-                           'errorTrace':strout.get()})
-    except submit.SubmittedTooLateError:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-            'errorMessage':_("The assignment was submitted too late"),
-            'errorTrace':strout.get()})
-    except:
-        traceback.print_exc(file = strout)
-        return json.dumps({'errorType':websutil.ERR_EXCEPTION,
-                           'errorMessage':"",
-                           'errorTrace':strout.get()})
+        # Call submit.py
+        ## Redirect stdout to catch logging messages from submit
+        sys.stdout = strout
+        (hasTeam, account) = websutil.getAssignmentAccountName(courseId, assignmentId, username, strout)
+        try:
+            if hasTeam:
+                submit.submit(tmpfile.name, assignmentId, account, courseId, user = username)
+            else:
+                submit.submit(tmpfile.name, assignmentId, account, courseId)
+            update_db.update_grades(courseId, account, assignment = assignmentId)
+        except submit.SubmittedTooSoonError:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+                               'errorMessage':_("The assignment was submitted too soon"),
+                               'errorTrace':strout.get()})
+        except submit.SubmittedTooLateError:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+                'errorMessage':_("The assignment was submitted too late"),
+                'errorTrace':strout.get()})
+        except:
+            traceback.print_exc(file = strout)
+            return json.dumps({'errorType':websutil.ERR_EXCEPTION,
+                               'errorMessage':"",
+                               'errorTrace':strout.get()})
 
-    return json.dumps({'status':True,
-                       'dumpLog':strout.get()})
+        return json.dumps({'status':True,
+                           'dumpLog':strout.get()})
 
 
 

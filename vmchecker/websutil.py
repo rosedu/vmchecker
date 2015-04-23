@@ -23,6 +23,9 @@ try:
 except ImportError:
     import json
 
+# The buffer size used for copying temporary files
+FILE_BUF_SIZE=10000
+
 # If requested, remember user for up to two weeks
 EXTENDED_SESSION_TIMEOUT = 60 * 60 * 24 * 14;
 
