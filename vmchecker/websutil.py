@@ -186,15 +186,6 @@ def get_ldap_user(username, password):
     return entry['cn'][0]
 
 
-# Generator to buffer file chunks
-def fbuffer(f, chunk_size=10000):
-    while True:
-        chunk = f.read(chunk_size)
-        if not chunk:
-            break
-        yield chunk
-
-
 def _find_file(searched_file_name, rfiles):
     """Search for a filename in an array for {fname:fcontent} dicts"""
     for rfile in rfiles:
