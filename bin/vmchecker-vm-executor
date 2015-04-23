@@ -81,7 +81,7 @@ class GenericHost():
             custom_runner_path = os.path.join(bundle_dir, machinecfg.custom_runner())
             custom_runner = imp.load_source("custom_runner", custom_runner_path)
             runner = custom_runner.get_runner(host, vm)
-        elif sb_cfg.getd('Assignment', 'assignmentstorage', '').lower() == 'large':
+        elif sb_cfg.get('Assignment', 'assignmentstorage', '').lower() == 'large':
             runner = LargeRunner(host, vm)
         else:
             runner = Runner(host, vm)
