@@ -69,7 +69,7 @@ class VmWareVM(VM):
                                   int(self.vmwarecfg.vmware_port()),
                                   self.vmwarecfg.vmware_username(),
                                   self.vmwarecfg.vmware_password())
-        except pyvix.vix.VIXException:
+        except pyvix.vix.VIXException as e:
             _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
             with open(self.error_fname, 'a') as handler:
                 print >> handler, 'Error powering on the virtual machine.\n' + \
@@ -93,7 +93,7 @@ class VmWareVM(VM):
 
         try:
             self.vminstance = self.vmhost.openVM(vmx_path)
-        except pyvix.vix.VIXException:
+        except pyvix.vix.VIXException as e:
             _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
             with open(self.error_fname, 'a') as handler:
                 print >> handler, 'Error powering on the virtual machine.\n' + \
@@ -111,12 +111,12 @@ class VmWareVM(VM):
     def stop(self):
         try:
             self.vminstance.powerOff()
-        except pyvix.vix.VIXException:
+        except pyvix.vix.VIXException as e:
             _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
         if self.vmwarecfg.vmware_register_and_unregister():
             try:
                 self.vmhost.unregisterVM(self.vmwarecfg.vmware_rel_vmx_path(self.vmx_path))
-            except pyvix.vix.VIXException:
+            except pyvix.vix.VIXException as e:
                 _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
 
     def _wait_for_tools(self):
@@ -128,7 +128,7 @@ class VmWareVM(VM):
         """
         try:
             self.vminstance.waitForToolsInGuest()
-        except pyvix.vix.VIXException:
+        except pyvix.vix.VIXException as e:
             _logger.exception('Exception thrown: ' + type(e).__name__ + "\n" + ", ".join(e.args) + "\n" + e.__str__())
 
 
@@ -153,8 +153,8 @@ class VmWareVM(VM):
             return True
 
 
-        _logger.error('Timeout waiting for VMWare Tools to start.' +
-                      'Make sure your virtual machine boots up corectly' +
+        _logger.error('Timeout waiting for VMWare Tools to start. ' +
+                      'Make sure your virtual machine boots up correctly ' +
                       'and that you have VMWare Tools installed.')
 
         with open(error_fname, 'a') as handler:
@@ -250,6 +250,8 @@ class VmWareVM(VM):
        
     def copyTo(self, sourceDir, targetDir, files):
         """ Copy files from host(source) to guest(target) """
+        if self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_TOOLS_RUNNING == 0:
+            return
         for f in files:
             host_path = os.path.join(sourceDir, f)
             guest_path = targetDir + f
@@ -261,6 +263,8 @@ class VmWareVM(VM):
         
     def copyFrom(self, sourceDir, targetDir, files):
         """ Copy files from guest(source) to host(target) """
+        if self.vminstance[VIX_PROPERTY_VM_POWER_STATE] & VIX_POWERSTATE_TOOLS_RUNNING == 0:
+            return
         for f in files:
             host_path = os.path.join(targetDir, f)
             guest_path = sourceDir + f

@@ -7,6 +7,7 @@ import java.util.Comparator;
 import ro.pub.cs.vmchecker.client.i18n.VmcheckerConstants;
 import ro.pub.cs.vmchecker.client.event.StatusChangedEvent;
 import ro.pub.cs.vmchecker.client.model.Assignment;
+import ro.pub.cs.vmchecker.client.model.AccountType;
 import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.model.ResultInfo;
 import ro.pub.cs.vmchecker.client.model.User;
@@ -28,7 +29,7 @@ public class StatisticsPresenter implements Presenter {
 		HTMLTable getStudentTable();
 		void displayInfo(User user, Assignment[] assignments,
 			ArrayList<ResultInfo> teamResultInfo, ArrayList<ResultInfo> studentResultInfo);
-		void displayResultDetails(String htmlDetails);
+		void displayResultDetails(String account, String assignment, String result, String htmlDetails);
 	}
 
 	private class TableClickHandler implements ClickHandler {
@@ -48,11 +49,7 @@ public class StatisticsPresenter implements Presenter {
 				ResultInfo resultInfo = this.resultsInfo.get(cell.getRowIndex() - 1);
 				String assignmentId = assignments[cell.getCellIndex() - 1].id;
 				if (resultInfo.results.containsKey(assignmentId)) {
-					if (resultInfo.owner == ResultInfo.OwnerType.USER) {
-						loadAndShowUserResultDetails(assignmentId, resultInfo.name);
-					} else {
-						loadAndShowTeamResultDetails(assignmentId, resultInfo.name);
-					}
+					loadAndShowResultDetails(resultInfo, assignmentId);
 				}
 			}
 		}
@@ -62,7 +59,7 @@ public class StatisticsPresenter implements Presenter {
 		AlphanumComparator stringComparator = new AlphanumComparator();
 		@Override
 		public int compare(ResultInfo r1, ResultInfo r2) {
-			return stringComparator.compare(r1.name, r2.name);
+			return stringComparator.compare(r1.accountName, r2.accountName);
 		}
 	}
 
@@ -96,14 +93,15 @@ public class StatisticsPresenter implements Presenter {
 		widget.getStudentTable().addClickHandler(new TableClickHandler(widget.getStudentTable(), studentResultsInfo));
 	}
 
-	private void loadAndShowTeamResultDetails(String assignmentId, String teamname) {
+	private void loadAndShowResultDetails(final ResultInfo resultInfo, final String assignment) {
 		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION,
-		constants.loadResults()));
-		service.getTeamResults(courseId, assignmentId, teamname, new AsyncCallback<EvaluationResult[]> () {
+				constants.loadResults()));
+		service.getResults(courseId, assignment, resultInfo.accountName,
+				resultInfo.accountType, new AsyncCallback<EvaluationResult[]> () {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				GWT.log("StatisticsPresenter.loadAndShowTeamResultDetails()", caught);
+				GWT.log("StatisticsPresenter.loadAndShowResultDetails()", caught);
 			}
 
 			@Override
@@ -113,30 +111,8 @@ public class StatisticsPresenter implements Presenter {
 				for (int i = 0; i < result.length; i++) {
 					resultsHTML += result[i].toHTML();
 				}
-				widget.displayResultDetails(resultsHTML);
-			}
-
-		});
-	}
-
-	private void loadAndShowUserResultDetails(String assignmentId, String username) {
-		eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.ACTION,
-		constants.loadResults()));
-		service.getUserResults(courseId, assignmentId, username, new AsyncCallback<EvaluationResult[]> () {
-
-			@Override
-			public void onFailure(Throwable caught) {
-				GWT.log("StatisticsPresenter.loadAndShowUserResultDetails()", caught);
-			}
-
-			@Override
-			public void onSuccess(EvaluationResult[] result) {
-				eventBus.fireEvent(new StatusChangedEvent(StatusChangedEvent.StatusType.RESET, null));
-				String resultsHTML = "";
-				for (int i = 0; i < result.length; i++) {
-					resultsHTML += result[i].toHTML();
-				}
-				widget.displayResultDetails(resultsHTML);
+				widget.displayResultDetails(resultInfo.accountName, assignment,
+						resultInfo.results.get(assignment), resultsHTML);
 			}
 
 		});
@@ -155,11 +131,11 @@ public class StatisticsPresenter implements Presenter {
 		studentResultsInfo.clear();
 		teamResultsInfo.clear();
 		for (ResultInfo result : resultsInfo) {
-			if (result.owner == ResultInfo.OwnerType.USER) {
+			if (result.accountType == AccountType.USER) {
 				studentResultsInfo.add(result);
 			}
 
-			if (result.owner == ResultInfo.OwnerType.TEAM) {
+			if (result.accountType == AccountType.TEAM) {
 				teamResultsInfo.add(result);
 			}
 		}

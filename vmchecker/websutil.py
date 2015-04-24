@@ -23,6 +23,9 @@ try:
 except ImportError:
     import json
 
+# The buffer size used for copying temporary files
+FILE_BUF_SIZE=10000
+
 # If requested, remember user for up to two weeks
 EXTENDED_SESSION_TIMEOUT = 60 * 60 * 24 * 14;
 
@@ -181,15 +184,6 @@ def get_ldap_user(username, password):
         raise
 
     return entry['cn'][0]
-
-
-# Generator to buffer file chunks
-def fbuffer(f, chunk_size=10000):
-    while True:
-        chunk = f.read(chunk_size)
-        if not chunk:
-            break
-        yield chunk
 
 
 def _find_file(searched_file_name, rfiles):

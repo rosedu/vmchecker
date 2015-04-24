@@ -7,12 +7,18 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Float;
+import com.google.gwt.dom.client.Style.FontWeight;
+import com.google.gwt.dom.client.Style.FontStyle;
+import com.google.gwt.dom.client.Style.Unit;
 
 import ro.pub.cs.vmchecker.client.i18n.StatisticsConstants;
 import ro.pub.cs.vmchecker.client.model.Assignment;
@@ -112,14 +118,14 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 				/* the first column contains the student's name */
 				if (j == 0) {
 					table.getCellFormatter().addStyleName(i, j, style.name());
-					table.setText(i, j, result.name);
+					table.setText(i, j, result.accountName);
 				} else if (result.results.containsKey(assignments[j-1].id)) {
 					table.getCellFormatter().addStyleName(i, j, style.innercell());
 					table.setWidget(i, j, new Anchor(result.results.get(assignments[j-1].id)));
 				}
 			}
 
-			if (user.name.equals(result.name) || user.id.equals(result.name)) {
+			if (user.name.equals(result.accountName) || user.id.equals(result.accountName)) {
 				table.getRowFormatter().addStyleName(i, style.itself());
 			} else {
 				table.getRowFormatter().addStyleName(i, (i % 2 == 0) ? style.evenrow() : style.oddrow());
@@ -155,8 +161,29 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 	}
 
 	@Override
-	public void displayResultDetails(String htmlDetails) {
-		resultDetailsPopup.showContent(htmlDetails);
+	public void displayResultDetails(String account, String assignment, String result, String htmlDetails) {
+		resultDetailsPopup.showContent(buildPopupHeader(account, assignment, result), htmlDetails);
+	}
+
+	private Widget buildPopupHeader(String account, String assignment, String result) {
+		HorizontalPanel p = new HorizontalPanel();
+		Label accountLabel = new Label(account);
+		accountLabel.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+		accountLabel.getElement().getStyle().setMarginRight(1, Unit.PX);
+		p.add(accountLabel);
+		p.add(new Label("@"));
+		Label assignmentLabel = new Label(assignment);
+		assignmentLabel.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+		assignmentLabel.getElement().getStyle().setMarginLeft(1, Unit.PX);
+		p.add(assignmentLabel);
+		p.add(new Label(":"));
+		Label resultLabel = new Label(result);
+		resultLabel.getElement().getStyle().setFontWeight(FontWeight.BOLD);
+		resultLabel.getElement().getStyle().setFontStyle(FontStyle.ITALIC);
+		accountLabel.getElement().getStyle().setMarginRight(1, Unit.PX);
+		p.add(resultLabel);
+		p.getElement().getStyle().setFloat(Float.RIGHT);
+		return p;
 	}
 
 

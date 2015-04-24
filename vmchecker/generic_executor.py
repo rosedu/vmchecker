@@ -29,7 +29,7 @@ _logger = logging.getLogger('vm_executor')
 
 
 
-class Host():
+class Host(object):
     def __init__(self):
         pass
 
@@ -89,7 +89,7 @@ class Host():
                 _logger.exception('HOSTPROC: while stopping host cmds')
         _logger.info("%%% -- stopped host commands")
 		    
-class VM():
+class VM(object):
     host 	= None
     path 	= None
     username	= None

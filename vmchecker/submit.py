@@ -19,6 +19,7 @@ import socket
 import random
 import datetime
 import paramiko
+import tempfile
 from contextlib import closing
 
 from . import config
@@ -26,7 +27,6 @@ from . import paths
 from . import ziputil
 from . import submissions
 from . import vmlogging
-from . import tempfileutil
 from . import callback
 from . import update_db
 
@@ -272,22 +272,22 @@ def create_testing_bundle(vmcfg, account, assignment, course_id):
 
     # builds archive with configuration
     with vmcfg.assignments().lock(vmpaths, assignment):
-        # creates the zip archive with an unique name
-        (bundle_fd, bundle_path) = tempfileutil.mkstemp(
-            suffix='.zip',
-            prefix='%s_%s_%s_' % (course_id, assignment, account),
-            dir=vmpaths.dir_storer_tmp())
-        logger.info('Creating bundle package %s', bundle_path)
-
         try:
-            with closing(os.fdopen(bundle_fd, 'w+b')) as handler:
-                ziputil.create_zip(handler, file_list)
+            # creates the zip archive with an unique name
+            with tempfile.NamedTemporaryFile(
+                    suffix='.zip',
+                    prefix='%s_%s_%s_' % (course_id, assignment, account),
+                    dir=vmpaths.dir_storer_tmp(),
+                    delete=False) as handle:
+                logger.info('Creating bundle package %s', handle.name)
+                ziputil.create_zip(handle, file_list)
+
+                return handle.name
+
         except:
             logger.error('Failed to create zip archive %s', bundle_path)
             raise # just cleaned up the bundle. the error still needs
                   # to be reported.
-
-    return bundle_path
 
 def get_tester_queue_contents(vmcfg, tester_id):
     # connect to the tester
