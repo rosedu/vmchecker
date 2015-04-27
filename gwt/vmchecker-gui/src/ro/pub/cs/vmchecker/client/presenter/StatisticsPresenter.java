@@ -13,6 +13,7 @@ import ro.pub.cs.vmchecker.client.model.ResultInfo;
 import ro.pub.cs.vmchecker.client.model.User;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.util.AlphanumComparator;
+import ro.pub.cs.vmchecker.client.util.ANSITextColorFilter;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -111,6 +112,7 @@ public class StatisticsPresenter implements Presenter {
 				for (int i = 0; i < result.length; i++) {
 					resultsHTML += result[i].toHTML();
 				}
+				resultsHTML = ANSITextColorFilter.apply(resultsHTML);
 				widget.displayResultDetails(resultInfo.accountName, assignment,
 						resultInfo.results.get(assignment), resultsHTML);
 			}
