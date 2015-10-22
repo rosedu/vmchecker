@@ -90,6 +90,16 @@ The string after ``assignment`` is the ID of the assignment. This may *NOT* cont
 
 Assignment test archives must be placed in tests/``assignment-id``.zip
 
+Resubmit an assignment
+======================
+
+In order to resubmit a student upload for rechecking you must:
+
+- delete the results folder from the current upload, e.g. ``rm -rf vmchecker-storer/repo/assign1/student.name/current/results``
+- run ``vmchecker-resubmit -c <course-id> -u <student-name> -a <assignment-name>``
+
+``vmchecker-resubmit`` also has an ``--all`` option if you want to mass resubmit.
+
 Add a new instance
 ==================
 
