@@ -89,3 +89,24 @@ The string after ``assignment`` is the ID of the assignment. This may *NOT* cont
 - ``OrderNumber`` is used to order assignments when presented to the student. These should be numbers starting from ``1`` for the first assignment and incremented for each new one.
 
 Assignment test archives must be placed in tests/``assignment-id``.zip
+
+Resubmit an assignment
+======================
+
+In order to resubmit a student upload for rechecking you must:
+
+- delete the results folder from the current upload, e.g. ``rm -rf vmchecker-storer/repo/assign1/student.name/current/results``
+- run ``vmchecker-resubmit -c <course-id> -u <student-name> -a <assignment-name>``
+
+``vmchecker-resubmit`` also has an ``--all`` option if you want to mass resubmit.
+
+Add a new instance
+==================
+
+To create an instance for a new school year, based of the previous year:
+
+- create a new folder
+- inside the folder run ``vmchecker-init-course storer``
+- copy ``config``, build/run scripts and tests from previous year
+- update ``config`` accordingly
+- point ``vmchecker-storer`` symbolic link to new instance folder
