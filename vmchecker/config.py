@@ -438,7 +438,9 @@ class VirtualMachineConfig(object):
             [tester TESTER_ID]
         from which more info about the tester can be determined.
         """
-        return self.config.get_list(self.machine_id, 'Testers')
+        # Backwards compatibility with single tester option
+        single_tester = self.config.get(self.machine_id, 'Tester', '')
+        return self.config.get_list(self.machine_id, 'Testers', single_tester)
 
 
     def get_vm_path(self):
