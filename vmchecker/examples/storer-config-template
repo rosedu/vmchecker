@@ -59,6 +59,12 @@ KnownHostsFile = $home/.ssh/known_hosts
 #  - VmwareVIServer
 #  - VirtualBox - [not implemented yet, just as a future hint]
 #
+# VmStorePath (OPTIONAL):
+# - This defines the path on the tester where the VMs are stored. This is useful
+# if the VMs are stored in a different folder than the home of the tester user.
+# Example:
+#    VmStorePath = /tmp/vmchecker-vms
+#
 # IMPORTANT: If you are only developing for the storer/UI,
 #            make sure that the testers are commented out
 #
