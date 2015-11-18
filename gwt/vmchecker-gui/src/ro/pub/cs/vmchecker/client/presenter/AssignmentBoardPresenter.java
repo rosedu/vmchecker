@@ -12,6 +12,7 @@ import ro.pub.cs.vmchecker.client.model.ErrorResponse;
 import ro.pub.cs.vmchecker.client.model.EvaluationResult;
 import ro.pub.cs.vmchecker.client.service.HTTPService;
 import ro.pub.cs.vmchecker.client.service.ServiceError;
+import ro.pub.cs.vmchecker.client.util.ANSITextColorFilter;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.HasSelectionHandlers;
@@ -134,6 +135,7 @@ public class AssignmentBoardPresenter implements Presenter {
 					EvaluationResult resultPack = result[i];
 					resultHTML += resultPack.toHTML();
 				}
+				resultHTML = ANSITextColorFilter.apply(resultHTML);
 				resultsWidget.getResultContainer().setHTML(resultHTML);
 				widget.displayView((com.google.gwt.user.client.ui.Widget) resultsWidget);
 				eventBus.fireEvent(new StatusChangedEvent(

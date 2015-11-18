@@ -109,7 +109,7 @@ a.fillButton:hover {
 	text-decoration: none;
 }
 
-.popupContainer {	
+.popupContainer {
 	overflow: hidden;
 }
 
@@ -126,4 +126,44 @@ a.fillButton:hover {
 
 .check_error {
 	color: red;
+}
+
+.blink {
+	-webkit-animation-name: blink;
+	   -moz-animation-name: blink;
+	     -o-animation-name: blink;
+	        animation-name: blink;
+	-webkit-animation-timing-function: linear;
+	   -moz-animation-timing-function: linear;
+	     -o-animation-timing-function: linear;
+	        animation-timing-function: linear;
+	-webkit-animation-duration: 1s;
+	   -moz-animation-duration: 1s;
+	     -o-animation-duration: 1s;
+	        animation-duration: 1s;
+	-webkit-animation-iteration-count: infinite;
+	   -moz-animation-iteration-count: infinite;
+	     -o-animation-iteration-count: infinite;
+	        animation-iteration-count: infinite;
+}
+
+@-webkit-keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@-o-keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }

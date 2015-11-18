@@ -321,7 +321,10 @@ class TesterConfig(Config):
 
     def vm_store_path(self, tester):
         """The path on tester machine where the vms are stored"""
-        return self.get(tester, 'vmstorepath')
+        path = self.get(tester, 'vmstorepath', '')
+        if path == '':
+            return None
+        return path
 
 class TestersConfig(ConfigWithDefaults, TesterConfig):
     """Obtain information about assignments from a config file.
@@ -435,7 +438,9 @@ class VirtualMachineConfig(object):
             [tester TESTER_ID]
         from which more info about the tester can be determined.
         """
-        return self.config.get_list(self.machine_id, 'Testers')
+        # Backwards compatibility with single tester option
+        single_tester = self.config.get(self.machine_id, 'Tester', '')
+        return self.config.get_list(self.machine_id, 'Testers', single_tester)
 
 
     def get_vm_path(self):

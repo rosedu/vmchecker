@@ -121,7 +121,13 @@ public class StatisticsWidget extends Composite implements StatisticsPresenter.W
 					table.setText(i, j, result.accountName);
 				} else if (result.results.containsKey(assignments[j-1].id)) {
 					table.getCellFormatter().addStyleName(i, j, style.innercell());
-					table.setWidget(i, j, new Anchor(result.results.get(assignments[j-1].id)));
+					Anchor cellContent = new Anchor(result.results.get(assignments[j-1].id));
+					cellContent.removeStyleName("blink");
+					if (cellContent.getText() == "running") {
+						// Make "running" entries blink
+						cellContent.addStyleName("blink");
+					}
+					table.setWidget(i, j, cellContent);
 				}
 			}
 
