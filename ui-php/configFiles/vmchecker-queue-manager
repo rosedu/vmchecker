@@ -1,0 +1,280 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Queue manager - wait for assignments to appear and invoke vmchecker-vm-executor to handle them.
+
+This module depends on pyinotify: http://pyinotify.sourceforge.net/
+For each bundle:
+  * listen for new files on a directory,
+  * decompress the bundle to a temporary directory,
+  * pass path of the directory to the executor,
+  * waits for the executor to finish.
+
+At startup it checks whether there are any stale jobs and executes them
+all as described above.
+
+"""
+
+from __future__ import with_statement
+
+import os
+import sys
+import time
+import shutil
+import signal
+import tempfile
+import optparse
+import subprocess
+from pyinotify import WatchManager, Notifier, ProcessEvent, EventsCodes
+
+from vmchecker.courselist import CourseList
+from vmchecker.config import CourseConfig
+from vmchecker.paths  import VmcheckerPaths
+from vmchecker import vmlogging
+from vmchecker import callback
+from vmchecker import ziputil
+
+
+# The maximum number of seconds each instance of vmchecker-vm-executor
+# is allowed to run. If it runs for more than this ammount of time,
+# the process gets killed automatically by the queue manager
+VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME = 10 * 60 # 10 minutes!
+
+EXIT_SUCCESS = 0
+EXIT_FAIL = 1
+
+_logger = vmlogging.create_script_stdout_logger()
+
+
+def upload_results_to_sender(bundle_dir):
+    """Runs callback script to upload results"""
+    try:
+        allfiles = os.listdir(bundle_dir)
+        vmrfiles = []
+        for fname in allfiles:
+            if fname.endswith('.vmr'):
+                vmrfiles.append(os.path.join(bundle_dir, fname))
+        sb_config = os.path.join(bundle_dir, 'submission-config')
+        callback.run_callback(sb_config, vmrfiles)
+    except:
+        # XXX: don't know whether to allow exceptions to kill
+        # queue-manager or not. Silent exceptions will most certainly
+        # run unnoticed, QM crashes will surely be noticed by students
+        _logger.exception("--Queue-Manager: error while sending back results")
+
+
+class _InotifyHandler(ProcessEvent):
+    """Dummy class needed to start processing events"""
+
+    def __init__(self, vmpaths):
+        self.vmpaths = vmpaths
+
+    def process_IN_CLOSE_WRITE(self, event):
+        """Called when a write ends (this means a new
+        bundle has arrived). Imediatly start the new job.
+
+        """
+        _logger.info('Processing job "%s" in queue dir "%s"' % (
+                event.name, event.path))
+        process_job(event.path, event.name, self.vmpaths)
+
+
+def log_vmchecker_stderr(location, string):
+    """Writes a message to 'vmchecker-stderr.vmr'"""
+    vmchecker_stderr = os.path.join(location, 'vmchecker-stderr.vmr')
+    with open(vmchecker_stderr, 'a+') as handler:
+        print >> handler, string
+
+def log_vmchecker_grade(location, exit_code):
+    """Writes 'ok' or 'error' to 'grade.vmr'.
+       If exit_code equals 0 then the result is 'ok', otherwise it is 'error'.
+    """
+    vmchecker_grade = os.path.join(location, 'grade.vmr')
+    with open(vmchecker_grade, 'w') as handler:
+        print >> handler, ['error', 'ok'] [ exit_code == 0 ]
+
+
+def launch_external_downloader(location):
+    """Launch a program to download any external files needed for
+    testing"""
+    try:
+        # download additional files into the bundle dir (location)
+        subprocess.call(['vmchecker-download-external-files', location])
+    except OSError:
+        _logger.exception('Cannot invoke vmchecker-download-external-files.')
+
+
+def launch_executor(location):
+    """Launch the vmchecker-vm-executor process and kill it if it runs
+    for too long"""
+
+    deadline = time.time() + VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME
+    _logger.info('Begin homework evaluation. Location %s', location)
+
+    # launch vmchecker-vm-executor
+    try:
+        popen = subprocess.Popen(['vmchecker-vm-executor', location])
+    except OSError:
+        _logger.exception('Cannot invoke vmchecker-vm-executor.')
+        log_vmchecker_grade(location, EXIT_FAIL)
+        log_vmchecker_stderr(location, 'Cannot run vmchecker-vm-executor.')
+        log_vmchecker_stderr(location, 'Please contact the administrators.')
+        # if we cannot open the process, there is nothing more that can be done
+        return
+
+    # wait for vmchecker-vm-executor to finish runing or kill it.
+    try:
+        counter = 0
+        while time.time() < deadline:
+            counter += 1
+            exit_code = popen.poll()
+            if exit_code != None:
+                # the process has terminated. Write to log and return.
+                log_vmchecker_stderr(location, 'vmexecutor exitcode %d (%s)' % (
+                        exit_code, ['error', 'success'] [ exit_code == 0 ]))
+                log_vmchecker_grade(location, exit_code)
+                return
+            # if process has not finished => continue to poll every 5s
+            _logger.debug('-- QM sleep(5): total=%d max=%d', counter*5,
+                          VMCHECKER_VM_EXECUTOR_MAXIMUM_RUNTIME)
+            time.sleep(5)
+        else:
+            log_vmchecker_stderr(location, '''VMExecutor successfuly
+                      started, but it's taking too long. Check your
+                      sources, makefiles, etc and resubmit. If the
+                      problem persists please contact administrators.''')
+            log_vmchecker_grade(location, EXIT_FAIL)
+    except (IOError, OSError):
+        _logger.exception('Exception while waiting for vmexecutor to end')
+
+    try:
+        # can't do "popen.kill()" here because it only
+        # available from python 2.6
+        os.kill(popen.pid, signal.SIGTERM)
+    except OSError:
+        _logger.exception('Exception in kill(PID=%d)', popen.pid)
+
+
+def process_job(path, name, vmpaths):
+    """Unzip a bundle archive and call the commander."""
+    location = tempfile.mkdtemp(prefix='vmchecker-',
+                                dir=vmpaths.dir_tester_unzip_tmp())
+    bundle_archive = os.path.join(path, name)
+    try:
+        ziputil.unzip_safely(bundle_archive, location)
+        _logger.info('-- QM: unzipped bundle (config/tests/scripts/etc)')
+        launch_external_downloader(location)
+        _logger.info('-- QM: finished downloading external dependencies')
+        launch_executor(location)
+        _logger.info('-- QM: finished testing - sending results')
+        upload_results_to_sender(location)
+    except:
+        _logger.exception('Failed to process "%s".' % location)
+
+    _logger.info('Cleaning "%s"' % location)
+    shutil.rmtree(location)
+
+    _logger.info('Removing job from the queue')
+    os.unlink(bundle_archive)
+
+
+def process_stale_jobs(dir_queue, vmpaths):
+    """The queue_manager may die leaving jobs unchecked.
+    This function runs the commander for each job found
+    in the queue directory at startup.
+
+    """
+    stale_jobs = os.listdir(dir_queue)
+    if len(stale_jobs) == 0:
+        _logger.info('No stale jobs in queue dir "%s"' % dir_queue)
+    for stale_job in stale_jobs:
+        _logger.info('Processing stale job "%s" in queue dir "%s"' % (
+                stale_job, dir_queue))
+        process_job(dir_queue, stale_job, vmpaths)
+
+
+def _callback(watch_manager):
+    """Called after each event is processed in the Notifier. We just
+    use it to write to the logger that we finished processing.
+
+    """
+    _logger.info('Waiting for the next job to arrive')
+
+
+def start_queue(vmpaths):
+    """ Process any stale jobs and register with inotify to wait
+    for new jobs to arrive.
+
+    """
+    dir_queue = vmpaths.dir_queue()
+
+    # register for inotify envents before processing stale jobs
+    watch_manager = WatchManager()
+    watch_manager.add_watch(dir_queue, EventsCodes.ALL_FLAGS['IN_CLOSE_WRITE'])
+    notifier = Notifier(watch_manager, _InotifyHandler(vmpaths))
+    process_stale_jobs(dir_queue, vmpaths)
+
+    # set callback to receive notifications (includes queued jobs after
+    # setting up inotify but before we finished processing stale jobs)
+    notifier.loop(callback=_callback)
+
+
+def check_tester_setup_correctly(vmpats):
+    """ Sanity check:
+        * all needed paths are present
+    """
+    # check needed paths setup correctly
+    for path in vmpats.tester_paths():
+        if not os.path.isdir(path):
+            _logger.error('"%s" missing. Run `vmchecker-init-course tester`' % path)
+            exit(1)
+
+
+def redirect_std_files(stdin_fname=None, stdout_fname=None, stderr_fname=None):
+    """Redirect standard files for the files that are not null"""
+    if stdin_fname != None:
+        stdin = file(stdin_fname, 'r')
+        os.dup2(stdin.fileno(), sys.stdin.fileno())
+
+    if stdout_fname != None:
+        sys.stdout.flush()
+        stdout = file(stdout_fname, 'a+')
+        os.dup2(stdout.fileno(), sys.stdout.fileno())
+
+    if stderr_fname != None:
+        sys.stderr.flush()
+        stderr = file(stderr_fname, 'a+', 0)
+        os.dup2(stderr.fileno(), sys.stderr.fileno())
+
+
+def main():
+    """Entry point for the queue manager"""
+    cmdline = optparse.OptionParser()
+    cmdline.add_option('-0', '--stdin',  dest='stdin',  default=None,
+                       help='Redirect stdin to FILE.',  metavar='FILE')
+    cmdline.add_option('-1', '--stdout', dest='stdout', default=None,
+                       help='Redirect stdout to FILE.', metavar='FILE')
+    cmdline.add_option('-2', '--stderr', dest='stderr', default=None,
+                       help='Redirect stderr to FILE.', metavar='FILE')
+    cmdline.add_option('-c', '--course_id', dest='course_id',
+                       help='The course id for which to start the queue manager.')
+    (options, _) = cmdline.parse_args()
+
+    course_id = options.course_id
+    if course_id == None:
+        print "course_id parameter required"
+        exit(1)
+
+    redirect_std_files(options.stdin, options.stdout, options.stderr)
+
+    vmcfg = CourseConfig(CourseList().course_config(course_id))
+    vmpaths = VmcheckerPaths(vmcfg.root_path())
+
+    os.chdir(vmcfg.root_path())
+    # fail early if something is not setup corectly, and not at a
+    # distant point when we'll need these things.
+    check_tester_setup_correctly(vmpaths)
+    start_queue(vmpaths)
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -e
+
+# Must be a valid filename
+NAME=vmchecker-queue-manager
+PIDFILE=/var/run/$NAME.pid
+CWDIR=/home/courses/so/vmchecker/2010/
+#This is the command to be run, give the full pathname
+DAEMON=/usr/bin/vmchecker-queue-manager
+DAEMON_OPTS="--course_id so --stdin=/dev/null --stdout=queue-manager.log --stderr=queue-manager.log"
+DAEMON_USER="so"
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+case "$1" in
+    start)
+        echo -n "Starting daemon: "$NAME
+	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --chdir $CWDIR --pidfile $PIDFILE --background --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
+        echo "."
+	;;
+    stop)
+        echo -n "Stopping daemon: "$NAME
+	start-stop-daemon --stop  --quiet --chuid $DAEMON_USER --user $DAEMON_USER --oknodo --pidfile $PIDFILE
+        echo "."
+	;;
+    restart)
+        echo -n "Restarting daemon: "$NAME
+	start-stop-daemon --stop  --quiet --chuid $DAEMON_USER --user $DAEMON_USER --oknodo --retry 30 --pidfile $PIDFILE
+	start-stop-daemon --start --quiet --chuid $DAEMON_USER --user $DAEMON_USER --chdir $CWDIR --pidfile $PIDFILE --background --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
+	echo "."
+	;;
+    *)
+	echo "Usage: "$1" {start|stop|restart}"
+	exit 1
+esac
+
+exit 0

@@ -1,0 +1,142 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Generates a HTML table containing the students' grades.
+
+The layout can be modified by editing the following CSS elements:
+
+table#hw-results-table {}
+table#hw-results-table tr.tr-odd {} /* odd rows from table */
+table#hw-results-table tr.tr-even {}/* even rows from table */
+table#hw-results-table td.hw-h {}   /* home heading row */
+table#hw-results-table td.st-h {}   /* student heading column */
+table#hw-results-table td.grade {}  /* the grade cell */
+
+"""
+
+import sys
+import sqlite3
+import urllib
+
+from vmchecker.courselist import CourseList
+from vmchecker.config import CourseConfig
+from vmchecker.paths  import VmcheckerPaths
+
+
+def _db_retrieve_grades(db_cursor):
+    """Retrieves all grades from database.
+
+    @return a 2-D dictionary mapping (users, assignment) to
+            user's grade on assignment
+
+    """
+    results = {}
+    db_cursor.execute(
+            'SELECT users.name, assignments.name, grades.grade '
+            'FROM users, assignments, grades '
+            'WHERE 1 '
+                'AND users.id = grades.user_id '
+                'AND assignments.id = grades.assignment_id')
+
+    for row in db_cursor:
+        user, assignment, grade = row
+        results.setdefault(user, {})[assignment] = grade
+
+    return results
+
+
+def href(target, text, title='Click pentru detalii'):
+    """ Generate a HTML anchor with target, text, and title attributes
+    @return
+    a HTML string with an A tag and it's attributes
+    """
+    return "<a href='%s' title='%s'>%s</a>" % (target, title, text)
+
+
+def _cpl_hack(user, assignment, result):
+    """A useful hack to link to results.
+
+    TODO replace with something less specific
+
+    """
+    return "<a href=\"Teme/nota.php?user=%s&homework=%s\">%s</a>" % (
+        urllib.quote(user), urllib.quote(assignment), result)
+
+
+def _generate_html(results, assignments):
+    """Generates a HTML table containing the results"""
+
+    # table header
+    html = "<table id='hw-results-table'>\n"
+
+    # the row with the names of the homeworks
+    html += "<tr>\n\t<td>Nume</td>\n"
+    for assignment in assignments:
+        html += "\t<td class='hw-h'>%s</td>\n" % assignment
+    html += "</tr>\n"
+
+    # the content
+    odd = True
+    for user in sorted(results.keys()):
+        html += "<tr class='%s'>\n\t<td class='st-h'>%s</td>\n" % (
+                ('tr-even', 'tr-odd')[odd], user)
+
+        # for each student generates a full row
+        for assignment in assignments:
+            html += '\t<td class="grade">'
+            if results[user].has_key(assignment):
+                html += _cpl_hack(user, assignment,
+                                  str(results[user][assignment]))
+            else:
+                html += '-'
+            html += '</td>\n'
+
+        html += "</tr>\n"
+        odd = not odd
+    html += '</table>\n'
+    return html
+
+
+def _powered_by_vmchecker():
+    """Returns a HTML div showing 'Powered by vmchecker'"""
+    return """
+<div>
+    <div style="float:left">
+        Powered by <a href="http://github.com/vmchecker/vmchecker/tree/master">vmchecker</a>
+    </div>
+    <div style="float:left">
+        &nbsp;-&nbsp;
+    </div>
+    <div style="float:left">
+        <script type="text/javascript" src="http://www.ohloh.net/p/26869/widgets/project_users_logo.js"></script>
+    </div>
+</div>
+"""
+
+def main():
+    """Reads grades and generates the HTML table"""
+    if len(sys.argv) <= 1:
+        print "Expencting course_id argument"
+        exit(1)
+
+    course_id = sys.argv[1]
+    vmcfg = CourseConfig(CourseList().course_config(course_id))
+    vmpaths = VmcheckerPaths(vmcfg.root_path())
+
+
+    db_conn = sqlite3.connect(vmpaths.db_file())
+    db_cursor = db_conn.cursor()
+
+    results = _db_retrieve_grades(db_cursor)
+    assignments = sorted(vmcfg.assignments())
+
+    # sends to the stdout all the HTML content
+    print _generate_html(results, assignments)
+    print _powered_by_vmchecker()
+
+    db_cursor.close()
+    db_conn.close()
+
+
+if __name__ == '__main__':
+    main()

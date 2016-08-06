@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+
+"""
+
+A script to download files (that are not stored on vmchecker-storer)
+that required for testing from another system through ssh.
+
+"""
+
+from __future__ import with_statement
+
+import os
+import sys
+import socket
+import paramiko
+import ConfigParser
+
+
+from vmchecker import ziputil
+from vmchecker.config import CourseConfig
+
+
+
+def get_submission_config(bundle_dir):
+    """Return the content of the submission config from the bundle"""
+    submission_config = ConfigParser.RawConfigParser()
+    submission_config_file = os.path.join(bundle_dir, 'submission-config')
+    with open(submission_config_file) as handle:
+        submission_config.readfp(handle)
+    return submission_config
+
+
+def get_assignment_id(bundle_dir):
+    """Reads the assignment identifier from the config file of the
+    submission from bundle_dir"""
+    config = get_submission_config(bundle_dir)
+    assignment = config.get('Assignment', 'Assignment')
+    return assignment
+
+
+def get_external_archive_zip(bundle_dir, asscfg, assignment):
+    """Bring an archive.zip from an external location"""
+
+    if asscfg.getd(assignment, 'assignmentstorage', '').lower() != 'large':
+        return
+
+    submission_config = get_submission_config(bundle_dir)
+
+    ssh_port = asscfg.get(assignment, 'assignmentstorageport')
+    ssh_host = asscfg.get(assignment, 'assignmentstoragehost')
+    ssh_user = asscfg.get(assignment, 'AssignmentStorageQueryUser')
+    ssh_path = asscfg.storage_basepath(assignment, submission_config.get('Assignment', 'user'))
+    # Initiate SCP session to retrieve archive.zip from the storage
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((ssh_host, int(ssh_port)))
+    transp = paramiko.Transport(sock)
+    try:
+        transp.start_client()
+
+        rsa_key_name = os.path.join(os.environ['HOME'], '.ssh', 'id_rsa')
+        key = paramiko.RSAKey.from_private_key_file(rsa_key_name)
+        transp.auth_publickey(ssh_user, key)
+        sftp = paramiko.SFTPClient.from_transport(transp)
+
+        external_path = ssh_path + \
+            "/" + submission_config.get('Assignment', 'user') + \
+            "/" + submission_config.get('Assignment', 'archivefilename')
+
+        # download the file from the external machine as 'archive.zip'
+        sftp.get(external_path, os.path.join(bundle_dir, "archive.zip"))
+    finally:
+        transp.close()
+
+
+def expand_archive(bundle_dir, assignment, asscfg):
+    """If required by the assignment config, expand the archive"""
+
+    unpack = asscfg.getd(assignment, 'UnpackArchive', '').lower()
+    if not (unpack == 'yes' or unpack == 'y' or unpack == 'True'):
+        return
+
+    unpack_dir = os.path.join(bundle_dir, 'archive')
+    archive_file = os.path.join(bundle_dir, 'archive.zip')
+
+    if not os.path.exists(archive_file):
+        return
+
+    ziputil.unzip_safely(archive_file, unpack_dir)
+
+
+def main():
+    """Check if the program is invoked correctly (with a path to the
+    bundle directory) and if it needs to bring data from another
+    machine. Uses data from the bundle_dir configuration files.
+
+    """
+
+    if len(sys.argv) != 2:
+        print 'Usage: ' + sys.argv[0] + ' <bundle_directory>'
+        sys.exit(1)
+
+    bundle_dir = sys.argv[1]
+    assignment = get_assignment_id(bundle_dir)
+    vmcfg = CourseConfig(os.path.join(bundle_dir, 'course-config'))
+    asscfg  = vmcfg.assignments()
+
+    get_external_archive_zip(bundle_dir, asscfg, assignment)
+
+    expand_archive(bundle_dir, assignment, asscfg)
+
+
+if __name__ == "__main__":
+    main()

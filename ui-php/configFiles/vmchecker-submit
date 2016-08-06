@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+
+"""A tool used to submit homework from the command line."""
+
+import optparse
+
+from vmchecker import submit
+
+def main():
+    """Parse arguments and sends the submission for evaluation"""
+    cmdline = optparse.OptionParser()
+    cmdline.add_option('-s', '--skip_time_check', action='store_true',
+                       dest='skip_time_check', default=False,
+                       help='Force submitting ignoring the time difference.')
+    cmdline.add_option('-t', '--forced-upload-time',
+                       help='Force the time of upload to be the argument. ' +
+                       'If not given, the current system time is used.')
+
+    cmdline.set_usage('Usage: %prog [options] course_id assignment' +
+                      ' user archive_filename')
+    (options, argv) = cmdline.parse_args()
+
+    if len(argv) != 4:
+        cmdline.error('Not enough arguments')
+
+    course_id        = argv[0]
+    assignment       = argv[1]
+    user             = argv[2]
+    archive_filename = argv[3]
+
+    submit.submit(archive_filename, assignment, user, course_id,
+                  options.skip_time_check, options.forced_upload_time)
+
+
+if __name__ == '__main__':
+    main()

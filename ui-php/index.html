@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html >
+
+<head>
+
+    <link rel="stylesheet" href="vmchecker.css">
+    <link rel="icon" type="image/gif"  width="16"  height="12" href="img/vmchecker-logo-perfect-fit-16x12.png" />
+
+    <title>Vmchecker search box</title>
+
+
+
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+
+<script type="text/javascript">
+
+    function lookup(inputString, directoryRead, type) {
+
+        if (type == 2)
+        {
+            var course = document.getElementById('inputString1').value;
+            directoryRead = directoryRead + '/'+ course + '/2012/';
+        }
+
+        if(inputString.length == 0)
+        {
+
+            $('#suggestions' + type).hide();
+
+        }
+            else
+            {
+
+    $.post("rpc.php", {queryString: ""+inputString+"",directory: ""+directoryRead+"", type: ""+type+""}, function(data)
+    {
+
+        if(data.length >0)
+        {
+
+            $('#suggestions' + type).show();
+
+            $('#autoSuggestionsList' + type).html(data);
+
+        }
+
+    });
+
+}
+
+}
+
+    function fill1(thisValue)
+        {
+
+            $('#inputString1' ).val(thisValue);
+
+            setTimeout("$('#suggestions1').hide();", 200);
+
+    }
+
+        function fill2(thisValue)
+        {
+
+            $('#inputString2').val(thisValue);
+
+            setTimeout("$('#suggestions2').hide();", 200);
+
+    }
+
+     function fill3(thisValue)
+        {
+
+            $('#inputString3').val(thisValue);
+
+            setTimeout("$('#suggestions3').hide();", 200);
+
+    }
+
+</script>
+
+</head>
+
+<body>
+
+    <div>
+
+            <form>
+
+                <div>
+                    <br />
+                    <input type="text" size="47" value="" id="inputString1" onkeyup="lookup(this.value,'opt/vmchecker/storer/home/courses',1);" onblur="fill();" />
+                </div>
+                    <div class="suggestionsBox" id="suggestions1" style="display: none;">
+                        <div class="suggestionList" id="autoSuggestionsList1">
+                        </div>
+                    </div>
+
+                    <div>
+                    <br />
+                    <input type="text" size="47" value="" id="inputString2" onkeyup="lookup(this.value,'opt/vmchecker/storer/home/courses',2);" onblur="fill();" />
+                </div>
+                    <div class="suggestionsBox" id="suggestions2" style="display: none;">
+                        <div class="suggestionList" id="autoSuggestionsList2">
+                        </div>
+                    </div>
+
+                    <div>
+                    <br />
+                    <input type="text" size="47" value="" id="inputString3" onkeyup="lookup(this.value,'opt/vmchecker/storer/home/courses',3);" onblur="fill();" />
+                </div>
+                    <div class="suggestionsBox" id="suggestions3" style="display: none;">
+                        <div class="suggestionList" id="autoSuggestionsList3">
+                        </div>
+                    </div>
+
+            </form>
+    </div>
+
+    </body>
+
+</html>
